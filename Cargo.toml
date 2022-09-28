@@ -4,5 +4,10 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.8.1", features = ["dynamic"] }
+bevy = { version = "0.8.1" } ## , features = ["dynamic"] }
 bevy_rapier3d = "0.16.2"
+web-sys = { version = "0.3.57", features = ["Window"]}
+
+[[bin]]
+name = "index"
+path = "src/main.rs"
