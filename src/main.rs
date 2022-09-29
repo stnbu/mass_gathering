@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+//use rapier2d::geometry::ColliderBuilder;
 
 fn main() {
     App::new()
@@ -41,7 +42,9 @@ pub fn setup_physics(mut commands: Commands) {
      */
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, -24.0, 0.0)))
-        .insert(Collider::cuboid(80.0, 20.0));
+        //.insert(RigidBody::Dynamic)
+        .insert(Collider::cuboid(80.0, 20.0))
+        .insert(ColliderMassProperties::Density(1.0));
 
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 100.0, 0.0)))
@@ -52,8 +55,6 @@ pub fn setup_physics(mut commands: Commands) {
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 260.0, 0.0)))
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(10.0, 10.0))
-        .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(ContactForceEventThreshold(10.0));
+        .insert(ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS)
+        .insert(ContactForceEventThreshold(5.0));
 }
-
-// CONTACT_FORCE_EVENTS

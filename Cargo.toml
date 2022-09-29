@@ -7,3 +7,4 @@ edition = "2021"
 bevy = { version = "0.8.1", features = ["dynamic"] }
 #bevy_rapier3d = "0.16.2"
 bevy_rapier2d = "0.16.2"
+rapier2d = "0.14.0"
