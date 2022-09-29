@@ -41,7 +41,7 @@ pub fn setup_physics(mut commands: Commands, mut rapier_config: ResMut<RapierCon
     /*
      * Ground
      */
-    rapier_config.gravity = Vec2::ZERO;
+    rapier_config.gravity = Vec2::Y * -500.0;
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, -24.0, 0.0)))
         .insert(Collider::cuboid(80.0, 20.0));
