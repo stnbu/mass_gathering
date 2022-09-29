@@ -53,8 +53,7 @@ pub fn setup_physics(mut commands: Commands) {
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(10.0, 10.0))
         .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(ActiveEvents::CONTACT_FORCE_EVENTS)
-        .insert(ContactForceEventThreshold(5.0));
+        .insert(ContactForceEventThreshold(10.0));
 }
 
 // CONTACT_FORCE_EVENTS
