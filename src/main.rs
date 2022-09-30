@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
-//use rapier2d::geometry::ColliderBuilder;
 
 fn main() {
     App::new()
@@ -15,46 +14,48 @@ fn main() {
         .add_plugin(RapierDebugRenderPlugin::default())
         .add_startup_system(setup_graphics)
         .add_startup_system(setup_physics)
-        .add_system_to_stage(CoreStage::PostUpdate, display_events)
         .run();
 }
 
 fn setup_graphics(mut commands: Commands) {
-    commands.spawn_bundle(Camera2dBundle::default());
-}
-
-fn display_events(
-    mut collision_events: EventReader<CollisionEvent>,
-    mut contact_force_events: EventReader<ContactForceEvent>,
-) {
-    for collision_event in collision_events.iter() {
-        println!("Received collision event: {:?}", collision_event);
-    }
-
-    for contact_force_event in contact_force_events.iter() {
-        println!("Received contact force event: {:?}", contact_force_event);
-    }
+    commands.spawn_bundle(Camera2dBundle {
+        transform: Transform::from_xyz(0.0, 200.0, 0.0),
+        ..default()
+    });
 }
 
 pub fn setup_physics(mut commands: Commands) {
     /*
-     * Ground
+     * The ground
+     */
+    let ground_size = 500.0;
+    let ground_height = 10.0;
+
+    commands
+        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
+            0.0,
+            -ground_height,
+            0.0,
+        )))
+        .insert(Collider::cuboid(ground_size, ground_height));
+
+    /*
+     * A rectangle that only rotate.
      */
     commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, -24.0, 0.0)))
-        //.insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(80.0, 20.0))
-        .insert(ColliderMassProperties::Density(1.0));
-
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 100.0, 0.0)))
-        .insert(Collider::cuboid(80.0, 30.0))
-        .insert(Sensor);
-
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 260.0, 0.0)))
+        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 300.0, 0.0)))
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(10.0, 10.0))
-        .insert(ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS)
-        .insert(ContactForceEventThreshold(5.0));
+        .insert(LockedAxes::TRANSLATION_LOCKED)
+        .insert(Collider::cuboid(200.0, 60.0));
+
+    /*
+     * A tilted cuboid that cannot rotate.
+     */
+    commands
+        .spawn_bundle(TransformBundle::from(
+            Transform::from_xyz(50.0, 500.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
+        ))
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::ROTATION_LOCKED)
+        .insert(Collider::cuboid(60.0, 40.0));
 }
