@@ -25,21 +25,7 @@ fn setup_graphics(mut commands: Commands) {
 }
 
 pub fn setup_physics(mut commands: Commands) {
-    /*
-     * The ground
-     */
-    let ground_size = 500.0;
-    let ground_height = 10.0;
-
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-            0.0,
-            -ground_height,
-            0.0,
-        )))
-        .insert(Collider::cuboid(ground_size, ground_height));
-
-    for y in [600.0, 400.0, 200.0] {
+    for y in [500.0, 300.0, 100.0] {
         for x in [-400.0, -200.0, 0.0, 200.0, 400.0] {
             commands
                 .spawn_bundle(TransformBundle::from(Transform::from_xyz(x, y, 0.0)))
@@ -54,8 +40,9 @@ pub fn setup_physics(mut commands: Commands) {
      */
     commands
         .spawn_bundle(TransformBundle::from(
-            Transform::from_xyz(50.0, 500.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
+            Transform::from_xyz(50.0, 800.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
         ))
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(3.0, 3.0));
+        .insert(Collider::cuboid(3.0, 3.0))
+        .insert(ColliderMassProperties::Density(5.0));
 }
