@@ -26,23 +26,24 @@ fn setup_graphics(mut commands: Commands) {
 
 pub fn setup_physics(mut commands: Commands) {
     for y in [500.0, 300.0, 100.0] {
-        for x in [-400.0, -200.0, 0.0, 200.0, 400.0] {
+        for x in [
+            -400.0, -300.0, -200.0, -100.0, 0.0, 100.0, 200.0, 300.0, 400.0,
+        ] {
             commands
                 .spawn_bundle(TransformBundle::from(Transform::from_xyz(x, y, 0.0)))
                 .insert(RigidBody::Dynamic)
                 .insert(LockedAxes::TRANSLATION_LOCKED)
-                .insert(Collider::cuboid(95.0, 10.0));
+                .insert(Collider::cuboid(48.0, 5.0))
+                .insert(Friction::new(0.05));
         }
     }
 
-    /*
-     * A tilted cuboid that cannot rotate.
-     */
     commands
         .spawn_bundle(TransformBundle::from(
             Transform::from_xyz(50.0, 800.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
         ))
         .insert(RigidBody::Dynamic)
         .insert(Collider::cuboid(3.0, 3.0))
-        .insert(ColliderMassProperties::Density(5.0));
+        .insert(ColliderMassProperties::Density(1.0))
+        .insert(Friction::new(0.05));
 }
