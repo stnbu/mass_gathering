@@ -39,14 +39,25 @@ pub fn setup_physics(mut commands: Commands) {
         )))
         .insert(Collider::cuboid(ground_size, ground_height));
 
-    /*
-     * A rectangle that only rotate.
-     */
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 300.0, 0.0)))
         .insert(RigidBody::Dynamic)
         .insert(LockedAxes::TRANSLATION_LOCKED)
-        .insert(Collider::cuboid(200.0, 60.0));
+        .insert(Collider::cuboid(90.0, 5.0));
+    commands
+        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
+            200.0, 300.0, 0.0,
+        )))
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::TRANSLATION_LOCKED)
+        .insert(Collider::cuboid(90.0, 5.0));
+    commands
+        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
+            -200.0, 300.0, 0.0,
+        )))
+        .insert(RigidBody::Dynamic)
+        .insert(LockedAxes::TRANSLATION_LOCKED)
+        .insert(Collider::cuboid(90.0, 5.0));
 
     /*
      * A tilted cuboid that cannot rotate.
@@ -56,6 +67,5 @@ pub fn setup_physics(mut commands: Commands) {
             Transform::from_xyz(50.0, 500.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
         ))
         .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::ROTATION_LOCKED)
-        .insert(Collider::cuboid(60.0, 40.0));
+        .insert(Collider::cuboid(10.0, 10.0));
 }
