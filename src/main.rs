@@ -24,6 +24,7 @@ fn setup_graphics(mut commands: Commands) {
     });
 }
 
+use rand::Rng;
 pub fn setup_physics(mut commands: Commands) {
     for y in [500.0, 400.0, 300.0, 200.0, 100.0] {
         for x in [
@@ -38,12 +39,19 @@ pub fn setup_physics(mut commands: Commands) {
         }
     }
 
-    commands
-        .spawn_bundle(TransformBundle::from(
-            Transform::from_xyz(50.0, 800.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
-        ))
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(3.0, 3.0))
-        .insert(ColliderMassProperties::Density(1.0))
-        .insert(Friction::new(0.05));
+    let mut rng = rand::thread_rng();
+    for x in [
+        -420.0, -320.0, -220.0, -120.0, -20.0, 80.0, 180.0, 280.0, 380.0,
+    ] {
+        let wiggle: u8 = rng.gen::<u8>() % 20;
+        commands
+            .spawn_bundle(TransformBundle::from(
+                Transform::from_xyz(x + wiggle as f32, 800.0, 0.0)
+                    .with_rotation(Quat::from_rotation_z(1.0)),
+            ))
+            .insert(RigidBody::Dynamic)
+            .insert(Collider::cuboid(3.0, 3.0))
+            .insert(ColliderMassProperties::Density(1.0))
+            .insert(Friction::new(0.05));
+    }
 }
