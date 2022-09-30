@@ -51,7 +51,7 @@ pub fn setup_physics(mut commands: Commands) {
             ))
             .insert(RigidBody::Dynamic)
             .insert(Collider::cuboid(3.0, 3.0))
-            .insert(ColliderMassProperties::Density(1.0))
+            .insert(ColliderMassProperties::Density(0.1 * wiggle as f32))
             .insert(Friction::new(0.05));
     }
 }
