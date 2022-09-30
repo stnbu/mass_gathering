@@ -39,25 +39,15 @@ pub fn setup_physics(mut commands: Commands) {
         )))
         .insert(Collider::cuboid(ground_size, ground_height));
 
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 300.0, 0.0)))
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::TRANSLATION_LOCKED)
-        .insert(Collider::cuboid(90.0, 5.0));
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-            200.0, 300.0, 0.0,
-        )))
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::TRANSLATION_LOCKED)
-        .insert(Collider::cuboid(90.0, 5.0));
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-            -200.0, 300.0, 0.0,
-        )))
-        .insert(RigidBody::Dynamic)
-        .insert(LockedAxes::TRANSLATION_LOCKED)
-        .insert(Collider::cuboid(90.0, 5.0));
+    for y in [600.0, 400.0, 200.0] {
+        for x in [-400.0, -200.0, 0.0, 200.0, 400.0] {
+            commands
+                .spawn_bundle(TransformBundle::from(Transform::from_xyz(x, y, 0.0)))
+                .insert(RigidBody::Dynamic)
+                .insert(LockedAxes::TRANSLATION_LOCKED)
+                .insert(Collider::cuboid(95.0, 10.0));
+        }
+    }
 
     /*
      * A tilted cuboid that cannot rotate.
@@ -67,5 +57,5 @@ pub fn setup_physics(mut commands: Commands) {
             Transform::from_xyz(50.0, 500.0, 0.0).with_rotation(Quat::from_rotation_z(1.0)),
         ))
         .insert(RigidBody::Dynamic)
-        .insert(Collider::cuboid(10.0, 10.0));
+        .insert(Collider::cuboid(3.0, 3.0));
 }
