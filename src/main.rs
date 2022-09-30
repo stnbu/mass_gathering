@@ -26,7 +26,7 @@ fn setup_graphics(mut commands: Commands) {
 
 use rand::Rng;
 pub fn setup_physics(mut commands: Commands) {
-    for y in [500.0, 400.0, 300.0, 200.0, 100.0] {
+    for y in [500.0, 400.0, 300.0, 200.0, 100.0, 0.0, -100.0, -200.0] {
         for x in [
             -400.0, -300.0, -200.0, -100.0, 0.0, 100.0, 200.0, 300.0, 400.0,
         ] {
