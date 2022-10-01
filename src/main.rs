@@ -2,19 +2,23 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 
 fn main() {
-    App::new()
-        .insert_resource(ClearColor(Color::rgb(
-            0xF9 as f32 / 255.0,
-            0xF9 as f32 / 255.0,
-            0xFF as f32 / 255.0,
-        )))
-        .insert_resource(Msaa::default())
-        .add_plugins(DefaultPlugins)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugin(RapierDebugRenderPlugin::default())
-        .add_startup_system(setup_graphics)
-        .add_startup_system(setup_physics)
-        .run();
+    let mut app = App::new();
+
+    #[cfg(target_arch = "wasm32")]
+    app.add_system(handle_browser_resize);
+
+    app.insert_resource(ClearColor(Color::rgb(
+        0xF9 as f32 / 255.0,
+        0xF9 as f32 / 255.0,
+        0xFF as f32 / 255.0,
+    )))
+    .insert_resource(Msaa::default())
+    .add_plugins(DefaultPlugins)
+    .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
+    .add_plugin(RapierDebugRenderPlugin::default())
+    .add_startup_system(setup_graphics)
+    .add_startup_system(setup_physics)
+    .run();
 }
 
 fn setup_graphics(mut commands: Commands) {
@@ -53,5 +57,19 @@ pub fn setup_physics(mut commands: Commands) {
             .insert(Collider::cuboid(3.0, 3.0))
             .insert(ColliderMassProperties::Density(0.1 * wiggle as f32))
             .insert(Friction::new(1.0 / wiggle as f32));
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn handle_browser_resize(mut windows: ResMut<Windows>) {
+    let window = windows.get_primary_mut().unwrap();
+    let wasm_window = web_sys::window().unwrap();
+    let (target_width, target_height) = (
+        wasm_window.inner_width().unwrap().as_f64().unwrap() as f32,
+        wasm_window.inner_height().unwrap().as_f64().unwrap() as f32,
+    );
+
+    if window.width() != target_width || window.height() != target_height {
+        window.set_resolution(target_width, target_height);
     }
 }
