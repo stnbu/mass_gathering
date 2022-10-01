@@ -14,7 +14,6 @@ fn main() {
         .add_startup_system(setup_game)
         .add_system(cube_sleep_detection)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugin(RapierDebugRenderPlugin::default())
         .run();
 }
 
@@ -67,7 +66,15 @@ impl Default for Game {
             n_lanes: 10,
             n_rows: 20,
             stats: Stats::default(),
-            cube_colors: vec![],
+            cube_colors: vec![
+                byte_rgb(0, 244, 243),
+                byte_rgb(238, 243, 0),
+                byte_rgb(177, 0, 254),
+                byte_rgb(27, 0, 250),
+                byte_rgb(252, 157, 0),
+                byte_rgb(0, 247, 0),
+                byte_rgb(255, 0, 0),
+            ],
             current_cube_joints: vec![],
         }
     }
@@ -78,16 +85,6 @@ fn byte_rgb(r: u8, g: u8, b: u8) -> Color {
 }
 
 fn setup_game(mut commands: Commands, mut game: ResMut<Game>) {
-    game.cube_colors = vec![
-        byte_rgb(0, 244, 243),
-        byte_rgb(238, 243, 0),
-        byte_rgb(177, 0, 254),
-        byte_rgb(27, 0, 250),
-        byte_rgb(252, 157, 0),
-        byte_rgb(0, 247, 0),
-        byte_rgb(255, 0, 0),
-    ];
-
     commands.spawn().insert_bundle(Camera2dBundle::default());
 
     // initial cube
