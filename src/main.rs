@@ -90,8 +90,6 @@ fn setup_game(mut commands: Commands, mut game: ResMut<Game>) {
 
     commands.spawn().insert_bundle(Camera2dBundle::default());
 
-    setup_board(&mut commands, &*game);
-
     // initial cube
     spawn_cube(&mut commands, &mut game);
 }
@@ -121,27 +119,6 @@ struct CubeLayout {
 
 #[derive(Component)]
 struct Block;
-
-fn setup_board(commands: &mut Commands, game: &Game) {
-    let floor_y = game.floor_y();
-
-    // Add floor
-    commands
-        .spawn_bundle(SpriteBundle {
-            sprite: Sprite {
-                color: Color::rgb(0.5, 0.5, 0.5),
-                custom_size: Some(Vec2::new(game.n_lanes as f32 * 30.0, 60.0)),
-                ..Default::default()
-            },
-            transform: Transform::from_xyz(0.0, floor_y - 30.0 * 0.5, 0.0),
-            ..Default::default()
-        })
-        .insert(RigidBody::Fixed)
-        .insert(Collider::cuboid(
-            game.n_lanes as f32 * 30.0 / 2.0,
-            60.0 / 2.0,
-        ));
-}
 
 fn spawn_cube(commands: &mut Commands, game: &mut Game) {
     let kind = CubeKind::random();
