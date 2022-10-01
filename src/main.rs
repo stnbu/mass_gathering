@@ -200,18 +200,14 @@ fn cube_sleep_detection(
     mut game: ResMut<Game>,
     block_query: Query<(Entity, &GlobalTransform)>,
 ) {
-    let all_blocks_sleeping = true;
+    for joint in &game.current_cube_joints {
+        commands.entity(*joint).despawn();
+    }
 
-    if all_blocks_sleeping {
-        for joint in &game.current_cube_joints {
-            commands.entity(*joint).despawn();
-        }
+    clear_filled_rows(&mut commands, &mut game, block_query);
 
-        clear_filled_rows(&mut commands, &mut game, block_query);
-
-        if game.stats.health() > 0.0 {
-            spawn_cube(&mut commands, &mut game);
-        }
+    if game.stats.health() > 0.0 {
+        spawn_cube(&mut commands, &mut game);
     }
 }
 
