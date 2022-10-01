@@ -1,10 +1,10 @@
 [package]
 name = "rapier_try"
-version = "0.0.1"
+version = "0.0.2"
 edition = "2021"
 
 [dependencies]
-bevy = { version = "0.8.1" } ## , features = ["dynamic"] }
+bevy = { version = "0.8.1" }
 bevy_rapier2d = "0.16.2"
 rand = "0.8.5"
 web-sys = { version = "0.3.57", features = ["Window"]}
