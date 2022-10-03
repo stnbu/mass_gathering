@@ -37,22 +37,31 @@ fn setup_graphics(mut commands: Commands) {
 }
 
 pub fn setup_physics(mut commands: Commands) {
-    // The ground
+    // Ceiling
+    commands
+        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 620.0, 0.0)))
+        .insert(Collider::cuboid(800.0, 10.0))
+        .insert(Restitution::coefficient(100.0));
+
+    // Floor
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, -300.0, 0.0)))
-        .insert(Collider::cuboid(800.0, 10.0));
+        .insert(Collider::cuboid(800.0, 10.0))
+        .insert(Restitution::coefficient(100.0));
 
     // Left wall
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(
             -460.0, 300.0, 0.0,
         )))
-        .insert(Collider::cuboid(10.0, 700.0));
+        .insert(Collider::cuboid(10.0, 700.0))
+        .insert(Restitution::coefficient(100.0));
 
     // Right wall
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(460.0, 0.0, 0.0)))
-        .insert(Collider::cuboid(10.0, 700.0));
+        .insert(Collider::cuboid(10.0, 700.0))
+        .insert(Restitution::coefficient(100.0));
 
     for y in [500.0, 400.0, 300.0, 200.0, 100.0, 0.0, -100.0, -200.0] {
         for x in [
