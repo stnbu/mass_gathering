@@ -13,7 +13,7 @@ fn main() {
         0xFF as f32 / 255.0,
     )))
     .insert_resource(WindowDescriptor {
-        height: 720.0,
+        height: 1280.0,
         width: 1280.0,
         ..default()
     })
@@ -23,19 +23,7 @@ fn main() {
     .add_plugin(RapierDebugRenderPlugin::default())
     .add_startup_system(setup_graphics)
     .add_startup_system(setup_physics)
-    .add_startup_system(access_window_system)
     .run();
-}
-
-fn access_window_system(mut windows: ResMut<Windows>) {
-    for window in windows.iter_mut() {
-        println!("Height: {}", window.height());
-        println!("Width: {}", window.width());
-        println!("Physical Height: {}", window.physical_height());
-        println!("Physical Width: {}", window.physical_width());
-        println!("Requested Height: {}", window.requested_height());
-        println!("Requested Width: {}", window.requested_width());
-    }
 }
 
 fn setup_graphics(mut commands: Commands) {
@@ -67,7 +55,7 @@ pub fn setup_physics(mut commands: Commands) {
         let wiggle: u8 = rng.gen::<u8>() % 20;
         commands
             .spawn_bundle(TransformBundle::from(
-                Transform::from_xyz(x + wiggle as f32, 800.0, 0.0)
+                Transform::from_xyz(x + wiggle as f32, 600.0, 0.0)
                     .with_rotation(Quat::from_rotation_z(1.0)),
             ))
             .insert(RigidBody::Dynamic)
