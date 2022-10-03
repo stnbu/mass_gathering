@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
+use rand::Rng;
 
 fn main() {
     let mut app = App::new();
@@ -12,18 +13,20 @@ fn main() {
         0xF9 as f32 / 255.0,
         0xFF as f32 / 255.0,
     )))
-    .insert_resource(WindowDescriptor {
-        height: 1280.0,
-        width: 1280.0,
-        ..default()
-    })
     .insert_resource(Msaa::default())
     .add_plugins(DefaultPlugins)
     .add_plugin(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
     .add_plugin(RapierDebugRenderPlugin::default())
+    .add_startup_system(max_win)
     .add_startup_system(setup_graphics)
     .add_startup_system(setup_physics)
     .run();
+}
+
+fn max_win(mut windows: ResMut<Windows>) {
+    for window in windows.iter_mut() {
+        window.set_maximized(true);
+    }
 }
 
 fn setup_graphics(mut commands: Commands) {
@@ -33,7 +36,6 @@ fn setup_graphics(mut commands: Commands) {
     });
 }
 
-use rand::Rng;
 pub fn setup_physics(mut commands: Commands) {
     for y in [500.0, 400.0, 300.0, 200.0, 100.0, 0.0, -100.0, -200.0] {
         for x in [
