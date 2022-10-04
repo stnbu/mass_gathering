@@ -5,9 +5,6 @@ use rand::Rng;
 fn main() {
     let mut app = App::new();
 
-    #[cfg(target_arch = "wasm32")]
-    app.add_system(handle_browser_resize);
-
     app.insert_resource(ClearColor(Color::rgb(
         0xF9 as f32 / 255.0,
         0xF9 as f32 / 255.0,
@@ -65,6 +62,7 @@ pub fn setup_physics(mut commands: Commands) {
         .insert(Collider::cuboid(10.0, 470.0))
         .insert(Restitution::coefficient(10.0));
 
+    // Paddles
     for y in [500.0, 400.0, 300.0, 200.0, 100.0, 0.0, -100.0, -200.0] {
         for x in [
             -400.0, -300.0, -200.0, -100.0, 0.0, 100.0, 200.0, 300.0, 400.0,
@@ -78,6 +76,7 @@ pub fn setup_physics(mut commands: Commands) {
         }
     }
 
+    // Bwoalls
     let mut rng = rand::thread_rng();
     for x in [
         -420.0, -320.0, -220.0, -120.0, -20.0, 80.0, 180.0, 280.0, 380.0,
@@ -93,19 +92,5 @@ pub fn setup_physics(mut commands: Commands) {
             .insert(Ccd::enabled())
             .insert(ColliderMassProperties::Density(0.1 * wiggle as f32))
             .insert(Friction::new(1.0 / wiggle as f32));
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn handle_browser_resize(mut windows: ResMut<Windows>) {
-    let window = windows.get_primary_mut().unwrap();
-    let wasm_window = web_sys::window().unwrap();
-    let (target_width, target_height) = (
-        wasm_window.inner_width().unwrap().as_f64().unwrap() as f32,
-        wasm_window.inner_height().unwrap().as_f64().unwrap() as f32,
-    );
-
-    if window.width() != target_width || window.height() != target_height {
-        window.set_resolution(target_width, target_height);
     }
 }
