@@ -34,33 +34,25 @@ fn setup_graphics(mut commands: Commands) {
 }
 
 pub fn setup_physics(mut commands: Commands) {
-    // Ceiling
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 620.0, 0.0)))
-        .insert(Collider::cuboid(450.0, 10.0))
-        .insert(Restitution::coefficient(10.0));
+    // Floor and Ceiling
+    for y_position in [620.0, -300.0] {
+        commands
+            .spawn_bundle(TransformBundle::from(Transform::from_xyz(
+                0.0, y_position, 0.0,
+            )))
+            .insert(Collider::cuboid(450.0, 10.0))
+            .insert(Restitution::coefficient(10.0));
+    }
 
-    // Floor
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, -300.0, 0.0)))
-        .insert(Collider::cuboid(450.0, 10.0))
-        .insert(Restitution::coefficient(10.0));
-
-    // Left wall
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-            -460.0, 160.0, 0.0,
-        )))
-        .insert(Collider::cuboid(10.0, 470.0))
-        .insert(Restitution::coefficient(10.0));
-
-    // Right wall
-    commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-            460.0, 160.0, 0.0,
-        )))
-        .insert(Collider::cuboid(10.0, 470.0))
-        .insert(Restitution::coefficient(10.0));
+    // Walls
+    for x_position in [-460.0, 460.0] {
+        commands
+            .spawn_bundle(TransformBundle::from(Transform::from_xyz(
+                x_position, 160.0, 0.0,
+            )))
+            .insert(Collider::cuboid(10.0, 470.0))
+            .insert(Restitution::coefficient(10.0));
+    }
 
     // Paddles
     for y in [500.0, 400.0, 300.0, 200.0, 100.0, 0.0, -100.0, -200.0] {
