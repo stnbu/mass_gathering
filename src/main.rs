@@ -35,7 +35,7 @@ fn setup_graphics(mut commands: Commands) {
 
 pub fn setup_physics(mut commands: Commands) {
     // Floor and Ceiling
-    for y_position in [620.0, -300.0] {
+    for y_position in [630.0, -290.0] {
         commands
             .spawn_bundle(TransformBundle::from(Transform::from_xyz(
                 0.0, y_position, 0.0,
@@ -48,7 +48,7 @@ pub fn setup_physics(mut commands: Commands) {
     for x_position in [-460.0, 460.0] {
         commands
             .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-                x_position, 160.0, 0.0,
+                x_position, 170.0, 0.0,
             )))
             .insert(Collider::cuboid(10.0, 470.0))
             .insert(Restitution::coefficient(10.0));
