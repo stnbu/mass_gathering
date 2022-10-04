@@ -40,21 +40,21 @@ pub fn setup_physics(mut commands: Commands) {
     // Ceiling
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 620.0, 0.0)))
-        .insert(Collider::cuboid(800.0, 10.0))
+        .insert(Collider::cuboid(450.0, 10.0))
         .insert(Restitution::coefficient(10.0));
 
     // Floor
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, -300.0, 0.0)))
-        .insert(Collider::cuboid(800.0, 10.0))
+        .insert(Collider::cuboid(450.0, 10.0))
         .insert(Restitution::coefficient(10.0));
 
     // Left wall
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(
-            -460.0, 300.0, 0.0,
+            -460.0, 170.0, 0.0,
         )))
-        .insert(Collider::cuboid(10.0, 700.0))
+        .insert(Collider::cuboid(10.0, 460.0))
         .insert(Restitution::coefficient(10.0));
 
     // Right wall
