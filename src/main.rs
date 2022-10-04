@@ -59,8 +59,10 @@ pub fn setup_physics(mut commands: Commands) {
 
     // Right wall
     commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(460.0, 0.0, 0.0)))
-        .insert(Collider::cuboid(10.0, 700.0))
+        .spawn_bundle(TransformBundle::from(Transform::from_xyz(
+            460.0, 160.0, 0.0,
+        )))
+        .insert(Collider::cuboid(10.0, 470.0))
         .insert(Restitution::coefficient(10.0));
 
     for y in [500.0, 400.0, 300.0, 200.0, 100.0, 0.0, -100.0, -200.0] {
