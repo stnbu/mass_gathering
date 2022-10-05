@@ -28,6 +28,6 @@ fn setup_graphics(mut commands: Commands) {
 fn ball(mut commands: Commands) {
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)))
-        .insert(RigidBody::Dynamic)
+        .insert(RigidBody::Fixed)
         .insert(Collider::ball(0.5));
 }
