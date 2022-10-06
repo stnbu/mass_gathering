@@ -1,9 +1,20 @@
 use bevy::prelude::*;
 use std::f32::consts::TAU;
 
+struct Rudder {
+    right: f32,
+}
+
+impl Default for Rudder {
+    fn default() -> Self {
+        Rudder { right: 0.0 }
+    }
+}
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .insert_resource(Rudder::default())
         .add_startup_system(setup)
         .add_system(move_camera)
         .add_system(steer)
@@ -16,26 +27,35 @@ fn move_camera(mut camera_query: Query<&mut Transform, With<Camera>>, timer: Res
     transform.translation -= direction * timer.delta_seconds();
 }
 
-fn steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera>>) {
+fn steer(
+    keys: Res<Input<KeyCode>>,
+    mut query: Query<&mut Transform, With<Camera>>,
+    mut rudder: ResMut<Rudder>,
+) {
     let nudge = TAU / 1000.0;
-    let mut right = 0.0;
+    let mut roll = 0.0;
     let mut up = 0.0;
     for key in keys.get_pressed() {
         match key {
-            KeyCode::Left => right -= nudge,
-            KeyCode::Right => right += nudge,
+            KeyCode::Left => roll -= nudge,
+            KeyCode::Right => roll += nudge,
             KeyCode::Up => up += nudge,
             KeyCode::Down => up -= nudge,
             _ => (),
         }
     }
-    if right != 0.0 || up != 0.0 {
-        let mut transform = query.single_mut();
+    let mut transform = query.single_mut();
+    if roll != 0.0 || up != 0.0 {
         let local_x = transform.local_x();
         let local_z = transform.local_z();
         transform.rotate(Quat::from_axis_angle(local_x, up));
-        transform.rotate(Quat::from_axis_angle(local_z, right));
+        transform.rotate(Quat::from_axis_angle(local_z, roll));
     }
+    if roll != 0.0 {
+        rudder.right += roll;
+    }
+    let local_y = transform.local_y();
+    transform.rotate(Quat::from_axis_angle(local_y, rudder.right));
 }
 
 fn setup(
