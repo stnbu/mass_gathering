@@ -20,12 +20,19 @@ fn setup(
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..Default::default()
     });
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-        transform: Transform::from_xyz(2.0, 0.5, 0.0),
-        ..Default::default()
-    });
+    for n in 0..10 {
+        let mut side = 1.0;
+        if n % 2 == 0 {
+            side = -1.0;
+        }
+        let step = 2.0 * n as f32;
+        commands.spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            transform: Transform::from_xyz(2.0 * side, 0.5, step),
+            ..Default::default()
+        });
+    }
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..Default::default()

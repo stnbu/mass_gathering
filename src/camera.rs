@@ -63,6 +63,7 @@ pub fn pan_orbit_camera(
 
         let mut any = false;
         if rotation_move.length_squared() > 0.0 {
+            // this changes the angle for _orbit_
             any = true;
             let window = get_primary_window_size(&windows);
             let delta_x = {
@@ -79,6 +80,7 @@ pub fn pan_orbit_camera(
             transform.rotation = yaw * transform.rotation; // rotate around global y axis
             transform.rotation = transform.rotation * pitch; // rotate around local x axis
         } else if pan.length_squared() > 0.0 {
+            // this does the pan thingie
             any = true;
             // make panning distance independent of resolution and FOV,
             let window = get_primary_window_size(&windows);
