@@ -6,7 +6,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
-        .add_system(camera::pan_orbit_camera)
+        //.add_system(camera::pan_orbit_camera)
         .run();
 }
 
@@ -37,5 +37,10 @@ fn setup(
         transform: Transform::from_xyz(4.0, 8.0, 4.0),
         ..Default::default()
     });
-    camera::spawn_camera(commands);
+    commands.spawn_bundle(Camera3dBundle {
+        transform: Transform::from_translation(Vec3::new(-2.0, 2.5, 5.0))
+            .looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    }); //    let translation = Vec3::new(-2.0, 2.5, 5.0);
+        //camera::spawn_camera(commands);
 }
