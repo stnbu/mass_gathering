@@ -1,13 +1,35 @@
 use bevy::prelude::*;
-
-mod camera;
+use std::f32::consts::TAU;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
-        //.add_system(camera::pan_orbit_camera)
+        .add_system(move_camera)
+        //.add_system(steer)
         .run();
+}
+
+fn move_camera(mut camera_query: Query<&mut Transform, With<Camera>>, timer: Res<Time>) {
+    let mut transform = camera_query.single_mut();
+    let direction = transform.local_z();
+    transform.translation -= direction * 0.10 * timer.delta_seconds();
+}
+
+fn _steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera>>) {
+    let nudge = TAU / 10.0;
+    let mut right = 0.0;
+    for key in keys.get_pressed() {
+        match key {
+            KeyCode::Left => right -= nudge,
+            KeyCode::Right => right += nudge,
+            _ => (),
+        }
+    }
+    if nudge != 0.0 {
+        let mut transform = query.single_mut();
+        transform.rotation = Quat::from_axis_angle(Vec3::Y, right); // local_y in future
+    }
 }
 
 fn setup(
@@ -16,7 +38,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 20.0 })),
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 60.0 })),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..Default::default()
     });
@@ -41,6 +63,5 @@ fn setup(
         transform: Transform::from_xyz(0.0, 0.5, -1.0)
             .looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
         ..Default::default()
-    }); //    let translation = Vec3::new(-2.0, 2.5, 5.0);
-        //camera::spawn_camera(commands);
+    });
 }
