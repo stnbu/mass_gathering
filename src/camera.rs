@@ -63,7 +63,6 @@ pub fn pan_orbit_camera(
 
         let mut any = false;
         if rotation_move.length_squared() > 0.0 {
-            print!("1");
             any = true;
             let window = get_primary_window_size(&windows);
             let delta_x = {
@@ -80,7 +79,6 @@ pub fn pan_orbit_camera(
             transform.rotation = yaw * transform.rotation; // rotate around global y axis
             transform.rotation = transform.rotation * pitch; // rotate around local x axis
         } else if pan.length_squared() > 0.0 {
-            print!("2");
             any = true;
             // make panning distance independent of resolution and FOV,
             let window = get_primary_window_size(&windows);
@@ -95,7 +93,6 @@ pub fn pan_orbit_camera(
             let translation = (right + up) * pan_orbit.radius;
             pan_orbit.focus += translation;
         } else if scroll.abs() > 0.0 {
-            print!("3");
             any = true;
             pan_orbit.radius -= scroll * pan_orbit.radius * 0.002;
             // dont allow zoom to reach zero or you get stuck
@@ -103,7 +100,6 @@ pub fn pan_orbit_camera(
         }
 
         if any {
-            print!("4");
             // emulating parent/child to make the yaw/y-axis rotation behave like a turntable
             // parent = x and y rotation
             // child = z-offset
