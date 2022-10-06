@@ -52,10 +52,9 @@ fn steer(
         transform.rotate(Quat::from_axis_angle(local_z, roll));
     }
     if roll != 0.0 {
-        rudder.right += roll;
+        let local_y = transform.local_y();
+        transform.rotate(Quat::from_axis_angle(local_y, roll));
     }
-    let local_y = transform.local_y();
-    transform.rotate(Quat::from_axis_angle(local_y, rudder.right));
 }
 
 fn setup(
