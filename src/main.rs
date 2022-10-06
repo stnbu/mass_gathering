@@ -13,23 +13,28 @@ fn main() {
 fn move_camera(mut camera_query: Query<&mut Transform, With<Camera>>, timer: Res<Time>) {
     let mut transform = camera_query.single_mut();
     let direction = transform.local_z();
-    transform.translation -= direction * 0.10 * timer.delta_seconds();
+    transform.translation -= direction * timer.delta_seconds();
 }
 
 fn steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera>>) {
-    let nudge = TAU / 100.0;
+    let nudge = TAU / 1000.0;
     let mut right = 0.0;
+    let mut up = 0.0;
     for key in keys.get_pressed() {
         match key {
             KeyCode::Left => right -= nudge,
             KeyCode::Right => right += nudge,
+            KeyCode::Up => up += nudge,
+            KeyCode::Down => up -= nudge,
             _ => (),
         }
     }
-    if right != 0.0 {
+    if right != 0.0 || up != 0.0 {
         let mut transform = query.single_mut();
-        let local_y = transform.local_y();
-        transform.rotate(Quat::from_axis_angle(local_y, right)); // local_y in future
+        let local_x = transform.local_x();
+        let local_z = transform.local_z();
+        transform.rotate(Quat::from_axis_angle(local_x, up));
+        transform.rotate(Quat::from_axis_angle(local_z, right));
     }
 }
 
