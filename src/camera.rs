@@ -86,6 +86,7 @@ pub fn pan_orbit_camera(
             let window = get_primary_window_size(&windows);
             if let Projection::Perspective(projection) = projection {
                 pan *= Vec2::new(projection.fov * projection.aspect_ratio, projection.fov) / window;
+                //pan /= 10000.0;
             }
             // translate by local axes
             let right = transform.rotation * Vec3::X * -pan.x;
@@ -96,7 +97,7 @@ pub fn pan_orbit_camera(
         } else if scroll.abs() > 0.0 {
             debug!("3");
             any = true;
-            pan_orbit.radius -= scroll * pan_orbit.radius * 0.2;
+            pan_orbit.radius -= scroll * pan_orbit.radius * 0.002;
             // dont allow zoom to reach zero or you get stuck
             pan_orbit.radius = f32::max(pan_orbit.radius, 0.05);
         }
