@@ -6,7 +6,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_system(move_camera)
-        //.add_system(steer)
+        .add_system(steer)
         .run();
 }
 
@@ -16,8 +16,8 @@ fn move_camera(mut camera_query: Query<&mut Transform, With<Camera>>, timer: Res
     transform.translation -= direction * 0.10 * timer.delta_seconds();
 }
 
-fn _steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera>>) {
-    let nudge = TAU / 10.0;
+fn steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera>>) {
+    let nudge = TAU / 100.0;
     let mut right = 0.0;
     for key in keys.get_pressed() {
         match key {
@@ -26,9 +26,9 @@ fn _steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camer
             _ => (),
         }
     }
-    if nudge != 0.0 {
+    if right != 0.0 {
         let mut transform = query.single_mut();
-        transform.rotation = Quat::from_axis_angle(Vec3::Y, right); // local_y in future
+        transform.rotate(Quat::from_axis_angle(Vec3::Y, right)); // local_y in future
     }
 }
 
