@@ -28,7 +28,8 @@ fn steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera
     }
     if right != 0.0 {
         let mut transform = query.single_mut();
-        transform.rotate(Quat::from_axis_angle(Vec3::Y, right)); // local_y in future
+        let local_y = transform.local_y();
+        transform.rotate(Quat::from_axis_angle(local_y, right)); // local_y in future
     }
 }
 
