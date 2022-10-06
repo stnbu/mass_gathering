@@ -36,7 +36,7 @@ pub fn pan_orbit_camera(
     let mut scroll = 0.0;
     let mut orbit_button_changed = false;
 
-    if input_mouse.pressed(MouseButton::Right) {
+    if input_mouse.pressed(MouseButton::Left) {
         for ev in ev_motion.iter() {
             rotation_move += ev.delta;
         }
@@ -49,8 +49,7 @@ pub fn pan_orbit_camera(
     for ev in ev_scroll.iter() {
         scroll += ev.y;
     }
-    if input_mouse.just_released(MouseButton::Right) || input_mouse.just_pressed(MouseButton::Right)
-    {
+    if input_mouse.just_released(MouseButton::Left) || input_mouse.just_pressed(MouseButton::Left) {
         orbit_button_changed = true;
     }
 
