@@ -4,19 +4,45 @@ use std::f32::consts::TAU;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_startup_system(setup)
+        .insert_resource(LocalPathCurvature::default())
         .add_system(rocket_forward)
         .add_system(steer)
+        .add_system(window_focus)
         .run();
 }
 
-fn rocket_forward(mut camera_query: Query<&mut Transform, With<Camera>>, timer: Res<Time>) {
-    let mut transform = camera_query.single_mut();
-    let direction = transform.local_z();
-    transform.translation -= direction * timer.delta_seconds();
+struct LocalPathCurvature {
+    curvature: Vec3,
 }
 
-fn steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera>>) {
+impl Default for LocalPathCurvature {
+    fn default() -> Self {
+        LocalPathCurvature {
+            curvature: Vec3::ZERO,
+        }
+    }
+}
+
+fn window_focus(mut focus_events: EventReader<bevy::window::WindowFocused>) {
+    for ev in focus_events.iter() {
+        eprintln!("Entity {:?} leveled up!", ev);
+    }
+}
+
+fn rocket_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
+    //time.delta();
+    let mut transform = camera_query.single_mut();
+    let direction = transform.local_z();
+    transform.translation -= direction * time.delta_seconds();
+}
+
+fn steer(
+    keys: Res<Input<KeyCode>>,
+    mut query: Query<&mut Transform, With<Camera>>,
+    time: Res<Time>,
+) {
     let nudge = TAU / 10000.0;
     let mut roll = 0.0;
     let mut up = 0.0;
@@ -31,6 +57,7 @@ fn steer(keys: Res<Input<KeyCode>>, mut query: Query<&mut Transform, With<Camera
     }
     let mut transform = query.single_mut();
     if roll != 0.0 || up != 0.0 {
+        println!("elapsed: {}", time.delta().as_secs());
         let local_x = transform.local_x();
         let local_y = transform.local_x();
         let local_z = transform.local_z();
