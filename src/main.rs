@@ -48,7 +48,7 @@ fn window_focus(
 	    }
 	}
 	return;
-    }    
+    }
     for ev in focus_events.iter() {
         if ev.focused {
             app_state.overwrite_set(AppState::Playing).unwrap();
