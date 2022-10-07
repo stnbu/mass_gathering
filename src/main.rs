@@ -4,12 +4,15 @@ use std::f32::consts::TAU;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_state(AppState::Paused)
-        .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
-        .add_startup_system(setup)
         .insert_resource(LocalPathCurvature::default())
-        .add_system(rocket_forward)
-        .add_system(steer)
+        .add_state(AppState::Playing)
+        .add_startup_system(setup)
+        .add_system_set(
+            SystemSet::on_update(AppState::Playing)
+		.with_system(rocket_forward)
+		.with_system(steer)
+        )
+        .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_system(window_focus)
         .run();
 }
