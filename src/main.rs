@@ -5,7 +5,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .insert_resource(LocalPathCurvature::default())
-        .add_state(AppState::Playing)
+        .add_state(AppState::Startup)
         .add_startup_system(setup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
@@ -19,6 +19,7 @@ fn main() {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
 enum AppState {
+    Startup,
     Playing,
     Paused,
 }
@@ -47,10 +48,10 @@ fn window_focus(
 	eprintln!("current focus event value: {}", ev.focused);
         if ev.focused && *current != AppState::Playing {
 	    eprintln!("setting to AppState::Playing");
-            app_state.set(AppState::Playing).unwrap();
+            app_state.overwrite_set(AppState::Playing).unwrap();
         } else if ! ev.focused && *current != AppState::Paused {
 	    eprintln!("setting to AppState::Paused");
-            app_state.set(AppState::Paused).unwrap();
+            app_state.overwrite_set(AppState::Paused).unwrap();
         } else {
 	    eprintln!("did nothing to the global app state");
 	}
