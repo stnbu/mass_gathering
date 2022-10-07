@@ -26,6 +26,8 @@ impl Default for LocalPathCurvature {
 }
 
 fn window_focus(mut focus_events: EventReader<bevy::window::WindowFocused>) {
+    assert!(focus_events.len() < 2);
+    // you can't "just have one"? like potato chips?
     for ev in focus_events.iter() {
         eprintln!("Entity {:?} leveled up!", ev);
     }
