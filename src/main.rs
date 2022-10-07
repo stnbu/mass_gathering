@@ -4,6 +4,7 @@ use std::f32::consts::TAU;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .add_state(AppState::Paused)
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_startup_system(setup)
         .insert_resource(LocalPathCurvature::default())
@@ -11,6 +12,12 @@ fn main() {
         .add_system(steer)
         .add_system(window_focus)
         .run();
+}
+
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum AppState {
+    Playing,
+    Paused,
 }
 
 struct LocalPathCurvature {
@@ -25,11 +32,25 @@ impl Default for LocalPathCurvature {
     }
 }
 
-fn window_focus(mut focus_events: EventReader<bevy::window::WindowFocused>) {
+fn window_focus(
+    mut focus_events: EventReader<bevy::window::WindowFocused>,
+    mut app_state: ResMut<State<AppState>>,
+) {
     assert!(focus_events.len() < 2);
     // you can't "just have one"? like potato chips?
     for ev in focus_events.iter() {
-        eprintln!("Entity {:?} leveled up!", ev);
+	let current = app_state.current();
+	eprintln!("current state {:?}", current);
+	eprintln!("current focus event value: {}", ev.focused);
+        if ev.focused && *current != AppState::Playing {
+	    eprintln!("setting to AppState::Playing");
+            app_state.set(AppState::Playing).unwrap();
+        } else if ! ev.focused && *current != AppState::Paused {
+	    eprintln!("setting to AppState::Paused");
+            app_state.set(AppState::Paused).unwrap();
+        } else {
+	    eprintln!("did nothing to the global app state");
+	}
     }
 }
 
