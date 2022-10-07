@@ -39,17 +39,32 @@ impl Default for LocalPathCurvature {
 fn window_focus(
     mut focus_events: EventReader<bevy::window::WindowFocused>,
     mut app_state: ResMut<State<AppState>>,
+    keys: Res<Input<KeyCode>>
 ) {
+    //let current = app_state.current();
+    if *(app_state.current()) == AppState::Startup {
+	let mut space_hat = false;
+	for key in keys.get_pressed() {
+            match key {
+		KeyCode::Space => space_hat = !space_hat,
+		_ => (),
+            }
+	}
+	if space_hat {
+	    eprintln!("setting to AppState::Playing");
+            app_state.overwrite_set(AppState::Playing).unwrap();
+	}
+	return;
+    }
+    
     assert!(focus_events.len() < 2);
     // you can't "just have one"? like potato chips?
     for ev in focus_events.iter() {
-	let current = app_state.current();
-	eprintln!("current state {:?}", current);
 	eprintln!("current focus event value: {}", ev.focused);
-        if ev.focused && *current != AppState::Playing {
+        if ev.focused {
 	    eprintln!("setting to AppState::Playing");
             app_state.overwrite_set(AppState::Playing).unwrap();
-        } else if ! ev.focused && *current != AppState::Paused {
+        } else if ! ev.focused {
 	    eprintln!("setting to AppState::Paused");
             app_state.overwrite_set(AppState::Paused).unwrap();
         } else {
