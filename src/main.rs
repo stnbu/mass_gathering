@@ -41,35 +41,20 @@ fn window_focus(
     mut app_state: ResMut<State<AppState>>,
     keys: Res<Input<KeyCode>>
 ) {
-    //let current = app_state.current();
     if *(app_state.current()) == AppState::Startup {
-	let mut space_hat = false;
 	for key in keys.get_pressed() {
-            match key {
-		KeyCode::Space => space_hat = !space_hat,
-		_ => (),
-            }
-	}
-	if space_hat {
-	    eprintln!("setting to AppState::Playing");
-            app_state.overwrite_set(AppState::Playing).unwrap();
+	    if *key == KeyCode::Space {
+		app_state.overwrite_set(AppState::Playing).unwrap();
+	    }
 	}
 	return;
-    }
-    
-    assert!(focus_events.len() < 2);
-    // you can't "just have one"? like potato chips?
+    }    
     for ev in focus_events.iter() {
-	eprintln!("current focus event value: {}", ev.focused);
         if ev.focused {
-	    eprintln!("setting to AppState::Playing");
             app_state.overwrite_set(AppState::Playing).unwrap();
-        } else if ! ev.focused {
-	    eprintln!("setting to AppState::Paused");
-            app_state.overwrite_set(AppState::Paused).unwrap();
         } else {
-	    eprintln!("did nothing to the global app state");
-	}
+            app_state.overwrite_set(AppState::Paused).unwrap();
+        }
     }
 }
 
