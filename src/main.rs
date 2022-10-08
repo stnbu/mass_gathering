@@ -1,11 +1,10 @@
 use bevy::prelude::*;
-use std::collections::HashSet;
 use std::f32::consts::TAU;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(LocalPathCurvature::default())
+        .insert_resource(Curvature::default())
         .add_state(AppState::Startup)
         .add_startup_system(setup)
         .add_system_set(
@@ -25,33 +24,8 @@ enum AppState {
     Paused,
 }
 
-// 11.864406779661017 chars per sec
 #[derive(Debug, Default)]
-struct LocalPathCurvature(Vec3);
-
-// use std::cmp::Eq;
-// use std::cmp::PartialEq;
-// use std::hash::Hash;
-
-// //#[derive(PartialEq, Eq, Hash)]
-// //#[derive(PartialEq, Eq, Hash)]
-// #[derive(PartialEq, Eq, Hash)]
-// struct KeyTimestamp(KeyCode, f64);
-
-// impl LocalPathCurvature {
-//     fn get_new_average(&mut self, key_event: (KeyCode, f64)) -> f64 {
-//         self.recent_keys.insert(key_event);
-//         0.0
-//     }
-// }
-
-// impl Default for LocalPathCurvature {
-//     fn default() -> Self {
-//         LocalPathCurvature {
-//             curvature: Vec3::ZERO,
-//         }
-//     }
-// }
+struct Curvature(Vec3);
 
 fn window_focus(
     mut focus_events: EventReader<bevy::window::WindowFocused>,
@@ -86,7 +60,7 @@ fn steer(
     keys: Res<Input<KeyCode>>,
     mut query: Query<&mut Transform, With<Camera>>,
     time: Res<Time>,
-    mut curvature: ResMut<LocalPathCurvature>,
+    mut curvature: ResMut<Curvature>,
 ) {
     let gain = 0.1;
     let nudge = TAU / 10000.0;
