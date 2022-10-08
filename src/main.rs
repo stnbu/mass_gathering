@@ -59,7 +59,6 @@ fn rocket_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: R
 fn steer(
     keys: Res<Input<KeyCode>>,
     mut query: Query<&mut Transform, With<Camera>>,
-    time: Res<Time>,
     mut curvature: ResMut<Curvature>,
 ) {
     let gain = 0.1;
@@ -83,12 +82,12 @@ fn steer(
             KeyCode::Up => {
                 up -= nudge * (curvature.0.y + 1.0);
                 had_input = true;
-                curvature.0.x += gain;
+                curvature.0.y += gain;
             }
             KeyCode::Down => {
                 up += nudge * (curvature.0.y + 1.0);
                 had_input = true;
-                curvature.0.x += gain;
+                curvature.0.y += gain;
             }
             _ => (),
         }
