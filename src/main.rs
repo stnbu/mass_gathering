@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use std::collections::HashSet;
 use std::f32::consts::TAU;
 
 fn main() {
@@ -9,8 +10,8 @@ fn main() {
         .add_startup_system(setup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-		.with_system(rocket_forward)
-		.with_system(steer)
+                .with_system(rocket_forward)
+                .with_system(steer),
         )
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_system(window_focus)
@@ -25,33 +26,45 @@ enum AppState {
 }
 
 // 11.864406779661017 chars per sec
-#[derive(Debug)]
-struct LocalPathCurvature {
-    curvature: Vec3,
-    pub recent_keys: Vec<(KeyCode, f64)>,
-}
+#[derive(Debug, Default)]
+struct LocalPathCurvature(Vec3);
 
-impl Default for LocalPathCurvature {
-    fn default() -> Self {
-        LocalPathCurvature {
-            curvature: Vec3::ZERO,
-	    recent_keys: Vec::new(),
-        }
-    }
-}
+// use std::cmp::Eq;
+// use std::cmp::PartialEq;
+// use std::hash::Hash;
+
+// //#[derive(PartialEq, Eq, Hash)]
+// //#[derive(PartialEq, Eq, Hash)]
+// #[derive(PartialEq, Eq, Hash)]
+// struct KeyTimestamp(KeyCode, f64);
+
+// impl LocalPathCurvature {
+//     fn get_new_average(&mut self, key_event: (KeyCode, f64)) -> f64 {
+//         self.recent_keys.insert(key_event);
+//         0.0
+//     }
+// }
+
+// impl Default for LocalPathCurvature {
+//     fn default() -> Self {
+//         LocalPathCurvature {
+//             curvature: Vec3::ZERO,
+//         }
+//     }
+// }
 
 fn window_focus(
     mut focus_events: EventReader<bevy::window::WindowFocused>,
     mut app_state: ResMut<State<AppState>>,
-    keys: Res<Input<KeyCode>>
+    keys: Res<Input<KeyCode>>,
 ) {
     if *(app_state.current()) == AppState::Startup {
-	for key in keys.get_pressed() {
-	    if *key == KeyCode::Space {
-		app_state.overwrite_set(AppState::Playing).unwrap();
-	    }
-	}
-	return;
+        for key in keys.get_pressed() {
+            if *key == KeyCode::Space {
+                app_state.overwrite_set(AppState::Playing).unwrap();
+            }
+        }
+        return;
     }
     for ev in focus_events.iter() {
         if ev.focused {
@@ -75,33 +88,60 @@ fn steer(
     time: Res<Time>,
     mut curvature: ResMut<LocalPathCurvature>,
 ) {
+    let gain = 0.1;
     let nudge = TAU / 10000.0;
-    let mut roll = 0.0;
+    let mut left = 0.0;
     let mut up = 0.0;
+    let mut had_input = false;
     for key in keys.get_pressed() {
-	let now = time.seconds_since_startup();
+        //let now = time.seconds_since_startup();
         match key {
             KeyCode::Left => {
-		roll += nudge;
-		curvature.recent_keys.push((*key, now));
-	    },
-            KeyCode::Right => roll -= nudge,
-            KeyCode::Up => up -= nudge,
+                left += nudge * (curvature.0.x + 1.0);
+                had_input = true;
+                curvature.0.x += gain;
+            }
+            KeyCode::Right => {
+                left -= nudge * (curvature.0.x + 1.0);
+                had_input = true;
+                curvature.0.x += gain;
+            }
+            KeyCode::Up => {
+                up -= nudge * (curvature.0.y + 1.0);
+                had_input = true;
+                curvature.0.x += gain;
+            }
             KeyCode::Down => {
-		eprintln!("{:?}", curvature);
-		up += nudge;},
+                up += nudge * (curvature.0.y + 1.0);
+                had_input = true;
+                curvature.0.x += gain;
+            }
             _ => (),
         }
     }
+    if !had_input {
+        if curvature.0.x > 0.0 {
+            curvature.0.x -= gain;
+            if curvature.0.x < 0.0 {
+                curvature.0.x = 0.0;
+            }
+        }
+        if curvature.0.y > 0.0 {
+            curvature.0.y -= gain;
+            if curvature.0.y < 0.0 {
+                curvature.0.y = 0.0;
+            }
+        }
+    }
     let mut transform = query.single_mut();
-    if roll != 0.0 || up != 0.0 {
+    if left != 0.0 || up != 0.0 {
         let local_x = transform.local_x();
         let local_y = transform.local_y();
         let local_z = transform.local_z();
         // Oh, I bet I need some math here.
         transform.rotate(Quat::from_axis_angle(local_x, up));
-        transform.rotate(Quat::from_axis_angle(local_z, roll));
-        transform.rotate(Quat::from_axis_angle(local_y, roll));
+        transform.rotate(Quat::from_axis_angle(local_z, left));
+        transform.rotate(Quat::from_axis_angle(local_y, left));
     }
 }
 
