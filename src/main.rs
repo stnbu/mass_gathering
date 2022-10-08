@@ -24,14 +24,18 @@ enum AppState {
     Paused,
 }
 
+// 11.864406779661017 chars per sec
+#[derive(Debug)]
 struct LocalPathCurvature {
     curvature: Vec3,
+    pub recent_keys: Vec<(KeyCode, f64)>,
 }
 
 impl Default for LocalPathCurvature {
     fn default() -> Self {
         LocalPathCurvature {
             curvature: Vec3::ZERO,
+	    recent_keys: Vec::new(),
         }
     }
 }
@@ -69,24 +73,30 @@ fn steer(
     keys: Res<Input<KeyCode>>,
     mut query: Query<&mut Transform, With<Camera>>,
     time: Res<Time>,
+    mut curvature: ResMut<LocalPathCurvature>,
 ) {
     let nudge = TAU / 10000.0;
     let mut roll = 0.0;
     let mut up = 0.0;
     for key in keys.get_pressed() {
+	let now = time.seconds_since_startup();
         match key {
-            KeyCode::Left => roll += nudge,
+            KeyCode::Left => {
+		roll += nudge;
+		curvature.recent_keys.push((*key, now));
+	    },
             KeyCode::Right => roll -= nudge,
             KeyCode::Up => up -= nudge,
-            KeyCode::Down => up += nudge,
+            KeyCode::Down => {
+		eprintln!("{:?}", curvature);
+		up += nudge;},
             _ => (),
         }
     }
     let mut transform = query.single_mut();
     if roll != 0.0 || up != 0.0 {
-        println!("elapsed: {}", time.delta().as_secs());
         let local_x = transform.local_x();
-        let local_y = transform.local_x();
+        let local_y = transform.local_y();
         let local_z = transform.local_z();
         // Oh, I bet I need some math here.
         transform.rotate(Quat::from_axis_angle(local_x, up));
