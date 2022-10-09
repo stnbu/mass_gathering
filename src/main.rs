@@ -63,32 +63,42 @@ fn steer(
 ) {
     let gain = 0.1;
     let nudge = TAU / 10000.0;
-    let mut left = 0.0;
-    let mut up = 0.0;
+    let mut roll = 0.0;
+    let mut pitch = 0.0;
     let mut had_input = false;
     for key in keys.get_pressed() {
         //let now = time.seconds_since_startup();
         match key {
             KeyCode::Left => {
-                left += nudge * (curvature.0.x + 1.0);
+                roll += nudge * (curvature.0.z + 1.0);
                 had_input = true;
-                curvature.0.x += gain;
+                curvature.0.z += gain;
             }
             KeyCode::Right => {
-                left -= nudge * (curvature.0.x + 1.0);
+                roll -= nudge * (curvature.0.z + 1.0);
                 had_input = true;
-                curvature.0.x += gain;
+                curvature.0.z += gain;
             }
             KeyCode::Up => {
-                up -= nudge * (curvature.0.y + 1.0);
+                pitch -= nudge * (curvature.0.y + 1.0);
                 had_input = true;
                 curvature.0.y += gain;
             }
             KeyCode::Down => {
-                up += nudge * (curvature.0.y + 1.0);
+                pitch += nudge * (curvature.0.y + 1.0);
                 had_input = true;
                 curvature.0.y += gain;
             }
+            // KeyCode::Z => {
+            //     pitch -= nudge * (curvature.0.y + 1.0);
+            //     had_input = true;
+            //     curvature.0.y += gain;
+            // }
+            // KeyCode::X => {
+            //     pitch += nudge * (curvature.0.y + 1.0);
+            //     had_input = true;
+            //     curvature.0.y += gain;
+            // }
             _ => (),
         }
     }
@@ -107,14 +117,14 @@ fn steer(
         }
     }
     let mut transform = query.single_mut();
-    if left != 0.0 || up != 0.0 {
+    if roll != 0.0 || pitch != 0.0 {
         let local_x = transform.local_x();
         let local_y = transform.local_y();
         let local_z = transform.local_z();
         // Oh, I bet I need some math here.
-        transform.rotate(Quat::from_axis_angle(local_x, up));
-        transform.rotate(Quat::from_axis_angle(local_z, left));
-        transform.rotate(Quat::from_axis_angle(local_y, left));
+        transform.rotate(Quat::from_axis_angle(local_x, pitch));
+        transform.rotate(Quat::from_axis_angle(local_z, roll));
+        //transform.rotate(Quat::from_axis_angle(local_y, roll));
     }
 }
 
