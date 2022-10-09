@@ -163,22 +163,24 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    //let mut coordinates = Vec::new();
-    for x in 0..20 {
-        for y in 0..20 {
-            for z in 0..20 {
-                let x = x as f32 - 10.0;
-                let y = y as f32 - 10.0;
-                let z = z as f32 - 10.0;
-                //coordinates.push(Vec3::new(x, y, z));
-                commands.spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-                    material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-                    transform: Transform::from_xyz(x, y, z + 100.0),
-                    ..Default::default()
-                });
+    let mut coordinates = Vec::new();
+    for x in 0..10 {
+        for y in 0..10 {
+            for z in 0..10 {
+                let x = x as f32 - 5.0;
+                let y = y as f32 - 5.0;
+                let z = z as f32 - 5.0;
+                coordinates.push(Vec3::new(x * 2.0, y * 2.0, z * 2.0));
             }
         }
+    }
+    for possition in coordinates {
+        commands.spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+            transform: Transform::from_translation(possition),
+            ..Default::default()
+        });
     }
     for n in 0..10 {
         let mut side = 1.0;
