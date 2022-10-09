@@ -13,7 +13,7 @@ fn main() {
                 .with_system(steer),
         )
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
-        .add_system(window_focus)
+        .add_system(handle_game_state)
         .run();
 }
 
@@ -27,29 +27,47 @@ enum AppState {
 #[derive(Debug, Default)]
 struct Curvature(Vec3);
 
-fn window_focus(
+fn toggle_pause(current: &AppState) -> Option<AppState> {
+    match current {
+        AppState::Paused => Some(AppState::Playing),
+        AppState::Playing => Some(AppState::Paused),
+        _ => None,
+    }
+}
+
+fn handle_game_state(
     mut focus_events: EventReader<bevy::window::WindowFocused>,
     mut app_state: ResMut<State<AppState>>,
     keys: Res<Input<KeyCode>>,
     mouse_buttons: Res<Input<MouseButton>>,
 ) {
-    if *(app_state.current()) == AppState::Startup {
-        for key in keys.get_pressed() {
-            if *key == KeyCode::Space {
-                app_state.overwrite_set(AppState::Playing).unwrap();
-            }
+    let mut poked = false; // space bar hit or window left-clicked
+    for key in keys.get_just_pressed() {
+        if *key == KeyCode::Space {
+            poked = true; // !poked;
         }
-        if mouse_buttons.pressed(MouseButton::Left) {
-            app_state.overwrite_set(AppState::Playing).unwrap();
-        }
+    }
+    if mouse_buttons.any_just_pressed([MouseButton::Left, MouseButton::Right]) {
+        poked = true; // !poked;
+    }
+
+    if !poked {
         return;
     }
-    for ev in focus_events.iter() {
-        if ev.focused {
-            app_state.overwrite_set(AppState::Playing).unwrap();
-        } else {
-            app_state.overwrite_set(AppState::Paused).unwrap();
+
+    if *(app_state.current()) == AppState::Startup {
+        app_state.overwrite_set(AppState::Playing).unwrap();
+    } else {
+        if let Some(new_state) = toggle_pause(app_state.current()) {
+            app_state.overwrite_set(new_state).unwrap();
         }
+        // for ev in focus_events.iter() {
+        //     if ev.focused {
+        //         app_state.overwrite_set(AppState::Playing).unwrap();
+        //     } else {
+        //         app_state.overwrite_set(AppState::Paused).unwrap();
+        //     }
+        // }
     }
 }
 
