@@ -31,12 +31,16 @@ fn window_focus(
     mut focus_events: EventReader<bevy::window::WindowFocused>,
     mut app_state: ResMut<State<AppState>>,
     keys: Res<Input<KeyCode>>,
+    mouse_buttons: Res<Input<MouseButton>>,
 ) {
     if *(app_state.current()) == AppState::Startup {
         for key in keys.get_pressed() {
             if *key == KeyCode::Space {
                 app_state.overwrite_set(AppState::Playing).unwrap();
             }
+        }
+        if mouse_buttons.pressed(MouseButton::Left) {
+            app_state.overwrite_set(AppState::Playing).unwrap();
         }
         return;
     }
@@ -90,12 +94,12 @@ fn steer(
                 curvature.0.x += gain;
             }
             KeyCode::Z => {
-                yaw -= nudge * (curvature.0.y + 1.0);
+                yaw += nudge * (curvature.0.y + 1.0);
                 had_input = true;
                 curvature.0.y += gain;
             }
             KeyCode::X => {
-                yaw += nudge * (curvature.0.y + 1.0);
+                yaw -= nudge * (curvature.0.y + 1.0);
                 had_input = true;
                 curvature.0.y += gain;
             }
