@@ -155,32 +155,34 @@ fn steer(
     }
 }
 
-//use rand::Rng;
-//let mut rng = rand::thread_rng();
+use rand::Rng;
 
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let mut coordinates = Vec::new();
+    let mut rng = rand::thread_rng();
+    //let ran = || rng.gen::<f32>();
     for x in 0..10 {
         for y in 0..10 {
             for z in 0..10 {
-                let x = x as f32 - 5.0;
-                let y = y as f32 - 5.0;
-                let z = z as f32 - 5.0;
-                coordinates.push(Vec3::new(x * 4.0, y * 4.0, z * 4.0));
+                let x = (x * 4) as f32 - 5.0 + rng.gen::<f32>();
+                let y = (y * 4) as f32 - 5.0 + rng.gen::<f32>();
+                let z = (z * 4) as f32 - 5.0 + rng.gen::<f32>();
+                let r = rng.gen::<f32>();
+                let g = rng.gen::<f32>();
+                let b = rng.gen::<f32>();
+                commands.spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Cube {
+                        size: rng.gen::<f32>() + 0.5,
+                    })),
+                    material: materials.add(Color::rgb(r, g, b).into()),
+                    transform: Transform::from_xyz(x, y, z),
+                    ..Default::default()
+                });
             }
         }
-    }
-    for possition in coordinates {
-        commands.spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.8 })),
-            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-            transform: Transform::from_translation(possition),
-            ..Default::default()
-        });
     }
     for n in 0..10 {
         let mut side = 1.0;
