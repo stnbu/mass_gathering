@@ -59,14 +59,13 @@ fn handle_game_state(
                 app_state.overwrite_set(AppState::Paused).unwrap();
             }
         }
-        return;
-    }
-
-    if *(app_state.current()) == AppState::Startup {
-        app_state.overwrite_set(AppState::Playing).unwrap();
     } else {
-        if let Some(new_state) = toggle_pause(app_state.current()) {
-            app_state.overwrite_set(new_state).unwrap();
+        if *(app_state.current()) == AppState::Startup {
+            app_state.overwrite_set(AppState::Playing).unwrap();
+        } else {
+            if let Some(new_state) = toggle_pause(app_state.current()) {
+                app_state.overwrite_set(new_state).unwrap();
+            }
         }
     }
 }
