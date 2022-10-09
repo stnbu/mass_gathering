@@ -44,14 +44,21 @@ fn handle_game_state(
     let mut poked = false; // space bar hit or window left-clicked
     for key in keys.get_just_pressed() {
         if *key == KeyCode::Space {
-            poked = true; // !poked;
+            poked = !poked;
         }
     }
     if mouse_buttons.any_just_pressed([MouseButton::Left, MouseButton::Right]) {
-        poked = true; // !poked;
+        poked = !poked;
     }
 
     if !poked {
+        for ev in focus_events.iter() {
+            if ev.focused {
+                app_state.overwrite_set(AppState::Playing).unwrap();
+            } else {
+                app_state.overwrite_set(AppState::Paused).unwrap();
+            }
+        }
         return;
     }
 
@@ -61,13 +68,6 @@ fn handle_game_state(
         if let Some(new_state) = toggle_pause(app_state.current()) {
             app_state.overwrite_set(new_state).unwrap();
         }
-        // for ev in focus_events.iter() {
-        //     if ev.focused {
-        //         app_state.overwrite_set(AppState::Playing).unwrap();
-        //     } else {
-        //         app_state.overwrite_set(AppState::Paused).unwrap();
-        //     }
-        // }
     }
 }
 
