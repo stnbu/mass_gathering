@@ -61,13 +61,13 @@ fn steer(
     mut query: Query<&mut Transform, With<Camera>>,
     mut curvature: ResMut<Curvature>,
 ) {
-    let gain = 0.1;
+    let gain = 0.2;
     let nudge = TAU / 10000.0;
     let mut roll = 0.0;
     let mut pitch = 0.0;
+    let mut yaw = 0.0;
     let mut had_input = false;
     for key in keys.get_pressed() {
-        //let now = time.seconds_since_startup();
         match key {
             KeyCode::Left => {
                 roll += nudge * (curvature.0.z + 1.0);
@@ -80,25 +80,25 @@ fn steer(
                 curvature.0.z += gain;
             }
             KeyCode::Up => {
-                pitch -= nudge * (curvature.0.y + 1.0);
+                pitch -= nudge * (curvature.0.x + 1.0);
                 had_input = true;
-                curvature.0.y += gain;
+                curvature.0.x += gain;
             }
             KeyCode::Down => {
-                pitch += nudge * (curvature.0.y + 1.0);
+                pitch += nudge * (curvature.0.x + 1.0);
+                had_input = true;
+                curvature.0.x += gain;
+            }
+            KeyCode::Z => {
+                yaw -= nudge * (curvature.0.y + 1.0);
                 had_input = true;
                 curvature.0.y += gain;
             }
-            // KeyCode::Z => {
-            //     pitch -= nudge * (curvature.0.y + 1.0);
-            //     had_input = true;
-            //     curvature.0.y += gain;
-            // }
-            // KeyCode::X => {
-            //     pitch += nudge * (curvature.0.y + 1.0);
-            //     had_input = true;
-            //     curvature.0.y += gain;
-            // }
+            KeyCode::X => {
+                yaw += nudge * (curvature.0.y + 1.0);
+                had_input = true;
+                curvature.0.y += gain;
+            }
             _ => (),
         }
     }
@@ -115,16 +115,22 @@ fn steer(
                 curvature.0.y = 0.0;
             }
         }
+        if curvature.0.z > 0.0 {
+            curvature.0.z -= gain;
+            if curvature.0.z < 0.0 {
+                curvature.0.z = 0.0;
+            }
+        }
     }
     let mut transform = query.single_mut();
-    if roll != 0.0 || pitch != 0.0 {
+    if roll != 0.0 || pitch != 0.0 || yaw != 0.0 {
         let local_x = transform.local_x();
         let local_y = transform.local_y();
         let local_z = transform.local_z();
         // Oh, I bet I need some math here.
         transform.rotate(Quat::from_axis_angle(local_x, pitch));
         transform.rotate(Quat::from_axis_angle(local_z, roll));
-        //transform.rotate(Quat::from_axis_angle(local_y, roll));
+        transform.rotate(Quat::from_axis_angle(local_y, yaw));
     }
 }
 
