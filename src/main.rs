@@ -170,13 +170,13 @@ fn setup(
                 let x = x as f32 - 5.0;
                 let y = y as f32 - 5.0;
                 let z = z as f32 - 5.0;
-                coordinates.push(Vec3::new(x * 2.0, y * 2.0, z * 2.0));
+                coordinates.push(Vec3::new(x * 4.0, y * 4.0, z * 4.0));
             }
         }
     }
     for possition in coordinates {
         commands.spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
+            mesh: meshes.add(Mesh::from(shape::Cube { size: 0.8 })),
             material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
             transform: Transform::from_translation(possition),
             ..Default::default()
