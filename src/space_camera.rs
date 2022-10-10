@@ -12,13 +12,13 @@ impl Plugin for SpaceCamera {
 }
 
 pub struct CameraConfig {
-    pub start_position: Vec3,
+    pub transform: Transform,
 }
 
 impl Default for CameraConfig {
     fn default() -> Self {
         Self {
-            start_position: Vec3::ZERO,
+            transform: Transform::default(),
         }
     }
 }
@@ -28,8 +28,7 @@ pub struct Curvature(Vec3);
 
 fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_translation(config.start_position)
-            .looking_at(Vec3::new(1.0, 1.0, 1.0), Vec3::Y),
+        transform: config.transform,
         ..Default::default()
     });
 }

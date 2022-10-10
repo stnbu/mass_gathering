@@ -13,7 +13,8 @@ fn main() {
                 .with_system(space_camera::steer),
         )
         .insert_resource(space_camera::CameraConfig {
-            start_position: Vec3::new(100.0, 100.0, 100.0),
+            transform: Transform::from_translation(Vec3::new(40.0, 40.0, 40.0))
+                .looking_at(Vec3::new(1.0, 1.0, 1.0), Vec3::Y),
         })
         .add_plugin(space_camera::SpaceCamera)
         .add_startup_system(setup)
