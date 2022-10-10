@@ -12,6 +12,9 @@ fn main() {
                 .with_system(space_camera::move_forward)
                 .with_system(space_camera::steer),
         )
+        .insert_resource(space_camera::CameraConfig {
+            start_position: Vec3::new(100.0, 100.0, 100.0),
+        })
         .add_plugin(space_camera::SpaceCamera)
         .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
