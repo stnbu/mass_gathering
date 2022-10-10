@@ -5,7 +5,7 @@ pub struct SpaceCamera;
 
 impl Plugin for SpaceCamera {
     fn build(&self, app: &mut App) {
-        app.insert_resource(CameraConfig::default())
+        app.init_resource::<CameraConfig>()
             .insert_resource(Curvature::default())
             .add_startup_system(spawn_camera);
     }
