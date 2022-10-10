@@ -6,14 +6,14 @@ mod space_camera;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(space_camera::SpaceCamera)
         .add_state(AppState::Startup)
-        .add_startup_system(setup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(space_camera::move_forward)
                 .with_system(space_camera::steer),
         )
+        .add_plugin(space_camera::SpaceCamera)
+        .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_system(handle_game_state)
         .run();

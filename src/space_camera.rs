@@ -3,19 +3,32 @@ use std::f32::consts::TAU;
 
 pub struct SpaceCamera;
 
-#[derive(Debug, Default)]
-pub struct Curvature(Vec3);
-
 impl Plugin for SpaceCamera {
     fn build(&self, app: &mut App) {
-        app.insert_resource(Curvature::default())
+        app.insert_resource(CameraConfig::default())
+            .insert_resource(Curvature::default())
             .add_startup_system(spawn_camera);
     }
 }
 
-fn spawn_camera(mut commands: Commands) {
+pub struct CameraConfig {
+    pub start_position: Vec3,
+}
+
+impl Default for CameraConfig {
+    fn default() -> Self {
+        Self {
+            start_position: Vec3::ZERO,
+        }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct Curvature(Vec3);
+
+fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(Vec3::new(0.0, 0.0, 1.0), Vec3::Y),
+        transform: Transform::from_xyz(0.0, 0.0, -1.0).looking_at(config.start_position, Vec3::Y), // wrong
         ..Default::default()
     });
 }
