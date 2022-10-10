@@ -1,17 +1,15 @@
 use bevy::prelude::*;
 use std::f32::consts::TAU;
 
-struct SpaceCamera;
+pub struct SpaceCamera;
 
 #[derive(Debug, Default)]
-struct Curvature(Vec3);
+pub struct Curvature(Vec3);
 
 impl Plugin for SpaceCamera {
     fn build(&self, app: &mut App) {
         app.insert_resource(Curvature::default())
-            .add_startup_system(spawn_camera)
-            .add_system(move_forward)
-            .add_system(steer)
+            .add_startup_system(spawn_camera);
     }
 }
 
@@ -22,13 +20,13 @@ fn spawn_camera(mut commands: Commands) {
     });
 }
 
-fn move_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
+pub fn move_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
     let mut transform = camera_query.single_mut();
     let direction = transform.local_z();
     transform.translation -= direction * time.delta_seconds();
 }
 
-fn steer(
+pub fn steer(
     keys: Res<Input<KeyCode>>,
     mut query: Query<&mut Transform, With<Camera>>,
     mut curvature: ResMut<Curvature>,

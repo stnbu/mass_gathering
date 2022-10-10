@@ -1,16 +1,18 @@
 use bevy::prelude::*;
-use std::f32::consts::TAU;
+use rand::Rng;
+
+mod space_camera;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(Curvature::default())
+        .add_plugin(space_camera::SpaceCamera)
         .add_state(AppState::Startup)
         .add_startup_system(setup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(rocket_forward)
-                .with_system(steer),
+                .with_system(space_camera::move_forward)
+                .with_system(space_camera::steer),
         )
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_system(handle_game_state)
@@ -23,9 +25,6 @@ enum AppState {
     Playing,
     Paused,
 }
-
-#[derive(Debug, Default)]
-struct Curvature(Vec3);
 
 fn toggle_pause(current: &AppState) -> Option<AppState> {
     match current {
@@ -70,93 +69,6 @@ fn handle_game_state(
     }
 }
 
-fn rocket_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
-    //time.delta();
-    let mut transform = camera_query.single_mut();
-    let direction = transform.local_z();
-    transform.translation -= direction * time.delta_seconds();
-}
-
-fn steer(
-    keys: Res<Input<KeyCode>>,
-    mut query: Query<&mut Transform, With<Camera>>,
-    mut curvature: ResMut<Curvature>,
-) {
-    let gain = 0.2;
-    let nudge = TAU / 10000.0;
-    let mut roll = 0.0;
-    let mut pitch = 0.0;
-    let mut yaw = 0.0;
-    let mut had_input = false;
-    for key in keys.get_pressed() {
-        match key {
-            KeyCode::Left => {
-                roll += nudge * (curvature.0.z + 1.0);
-                had_input = true;
-                curvature.0.z += gain;
-            }
-            KeyCode::Right => {
-                roll -= nudge * (curvature.0.z + 1.0);
-                had_input = true;
-                curvature.0.z += gain;
-            }
-            KeyCode::Up => {
-                pitch -= nudge * (curvature.0.x + 1.0);
-                had_input = true;
-                curvature.0.x += gain;
-            }
-            KeyCode::Down => {
-                pitch += nudge * (curvature.0.x + 1.0);
-                had_input = true;
-                curvature.0.x += gain;
-            }
-            KeyCode::Z => {
-                yaw += nudge * (curvature.0.y + 1.0);
-                had_input = true;
-                curvature.0.y += gain;
-            }
-            KeyCode::X => {
-                yaw -= nudge * (curvature.0.y + 1.0);
-                had_input = true;
-                curvature.0.y += gain;
-            }
-            _ => (),
-        }
-    }
-    if !had_input {
-        if curvature.0.x > 0.0 {
-            curvature.0.x -= gain;
-            if curvature.0.x < 0.0 {
-                curvature.0.x = 0.0;
-            }
-        }
-        if curvature.0.y > 0.0 {
-            curvature.0.y -= gain;
-            if curvature.0.y < 0.0 {
-                curvature.0.y = 0.0;
-            }
-        }
-        if curvature.0.z > 0.0 {
-            curvature.0.z -= gain;
-            if curvature.0.z < 0.0 {
-                curvature.0.z = 0.0;
-            }
-        }
-    }
-    let mut transform = query.single_mut();
-    if roll != 0.0 || pitch != 0.0 || yaw != 0.0 {
-        let local_x = transform.local_x();
-        let local_y = transform.local_y();
-        let local_z = transform.local_z();
-        // Oh, I bet I need some math here.
-        transform.rotate(Quat::from_axis_angle(local_x, pitch));
-        transform.rotate(Quat::from_axis_angle(local_z, roll));
-        transform.rotate(Quat::from_axis_angle(local_y, yaw));
-    }
-}
-
-use rand::Rng;
-
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -186,14 +98,6 @@ fn setup(
     }
     commands.spawn_bundle(PointLightBundle {
         transform: Transform::from_xyz(30.0, 30.0, 30.0),
-        ..Default::default()
-    });
-
-    commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(
-            Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>()),
-            Vec3::Y,
-        ),
         ..Default::default()
     });
 }
