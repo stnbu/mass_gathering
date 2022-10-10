@@ -80,12 +80,12 @@ fn setup(
 ) {
     let mut rng = rand::thread_rng();
     //let ran = || rng.gen::<f32>();
-    for x in 0..10 {
-        for y in 0..10 {
-            for z in 0..10 {
-                let x = (x * 4) as f32 - 5.0 + rng.gen::<f32>();
-                let y = (y * 4) as f32 - 5.0 + rng.gen::<f32>();
-                let z = (z * 4) as f32 - 5.0 + rng.gen::<f32>();
+    for x in 0..4 {
+        for y in 0..4 {
+            for z in 0..4 {
+                let x = (x * 4) as f32 - 2.0 + rng.gen::<f32>();
+                let y = (y * 4) as f32 - 2.0 + rng.gen::<f32>();
+                let z = (z * 4) as f32 - 2.0 + rng.gen::<f32>();
                 let r = rng.gen::<f32>();
                 let g = rng.gen::<f32>();
                 let b = rng.gen::<f32>();
@@ -103,10 +103,10 @@ fn setup(
     }
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
-            intensity: 800.0 * 2000.0, // intensity ignored..?
+            intensity: 800.0 * 20.0, // intensity ignored..?
             ..Default::default()
         },
-        transform: Transform::from_xyz(75.0, 70.0, 85.0),
+        transform: Transform::from_xyz(12.0, 22.0, 31.0),
         ..Default::default()
     });
 }
