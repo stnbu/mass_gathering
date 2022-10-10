@@ -90,8 +90,9 @@ fn setup(
                 let g = rng.gen::<f32>();
                 let b = rng.gen::<f32>();
                 commands.spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Cube {
-                        size: rng.gen::<f32>() + 0.5,
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: rng.gen::<f32>() + 0.5,
+                        ..Default::default()
                     })),
                     material: materials.add(Color::rgb(r, g, b).into()),
                     transform: Transform::from_xyz(x, y, z),
