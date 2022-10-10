@@ -13,7 +13,7 @@ fn main() {
                 .with_system(space_camera::steer),
         )
         .insert_resource(space_camera::CameraConfig {
-            transform: Transform::from_translation(Vec3::new(40.0, 40.0, 40.0))
+            transform: Transform::from_translation(Vec3::new(20.0, 30.0, -12.0))
                 .looking_at(Vec3::new(1.0, 1.0, 1.0), Vec3::Y),
         })
         .add_plugin(space_camera::SpaceCamera)
@@ -103,10 +103,10 @@ fn setup(
     }
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
-            intensity: 800.0 * 20.0, // intensity ignored..?
+            intensity: 800.0 * 2000.0, // intensity ignored..?
             ..Default::default()
         },
-        transform: Transform::from_xyz(12.0, 22.0, 31.0),
+        transform: Transform::from_xyz(120.0, 220.0, 310.0),
         ..Default::default()
     });
 }
