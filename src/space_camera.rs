@@ -36,7 +36,7 @@ fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
 pub fn move_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
     let mut transform = camera_query.single_mut();
     let direction = transform.local_z();
-    transform.translation -= direction * time.delta_seconds();
+    transform.translation -= direction * time.delta_seconds() * 4.0;
 }
 
 pub fn steer(

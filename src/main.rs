@@ -91,7 +91,7 @@ fn setup(
                 let b = rng.gen::<f32>();
                 commands.spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: rng.gen::<f32>() + 0.5,
+                        radius: rng.gen::<f32>() + 0.2,
                         ..Default::default()
                     })),
                     material: materials.add(Color::rgb(r, g, b).into()),
@@ -102,7 +102,11 @@ fn setup(
         }
     }
     commands.spawn_bundle(PointLightBundle {
-        transform: Transform::from_xyz(30.0, 30.0, 30.0),
+        point_light: PointLight {
+            intensity: 800.0 * 2000.0, // intensity ignored..?
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(75.0, 70.0, 85.0),
         ..Default::default()
     });
 }
