@@ -184,26 +184,16 @@ fn setup(
             }
         }
     }
-    for n in 0..10 {
-        let mut side = 1.0;
-        if n % 2 == 0 {
-            side = -1.0;
-        }
-        let step = 2.0 * n as f32;
-        commands.spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Cube { size: 1.0 })),
-            material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
-            transform: Transform::from_xyz(2.0 * side, 0.5, step),
-            ..Default::default()
-        });
-    }
     commands.spawn_bundle(PointLightBundle {
-        transform: Transform::from_xyz(4.0, 8.0, 4.0),
+        transform: Transform::from_xyz(30.0, 30.0, 30.0),
         ..Default::default()
     });
+
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.5, -1.0)
-            .looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
+        transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(
+            Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>()),
+            Vec3::Y,
+        ),
         ..Default::default()
     });
 }
