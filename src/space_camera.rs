@@ -28,7 +28,8 @@ pub struct Curvature(Vec3);
 
 fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(0.0, 0.0, -1.0).looking_at(config.start_position, Vec3::Y), // wrong
+        transform: Transform::from_translation(config.start_position)
+            .looking_at(Vec3::new(1.0, 1.0, 1.0), Vec3::Y),
         ..Default::default()
     });
 }
