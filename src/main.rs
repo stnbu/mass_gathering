@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use heron::Velocity;
 use rand::Rng;
 
 mod bodies;
@@ -90,9 +91,10 @@ fn setup(
                 let r = rng.gen::<f32>();
                 let g = rng.gen::<f32>();
                 let b = rng.gen::<f32>();
+                //Velocity::from_linear(Vec3::new(0.1, 0.3, 0.4));
                 commands.spawn_bundle(bodies::BodyBundle::new(
                     Vec3::new(x, y, z),
-                    Vec3::new(z, x, y),
+                    Velocity::from_linear(Vec3::new(z, x, y)),
                     bodies::PointMass(rng.gen::<f32>() * 12.0 + 12.0),
                     Color::rgb(r, g, b),
                     meshes,
