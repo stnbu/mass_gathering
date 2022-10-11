@@ -1,6 +1,5 @@
 use bevy::prelude::*;
-use heron::Velocity;
-use heron::{PhysicsSteps, PhysicsTime};
+use heron::{PhysicsSteps, PhysicsTime, Velocity};
 use rand::Rng;
 
 mod bodies;
