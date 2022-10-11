@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use heron::{PhysicsSteps, PhysicsTime, Velocity};
+use heron::{PhysicsPlugin, PhysicsSteps, Velocity};
 use rand::Rng;
 
 mod bodies;
@@ -9,6 +9,10 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_state(AppState::Startup)
+        .add_plugin(PhysicsPlugin::default())
+        //.insert_resource(PhysicsTime::new(1.0))
+        .insert_resource(PhysicsSteps::from_steps_per_seconds(60.0))
+        .add_plugin(bodies::ParticularPlugin)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(space_camera::move_forward)
@@ -19,9 +23,6 @@ fn main() {
                 .looking_at(Vec3::new(1.0, 1.0, 1.0), Vec3::Y),
         })
         .add_plugin(space_camera::SpaceCamera)
-        .insert_resource(PhysicsTime::new(1.0))
-        .insert_resource(PhysicsSteps::from_steps_per_seconds(60.0))
-        .add_plugin(bodies::ParticularPlugin)
         .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_system(handle_game_state)
