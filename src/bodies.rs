@@ -52,7 +52,6 @@ fn sync_particle_set(
     mut particle_set: ResMut<ParticleSet<Body>>,
     query: Query<(Entity, &GlobalTransform, &PointMass)>,
 ) {
-    eprint!("s");
     *particle_set = ParticleSet::new();
     query.for_each(|(entity, tranform, mass)| {
         let position = tranform.translation().xyz();
@@ -64,7 +63,6 @@ fn accelerate_particles(
     mut particle_set: ResMut<ParticleSet<Body>>,
     mut query: Query<&mut Acceleration, With<PointMass>>,
 ) {
-    eprint!("a");
     for (body, gravity) in particle_set.result() {
         if let Ok(mut acceleration) = query.get_mut(body.entity) {
             acceleration.linear = gravity;

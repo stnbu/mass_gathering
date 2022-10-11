@@ -10,12 +10,11 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_state(AppState::Startup)
         .add_plugin(PhysicsPlugin::default())
-        //.insert_resource(PhysicsTime::new(1.0))
         .insert_resource(PhysicsSteps::from_steps_per_seconds(60.0))
         .add_plugin(bodies::ParticularPlugin)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(space_camera::move_forward)
+                //.with_system(space_camera::move_forward)
                 .with_system(space_camera::steer),
         )
         .insert_resource(space_camera::CameraConfig {
