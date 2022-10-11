@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use rand::Rng;
 
+mod bodies;
 mod space_camera;
 
 fn main() {
