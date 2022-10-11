@@ -95,8 +95,8 @@ fn setup(
                     Velocity::from_linear(Vec3::new(z, x, y)),
                     bodies::PointMass(rng.gen::<f32>() * 12.0 + 12.0),
                     Color::rgb(r, g, b),
-                    meshes,
-                    materials,
+                    &mut meshes,
+                    &mut materials,
                 ));
             }
         }

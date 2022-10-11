@@ -81,14 +81,14 @@ pub struct BodyBundle {
 
 use std::f32::consts::PI;
 
-impl BodyBundle<'static> {
+impl<'a> BodyBundle {
     pub fn new(
         position: Vec3,
         velocity: Velocity,
         mass: PointMass,
         color: Color,
-        mut meshes: ResMut<Assets<Mesh>>,
-        mut materials: ResMut<Assets<StandardMaterial>>,
+        meshes: &'a mut ResMut<Assets<Mesh>>,
+        materials: &'a mut ResMut<Assets<StandardMaterial>>,
     ) -> Self {
         let radius = (mass.0 / PI).sqrt();
         Self {
