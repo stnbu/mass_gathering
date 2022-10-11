@@ -81,7 +81,6 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mut rng = rand::thread_rng();
-    //let ran = || rng.gen::<f32>();
     for x in 0..4 {
         for y in 0..4 {
             for z in 0..4 {
@@ -91,7 +90,6 @@ fn setup(
                 let r = rng.gen::<f32>();
                 let g = rng.gen::<f32>();
                 let b = rng.gen::<f32>();
-                //Velocity::from_linear(Vec3::new(0.1, 0.3, 0.4));
                 commands.spawn_bundle(bodies::BodyBundle::new(
                     Vec3::new(x, y, z),
                     Velocity::from_linear(Vec3::new(z, x, y)),
