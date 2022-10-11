@@ -6,7 +6,7 @@ use particular::prelude::*;
 
 //use bevy::math::Vec2 as Vect;
 
-const G: f32 = 1.0;
+const G: f32 = 10.0;
 
 #[derive(Particle)]
 pub struct Body {
