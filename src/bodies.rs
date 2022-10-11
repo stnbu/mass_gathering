@@ -25,8 +25,8 @@ impl Body {
     }
 }
 
-#[derive(Component)]
-pub struct PointMass(f32);
+//#[derive(Component)]
+pub struct PointMass(pub f32);
 
 pub struct ParticularPlugin;
 
@@ -71,12 +71,12 @@ fn accelerate_particles(
 }
 
 #[derive(Bundle)]
-struct BodyBundle {
+pub struct BodyBundle {
     #[bundle]
     shape_bundle: PbrBundle,
     velocity: Velocity,
     acceleration: Acceleration,
-    point_mass: PointMass,
+    mass: PointMass,
 }
 
 use std::f32::consts::PI;
@@ -85,13 +85,12 @@ impl BodyBundle {
     pub fn new(
         position: Vec3,
         velocity: Velocity,
-        mass: f32,
-        point_mass: PointMass,
+        mass: PointMass,
         color: Color,
-        meshes: &mut Assets<Mesh>,
-        materials: &mut Assets<StandardMaterial>,
+        meshes: ResMut<Assets<Mesh>>,
+        materials: ResMut<Assets<StandardMaterial>>,
     ) -> Self {
-        let radius = (mass / PI).sqrt();
+        let radius = (mass.0 / PI).sqrt();
         Self {
             shape_bundle: PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -104,7 +103,7 @@ impl BodyBundle {
             },
             velocity,
             acceleration: Acceleration::default(),
-            point_mass,
+            mass,
         }
     }
 }

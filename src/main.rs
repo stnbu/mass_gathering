@@ -90,15 +90,14 @@ fn setup(
                 let r = rng.gen::<f32>();
                 let g = rng.gen::<f32>();
                 let b = rng.gen::<f32>();
-                commands.spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: rng.gen::<f32>() + 0.2,
-                        ..Default::default()
-                    })),
-                    material: materials.add(Color::rgb(r, g, b).into()),
-                    transform: Transform::from_xyz(x, y, z),
-                    ..Default::default()
-                });
+                commands.spawn_bundle(bodies::BodyBundle::new(
+                    Vec3::new(x, y, z),
+                    Vec3::new(z, x, y),
+                    bodies::PointMass(rng.gen::<f32>() * 12.0 + 12.0),
+                    Color::rgb(r, g, b),
+                    meshes,
+                    materials,
+                ));
             }
         }
     }
