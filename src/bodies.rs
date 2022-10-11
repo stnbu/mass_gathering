@@ -64,9 +64,9 @@ fn accelerate_particles(
     mut query: Query<&mut Acceleration, With<PointMass>>,
 ) {
     for (body, gravity) in particle_set.result() {
-        // if let Ok(mut acceleration) = query.get_mut(body.entity) {
-        //     acceleration.linear = gravity.extend(0.0);
-        // }
+        if let Ok(mut acceleration) = query.get_mut(body.entity) {
+            acceleration.linear = gravity;
+        }
     }
 }
 
