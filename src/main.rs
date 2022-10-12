@@ -1,5 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
+use rapier3d::geometry::SharedShape;
 
 fn main() {
     App::new()
@@ -26,30 +27,11 @@ fn setup_graphics(mut commands: Commands) {
     });
 }
 
-fn display_events(
-    mut collision_events: EventReader<CollisionEvent>,
-    mut contact_force_events: EventReader<ContactForceEvent>,
-) {
+fn display_events(mut collision_events: EventReader<CollisionEvent>) {
     for collision_event in collision_events.iter() {
         println!("Received collision event: {:?}", collision_event);
     }
-
-    for contact_force_event in contact_force_events.iter() {
-        println!("Received contact force event: {:?}", contact_force_event);
-    }
 }
-
-/*
-    /// Initialize a new collider builder with a cuboid shape defined by its half-extents.
-    #[cfg(feature = "dim3")]
-    pub fn cuboid(hx: Real, hy: Real, hz: Real) -> Self {
-        Self::new(SharedShape::cuboid(hx, hy, hz))
-    }
-
-*/
-
-use rapier3d::geometry::ColliderBuilder;
-use rapier3d::geometry::SharedShape;
 
 pub fn setup_physics(mut commands: Commands) {
     commands
@@ -57,14 +39,11 @@ pub fn setup_physics(mut commands: Commands) {
         .insert(Collider::cuboid(3.0, 3.0, 3.0))
         .insert(ColliderMassProperties::Density(1.0));
 
-    //let collider = ColliderBuilder::ball(1.5).density(1.0);
-
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 10.0, 0.0)))
         .insert(RigidBody::Dynamic)
         .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
             1.5,
         )))
-        .insert(ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS)
-        .insert(ContactForceEventThreshold(5.0));
+        .insert(ActiveEvents::COLLISION_EVENTS);
 }
