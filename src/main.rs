@@ -8,7 +8,7 @@ mod space_camera;
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.05)))
+        .insert_resource(ClearColor(Color::MIDNIGHT_BLUE))
         .add_plugins(DefaultPlugins)
         .insert_resource(ParticleSet::<bodies::Body>::new())
         .add_state(AppState::Startup)
@@ -98,14 +98,14 @@ fn setup(
     for x in 0..4 {
         for y in 0..4 {
             for z in 0..4 {
-                let x = (x * 4) as f32 - 2.0 + rf();
-                let y = (y * 4) as f32 - 2.0 + rf();
-                let z = (z * 4) as f32 - 2.0 + rf();
+                let x = ((x - 2) * 4) as f32 + rf();
+                let y = ((y - 2) * 4) as f32 + rf();
+                let z = ((z - 2) * 4) as f32 + rf();
                 let position = Vec3::new(x, y, z);
                 let r = rf();
                 let g = rf();
                 let b = rf();
-                let radius = rf() + 0.2;
+                let radius = rf() + 1.0;
                 let pbr = PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius,
