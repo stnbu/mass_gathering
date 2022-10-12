@@ -43,7 +43,7 @@ fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
         camera: Camera {
             viewport: Some(Viewport {
                 physical_size: UVec2 { x: 600, y: 600 },
-                physical_position: UVec2 { x: 0, y: 100 }, // y:100 -- testing
+                physical_position: UVec2 { x: 0, y: 0 },
                 ..Default::default()
             }),
             target: RenderTarget::Window(WindowId::primary()),
@@ -57,7 +57,7 @@ fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
         camera: Camera {
             viewport: Some(Viewport {
                 physical_size: UVec2 { x: 600, y: 600 },
-                physical_position: UVec2 { x: 601, y: 0 }, // 1?
+                physical_position: UVec2 { x: 600, y: 0 },
                 ..Default::default()
             }),
             target: RenderTarget::Window(WindowId::primary()),
