@@ -34,11 +34,15 @@ fn _get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
     Vec2::new(window.width() as f32, window.height() as f32)
 }
 use bevy::window::WindowId;
+
 fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
-    /*
-    WindowId::primary()
-    Camera { target: RenderTarget::Window(primary) }
-    */
+    commands.spawn_bundle(Camera3dBundle {
+        transform: config.transform,
+        ..Default::default()
+    });
+}
+
+fn _spawn_broken_stereo_camera(mut commands: Commands, config: Res<CameraConfig>) {
     commands.spawn_bundle(Camera3dBundle {
         camera: Camera {
             viewport: Some(Viewport {
