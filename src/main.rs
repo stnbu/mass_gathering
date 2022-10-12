@@ -1,7 +1,11 @@
 use bevy::prelude::*;
+use bevy_rapier3d::prelude::*;
+//use heron::rapier_plugin::rapier3d::prelude::ActiveEvents;
 use particular::prelude::*;
 use rand::Rng;
 use std::f32::consts::PI;
+//use bevy_rapier3d::prelude::*;
+use rapier3d::geometry::SharedShape;
 
 mod bodies;
 mod space_camera;
@@ -80,6 +84,14 @@ fn handle_game_state(
     }
 }
 
+/*
+        .insert(RigidBody::Rigid)
+        .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
+            1.5,
+        )))
+        .insert(ActiveEvents::COLLISION_EVENTS);
+*/
+
 #[derive(Bundle)]
 struct Planet {
     #[bundle]
@@ -115,11 +127,19 @@ fn setup(
                     transform: Transform::from_translation(position),
                     ..Default::default()
                 };
+                // let collider: Collider =
+                //     <SharedShape as Into<Collider>>::into(SharedShape::ball(1.5));
+                let collider: Collider = SharedShape::ball(1.5).into();
                 let entity = commands
                     .spawn_bundle(Planet {
                         pbr,
                         point_mass: bodies::PointMass {},
                     })
+                    .insert(RigidBody::Fixed)
+                    .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
+                        1.5,
+                    )))
+                    .insert(ActiveEvents::COLLISION_EVENTS)
                     .id();
                 let mass = 0.75 * PI * radius.powf(3.0);
                 let velocity = Vec3::new(rf(), rf(), rf());
