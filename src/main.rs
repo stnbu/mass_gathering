@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use heron::{PhysicsPlugin, PhysicsSteps, Velocity};
+use particular::prelude::*;
 use rand::Rng;
+use std::f32::consts::PI;
 
 mod bodies;
 mod space_camera;
@@ -8,10 +9,8 @@ mod space_camera;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
+        .insert_resource(ParticleSet::<bodies::Body>::new())
         .add_state(AppState::Startup)
-        .add_plugin(PhysicsPlugin::default())
-        .insert_resource(PhysicsSteps::from_steps_per_seconds(60.0))
-        .add_plugin(bodies::ParticularPlugin)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 //.with_system(space_camera::move_forward)
@@ -78,10 +77,18 @@ fn handle_game_state(
     }
 }
 
+#[derive(Bundle)]
+struct Planet {
+    #[bundle]
+    pbr: PbrBundle,
+    point_mass: bodies::PointMass,
+}
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut particle_set: ResMut<ParticleSet<bodies::Body>>,
 ) {
     let mut rng = rand::thread_rng();
     for x in 0..4 {
@@ -90,17 +97,29 @@ fn setup(
                 let x = (x * 4) as f32 - 2.0 + rng.gen::<f32>();
                 let y = (y * 4) as f32 - 2.0 + rng.gen::<f32>();
                 let z = (z * 4) as f32 - 2.0 + rng.gen::<f32>();
+                let position = Vec3::new(x, y, z);
                 let r = rng.gen::<f32>();
                 let g = rng.gen::<f32>();
                 let b = rng.gen::<f32>();
-                commands.spawn_bundle(bodies::BodyBundle::new(
-                    Vec3::new(x, y, z),
-                    Velocity::from_linear(Vec3::new(z, x, y)),
-                    bodies::PointMass(rng.gen::<f32>() * 6.0),
-                    Color::rgb(r, g, b),
-                    &mut meshes,
-                    &mut materials,
-                ));
+                let radius = rng.gen::<f32>() + 0.2;
+                let pbr = PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius,
+                        ..Default::default()
+                    })),
+                    material: materials.add(Color::rgb(r, g, b).into()),
+                    transform: Transform::from_translation(position),
+                    ..Default::default()
+                };
+                let entity = commands
+                    .spawn_bundle(Planet {
+                        pbr,
+                        point_mass: bodies::PointMass {},
+                    })
+                    .id();
+                let mass = 0.75 * PI * radius.powf(3.0);
+                let velocity = Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>());
+                particle_set.add_massive(bodies::Body::new(position, mass, velocity, entity));
             }
         }
     }
