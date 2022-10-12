@@ -8,6 +8,7 @@ mod space_camera;
 
 fn main() {
     App::new()
+        .insert_resource(ClearColor(Color::rgb(0.05, 0.05, 0.05)))
         .add_plugins(DefaultPlugins)
         .insert_resource(ParticleSet::<bodies::Body>::new())
         .add_state(AppState::Startup)
@@ -126,7 +127,7 @@ fn setup(
     }
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
-            intensity: 800.0 * 1000.0,
+            intensity: 1600000.0,
             range: 1000.0,
             ..Default::default()
         },
@@ -135,7 +136,7 @@ fn setup(
     });
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
-            intensity: 800.0 * 1000.0 * 0.8,
+            intensity: 1280000.0,
             range: 1000.0,
             ..Default::default()
         },
