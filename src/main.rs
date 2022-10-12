@@ -92,19 +92,21 @@ fn add_flotsam(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let mut rng = rand::thread_rng();
+    let mut rf = || rng.gen::<f32>();
     for x in -5..5 {
         for y in -5..5 {
             for z in -5..5 {
                 commands.spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.08,
+                        radius: 0.07,
                         ..Default::default()
                     })),
                     material: materials.add(Color::WHITE.into()),
                     transform: Transform::from_xyz(
-                        x as f32 * 10.0,
-                        y as f32 * 10.0,
-                        z as f32 * 10.0,
+                        x as f32 * 10.0 * rf(),
+                        y as f32 * 10.0 * rf(),
+                        z as f32 * 10.0 * rf(),
                     ),
                     ..Default::default()
                 });
@@ -120,17 +122,18 @@ fn setup(
     mut particle_set: ResMut<ParticleSet<bodies::Body>>,
 ) {
     let mut rng = rand::thread_rng();
+    let mut rf = || rng.gen::<f32>();
     for x in 0..4 {
         for y in 0..4 {
             for z in 0..4 {
-                let x = (x * 4) as f32 - 2.0 + rng.gen::<f32>();
-                let y = (y * 4) as f32 - 2.0 + rng.gen::<f32>();
-                let z = (z * 4) as f32 - 2.0 + rng.gen::<f32>();
+                let x = (x * 4) as f32 - 2.0 + rf();
+                let y = (y * 4) as f32 - 2.0 + rf();
+                let z = (z * 4) as f32 - 2.0 + rf();
                 let position = Vec3::new(x, y, z);
-                let r = rng.gen::<f32>();
-                let g = rng.gen::<f32>();
-                let b = rng.gen::<f32>();
-                let radius = rng.gen::<f32>() + 0.2;
+                let r = rf();
+                let g = rf();
+                let b = rf();
+                let radius = rf() + 0.2;
                 let pbr = PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius,
@@ -147,7 +150,7 @@ fn setup(
                     })
                     .id();
                 let mass = 0.75 * PI * radius.powf(3.0);
-                let velocity = Vec3::new(rng.gen::<f32>(), rng.gen::<f32>(), rng.gen::<f32>());
+                let velocity = Vec3::new(rf(), rf(), rf());
                 particle_set.add_massive(bodies::Body::new(position, mass, velocity, entity));
             }
         }
