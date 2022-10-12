@@ -13,7 +13,7 @@ fn main() {
         .add_state(AppState::Startup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                //.with_system(space_camera::move_forward)
+                .with_system(space_camera::move_forward)
                 .with_system(space_camera::steer)
                 .with_system(bodies::update_particles),
         )
@@ -126,10 +126,11 @@ fn setup(
     }
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
-            intensity: 800.0 * 2000.0, // intensity ignored..?
+            intensity: 800.0 * 1000.0,
+            range: 1000.0,
             ..Default::default()
         },
-        transform: Transform::from_xyz(120.0, 220.0, 310.0),
+        transform: Transform::from_xyz(220.0, 200.0, 45.0),
         ..Default::default()
     });
 }
