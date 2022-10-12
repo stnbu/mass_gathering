@@ -24,7 +24,6 @@ fn main() {
         })
         .add_plugin(space_camera::SpaceCamera)
         .add_startup_system(setup)
-        .add_startup_system(add_flotsam)
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_system(handle_game_state)
         .run();
@@ -85,34 +84,6 @@ struct Planet {
     #[bundle]
     pbr: PbrBundle,
     point_mass: bodies::PointMass,
-}
-
-fn add_flotsam(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let mut rng = rand::thread_rng();
-    let mut rf = || rng.gen::<f32>();
-    for x in -5..5 {
-        for y in -5..5 {
-            for z in -5..5 {
-                commands.spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.07,
-                        ..Default::default()
-                    })),
-                    material: materials.add(Color::WHITE.into()),
-                    transform: Transform::from_xyz(
-                        x as f32 * 10.0 * rf(),
-                        y as f32 * 10.0 * rf(),
-                        z as f32 * 10.0 * rf(),
-                    ),
-                    ..Default::default()
-                });
-            }
-        }
-    }
 }
 
 fn setup(
