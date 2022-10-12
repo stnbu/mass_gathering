@@ -133,4 +133,13 @@ fn setup(
         transform: Transform::from_xyz(220.0, 200.0, 45.0),
         ..Default::default()
     });
+    commands.spawn_bundle(PointLightBundle {
+        point_light: PointLight {
+            intensity: 800.0 * 1000.0 * 0.8,
+            range: 1000.0,
+            ..Default::default()
+        },
+        transform: Transform::from_xyz(-120.0, -300.0, -89.0),
+        ..Default::default()
+    });
 }
