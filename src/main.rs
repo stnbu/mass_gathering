@@ -14,7 +14,7 @@ fn main() {
         .add_state(AppState::Startup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                //.with_system(space_camera::move_forward)
+                .with_system(space_camera::move_forward)
                 .with_system(space_camera::steer)
                 .with_system(bodies::update_particles),
         )
@@ -24,6 +24,7 @@ fn main() {
         })
         .add_plugin(space_camera::SpaceCamera)
         .add_startup_system(setup)
+        .add_startup_system(add_flotsam)
         .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
         .add_system(handle_game_state)
         .run();
@@ -84,6 +85,32 @@ struct Planet {
     #[bundle]
     pbr: PbrBundle,
     point_mass: bodies::PointMass,
+}
+
+fn add_flotsam(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for x in -5..5 {
+        for y in -5..5 {
+            for z in -5..5 {
+                commands.spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.08,
+                        ..Default::default()
+                    })),
+                    material: materials.add(Color::WHITE.into()),
+                    transform: Transform::from_xyz(
+                        x as f32 * 10.0,
+                        y as f32 * 10.0,
+                        z as f32 * 10.0,
+                    ),
+                    ..Default::default()
+                });
+            }
+        }
+    }
 }
 
 fn setup(
