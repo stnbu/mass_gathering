@@ -52,20 +52,29 @@ fn sync_particle_set(
     mut particle_set: ResMut<ParticleSet<Body>>,
     query: Query<(Entity, &GlobalTransform, &PointMass)>,
 ) {
+    eprint!("s");
     *particle_set = ParticleSet::new();
     query.for_each(|(entity, tranform, mass)| {
         let position = tranform.translation().xyz();
         particle_set.add_massive(Body::new(position, mass.0 * G, entity))
     })
 }
-
+use bevy::math::Vec3A;
 fn accelerate_particles(
     mut particle_set: ResMut<ParticleSet<Body>>,
-    mut query: Query<&mut Acceleration, With<PointMass>>,
+    mut query: Query<&mut Transform, With<PointMass>>,
 ) {
     for (body, gravity) in particle_set.result() {
-        if let Ok(mut acceleration) = query.get_mut(body.entity) {
-            acceleration.linear = gravity;
+        if let Ok(mut transform) = query.get_mut(body.entity) {
+            eprint!("y");
+            transform.translation += gravity;
+            //*transform = Transform::from_translation(body.position);
+            // let mut t = transform.translation_mut();
+            // let p = body.position();
+            // *t = Vec3A::new(p.x, p.y, p.z)
+            // //*t = body.position();
+        } else {
+            eprint!("x");
         }
     }
 }
