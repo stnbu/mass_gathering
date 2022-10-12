@@ -14,12 +14,12 @@ fn main() {
         .add_state(AppState::Startup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(space_camera::move_forward)
+                //.with_system(space_camera::move_forward)
                 .with_system(space_camera::steer)
                 .with_system(bodies::update_particles),
         )
         .insert_resource(space_camera::CameraConfig {
-            transform: Transform::from_translation(Vec3::new(20.0, 30.0, -12.0))
+            transform: Transform::from_translation(Vec3::new(100.0, 100.0, 100.0))
                 .looking_at(Vec3::new(1.0, 1.0, 1.0), Vec3::Y),
         })
         .add_plugin(space_camera::SpaceCamera)
