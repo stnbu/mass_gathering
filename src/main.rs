@@ -1,11 +1,9 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-//use heron::rapier_plugin::rapier3d::prelude::ActiveEvents;
 use particular::prelude::*;
 use rand::Rng;
-use std::f32::consts::PI;
-//use bevy_rapier3d::prelude::*;
 use rapier3d::geometry::SharedShape;
+use std::f32::consts::PI;
 
 mod bodies;
 mod space_camera;
@@ -31,6 +29,8 @@ fn main() {
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_system_to_stage(CoreStage::PostUpdate, display_events)
         .run();
 }
 
@@ -39,6 +39,13 @@ enum AppState {
     Startup,
     Playing,
     Paused,
+}
+
+fn display_events(mut events: EventReader<CollisionEvent>) {
+    eprint!("?");
+    for collision_event in events.iter() {
+        eprint!(".");
+    }
 }
 
 fn toggle_pause(current: &AppState) -> Option<AppState> {
@@ -129,15 +136,15 @@ fn setup(
                 };
                 // let collider: Collider =
                 //     <SharedShape as Into<Collider>>::into(SharedShape::ball(1.5));
-                let collider: Collider = SharedShape::ball(1.5).into();
+                //let collider: Collider = SharedShape::ball(1.5).into();
                 let entity = commands
                     .spawn_bundle(Planet {
                         pbr,
                         point_mass: bodies::PointMass {},
                     })
-                    .insert(RigidBody::Fixed)
+                    .insert(RigidBody::Dynamic)
                     .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
-                        1.5,
+                        radius,
                     )))
                     .insert(ActiveEvents::COLLISION_EVENTS)
                     .id();
