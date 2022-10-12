@@ -24,7 +24,8 @@ fn main() {
         })
         .add_plugin(space_camera::SpaceCamera)
         .add_startup_system(setup)
-        .add_system(bevy::window::close_on_esc) // "or prototyping" -- unclean shutdown
+        // "for prototyping" -- unclean shutdown, havoc under wasm.
+        .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
         .run();
 }
