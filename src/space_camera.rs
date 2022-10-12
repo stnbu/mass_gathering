@@ -1,4 +1,7 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*,
+    render::camera::{RenderTarget, Viewport},
+};
 use std::f32::consts::TAU;
 
 pub struct SpaceCamera;
@@ -26,17 +29,57 @@ impl Default for CameraConfig {
 #[derive(Debug, Default)]
 pub struct Curvature(Vec3);
 
+type Left = Camera3dBundle;
+type Right = Camera3dBundle;
+
+// WindowId::primary()
+fn get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
+    let window = windows.get_primary().unwrap();
+    let window = Vec2::new(window.width() as f32, window.height() as f32);
+    window
+}
+use bevy::window::WindowId;
 fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
-    commands.spawn_bundle(Camera3dBundle {
+    /*
+    WindowId::primary()
+    Camera { target: RenderTarget::Window(primary) }
+    */
+    commands.spawn_bundle(Left {
+        camera: Camera {
+            viewport: Some(Viewport {
+                physical_size: UVec2 { x: 600, y: 600 },
+                physical_position: UVec2 { x: 0, y: 0 },
+                ..Default::default()
+            }),
+            target: RenderTarget::Window(WindowId::primary()),
+            priority: 0,
+            ..Default::default()
+        },
+        transform: config.transform,
+        ..Default::default()
+    });
+    commands.spawn_bundle(Right {
+        camera: Camera {
+            viewport: Some(Viewport {
+                physical_size: UVec2 { x: 600, y: 600 },
+                physical_position: UVec2 { x: 601, y: 0 }, // 1?
+                ..Default::default()
+            }),
+            target: RenderTarget::Window(WindowId::primary()),
+            priority: 1,
+            ..Default::default()
+        },
         transform: config.transform,
         ..Default::default()
     });
 }
 
 pub fn move_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
-    let mut transform = camera_query.single_mut();
-    let direction = transform.local_z();
-    transform.translation -= direction * time.delta_seconds() * 4.0;
+    //let mut transform = camera_query.single_mut();
+    for mut transform in camera_query.iter_mut() {
+        let direction = transform.local_z();
+        transform.translation -= direction * time.delta_seconds();
+    }
 }
 
 pub fn steer(
@@ -105,13 +148,15 @@ pub fn steer(
             }
         }
     }
-    let mut transform = query.single_mut();
+    //let mut transform = query.single_mut();
     if roll != 0.0 || pitch != 0.0 || yaw != 0.0 {
-        let local_x = transform.local_x();
-        let local_y = transform.local_y();
-        let local_z = transform.local_z();
-        transform.rotate(Quat::from_axis_angle(local_x, pitch));
-        transform.rotate(Quat::from_axis_angle(local_z, roll));
-        transform.rotate(Quat::from_axis_angle(local_y, yaw));
+        for mut transform in query.iter_mut() {
+            let local_x = transform.local_x();
+            let local_y = transform.local_y();
+            let local_z = transform.local_z();
+            transform.rotate(Quat::from_axis_angle(local_x, pitch));
+            transform.rotate(Quat::from_axis_angle(local_z, roll));
+            transform.rotate(Quat::from_axis_angle(local_y, yaw));
+        }
     }
 }
