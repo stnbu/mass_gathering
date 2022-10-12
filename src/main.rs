@@ -62,8 +62,8 @@ pub fn setup_physics(mut commands: Commands) {
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 10.0, 0.0)))
         .insert(RigidBody::Dynamic)
-        .insert(<SharedShape as Into<Collider>>::into(SharedShape::cuboid(
-            1.0, 1.0, 1.0,
+        .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
+            1.5,
         )))
         .insert(ActiveEvents::COLLISION_EVENTS | ActiveEvents::CONTACT_FORCE_EVENTS)
         .insert(ContactForceEventThreshold(5.0));
