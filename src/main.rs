@@ -3,10 +3,13 @@ use bevy_egui::{
     egui::{Color32, Frame, RichText, SidePanel},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::prelude::*;
+//use bevy_rapier3d::prelude::*;
+use bevy_rapier3d::prelude::{
+    ActiveEvents, Collider, CollisionEvent, NoUserData, RapierPhysicsPlugin, RigidBody,
+};
 use particular::prelude::*;
 use rand::Rng;
-use rapier3d::geometry::SharedShape;
+use rapier3d::prelude::SharedShape;
 use std::f32::consts::PI;
 
 mod bodies;
@@ -27,16 +30,15 @@ fn main() {
         )
         .insert_resource(space_camera::CameraConfig {
             transform: Transform::from_translation(Vec3::new(100.0, 100.0, 100.0))
-                .looking_at(Vec3::new(1.0, 1.0, 1.0), Vec3::Y),
+                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         })
         .add_plugin(space_camera::SpaceCamera)
         .add_startup_system(setup)
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
-        // -- Uncomment once we have collision working:
-        // .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        // .add_system_to_stage(CoreStage::PostUpdate, display_events)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_system_to_stage(CoreStage::PostUpdate, display_events)
         .add_system(hud)
         .run();
 }
@@ -48,8 +50,13 @@ enum AppState {
     Paused,
 }
 
-fn _display_events(mut events: EventReader<CollisionEvent>) {
-    for _collision_event in events.iter() {
+fn display_events(mut events: EventReader<CollisionEvent>, query: Query<&Transform, With<Camera>>) {
+    if query.is_empty() {
+        return;
+    }
+    for collision_event in events.iter() {
+        let a = collision_event.collider1();
+        let b = collision_event.collider2();
         //
     }
 }

@@ -2,6 +2,8 @@ use bevy::{
     prelude::*,
     render::camera::{RenderTarget, Viewport},
 };
+use bevy_rapier3d::prelude::*;
+use rapier3d::geometry::SharedShape;
 use std::f32::consts::TAU;
 
 pub struct SpaceCamera;
@@ -43,7 +45,12 @@ fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
             transform: config.transform,
             ..Default::default()
         })
-        .insert(Movement::default());
+        .insert(Movement::default())
+        .insert(RigidBody::Dynamic)
+        .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
+            1.0, // how big is a camera?
+        )))
+        .insert(ActiveEvents::COLLISION_EVENTS);
 }
 
 fn _spawn_broken_stereo_camera(mut commands: Commands, config: Res<CameraConfig>) {
