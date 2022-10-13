@@ -1,4 +1,8 @@
 use bevy::prelude::*;
+use bevy_egui::{
+    egui::{Color32, Frame, RichText, SidePanel},
+    EguiContext, EguiPlugin,
+};
 use bevy_rapier3d::prelude::*;
 use particular::prelude::*;
 use rand::Rng;
@@ -12,6 +16,7 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .add_plugins(DefaultPlugins)
+        .add_plugin(EguiPlugin)
         .insert_resource(ParticleSet::<bodies::Body>::new())
         .add_state(AppState::Startup)
         .add_system_set(
@@ -32,6 +37,7 @@ fn main() {
         // -- Uncomment once we have collision working:
         // .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         // .add_system_to_stage(CoreStage::PostUpdate, display_events)
+        .add_system(hud)
         .run();
 }
 
@@ -98,13 +104,6 @@ struct Planet {
     point_mass: bodies::PointMass,
 }
 
-#[derive(Component)]
-struct Follower {
-    reference: Entity,
-    translation: Vec3,
-    rotation: Vec3,
-}
-
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -159,4 +158,16 @@ fn setup(
         transform: Transform::from_xyz(220.0, 200.0, 45.0),
         ..Default::default()
     });
+}
+
+// {SidePanel, Frame, Color32, RichText }
+fn hud(mut ctx: ResMut<EguiContext>, mut movement: Res<space_camera::Movement>) {
+    SidePanel::left("hud")
+        .frame(Frame {
+            fill: Color32::TRANSPARENT,
+            ..Default::default()
+        })
+        .show(ctx.ctx_mut(), |ui| {
+            ui.label(RichText::new(format!("Speed: {}", movement.speed)).color(Color32::GREEN));
+        });
 }

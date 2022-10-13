@@ -29,7 +29,7 @@ impl Default for CameraConfig {
 #[derive(Debug, Default)]
 pub struct Movement {
     axis_gain: Vec3,
-    speed: f32,
+    pub speed: f32,
 }
 
 fn _get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
