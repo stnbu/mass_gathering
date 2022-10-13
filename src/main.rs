@@ -36,8 +36,8 @@ fn main() {
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_system_to_stage(CoreStage::PostUpdate, display_events)
+        //.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        //.add_system_to_stage(CoreStage::PostUpdate, display_events)
         .add_system(hud)
         .run();
 }
@@ -49,18 +49,31 @@ enum AppState {
     Paused,
 }
 
-fn display_events(mut events: EventReader<CollisionEvent>, query: Query<&Transform, With<Camera>>) {
-    if events.is_empty() {
-        return; // how to obviate
-    }
-    for collision_event in events.iter() {
-        if let CollisionEvent::Stopped(e1, e2, flags) = collision_event {
-            if flags.contains(CollisionEventFlags::SENSOR) {
-                println!("stop  - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
-            }
-        }
-    }
-}
+// fn display_events(
+//     mut events: EventReader<CollisionEvent>,
+//     mut set: ParamSet<(Query<&mut Transform, With<Camera>>, Query<&Transform>)>,
+// ) {
+//     if events.is_empty() {
+//         return; // how to obviate
+//     }
+//     for collision_event in events.iter() {
+//         if let CollisionEvent::Stopped(e1, e2, flags) = collision_event {
+//             if flags.contains(CollisionEventFlags::SENSOR) {
+//                 if set.p0().iter().contains(*e1) {
+//                     let mut camera = set.p0().get_mut(*e1).unwrap();
+//                     let planet = set.p1().get(*e2).unwrap();
+//                     let connector = camera.translation - planet.translation;
+//                     let (rotation, blah) = camera.rotation.to_axis_angle();
+//                     let dot = connector.dot(rotation);
+
+//                     let new_rotation = 2.0 * dot * connector - rotation;
+//                     let quat = Quat::from_axis_angle(new_rotation, blah);
+//                     camera.rotation = quat;
+//                 }
+//             }
+//         }
+//     }
+// }
 fn toggle_pause(current: &AppState) -> Option<AppState> {
     match current {
         AppState::Paused => Some(AppState::Playing),
