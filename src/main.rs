@@ -56,26 +56,13 @@ fn display_events(mut events: EventReader<CollisionEvent>, query: Query<&Transfo
         return; // how to obviate
     }
     for collision_event in events.iter() {
-        match collision_event {
-            // CollisionEvent::Started(e1, e2, flags) => {
-            //     if flags.contains(CollisionEventFlags::SENSOR) {
-            //         println!("start - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
-            //     } else {
-            //         print!(".");
-            //     }
-            // }
-            CollisionEvent::Stopped(e1, e2, flags) => {
-                if flags.contains(CollisionEventFlags::SENSOR) {
-                    println!("stop  - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
-                } else {
-                    print!(".");
-                }
+        if let CollisionEvent::Stopped(e1, e2, flags) = collision_event {
+            if flags.contains(CollisionEventFlags::SENSOR) {
+                println!("stop  - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
             }
-            _ => (),
         }
     }
 }
-
 fn toggle_pause(current: &AppState) -> Option<AppState> {
     match current {
         AppState::Paused => Some(AppState::Playing),
