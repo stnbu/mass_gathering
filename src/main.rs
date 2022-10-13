@@ -160,8 +160,7 @@ fn setup(
     });
 }
 
-// {SidePanel, Frame, Color32, RichText }
-fn hud(mut ctx: ResMut<EguiContext>, mut movement: Res<space_camera::Movement>) {
+fn hud(mut ctx: ResMut<EguiContext>, movement: Res<space_camera::Movement>) {
     SidePanel::left("hud")
         .frame(Frame {
             fill: Color32::TRANSPARENT,
