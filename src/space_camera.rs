@@ -9,7 +9,6 @@ pub struct SpaceCamera;
 impl Plugin for SpaceCamera {
     fn build(&self, app: &mut App) {
         app.init_resource::<CameraConfig>()
-            .init_resource::<Movement>()
             .add_startup_system(spawn_camera);
     }
 }
@@ -26,7 +25,7 @@ impl Default for CameraConfig {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Component)]
 pub struct Movement {
     axis_gain: Vec3,
     pub speed: f32,
@@ -39,10 +38,12 @@ fn _get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
 use bevy::window::WindowId;
 
 fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
-    commands.spawn_bundle(Camera3dBundle {
-        transform: config.transform,
-        ..Default::default()
-    });
+    commands
+        .spawn_bundle(Camera3dBundle {
+            transform: config.transform,
+            ..Default::default()
+        })
+        .insert(Movement::default());
 }
 
 fn _spawn_broken_stereo_camera(mut commands: Commands, config: Res<CameraConfig>) {
@@ -77,11 +78,10 @@ fn _spawn_broken_stereo_camera(mut commands: Commands, config: Res<CameraConfig>
 }
 
 pub fn move_forward(
-    mut camera_query: Query<&mut Transform, With<Camera>>,
+    mut camera_query: Query<(&mut Transform, &Movement), With<Camera>>,
     time: Res<Time>,
-    movement: ResMut<Movement>,
 ) {
-    for mut transform in camera_query.iter_mut() {
+    for (mut transform, movement) in camera_query.iter_mut() {
         let direction = transform.local_z();
         transform.translation -= direction * time.delta_seconds() * movement.speed;
     }
@@ -89,8 +89,7 @@ pub fn move_forward(
 
 pub fn steer(
     keys: Res<Input<KeyCode>>,
-    mut query: Query<&mut Transform, With<Camera>>,
-    mut movement: ResMut<Movement>,
+    mut query: Query<(&mut Transform, &mut Movement), With<Camera>>,
 ) {
     let gain = 0.2;
     let nudge = TAU / 10000.0;
@@ -98,6 +97,9 @@ pub fn steer(
     let mut pitch = 0.0;
     let mut yaw = 0.0;
     let mut had_input = false;
+
+    let (mut transform, mut movement) = query.get_single_mut().unwrap();
+
     for key in keys.get_pressed() {
         match key {
             KeyCode::Left => {
@@ -161,13 +163,11 @@ pub fn steer(
     }
 
     if roll != 0.0 || pitch != 0.0 || yaw != 0.0 {
-        for mut transform in query.iter_mut() {
-            let local_x = transform.local_x();
-            let local_y = transform.local_y();
-            let local_z = transform.local_z();
-            transform.rotate(Quat::from_axis_angle(local_x, pitch));
-            transform.rotate(Quat::from_axis_angle(local_z, roll));
-            transform.rotate(Quat::from_axis_angle(local_y, yaw));
-        }
+        let local_x = transform.local_x();
+        let local_y = transform.local_y();
+        let local_z = transform.local_z();
+        transform.rotate(Quat::from_axis_angle(local_x, pitch));
+        transform.rotate(Quat::from_axis_angle(local_z, roll));
+        transform.rotate(Quat::from_axis_angle(local_y, yaw));
     }
 }

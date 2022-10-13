@@ -160,7 +160,8 @@ fn setup(
     });
 }
 
-fn hud(mut ctx: ResMut<EguiContext>, movement: Res<space_camera::Movement>) {
+fn hud(mut ctx: ResMut<EguiContext>, query: Query<&space_camera::Movement>) {
+    let movement = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
             fill: Color32::TRANSPARENT,
