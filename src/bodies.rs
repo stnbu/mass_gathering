@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use particular::prelude::*;
 
 // How many ticks per frame will the simulation run (higher means faster universe)
-const SIMS_PER_FRAME: usize = 10;
+const SIMS_PER_FRAME: usize = 1;
 
 #[derive(Particle)]
 pub struct Body {

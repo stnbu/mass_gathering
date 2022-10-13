@@ -7,13 +7,10 @@ edition = "2021"
 bevy = { version = "0.8.1" }
 bevy_egui = "0.16.1"
 bevy_prototype_lyon = "0.6.0"
-bevy_rapier3d = "0.17.0"
+bevy_rapier3d = { path = "/Users/mburr/git/bevy_rapier/bevy_rapier3d" }
 heron = { version = "4.0.2", features = ["3d"] }
 particular = "0.2.0"
 rand = "0.8.5"
-
-#rapier3d = "0.15.0"
-rapier3d = "0.14.0"
 
 [profile.release]
 opt-level = "s"

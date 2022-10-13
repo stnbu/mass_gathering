@@ -9,7 +9,7 @@ use bevy_rapier3d::prelude::{
 };
 use particular::prelude::*;
 use rand::Rng;
-use rapier3d::prelude::SharedShape;
+//use rapier3d::prelude::SharedShape;
 use std::f32::consts::PI;
 
 mod bodies;
@@ -51,13 +51,18 @@ enum AppState {
 }
 
 fn display_events(mut events: EventReader<CollisionEvent>, query: Query<&Transform, With<Camera>>) {
-    if query.is_empty() {
-        return;
+    if events.is_empty() {
+        return; // how to obviate
     }
     for collision_event in events.iter() {
-        let a = collision_event.collider1();
-        let b = collision_event.collider2();
-        //
+        match collision_event {
+            CollisionEvent::Started(e1, e2, flags) => {
+                println!("start - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
+            }
+            CollisionEvent::Stopped(e1, e2, flags) => {
+                println!("stop  - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
+            }
+        }
     }
 }
 
@@ -122,9 +127,9 @@ fn setup(
     for x in 0..4 {
         for y in 0..4 {
             for z in 0..4 {
-                let x = ((x - 2) * 4) as f32 + rf();
-                let y = ((y - 2) * 4) as f32 + rf();
-                let z = ((z - 2) * 4) as f32 + rf();
+                let x = ((x - 2) * 10) as f32 + rf();
+                let y = ((y - 2) * 10) as f32 + rf();
+                let z = ((z - 2) * 10) as f32 + rf();
                 let position = Vec3::new(x, y, z);
                 let r = rf();
                 let g = rf();
@@ -145,9 +150,7 @@ fn setup(
                         point_mass: bodies::PointMass {},
                     })
                     .insert(RigidBody::Dynamic)
-                    .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
-                        radius,
-                    )))
+                    .insert(Collider::ball(radius))
                     .insert(ActiveEvents::COLLISION_EVENTS)
                     .id();
                 let mass = 0.75 * PI * radius.powf(3.0);
