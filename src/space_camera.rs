@@ -9,7 +9,7 @@ pub struct SpaceCamera;
 impl Plugin for SpaceCamera {
     fn build(&self, app: &mut App) {
         app.init_resource::<CameraConfig>()
-            .init_resource::<Curvature>()
+            .init_resource::<Movement>()
             .add_startup_system(spawn_camera);
     }
 }
@@ -27,7 +27,10 @@ impl Default for CameraConfig {
 }
 
 #[derive(Debug, Default)]
-pub struct Curvature(Vec3);
+pub struct Movement {
+    axis_gain: Vec3,
+    speed: f32,
+}
 
 fn _get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
     let window = windows.get_primary().unwrap();
@@ -73,18 +76,21 @@ fn _spawn_broken_stereo_camera(mut commands: Commands, config: Res<CameraConfig>
     });
 }
 
-pub fn move_forward(mut camera_query: Query<&mut Transform, With<Camera>>, time: Res<Time>) {
-    //let mut transform = camera_query.single_mut();
+pub fn move_forward(
+    mut camera_query: Query<&mut Transform, With<Camera>>,
+    time: Res<Time>,
+    movement: ResMut<Movement>,
+) {
     for mut transform in camera_query.iter_mut() {
         let direction = transform.local_z();
-        transform.translation -= direction * time.delta_seconds();
+        transform.translation -= direction * time.delta_seconds() * movement.speed;
     }
 }
 
 pub fn steer(
     keys: Res<Input<KeyCode>>,
     mut query: Query<&mut Transform, With<Camera>>,
-    mut curvature: ResMut<Curvature>,
+    mut movement: ResMut<Movement>,
 ) {
     let gain = 0.2;
     let nudge = TAU / 10000.0;
@@ -95,55 +101,61 @@ pub fn steer(
     for key in keys.get_pressed() {
         match key {
             KeyCode::Left => {
-                roll += nudge * (curvature.0.z + 1.0);
+                roll += nudge * (movement.axis_gain.z + 1.0);
                 had_input = true;
-                curvature.0.z += gain;
+                movement.axis_gain.z += gain;
             }
             KeyCode::Right => {
-                roll -= nudge * (curvature.0.z + 1.0);
+                roll -= nudge * (movement.axis_gain.z + 1.0);
                 had_input = true;
-                curvature.0.z += gain;
+                movement.axis_gain.z += gain;
             }
             KeyCode::Up => {
-                pitch -= nudge * (curvature.0.x + 1.0);
+                pitch -= nudge * (movement.axis_gain.x + 1.0);
                 had_input = true;
-                curvature.0.x += gain;
+                movement.axis_gain.x += gain;
             }
             KeyCode::Down => {
-                pitch += nudge * (curvature.0.x + 1.0);
+                pitch += nudge * (movement.axis_gain.x + 1.0);
                 had_input = true;
-                curvature.0.x += gain;
+                movement.axis_gain.x += gain;
             }
             KeyCode::Z => {
-                yaw += nudge * (curvature.0.y + 1.0);
+                yaw += nudge * (movement.axis_gain.y + 1.0);
                 had_input = true;
-                curvature.0.y += gain;
+                movement.axis_gain.y += gain;
             }
             KeyCode::X => {
-                yaw -= nudge * (curvature.0.y + 1.0);
+                yaw -= nudge * (movement.axis_gain.y + 1.0);
                 had_input = true;
-                curvature.0.y += gain;
+                movement.axis_gain.y += gain;
+            }
+            KeyCode::PageUp => {
+                movement.speed += 0.5;
+            }
+            KeyCode::PageDown => {
+                movement.speed -= 0.5;
             }
             _ => (),
         }
     }
     if !had_input {
-        if curvature.0.x > 0.0 {
-            curvature.0.x -= gain;
-            if curvature.0.x < 0.0 {
-                curvature.0.x = 0.0;
+        if movement.axis_gain.x > 0.0 {
+            movement.axis_gain.x -= gain;
+            if movement.axis_gain.x < 0.0 {
+                movement.axis_gain.x = 0.0;
             }
         }
-        if curvature.0.y > 0.0 {
-            curvature.0.y -= gain;
-            if curvature.0.y < 0.0 {
-                curvature.0.y = 0.0;
+        if movement.axis_gain.y > 0.0 {
+            movement.axis_gain.y -= gain;
+            if movement.axis_gain.y < 0.0 {
+                movement.axis_gain.y = 0.0;
             }
         }
-        if curvature.0.z > 0.0 {
-            curvature.0.z -= gain;
-            if curvature.0.z < 0.0 {
-                curvature.0.z = 0.0;
+        if movement.axis_gain.z > 0.0 {
+            movement.axis_gain.z -= gain;
+            if movement.axis_gain.z < 0.0 {
+                movement.axis_gain.z = 0.0;
             }
         }
     }
