@@ -1,6 +1,9 @@
 use bevy::prelude::*;
 use particular::prelude::*;
 
+// How many ticks per frame will the simulation run (higher means faster universe)
+const SIMS_PER_FRAME: usize = 10;
+
 #[derive(Particle)]
 pub struct Body {
     position: Vec3,
@@ -29,9 +32,13 @@ pub fn update_particles(
     time: Res<Time>,
 ) {
     let d = time.delta_seconds();
-    for (particle, force) in particle_set.result() {
-        particle.velocity += (force * d) / particle.mu;
-        particle.position += particle.velocity * d;
+    for _ in 0..SIMS_PER_FRAME {
+        for (particle, force) in particle_set.result() {
+            particle.velocity += (force * d) / particle.mu;
+            particle.position += particle.velocity * d;
+        }
+    }
+    for (particle, _) in particle_set.result() {
         if let Ok(mut transform) = query.get_mut(particle.entity) {
             transform.translation = particle.position;
         }
