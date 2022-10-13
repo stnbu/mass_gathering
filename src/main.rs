@@ -168,5 +168,9 @@ fn hud(mut ctx: ResMut<EguiContext>, movement: Res<space_camera::Movement>) {
         })
         .show(ctx.ctx_mut(), |ui| {
             ui.label(RichText::new(format!("Speed: {}", movement.speed)).color(Color32::GREEN));
+            ui.separator();
+            ui.label(RichText::new("Arrow Keys: Pitch & Roll").color(Color32::GREEN));
+            ui.label(RichText::new("Z & X: Yaw").color(Color32::GREEN));
+            ui.label(RichText::new("PgUp/PgDn: Speed").color(Color32::GREEN));
         });
 }
