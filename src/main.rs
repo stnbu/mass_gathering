@@ -4,8 +4,9 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 //use bevy_rapier3d::prelude::*;
-use bevy_rapier3d::prelude::{
-    ActiveEvents, Collider, CollisionEvent, NoUserData, RapierPhysicsPlugin, RigidBody,
+use bevy_rapier3d::{
+    prelude::{ActiveEvents, Collider, CollisionEvent, NoUserData, RapierPhysicsPlugin, RigidBody},
+    rapier::prelude::CollisionEventFlags,
 };
 use particular::prelude::*;
 use rand::Rng;
@@ -56,12 +57,21 @@ fn display_events(mut events: EventReader<CollisionEvent>, query: Query<&Transfo
     }
     for collision_event in events.iter() {
         match collision_event {
-            CollisionEvent::Started(e1, e2, flags) => {
-                println!("start - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
-            }
+            // CollisionEvent::Started(e1, e2, flags) => {
+            //     if flags.contains(CollisionEventFlags::SENSOR) {
+            //         println!("start - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
+            //     } else {
+            //         print!(".");
+            //     }
+            // }
             CollisionEvent::Stopped(e1, e2, flags) => {
-                println!("stop  - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
+                if flags.contains(CollisionEventFlags::SENSOR) {
+                    println!("stop  - e1: {:?}\ne2: {:?}\nflags: {:?}\n", e1, e2, flags);
+                } else {
+                    print!(".");
+                }
             }
+            _ => (),
         }
     }
 }

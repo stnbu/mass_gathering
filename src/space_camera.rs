@@ -2,7 +2,7 @@ use bevy::{
     prelude::*,
     render::camera::{RenderTarget, Viewport},
 };
-use bevy_rapier3d::prelude::{ActiveEvents, Collider, RigidBody};
+use bevy_rapier3d::prelude::{ActiveEvents, Collider, RigidBody, Sensor};
 use std::f32::consts::TAU;
 
 pub struct SpaceCamera;
@@ -47,7 +47,8 @@ fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
         .insert(Movement::default())
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(1.0))
-        .insert(ActiveEvents::COLLISION_EVENTS);
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(Sensor);
 }
 
 fn _spawn_broken_stereo_camera(mut commands: Commands, config: Res<CameraConfig>) {
