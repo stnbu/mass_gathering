@@ -3,14 +3,12 @@ use bevy_egui::{
     egui::{Color32, Frame, RichText, SidePanel},
     EguiContext, EguiPlugin,
 };
-//use bevy_rapier3d::prelude::*;
 use bevy_rapier3d::{
     prelude::{ActiveEvents, Collider, CollisionEvent, NoUserData, RapierPhysicsPlugin, RigidBody},
     rapier::prelude::CollisionEventFlags,
 };
 use particular::prelude::*;
 use rand::Rng;
-//use rapier3d::prelude::SharedShape;
 use std::f32::consts::PI;
 
 mod bodies;
@@ -87,7 +85,7 @@ fn handle_game_state(
         poked = !poked;
     }
 
-    if !poked {
+    if !poked && *(app_state.current()) != AppState::Startup {
         for ev in focus_events.iter() {
             if ev.focused {
                 app_state.overwrite_set(AppState::Playing).unwrap();
@@ -167,18 +165,29 @@ fn setup(
     });
 }
 
-fn hud(mut ctx: ResMut<EguiContext>, query: Query<&space_camera::Movement>) {
-    let movement = query.get_single().unwrap();
+fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&space_camera::Movement, &Transform)>) {
+    let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
             fill: Color32::TRANSPARENT,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            ui.label(RichText::new(format!("Speed: {}", movement.speed)).color(Color32::GREEN));
             ui.separator();
-            ui.label(RichText::new("Arrow Keys: Pitch & Roll").color(Color32::GREEN));
-            ui.label(RichText::new("Z & X: Yaw").color(Color32::GREEN));
-            ui.label(RichText::new("PgUp/PgDn: Speed").color(Color32::GREEN));
+            ui.label(RichText::new("Keys:").color(Color32::GREEN));
+            ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
+            ui.label(RichText::new("  Z & X:\tYaw").color(Color32::GREEN));
+            ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
+            ui.separator();
+            ui.label(
+                RichText::new(format!("Your Speed: {}", movement.speed)).color(Color32::GREEN),
+            );
+            ui.label(
+                RichText::new(format!(
+                    "Your Location:\n  x: {}\n  y:{}\n  z:{}",
+                    transform.translation.x, transform.translation.y, transform.translation.z
+                ))
+                .color(Color32::GREEN),
+            );
         });
 }

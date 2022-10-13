@@ -45,7 +45,7 @@ fn spawn_camera(mut commands: Commands, config: Res<CameraConfig>) {
             ..Default::default()
         })
         .insert(Movement::default())
-        .insert(RigidBody::Dynamic)
+        .insert(RigidBody::Fixed)
         .insert(Collider::ball(1.0))
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(Sensor);
