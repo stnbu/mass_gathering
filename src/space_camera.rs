@@ -111,12 +111,12 @@ pub fn steer(
                 movement.axis_gain.z += gain;
             }
             KeyCode::Up => {
-                pitch -= nudge * (movement.axis_gain.x + 1.0);
+                pitch += nudge * (movement.axis_gain.x + 1.0);
                 had_input = true;
                 movement.axis_gain.x += gain;
             }
             KeyCode::Down => {
-                pitch += nudge * (movement.axis_gain.x + 1.0);
+                pitch -= nudge * (movement.axis_gain.x + 1.0);
                 had_input = true;
                 movement.axis_gain.x += gain;
             }
@@ -159,7 +159,7 @@ pub fn steer(
             }
         }
     }
-    //let mut transform = query.single_mut();
+
     if roll != 0.0 || pitch != 0.0 || yaw != 0.0 {
         for mut transform in query.iter_mut() {
             let local_x = transform.local_x();
