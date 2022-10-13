@@ -10,7 +10,7 @@ mod space_camera;
 
 fn main() {
     App::new()
-        .insert_resource(ClearColor(Color::MIDNIGHT_BLUE))
+        .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .add_plugins(DefaultPlugins)
         .insert_resource(ParticleSet::<bodies::Body>::new())
         .add_state(AppState::Startup)
@@ -29,8 +29,9 @@ fn main() {
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_system_to_stage(CoreStage::PostUpdate, display_events)
+        // -- Uncomment once we have collision working:
+        // .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        // .add_system_to_stage(CoreStage::PostUpdate, display_events)
         .run();
 }
 
@@ -91,14 +92,6 @@ fn handle_game_state(
     }
 }
 
-/*
-        .insert(RigidBody::Rigid)
-        .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
-            1.5,
-        )))
-        .insert(ActiveEvents::COLLISION_EVENTS);
-*/
-
 #[derive(Bundle)]
 struct Planet {
     #[bundle]
@@ -134,9 +127,6 @@ fn setup(
                     transform: Transform::from_translation(position),
                     ..Default::default()
                 };
-                // let collider: Collider =
-                //     <SharedShape as Into<Collider>>::into(SharedShape::ball(1.5));
-                //let collider: Collider = SharedShape::ball(1.5).into();
                 let entity = commands
                     .spawn_bundle(Planet {
                         pbr,
