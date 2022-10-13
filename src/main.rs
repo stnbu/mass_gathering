@@ -42,10 +42,9 @@ enum AppState {
     Paused,
 }
 
-fn display_events(mut events: EventReader<CollisionEvent>) {
-    eprint!("?");
-    for collision_event in events.iter() {
-        eprint!(".");
+fn _display_events(mut events: EventReader<CollisionEvent>) {
+    for _collision_event in events.iter() {
+        //
     }
 }
 
@@ -97,6 +96,13 @@ struct Planet {
     #[bundle]
     pbr: PbrBundle,
     point_mass: bodies::PointMass,
+}
+
+#[derive(Component)]
+struct Follower {
+    reference: Entity,
+    translation: Vec3,
+    rotation: Vec3,
 }
 
 fn setup(
