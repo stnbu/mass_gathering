@@ -28,7 +28,7 @@ fn main() {
                 .with_system(bodies::update_particles),
         )
         .insert_resource(space_camera::CameraConfig {
-            transform: Transform::from_translation(Vec3::new(100.0, 100.0, 100.0))
+            transform: Transform::from_translation(Vec3::new(30.0, 30.0, 30.0))
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
         })
         .add_plugin(space_camera::SpaceCamera)
@@ -36,8 +36,8 @@ fn main() {
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
-        //.add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        //.add_system_to_stage(CoreStage::PostUpdate, display_events)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+        .add_system_to_stage(CoreStage::PostUpdate, display_events)
         .add_system(hud)
         .run();
 }
@@ -49,31 +49,39 @@ enum AppState {
     Paused,
 }
 
-// fn display_events(
-//     mut events: EventReader<CollisionEvent>,
-//     mut set: ParamSet<(Query<&mut Transform, With<Camera>>, Query<&Transform>)>,
-// ) {
-//     if events.is_empty() {
-//         return; // how to obviate
-//     }
-//     for collision_event in events.iter() {
-//         if let CollisionEvent::Stopped(e1, e2, flags) = collision_event {
-//             if flags.contains(CollisionEventFlags::SENSOR) {
-//                 if set.p0().iter().contains(*e1) {
-//                     let mut camera = set.p0().get_mut(*e1).unwrap();
-//                     let planet = set.p1().get(*e2).unwrap();
-//                     let connector = camera.translation - planet.translation;
-//                     let (rotation, blah) = camera.rotation.to_axis_angle();
-//                     let dot = connector.dot(rotation);
+fn display_events(
+    mut events: EventReader<CollisionEvent>,
+    mut camera_query: Query<&mut Transform, With<Camera>>,
+    planet_query: Query<&Transform, Without<Camera>>,
+) {
+    eprint!("x");
+    if events.is_empty() {
+        return; // how to obviate
+    }
+    eprint!("y");
+    for collision_event in events.iter() {
+        eprint!("z");
+        if let CollisionEvent::Started(e1, e2, flags) = collision_event {
+            eprint!("0");
+            if flags.contains(CollisionEventFlags::SENSOR) {
+                eprint!("1");
+                if camera_query.contains(*e1) {
+                    let mut camera = camera_query.get_mut(*e1).unwrap();
+                    let planet = planet_query.get(*e2).unwrap();
+                    let connector = camera.translation - planet.translation;
+                    let (rotation, blah) = camera.rotation.to_axis_angle();
+                    let dot = connector.dot(rotation);
 
-//                     let new_rotation = 2.0 * dot * connector - rotation;
-//                     let quat = Quat::from_axis_angle(new_rotation, blah);
-//                     camera.rotation = quat;
-//                 }
-//             }
-//         }
-//     }
-// }
+                    let new_rotation = 2.0 * dot * connector - rotation;
+                    let quat = Quat::from_axis_angle(new_rotation, blah);
+                    camera.rotation = quat;
+                } else {
+                    eprint!("2");
+                }
+            }
+        }
+    }
+}
 fn toggle_pause(current: &AppState) -> Option<AppState> {
     match current {
         AppState::Paused => Some(AppState::Playing),
@@ -99,13 +107,13 @@ fn handle_game_state(
     }
 
     if !poked && *(app_state.current()) != AppState::Startup {
-        for ev in focus_events.iter() {
-            if ev.focused {
-                app_state.overwrite_set(AppState::Playing).unwrap();
-            } else {
-                app_state.overwrite_set(AppState::Paused).unwrap();
-            }
-        }
+        // for ev in focus_events.iter() {
+        //     if ev.focused {
+        //         app_state.overwrite_set(AppState::Playing).unwrap();
+        //     } else {
+        //         app_state.overwrite_set(AppState::Paused).unwrap();
+        //     }
+        // }
     } else {
         if *(app_state.current()) == AppState::Startup {
             app_state.overwrite_set(AppState::Playing).unwrap();
@@ -157,7 +165,7 @@ fn setup(
                         pbr,
                         point_mass: bodies::PointMass {},
                     })
-                    .insert(RigidBody::Dynamic)
+                    .insert(RigidBody::Fixed)
                     .insert(Collider::ball(radius))
                     .insert(ActiveEvents::COLLISION_EVENTS)
                     .id();
