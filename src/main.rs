@@ -69,26 +69,34 @@ fn main() {
 //     }
 // }
 
-type RelativeTransform = Transform;
+//type RelativeTransform = Transform;
+
+#[derive(Component)]
+struct RelativeTransform {
+    entity: Entity,
+    transform: Transform,
+}
 
 fn floodlights(
-    mut query: Query<&mut RelativeTransform, With<PointLight>>,
-    query2: Query<&ft::FlyingTransform, Without<PointLight>>,
+    mut light_query: Query<(&mut Transform, &RelativeTransform), With<PointLight>>,
+    ft_query: Query<&ft::FlyingTransform, Without<PointLight>>,
 ) {
-    if let Ok(mut light) = query.get_single_mut() {
-        for flying_transform in query2.iter() {
-            println!(">>yaya");
-            light.translation = flying_transform.translation + flying_transform.local_y() * -100.0;
+    for (mut light, rel) in light_query.iter_mut() {
+        println!("found a followlight");
+        if let Ok(flying_transform) = ft_query.get(rel.entity) {
+            light.translation = flying_transform.translation + rel.transform.translation;
+        } else {
+            println!("noo f");
         }
-
-        // if let Ok(flying_transform) = query2.get_single() {
-        //     light.translation = flying_transform.translation + flying_transform.local_y() * 100.0;
-        // } else {
-        //     println!("no ft");
-        // }
-    } else {
-        println!("no light");
     }
+    // if let Ok(flying_transform) = query2.get_single() {
+    //     light.translation = flying_transform.translation + flying_transform.local_y() * 100.0;
+    // } else {
+    //     println!("no ft");
+    // }
+    // } else {
+    //     println!("no light");
+    // }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -162,14 +170,15 @@ fn setup(
             );
         }
     }
-    commands
+    let cam = commands
         .spawn_bundle(Camera3dBundle {
             transform: ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
         .insert(ft::Movement::default())
-        .insert(GravityScale(0.0)); // can ditch
+        .insert(GravityScale(0.0))
+        .id(); // can ditch
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
@@ -177,10 +186,14 @@ fn setup(
                 range: 1000.0,
                 ..Default::default()
             },
-            transform: RelativeTransform::from_xyz(0.0, 100.0, 0.0),
+            transform: Transform::from_translation(Vec3::new(10.0, 10.0, 10.0)),
             ..Default::default()
         })
-        .insert(GravityScale(0.0));
+        .insert(GravityScale(0.0))
+        .insert(RelativeTransform {
+            entity: cam,
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+        });
 }
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
