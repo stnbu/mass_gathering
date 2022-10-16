@@ -78,12 +78,12 @@ struct RelativeTransform {
 }
 
 fn follow(
-    mut follow_query: Query<(&mut Transform, &RelativeTransform), With<PointLight>>,
-    ft_query: Query<&ft::FlyingTransform, Without<PointLight>>,
+    mut follow_query: Query<(&mut Transform, &RelativeTransform)>,
+    transforms: Query<&Transform, Without<RelativeTransform>>,
 ) {
     for (mut follow, rel) in follow_query.iter_mut() {
-        if let Ok(flying_transform) = ft_query.get(rel.entity) {
-            follow.translation = flying_transform.translation + rel.transform.translation;
+        if let Ok(anchor_transform) = transforms.get(rel.entity) {
+            *follow = anchor_transform.mul_transform(rel.transform);
         }
     }
 }
@@ -159,10 +159,11 @@ fn setup(
             );
         }
     }
+    let ft_ = ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
+        .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
     let cam = commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
-                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+            transform: ft_,
             ..Default::default()
         })
         .insert(ft::Movement::default())
@@ -170,7 +171,7 @@ fn setup(
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
-                intensity: 1600000.0 * 0.8,
+                intensity: 1600000.0 * 0.3,
                 range: 1000.0,
                 ..Default::default()
             },
@@ -178,7 +179,33 @@ fn setup(
         })
         .insert(RelativeTransform {
             entity: cam,
-            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            transform: Transform::from_xyz(0.0, -10.0, 30.0),
+        });
+    commands
+        .spawn_bundle(PointLightBundle {
+            point_light: PointLight {
+                intensity: 1600000.0 * 2.0,
+                range: 1000.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(RelativeTransform {
+            entity: cam,
+            transform: Transform::from_xyz(-150.0, -100.0, -80.0),
+        });
+    commands
+        .spawn_bundle(PointLightBundle {
+            point_light: PointLight {
+                intensity: 1600000.0 * 1.5,
+                range: 1000.0,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(RelativeTransform {
+            entity: cam,
+            transform: Transform::from_xyz(15.0, -200.0, 50.0),
         });
 }
 
