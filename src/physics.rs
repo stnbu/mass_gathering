@@ -85,6 +85,13 @@ pub fn spawn_planet<'a>(
         .insert(ActiveEvents::COLLISION_EVENTS);
 }
 
+#[derive(Bundle)]
+struct Planet {
+    #[bundle]
+    pbr: PbrBundle,
+    point_mass: Transform,
+}
+
 #[derive(Component, Debug)]
 pub struct Momentum {
     velocity: Vec3,

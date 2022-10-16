@@ -25,6 +25,7 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{GravityScale, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use ft::FlyingTransform;
 use rand::Rng;
 
 mod flying_transform;
@@ -37,6 +38,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
+        .add_system(floodlights)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
@@ -51,6 +53,42 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
+}
+
+// #[derive(Component)]
+// struct RelativeTransform {
+//     origin: Entity,
+//     transform: Transform,
+// }
+
+// impl Default for RelativeTransform {
+//     fn default() -> Self {
+// 	Self {
+// 	    origin:
+// 	}
+//     }
+// }
+
+type RelativeTransform = Transform;
+
+fn floodlights(
+    mut query: Query<&mut RelativeTransform, With<PointLight>>,
+    query2: Query<&ft::FlyingTransform, Without<PointLight>>,
+) {
+    if let Ok(mut light) = query.get_single_mut() {
+        for flying_transform in query2.iter() {
+            println!(">>yaya");
+            light.translation = flying_transform.translation + flying_transform.local_y() * -100.0;
+        }
+
+        // if let Ok(flying_transform) = query2.get_single() {
+        //     light.translation = flying_transform.translation + flying_transform.local_y() * 100.0;
+        // } else {
+        //     println!("no ft");
+        // }
+    } else {
+        println!("no light");
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -139,7 +177,7 @@ fn setup(
                 range: 1000.0,
                 ..Default::default()
             },
-            transform: Transform::from_xyz(120.0, 93.0, 101.0),
+            transform: RelativeTransform::from_xyz(0.0, 100.0, 0.0),
             ..Default::default()
         })
         .insert(GravityScale(0.0));
