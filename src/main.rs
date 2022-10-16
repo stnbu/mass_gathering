@@ -107,7 +107,7 @@ fn setup(
     let pair_count = 20;
     for _ in 0..pair_count {
         let direction = Vec3::new(rf(), rf(), rf());
-        let position = direction * 100.0;
+        let position = direction * 80.0;
         let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
         let velocity = (position + perturbence) * 0.1;
         let radius = rf() + 1.0;
@@ -126,7 +126,7 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_translation(Vec3::new(30.0, 0.0, 0.0))
+            transform: ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
