@@ -24,7 +24,7 @@ use bevy_egui::{
     egui::{Color32, Frame, RichText, SidePanel},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::prelude::{NoUserData, RapierPhysicsPlugin};
+use bevy_rapier3d::prelude::{GravityScale, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 
 mod flying_transform;
@@ -98,7 +98,10 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut rapier_config: ResMut<RapierConfiguration>,
 ) {
+    rapier_config.gravity = Vec3::ZERO;
+
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
     for x in 0..2 {
@@ -108,7 +111,7 @@ fn setup(
                 let y = ((y - 1) * 10) as f32 + rf();
                 let z = ((z - 1) * 10) as f32 + rf();
                 let position = Vec3::new(x, y, z);
-                let velocity = Vec3::new(rf() * 5.0, rf() * 5.0, rf() * 5.0);
+                let velocity = Vec3::new(rf() * 3.0, rf() * 3.0, rf() * 3.0);
                 let radius = rf() + 1.0;
                 let color = Color::rgb(rf(), rf(), rf());
                 physics::spawn_planet(
@@ -129,16 +132,19 @@ fn setup(
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
-        .insert(ft::Movement::default());
-    commands.spawn_bundle(PointLightBundle {
-        point_light: PointLight {
-            intensity: 1600000.0 * 0.8,
-            range: 1000.0,
+        .insert(ft::Movement::default())
+        .insert(GravityScale(0.0));
+    commands
+        .spawn_bundle(PointLightBundle {
+            point_light: PointLight {
+                intensity: 1600000.0 * 0.8,
+                range: 1000.0,
+                ..Default::default()
+            },
+            transform: Transform::from_xyz(220.0, 200.0, 45.0),
             ..Default::default()
-        },
-        transform: Transform::from_xyz(220.0, 200.0, 45.0),
-        ..Default::default()
-    });
+        })
+        .insert(GravityScale(0.0));
 }
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
