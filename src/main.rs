@@ -1,15 +1,31 @@
+/// FIXME
+///
+/// How Art Me Broken --
+///
+/// Before I forget, some longform about a recent new and terrible bug:
+/// Particular worked fine, needed to merge planets so dropped it and now
+/// use a `Query` as my particle set. Math should be same but gravity way
+/// stronger now. So naturally I just mul'd it by a tiny number. That fixes
+/// things sorta. I'm not sure it takes us back to where we were but it
+/// _looks_ like it does. But then I turn on the collision stuff.
+///
+/// The "merging" stuff is weird and messy. Reasonably we will see entities
+/// that we just despawned because of 3-way collisions in the queue, etc.
+/// I chose just to skip those collisions. That seems to solve problems to
+/// the point where all is as expected, except when we get to the last few
+/// planets, the merging accelerates and BWOOP all are one gigantic planet.
+/// (and that planet seems too big...) I'm not sure if this is a result of
+/// the initial "cloud" not having enough outward momentum or ...what.
+///
+/// The Final Planet being so large makes me wonder if our merging math is
+/// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
     egui::{Color32, Frame, RichText, SidePanel},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::{
-    prelude::{ActiveEvents, Collider, CollisionEvent, NoUserData, RapierPhysicsPlugin, RigidBody},
-    rapier::prelude::CollisionEventFlags,
-};
-use particular::prelude::*;
+use bevy_rapier3d::prelude::{NoUserData, RapierPhysicsPlugin};
 use rand::Rng;
-use std::f32::consts::PI;
 
 mod flying_transform;
 mod physics;
@@ -53,7 +69,6 @@ fn toggle_pause(current: &AppState) -> Option<AppState> {
 }
 
 fn handle_game_state(
-    mut focus_events: EventReader<bevy::window::WindowFocused>,
     mut app_state: ResMut<State<AppState>>,
     keys: Res<Input<KeyCode>>,
     mouse_buttons: Res<Input<MouseButton>>,
@@ -68,15 +83,7 @@ fn handle_game_state(
         poked = !poked;
     }
 
-    if !poked && *(app_state.current()) != AppState::Startup {
-        // for ev in focus_events.iter() {
-        //     if ev.focused {
-        //         app_state.overwrite_set(AppState::Playing).unwrap();
-        //     } else {
-        //         app_state.overwrite_set(AppState::Paused).unwrap();
-        //     }
-        // }
-    } else {
+    if poked {
         if *(app_state.current()) == AppState::Startup {
             app_state.overwrite_set(AppState::Playing).unwrap();
         } else {
@@ -94,14 +101,14 @@ fn setup(
 ) {
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    for x in 0..4 {
-        for y in 0..4 {
-            for z in 0..4 {
-                let x = ((x - 2) * 10) as f32 + rf();
-                let y = ((y - 2) * 10) as f32 + rf();
-                let z = ((z - 2) * 10) as f32 + rf();
+    for x in 0..2 {
+        for y in 0..2 {
+            for z in 0..2 {
+                let x = ((x - 1) * 10) as f32 + rf();
+                let y = ((y - 1) * 10) as f32 + rf();
+                let z = ((z - 1) * 10) as f32 + rf();
                 let position = Vec3::new(x, y, z);
-                let velocity = Vec3::new(rf() * 5.0, rf() * 5.0, rf() * 5.0);
+                let velocity = Vec3::new(rf() * 15.0, rf() * 15.0, rf() * 15.0);
                 let radius = rf() + 1.0;
                 let color = Color::rgb(rf(), rf(), rf());
                 physics::spawn_planet(
