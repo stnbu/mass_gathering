@@ -25,7 +25,6 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-use ft::FlyingTransform;
 use rand::Rng;
 
 mod flying_transform;
