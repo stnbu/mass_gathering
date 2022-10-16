@@ -12,7 +12,8 @@ use rand::Rng;
 use std::f32::consts::PI;
 
 mod bodies;
-mod space_camera;
+mod flying_transform;
+use flying_transform as ft;
 
 fn main() {
     App::new()
@@ -23,21 +24,15 @@ fn main() {
         .add_state(AppState::Startup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(space_camera::move_forward)
-                .with_system(space_camera::steer)
+                .with_system(ft::move_forward)
+                .with_system(ft::steer)
                 .with_system(bodies::update_particles),
         )
-        .insert_resource(space_camera::CameraConfig {
-            transform: Transform::from_translation(Vec3::new(30.0, 30.0, 30.0))
-                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
-        })
-        .add_plugin(space_camera::SpaceCamera)
         .add_startup_system(setup)
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_system_to_stage(CoreStage::PostUpdate, display_events)
         .add_system(hud)
         .run();
 }
@@ -49,39 +44,6 @@ enum AppState {
     Paused,
 }
 
-fn display_events(
-    mut events: EventReader<CollisionEvent>,
-    mut camera_query: Query<&mut Transform, With<Camera>>,
-    planet_query: Query<&Transform, Without<Camera>>,
-) {
-    eprint!("x");
-    if events.is_empty() {
-        return; // how to obviate
-    }
-    eprint!("y");
-    for collision_event in events.iter() {
-        eprint!("z");
-        if let CollisionEvent::Started(e1, e2, flags) = collision_event {
-            eprint!("0");
-            if flags.contains(CollisionEventFlags::SENSOR) {
-                eprint!("1");
-                if camera_query.contains(*e1) {
-                    let mut camera = camera_query.get_mut(*e1).unwrap();
-                    let planet = planet_query.get(*e2).unwrap();
-                    let connector = camera.translation - planet.translation;
-                    let (rotation, blah) = camera.rotation.to_axis_angle();
-                    let dot = connector.dot(rotation);
-
-                    let new_rotation = 2.0 * dot * connector - rotation;
-                    let quat = Quat::from_axis_angle(new_rotation, blah);
-                    camera.rotation = quat;
-                } else {
-                    eprint!("2");
-                }
-            }
-        }
-    }
-}
 fn toggle_pause(current: &AppState) -> Option<AppState> {
     match current {
         AppState::Paused => Some(AppState::Playing),
@@ -175,6 +137,13 @@ fn setup(
             }
         }
     }
+    commands
+        .spawn_bundle(Camera3dBundle {
+            transform: ft::FlyingTransform::from_translation(Vec3::new(30.0, 30.0, 30.0))
+                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+            ..Default::default()
+        })
+        .insert(ft::Movement::default());
     commands.spawn_bundle(PointLightBundle {
         point_light: PointLight {
             intensity: 1600000.0 * 0.8,
@@ -186,7 +155,7 @@ fn setup(
     });
 }
 
-fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&space_camera::Movement, &Transform)>) {
+fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
     let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
