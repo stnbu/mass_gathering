@@ -1,6 +1,5 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use rapier3d::geometry::SharedShape;
 
 fn main() {
     App::new()
@@ -33,17 +32,27 @@ fn display_events(mut collision_events: EventReader<CollisionEvent>) {
     }
 }
 
-pub fn setup_physics(mut commands: Commands) {
+pub fn setup_physics(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     commands
         .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 0.0, 0.0)))
         .insert(Collider::cuboid(3.0, 3.0, 3.0))
         .insert(ColliderMassProperties::Density(1.0));
 
     commands
-        .spawn_bundle(TransformBundle::from(Transform::from_xyz(0.0, 10.0, 0.0)))
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                radius: 1.0,
+                ..Default::default()
+            })),
+            material: materials.add(Color::WHITE.into()),
+            transform: Transform::from_xyz(0.0, 10.0, 0.0),
+            ..Default::default()
+        })
         .insert(RigidBody::Dynamic)
-        .insert(<SharedShape as Into<Collider>>::into(SharedShape::ball(
-            1.5,
-        )))
+        .insert(Collider::ball(0.5))
         .insert(ActiveEvents::COLLISION_EVENTS);
 }
