@@ -151,7 +151,7 @@ pub fn freefall(mut query: Query<(Entity, &mut Transform, &mut Momentum)>, time:
             } else {
                 dir
             };
-            acceleration + grav_acc // * 0.05 // arbitrary tweak
+            acceleration + grav_acc
         })
     });
     let dt = time.delta_seconds();
@@ -162,8 +162,6 @@ pub fn freefall(mut query: Query<(Entity, &mut Transform, &mut Momentum)>, time:
         }
     }
 }
-
-////////////
 
 #[cfg(test)]
 pub mod tests {

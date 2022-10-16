@@ -104,26 +104,24 @@ fn setup(
 
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    for x in 0..2 {
-        for y in 0..2 {
-            for z in 0..2 {
-                let x = ((x - 1) * 10) as f32 + rf();
-                let y = ((y - 1) * 10) as f32 + rf();
-                let z = ((z - 1) * 10) as f32 + rf();
-                let position = Vec3::new(x, y, z);
-                let velocity = Vec3::new(rf() * 3.0, rf() * 3.0, rf() * 3.0);
-                let radius = rf() + 1.0;
-                let color = Color::rgb(rf(), rf(), rf());
-                physics::spawn_planet(
-                    radius,
-                    position,
-                    velocity,
-                    color,
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                );
-            }
+    let pair_count = 10;
+    for _ in 0..pair_count {
+        let direction = Vec3::new(rf(), rf(), rf());
+        let position = direction * 20.0;
+        let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
+        let velocity = position + perturbence;
+        let radius = rf() + 1.0;
+        for side in [-1.0, 1.0] {
+            let color = Color::rgb(rf(), rf(), rf());
+            physics::spawn_planet(
+                radius,
+                position * side,
+                velocity * side,
+                color,
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+            );
         }
     }
     commands
@@ -133,7 +131,7 @@ fn setup(
             ..Default::default()
         })
         .insert(ft::Movement::default())
-        .insert(GravityScale(0.0));
+        .insert(GravityScale(0.0)); // can ditch
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
