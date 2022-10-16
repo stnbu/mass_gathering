@@ -38,7 +38,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
-        .add_system(floodlights)
+        .add_system(follow)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
@@ -77,26 +77,15 @@ struct RelativeTransform {
     transform: Transform,
 }
 
-fn floodlights(
-    mut light_query: Query<(&mut Transform, &RelativeTransform), With<PointLight>>,
+fn follow(
+    mut follow_query: Query<(&mut Transform, &RelativeTransform), With<PointLight>>,
     ft_query: Query<&ft::FlyingTransform, Without<PointLight>>,
 ) {
-    for (mut light, rel) in light_query.iter_mut() {
-        println!("found a followlight");
+    for (mut follow, rel) in follow_query.iter_mut() {
         if let Ok(flying_transform) = ft_query.get(rel.entity) {
-            light.translation = flying_transform.translation + rel.transform.translation;
-        } else {
-            println!("noo f");
+            follow.translation = flying_transform.translation + rel.transform.translation;
         }
     }
-    // if let Ok(flying_transform) = query2.get_single() {
-    //     light.translation = flying_transform.translation + flying_transform.local_y() * 100.0;
-    // } else {
-    //     println!("no ft");
-    // }
-    // } else {
-    //     println!("no light");
-    // }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -186,7 +175,6 @@ fn setup(
                 range: 1000.0,
                 ..Default::default()
             },
-            transform: Transform::from_translation(Vec3::new(10.0, 10.0, 10.0)),
             ..Default::default()
         })
         .insert(GravityScale(0.0))
