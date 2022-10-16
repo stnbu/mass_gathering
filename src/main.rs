@@ -108,7 +108,7 @@ fn setup(
                 let y = ((y - 1) * 10) as f32 + rf();
                 let z = ((z - 1) * 10) as f32 + rf();
                 let position = Vec3::new(x, y, z);
-                let velocity = Vec3::new(rf() * 15.0, rf() * 15.0, rf() * 15.0);
+                let velocity = Vec3::new(rf() * 5.0, rf() * 5.0, rf() * 5.0);
                 let radius = rf() + 1.0;
                 let color = Color::rgb(rf(), rf(), rf());
                 physics::spawn_planet(
