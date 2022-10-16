@@ -171,7 +171,7 @@ fn setup(
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
-                intensity: 1600000.0 * 0.3,
+                intensity: 1600000.0 * 0.03,
                 range: 1000.0,
                 ..Default::default()
             },
@@ -179,12 +179,12 @@ fn setup(
         })
         .insert(RelativeTransform {
             entity: cam,
-            transform: Transform::from_xyz(0.0, -10.0, 30.0),
+            transform: Transform::from_xyz(0.0, 20.0, 30.0),
         });
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
-                intensity: 1600000.0 * 2.0,
+                intensity: 1600000.0 * 0.05,
                 range: 1000.0,
                 ..Default::default()
             },
@@ -192,12 +192,12 @@ fn setup(
         })
         .insert(RelativeTransform {
             entity: cam,
-            transform: Transform::from_xyz(-150.0, -100.0, -80.0),
+            transform: Transform::from_xyz(-15.0, -10.0, 80.0),
         });
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
-                intensity: 1600000.0 * 1.5,
+                intensity: 1600000.0 * 0.02,
                 range: 1000.0,
                 ..Default::default()
             },
@@ -205,7 +205,7 @@ fn setup(
         })
         .insert(RelativeTransform {
             entity: cam,
-            transform: Transform::from_xyz(15.0, -200.0, 50.0),
+            transform: Transform::from_xyz(15.0, -20.0, 5.0),
         });
 }
 
