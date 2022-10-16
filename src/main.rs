@@ -11,8 +11,8 @@ use particular::prelude::*;
 use rand::Rng;
 use std::f32::consts::PI;
 
-mod bodies;
 mod flying_transform;
+mod physics;
 use flying_transform as ft;
 
 fn main() {
@@ -20,13 +20,13 @@ fn main() {
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
-        .insert_resource(ParticleSet::<bodies::Body>::new())
         .add_state(AppState::Startup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
                 .with_system(ft::steer)
-                .with_system(bodies::update_particles),
+                .with_system(physics::freefall)
+                .with_system(physics::collision_events),
         )
         .add_startup_system(setup)
         // "for prototyping" -- unclean shutdown, havoc under wasm.
@@ -87,18 +87,10 @@ fn handle_game_state(
     }
 }
 
-#[derive(Bundle)]
-struct Planet {
-    #[bundle]
-    pbr: PbrBundle,
-    point_mass: bodies::PointMass,
-}
-
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut particle_set: ResMut<ParticleSet<bodies::Body>>,
 ) {
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
@@ -109,31 +101,18 @@ fn setup(
                 let y = ((y - 2) * 10) as f32 + rf();
                 let z = ((z - 2) * 10) as f32 + rf();
                 let position = Vec3::new(x, y, z);
-                let r = rf();
-                let g = rf();
-                let b = rf();
+                let velocity = Vec3::new(rf() * 5.0, rf() * 5.0, rf() * 5.0);
                 let radius = rf() + 1.0;
-                let pbr = PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius,
-                        ..Default::default()
-                    })),
-                    material: materials.add(Color::rgb(r, g, b).into()),
-                    transform: Transform::from_translation(position),
-                    ..Default::default()
-                };
-                let entity = commands
-                    .spawn_bundle(Planet {
-                        pbr,
-                        point_mass: bodies::PointMass {},
-                    })
-                    .insert(RigidBody::Fixed)
-                    .insert(Collider::ball(radius))
-                    .insert(ActiveEvents::COLLISION_EVENTS)
-                    .id();
-                let mass = 0.75 * PI * radius.powf(3.0);
-                let velocity = Vec3::new(rf(), rf(), rf());
-                particle_set.add_massive(bodies::Body::new(position, mass, velocity, entity));
+                let color = Color::rgb(rf(), rf(), rf());
+                physics::spawn_planet(
+                    radius,
+                    position,
+                    velocity,
+                    color,
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                );
             }
         }
     }
