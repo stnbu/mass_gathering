@@ -126,7 +126,7 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_translation(Vec3::new(30.0, 30.0, 30.0))
+            transform: ft::FlyingTransform::from_translation(Vec3::new(30.0, 0.0, 0.0))
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
@@ -139,7 +139,7 @@ fn setup(
                 range: 1000.0,
                 ..Default::default()
             },
-            transform: Transform::from_xyz(220.0, 200.0, 45.0),
+            transform: Transform::from_xyz(120.0, 93.0, 101.0),
             ..Default::default()
         })
         .insert(GravityScale(0.0));
