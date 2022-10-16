@@ -104,12 +104,12 @@ fn setup(
 
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    let pair_count = 10;
+    let pair_count = 20;
     for _ in 0..pair_count {
         let direction = Vec3::new(rf(), rf(), rf());
-        let position = direction * 20.0;
+        let position = direction * 100.0;
         let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
-        let velocity = position + perturbence;
+        let velocity = (position + perturbence) * 0.1;
         let radius = rf() + 1.0;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
