@@ -24,7 +24,7 @@ use bevy_egui::{
     egui::{Color32, Frame, RichText, SidePanel},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::prelude::{GravityScale, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use ft::FlyingTransform;
 use rand::Rng;
 
@@ -166,7 +166,6 @@ fn setup(
             ..Default::default()
         })
         .insert(ft::Movement::default())
-        .insert(GravityScale(0.0))
         .id(); // can ditch
     commands
         .spawn_bundle(PointLightBundle {
@@ -177,7 +176,6 @@ fn setup(
             },
             ..Default::default()
         })
-        .insert(GravityScale(0.0))
         .insert(RelativeTransform {
             entity: cam,
             transform: Transform::from_xyz(0.0, 0.0, 0.0),
