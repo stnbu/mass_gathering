@@ -24,7 +24,10 @@ use bevy_egui::{
     egui::{Color32, Frame, RichText, SidePanel, Slider},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_rapier3d::{
+    parry::query::visitors::CompositePointContainmentTest,
+    prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin},
+};
 use rand::Rng;
 
 mod flying_transform;
@@ -117,6 +120,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
+    global_config: ResMut<GlobalConfig>,
 ) {
     rapier_config.gravity = Vec3::ZERO;
 
@@ -164,17 +168,14 @@ fn setup(
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.8, 0.2, 1.0))),
         material: materials.add(Color::WHITE.into()),
-        transform: Transform::from_xyz(20.0, 20.0, 20.0),
+        transform: Transform::from_translation(global_config.pos), //_position(global_config), //xyz(20.0, 20.0, 20.0),
         ..Default::default()
     });
 }
 
 #[derive(Default)]
 struct GlobalConfig {
-    size: Vec3,
-    rounding: f32,
-    stroke_width: f32,
-    num_boxes: usize,
+    pos: Vec3,
 }
 
 fn hud(
@@ -206,10 +207,8 @@ fn hud(
                 .color(Color32::GREEN),
             );
             ui.separator();
-            ui.add(Slider::new(&mut global_config.size.x, 0.0..=500.0).text("width"));
-            ui.add(Slider::new(&mut global_config.size.y, 0.0..=500.0).text("height"));
-            ui.add(Slider::new(&mut global_config.rounding, 0.0..=50.0).text("rounding"));
-            ui.add(Slider::new(&mut global_config.stroke_width, 0.0..=10.0).text("stroke_width"));
-            ui.add(Slider::new(&mut global_config.num_boxes, 0..=8).text("num_boxes"));
+            ui.add(Slider::new(&mut global_config.pos.x, 0.0..=500.0).text("x"));
+            ui.add(Slider::new(&mut global_config.pos.y, 0.0..=500.0).text("y"));
+            ui.add(Slider::new(&mut global_config.pos.z, 0.0..=500.0).text("x"));
         });
 }
