@@ -77,14 +77,16 @@ fn follow(
 
 fn on_global_changes(
     global_config: Res<GlobalConfig>,
-    mut query: Query<(&mut Transform, &mut PointLight), With<PointLight>>,
+    mut query: Query<(&mut Transform, &mut PointLight, &LightIndex), With<PointLight>>,
     camera_query: Query<&Transform, (With<Camera>, Without<PointLight>)>,
 ) {
     if global_config.is_changed() {
-        for (mut transform, mut light) in query.iter_mut() {
+        for (mut transform, mut light, index) in query.iter_mut() {
             if let Ok(camera) = camera_query.get_single() {
-                transform.translation = Vec3::ZERO; // camera.translation + global_config.pos.powf(1.1);
-                light.intensity = 0.0;
+                if let Some(config) = global_config.lights.get(index.0) {
+                    transform.translation = (*config).position + camera.translation;
+                    light.intensity = (*config).brightness;
+                }
             }
         }
     }
