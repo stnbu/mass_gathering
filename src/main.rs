@@ -78,10 +78,13 @@ fn follow(
 fn on_global_changes(
     global_config: Res<GlobalConfig>,
     mut query: Query<&mut Transform, With<PointLight>>,
+    camera_query: Query<&Transform, (With<Camera>, Without<PointLight>)>,
 ) {
     if global_config.is_changed() {
         for mut transform in query.iter_mut() {
-            transform.translation = global_config.pos;
+            if let Ok(camera) = camera_query.get_single() {
+                transform.translation = camera.translation + global_config.pos;
+            }
         }
     }
 }
@@ -219,8 +222,8 @@ fn hud(
                 .color(Color32::GREEN),
             );
             ui.separator();
-            ui.add(Slider::new(&mut global_config.pos.x, 0.0..=500.0).text("x"));
-            ui.add(Slider::new(&mut global_config.pos.y, 0.0..=500.0).text("y"));
-            ui.add(Slider::new(&mut global_config.pos.z, 0.0..=500.0).text("x"));
+            ui.add(Slider::new(&mut global_config.pos.x, 0.0..=167.0).text("x"));
+            ui.add(Slider::new(&mut global_config.pos.y, 0.0..=167.0).text("y"));
+            ui.add(Slider::new(&mut global_config.pos.z, 0.0..=167.0).text("x"));
         });
 }
