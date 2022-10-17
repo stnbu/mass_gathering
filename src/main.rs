@@ -41,6 +41,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
+        .add_system(on_global_changes)
         //.add_system(follow)
         .add_system(ft::steer)
         .add_system_set(
@@ -70,6 +71,17 @@ fn follow(
     for (mut follow, rel) in follow_query.iter_mut() {
         if let Ok(anchor_transform) = transforms.get(rel.entity) {
             *follow = anchor_transform.mul_transform(rel.transform);
+        }
+    }
+}
+
+fn on_global_changes(
+    global_config: Res<GlobalConfig>,
+    mut query: Query<&mut Transform, With<PointLight>>,
+) {
+    if global_config.is_changed() {
+        for mut transform in query.iter_mut() {
+            transform.translation = global_config.pos;
         }
     }
 }
@@ -120,7 +132,6 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
-    global_config: ResMut<GlobalConfig>,
 ) {
     rapier_config.gravity = Vec3::ZERO;
 
@@ -165,10 +176,11 @@ fn setup(
         ..Default::default()
     });
 
+    //global_config.as_ref()
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(0.8, 0.2, 1.0))),
         material: materials.add(Color::WHITE.into()),
-        transform: Transform::from_translation(global_config.pos), //_position(global_config), //xyz(20.0, 20.0, 20.0),
+        transform: Transform::default(),
         ..Default::default()
     });
 }
