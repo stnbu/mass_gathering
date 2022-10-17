@@ -21,7 +21,7 @@
 /// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{Color32, Frame, RichText, SidePanel, Slider},
+    egui::{style::Margin, Color32, Frame, RichText, SidePanel, Slider},
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::{
@@ -201,6 +201,7 @@ fn hud(
     let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
+            outer_margin: Margin::symmetric(10.0, 10.0),
             fill: Color32::TRANSPARENT,
             ..Default::default()
         })
@@ -224,6 +225,6 @@ fn hud(
             ui.separator();
             ui.add(Slider::new(&mut global_config.pos.x, -200.0..=200.0).text("x"));
             ui.add(Slider::new(&mut global_config.pos.y, -200.0..=200.0).text("y"));
-            ui.add(Slider::new(&mut global_config.pos.z, 0.0..=167.0).text("x"));
+            ui.add(Slider::new(&mut global_config.pos.z, -200.0..=200.0).text("x"));
         });
 }
