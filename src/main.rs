@@ -218,33 +218,15 @@ fn hud(
     query: Query<(&ft::Movement, &Transform)>,
     mut global_config: ResMut<GlobalConfig>,
 ) {
-    let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
-            outer_margin: Margin::symmetric(10.0, 10.0),
+            outer_margin: Margin::symmetric(10.0, 20.0),
             fill: Color32::TRANSPARENT,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            ui.separator();
-            ui.label(RichText::new("Keys:").color(Color32::GREEN));
-            ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
-            ui.label(RichText::new("  Z & X:\tYaw").color(Color32::GREEN));
-            ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
-            ui.separator();
-            ui.label(
-                RichText::new(format!("Your Speed: {}", movement.speed)).color(Color32::GREEN),
-            );
-            ui.label(
-                RichText::new(format!(
-                    "Your Location:\n  x: {}\n  y:{}\n  z:{}",
-                    transform.translation.x, transform.translation.y, transform.translation.z
-                ))
-                .color(Color32::GREEN),
-            );
-            ui.separator();
-            ui.separator();
-            for light in global_config.lights.iter_mut() {
+            for (index, light) in global_config.lights.iter_mut().enumerate() {
+                ui.label(RichText::new(format!("Light #{}", index)).color(Color32::GREEN));
                 ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
                 ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
                 ui.add(Slider::new(&mut light.position.y, -200.0..=200.0).text("y"));
