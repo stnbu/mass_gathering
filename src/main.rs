@@ -222,8 +222,8 @@ fn hud(
                 .color(Color32::GREEN),
             );
             ui.separator();
-            ui.add(Slider::new(&mut global_config.pos.x, 0.0..=167.0).text("x"));
-            ui.add(Slider::new(&mut global_config.pos.y, 0.0..=167.0).text("y"));
+            ui.add(Slider::new(&mut global_config.pos.x, -200.0..=200.0).text("x"));
+            ui.add(Slider::new(&mut global_config.pos.y, -200.0..=200.0).text("y"));
             ui.add(Slider::new(&mut global_config.pos.z, 0.0..=167.0).text("x"));
         });
 }
