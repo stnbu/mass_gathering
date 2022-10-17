@@ -77,13 +77,14 @@ fn follow(
 
 fn on_global_changes(
     global_config: Res<GlobalConfig>,
-    mut query: Query<&mut Transform, With<PointLight>>,
+    mut query: Query<(&mut Transform, &mut PointLight), With<PointLight>>,
     camera_query: Query<&Transform, (With<Camera>, Without<PointLight>)>,
 ) {
     if global_config.is_changed() {
-        for mut transform in query.iter_mut() {
+        for (mut transform, mut light) in query.iter_mut() {
             if let Ok(camera) = camera_query.get_single() {
-                transform.translation = camera.translation + global_config.pos.powf(1.1);
+                transform.translation = Vec3::ZERO; // camera.translation + global_config.pos.powf(1.1);
+                light.intensity = 0.0;
             }
         }
     }
@@ -135,6 +136,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
+    global_config: Res<GlobalConfig>,
 ) {
     rapier_config.gravity = Vec3::ZERO;
 
@@ -168,29 +170,46 @@ fn setup(
         })
         .insert(ft::Movement::default())
         .id();
-
-    commands.spawn_bundle(PointLightBundle {
-        transform: Transform::from_xyz(30.0, 30.0, 30.0),
-        point_light: PointLight {
-            intensity: 1600000.0 * 0.8,
-            range: 1000.0,
-            ..Default::default()
-        },
-        ..Default::default()
-    });
-
-    //global_config.as_ref()
-    commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Box::new(0.8, 0.2, 1.0))),
-        material: materials.add(Color::WHITE.into()),
-        transform: Transform::default(),
-        ..Default::default()
-    });
+    ///
+    for num in 0..global_config.lights.len() {
+        commands
+            .spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(30.0, 30.0, 30.0),
+                point_light: PointLight {
+                    intensity: 0.0,
+                    range: 1000.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .insert(LightIndex(num));
+    }
 }
 
-#[derive(Default)]
+#[derive(Component)]
+struct LightIndex(usize);
+
+struct LightConfig {
+    position: Vec3,
+    brightness: f32,
+}
+
+//#[derive(Default)]
 struct GlobalConfig {
-    pos: Vec3,
+    lights: Vec<LightConfig>,
+}
+
+impl Default for GlobalConfig {
+    fn default() -> Self {
+        Self {
+            lights: (0..5)
+                .map(|_| LightConfig {
+                    position: Vec3::ZERO,
+                    brightness: 0.0,
+                })
+                .collect(),
+        }
+    }
 }
 
 fn hud(
@@ -223,8 +242,13 @@ fn hud(
                 .color(Color32::GREEN),
             );
             ui.separator();
-            ui.add(Slider::new(&mut global_config.pos.x, -200.0..=200.0).text("x"));
-            ui.add(Slider::new(&mut global_config.pos.y, -200.0..=200.0).text("y"));
-            ui.add(Slider::new(&mut global_config.pos.z, -200.0..=200.0).text("x"));
+            ui.separator();
+            for light in global_config.lights.iter_mut() {
+                ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
+                ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
+                ui.add(Slider::new(&mut light.position.y, -200.0..=200.0).text("y"));
+                ui.add(Slider::new(&mut light.position.z, -200.0..=200.0).text("x"));
+                ui.separator();
+            }
         });
 }
