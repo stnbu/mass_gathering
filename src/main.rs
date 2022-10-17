@@ -230,7 +230,7 @@ fn hud(
                 ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
                 ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
                 ui.add(Slider::new(&mut light.position.y, -200.0..=200.0).text("y"));
-                ui.add(Slider::new(&mut light.position.z, -200.0..=200.0).text("x"));
+                ui.add(Slider::new(&mut light.position.z, -200.0..=200.0).text("z"));
                 ui.separator();
             }
         });
