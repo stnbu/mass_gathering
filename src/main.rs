@@ -144,13 +144,13 @@ fn setup(
 
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    let pair_count = 20;
+    let pair_count = 40;
     for _ in 0..pair_count {
         let direction = Vec3::new(rf(), rf(), rf());
         let position = direction * 80.0;
         let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
         let velocity = (position + perturbence) * 0.1;
-        let radius = rf() + 1.0;
+        let radius = rf() + 0.8;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
             physics::spawn_planet(
@@ -166,8 +166,7 @@ fn setup(
     }
     let _cam = commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_translation(Vec3::new(0.0, 0.0, -50.0))
-                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+            transform: ft::FlyingTransform::default(),
             ..Default::default()
         })
         .insert(ft::Movement::default())
@@ -176,7 +175,7 @@ fn setup(
     for num in 0..global_config.lights.len() {
         commands
             .spawn_bundle(PointLightBundle {
-                transform: Transform::from_xyz(30.0, 30.0, 30.0),
+                transform: Transform::default(),
                 point_light: PointLight {
                     intensity: 0.0,
                     range: 1000.0,
