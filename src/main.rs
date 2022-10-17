@@ -21,7 +21,7 @@
 /// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{Color32, Frame, RichText, SidePanel},
+    egui::{Color32, Frame, RichText, Sense, SidePanel, Slider, Stroke},
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -34,6 +34,7 @@ use flying_transform as ft;
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
+        .insert_resource(GlobalConfig::default())
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
@@ -69,6 +70,17 @@ fn main() {
 // }
 
 //type RelativeTransform = Transform;
+
+/*
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    if ui.button("Quit").clicked() {
+                        std::process::exit(0);
+                    }
+                }
+// MiscDemoWindow
+
+*/
 
 #[derive(Component)]
 struct RelativeTransform {
@@ -158,15 +170,15 @@ fn setup(
             );
         }
     }
-    let ft_ = ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
-        .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y);
     let cam = commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft_,
+            transform: ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
+                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
         .insert(ft::Movement::default())
-        .id(); // can ditch
+        .id();
+
     commands
         .spawn_bundle(PointLightBundle {
             point_light: PointLight {
@@ -206,9 +218,50 @@ fn setup(
             entity: cam,
             transform: Transform::from_xyz(15.0, -20.0, 5.0),
         });
+
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.8, 0.2, 1.0))),
+            material: materials.add(Color::WHITE.into()),
+            transform: Transform::default(),
+            ..Default::default()
+        })
+        .insert(RelativeTransform {
+            entity: cam,
+            transform: Transform::from_xyz(0.0, 2.0, -3.0),
+        });
 }
 
-fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
+#[derive(Default)]
+struct GlobalConfig {
+    /*
+           ui.add(Slider::new(&mut global_config.size.x, 0.0..=500.0).text("width"));
+           ui.add(Slider::new(&mut global_config.size.y, 0.0..=500.0).text("height"));
+           ui.add(Slider::new(&mut global_config.rounding, 0.0..=50.0).text("rounding"));
+           ui.add(Slider::new(&mut global_config.stroke_width, 0.0..=10.0).text("stroke_width"));
+           ui.add(Slider::new(&mut global_config.num_boxes, 0..=8).text("num_boxes"));
+
+    */
+    size: Vec3,
+    rounding: f32,
+    stroke_width: f32,
+    num_boxes: usize,
+}
+
+// impl Default for GlobalConfig {
+//     fn default() -> Self {
+//         Self {
+//             ..Default::default()
+//         }
+//     }
+// }
+
+fn hud(
+    mut ctx: ResMut<EguiContext>,
+    query: Query<(&ft::Movement, &Transform)>,
+    mut global_config: ResMut<GlobalConfig>,
+) {
+    //, Slider, Stroke, Sense
     let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
@@ -232,5 +285,24 @@ fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) 
                 ))
                 .color(Color32::GREEN),
             );
+            ui.separator();
+            ui.add(Slider::new(&mut global_config.size.x, 0.0..=500.0).text("width"));
+            ui.add(Slider::new(&mut global_config.size.y, 0.0..=500.0).text("height"));
+            ui.add(Slider::new(&mut global_config.rounding, 0.0..=50.0).text("rounding"));
+            ui.add(Slider::new(&mut global_config.stroke_width, 0.0..=10.0).text("stroke_width"));
+            ui.add(Slider::new(&mut global_config.num_boxes, 0..=8).text("num_boxes"));
+
+            // ui.horizontal_wrapped(|ui| {
+            //     for _ in 0..global_config.num_boxes {
+            //         let (rect, _response) =
+            //             ui.allocate_at_least(global_config.size, Sense::hover());
+            //         ui.painter().rect(
+            //             rect,
+            //             global_config.rounding,
+            //             Color32::from_gray(64),
+            //             Stroke::new(global_config.stroke_width, Color32::WHITE),
+            //         );
+            //     }
+            // });
         });
 }
