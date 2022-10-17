@@ -83,7 +83,7 @@ fn on_global_changes(
     if global_config.is_changed() {
         for mut transform in query.iter_mut() {
             if let Ok(camera) = camera_query.get_single() {
-                transform.translation = camera.translation + global_config.pos;
+                transform.translation = camera.translation + global_config.pos.powf(1.1);
             }
         }
     }
@@ -162,7 +162,7 @@ fn setup(
     }
     let _cam = commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_translation(Vec3::new(30.0, 30.0, 30.0))
+            transform: ft::FlyingTransform::from_translation(Vec3::new(0.0, 0.0, -50.0))
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
