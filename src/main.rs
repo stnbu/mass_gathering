@@ -21,13 +21,10 @@
 /// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{style::Margin, Color32, Frame, RichText, SidePanel, Slider},
+    egui::{Color32, Frame, RichText, SidePanel, Slider},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::{
-    parry::query::visitors::CompositePointContainmentTest,
-    prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin},
-};
+use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 
 mod flying_transform;
@@ -42,21 +39,50 @@ fn main() {
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
         .add_system(on_global_changes)
-        //.add_system(follow)
-        .add_system(ft::steer)
+        .add_system(follow)
+        .add_system(hud)
         .add_system_set(
-            SystemSet::on_update(AppState::Playing), //.with_system(ft::move_forward)
-                                                     //.with_system(ft::steer), //.with_system(physics::freefall)
-                                                     //.with_system(physics::collision_events),
+            SystemSet::on_update(AppState::Playing)
+                .with_system(ft::move_forward)
+                .with_system(ft::steer)
+                .with_system(physics::freefall)
+                .with_system(physics::collision_events),
         )
         .add_startup_system(setup)
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
-        //.add_system(handle_game_state)
+        .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
 }
+
+// #[derive(Component)]
+// struct RelativeTransform {
+//     origin: Entity,
+//     transform: Transform,
+// }
+
+// impl Default for RelativeTransform {
+//     fn default() -> Self {
+// 	Self {
+// 	    origin:
+// 	}
+//     }
+// }
+
+//type RelativeTransform = Transform;
+
+/*
+                #[cfg(not(target_arch = "wasm32"))]
+                {
+                    if ui.button("Quit").clicked() {
+                        std::process::exit(0);
+                    }
+                }
+// MiscDemoWindow
+
+*/
 
 #[derive(Component)]
 struct RelativeTransform {
@@ -138,19 +164,19 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
-    global_config: Res<GlobalConfig>,
+    mut global_config: ResMut<GlobalConfig>,
 ) {
     rapier_config.gravity = Vec3::ZERO;
 
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    let pair_count = 40;
+    let pair_count = 20;
     for _ in 0..pair_count {
         let direction = Vec3::new(rf(), rf(), rf());
         let position = direction * 80.0;
         let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
         let velocity = (position + perturbence) * 0.1;
-        let radius = rf() + 0.8;
+        let radius = rf() + 1.0;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
             physics::spawn_planet(
@@ -164,9 +190,10 @@ fn setup(
             );
         }
     }
-    let _cam = commands
+    let cam = commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::default(),
+            transform: ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
+                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
         .insert(ft::Movement::default())
@@ -186,7 +213,6 @@ fn setup(
             .insert(LightIndex(num));
     }
 }
-
 #[derive(Component)]
 struct LightIndex(usize);
 
@@ -195,8 +221,15 @@ struct LightConfig {
     brightness: f32,
 }
 
-//#[derive(Default)]
 struct GlobalConfig {
+    /*
+           ui.add(Slider::new(&mut global_config.size.x, 0.0..=500.0).text("width"));
+           ui.add(Slider::new(&mut global_config.size.y, 0.0..=500.0).text("height"));
+           ui.add(Slider::new(&mut global_config.rounding, 0.0..=50.0).text("rounding"));
+           ui.add(Slider::new(&mut global_config.stroke_width, 0.0..=10.0).text("stroke_width"));
+           ui.add(Slider::new(&mut global_config.num_boxes, 0..=8).text("num_boxes"));
+
+    */
     lights: Vec<LightConfig>,
 }
 
@@ -205,8 +238,8 @@ impl Default for GlobalConfig {
         Self {
             lights: (0..5)
                 .map(|_| LightConfig {
-                    position: Vec3::ZERO,
                     brightness: 0.0,
+                    position: Vec3::ZERO,
                 })
                 .collect(),
         }
@@ -218,13 +251,33 @@ fn hud(
     query: Query<(&ft::Movement, &Transform)>,
     mut global_config: ResMut<GlobalConfig>,
 ) {
+    //, Slider, Stroke, Sense
+    let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
-            outer_margin: Margin::symmetric(10.0, 20.0),
             fill: Color32::TRANSPARENT,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
+            ui.separator();
+            ui.label(RichText::new("Keys:").color(Color32::GREEN));
+            ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
+            ui.label(RichText::new("  Z & X:\tYaw").color(Color32::GREEN));
+            ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
+            ui.separator();
+            ui.label(
+                RichText::new(format!("Your Speed: {}", movement.speed)).color(Color32::GREEN),
+            );
+            ui.label(
+                RichText::new(format!(
+                    "Your Location:\n  x: {}\n  y:{}\n  z:{}",
+                    transform.translation.x, transform.translation.y, transform.translation.z
+                ))
+                .color(Color32::GREEN),
+            );
+            ui.separator();
+            ui.separator();
+
             for (index, light) in global_config.lights.iter_mut().enumerate() {
                 ui.label(RichText::new(format!("Light #{}", index)).color(Color32::GREEN));
                 ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
