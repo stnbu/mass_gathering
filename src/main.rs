@@ -21,7 +21,7 @@
 /// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{Color32, Frame, RichText, Sense, SidePanel, Slider, Stroke},
+    egui::{Color32, Frame, RichText, SidePanel, Slider},
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -38,49 +38,21 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
-        .add_system(follow)
+        //.add_system(follow)
+        .add_system(ft::steer)
         .add_system_set(
-            SystemSet::on_update(AppState::Playing)
-                .with_system(ft::move_forward)
-                .with_system(ft::steer)
-                .with_system(physics::freefall)
-                .with_system(physics::collision_events),
+            SystemSet::on_update(AppState::Playing), //.with_system(ft::move_forward)
+                                                     //.with_system(ft::steer), //.with_system(physics::freefall)
+                                                     //.with_system(physics::collision_events),
         )
         .add_startup_system(setup)
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
-        .add_system(handle_game_state)
+        //.add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
 }
-
-// #[derive(Component)]
-// struct RelativeTransform {
-//     origin: Entity,
-//     transform: Transform,
-// }
-
-// impl Default for RelativeTransform {
-//     fn default() -> Self {
-// 	Self {
-// 	    origin:
-// 	}
-//     }
-// }
-
-//type RelativeTransform = Transform;
-
-/*
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    if ui.button("Quit").clicked() {
-                        std::process::exit(0);
-                    }
-                }
-// MiscDemoWindow
-
-*/
 
 #[derive(Component)]
 struct RelativeTransform {
@@ -170,98 +142,46 @@ fn setup(
             );
         }
     }
-    let cam = commands
+    let _cam = commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
+            transform: ft::FlyingTransform::from_translation(Vec3::new(30.0, 30.0, 30.0))
                 .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
             ..Default::default()
         })
         .insert(ft::Movement::default())
         .id();
 
-    commands
-        .spawn_bundle(PointLightBundle {
-            point_light: PointLight {
-                intensity: 1600000.0 * 0.03,
-                range: 1000.0,
-                ..Default::default()
-            },
+    commands.spawn_bundle(PointLightBundle {
+        transform: Transform::from_xyz(30.0, 30.0, 30.0),
+        point_light: PointLight {
+            intensity: 1600000.0 * 0.8,
+            range: 1000.0,
             ..Default::default()
-        })
-        .insert(RelativeTransform {
-            entity: cam,
-            transform: Transform::from_xyz(0.0, 20.0, 30.0),
-        });
-    commands
-        .spawn_bundle(PointLightBundle {
-            point_light: PointLight {
-                intensity: 1600000.0 * 0.05,
-                range: 1000.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(RelativeTransform {
-            entity: cam,
-            transform: Transform::from_xyz(-15.0, -10.0, 80.0),
-        });
-    commands
-        .spawn_bundle(PointLightBundle {
-            point_light: PointLight {
-                intensity: 1600000.0 * 0.02,
-                range: 1000.0,
-                ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(RelativeTransform {
-            entity: cam,
-            transform: Transform::from_xyz(15.0, -20.0, 5.0),
-        });
+        },
+        ..Default::default()
+    });
 
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(0.8, 0.2, 1.0))),
-            material: materials.add(Color::WHITE.into()),
-            transform: Transform::default(),
-            ..Default::default()
-        })
-        .insert(RelativeTransform {
-            entity: cam,
-            transform: Transform::from_xyz(0.0, 2.0, -3.0),
-        });
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Box::new(0.8, 0.2, 1.0))),
+        material: materials.add(Color::WHITE.into()),
+        transform: Transform::from_xyz(20.0, 20.0, 20.0),
+        ..Default::default()
+    });
 }
 
 #[derive(Default)]
 struct GlobalConfig {
-    /*
-           ui.add(Slider::new(&mut global_config.size.x, 0.0..=500.0).text("width"));
-           ui.add(Slider::new(&mut global_config.size.y, 0.0..=500.0).text("height"));
-           ui.add(Slider::new(&mut global_config.rounding, 0.0..=50.0).text("rounding"));
-           ui.add(Slider::new(&mut global_config.stroke_width, 0.0..=10.0).text("stroke_width"));
-           ui.add(Slider::new(&mut global_config.num_boxes, 0..=8).text("num_boxes"));
-
-    */
     size: Vec3,
     rounding: f32,
     stroke_width: f32,
     num_boxes: usize,
 }
 
-// impl Default for GlobalConfig {
-//     fn default() -> Self {
-//         Self {
-//             ..Default::default()
-//         }
-//     }
-// }
-
 fn hud(
     mut ctx: ResMut<EguiContext>,
     query: Query<(&ft::Movement, &Transform)>,
     mut global_config: ResMut<GlobalConfig>,
 ) {
-    //, Slider, Stroke, Sense
     let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
@@ -291,18 +211,5 @@ fn hud(
             ui.add(Slider::new(&mut global_config.rounding, 0.0..=50.0).text("rounding"));
             ui.add(Slider::new(&mut global_config.stroke_width, 0.0..=10.0).text("stroke_width"));
             ui.add(Slider::new(&mut global_config.num_boxes, 0..=8).text("num_boxes"));
-
-            // ui.horizontal_wrapped(|ui| {
-            //     for _ in 0..global_config.num_boxes {
-            //         let (rect, _response) =
-            //             ui.allocate_at_least(global_config.size, Sense::hover());
-            //         ui.painter().rect(
-            //             rect,
-            //             global_config.rounding,
-            //             Color32::from_gray(64),
-            //             Stroke::new(global_config.stroke_width, Color32::WHITE),
-            //         );
-            //     }
-            // });
         });
 }
