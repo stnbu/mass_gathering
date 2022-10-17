@@ -21,10 +21,13 @@
 /// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{Color32, Frame, RichText, SidePanel, Slider},
+    egui::{style::Margin, Color32, Frame, RichText, SidePanel, Slider},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_rapier3d::{
+    parry::query::visitors::CompositePointContainmentTest,
+    prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin},
+};
 use rand::Rng;
 
 mod flying_transform;
@@ -39,50 +42,23 @@ fn main() {
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
         .add_system(on_global_changes)
-        .add_system(follow)
-        .add_system(hud)
+        //.add_system(follow)
+        .add_system(ft::steer)
+        //.add_system(hud)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(ft::move_forward)
-                .with_system(ft::steer)
-                .with_system(physics::freefall)
-                .with_system(physics::collision_events),
+                //.with_system(ft::move_forward)
+                .with_system(ft::steer), //.with_system(physics::freefall)
+                                         //.with_system(physics::collision_events),
         )
         .add_startup_system(setup)
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
-        .add_system(handle_game_state)
+        //.add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
 }
-
-// #[derive(Component)]
-// struct RelativeTransform {
-//     origin: Entity,
-//     transform: Transform,
-// }
-
-// impl Default for RelativeTransform {
-//     fn default() -> Self {
-// 	Self {
-// 	    origin:
-// 	}
-//     }
-// }
-
-//type RelativeTransform = Transform;
-
-/*
-                #[cfg(not(target_arch = "wasm32"))]
-                {
-                    if ui.button("Quit").clicked() {
-                        std::process::exit(0);
-                    }
-                }
-// MiscDemoWindow
-
-*/
 
 #[derive(Component)]
 struct RelativeTransform {
@@ -164,7 +140,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
-    mut global_config: ResMut<GlobalConfig>,
+    global_config: Res<GlobalConfig>,
 ) {
     rapier_config.gravity = Vec3::ZERO;
 
@@ -222,14 +198,6 @@ struct LightConfig {
 }
 
 struct GlobalConfig {
-    /*
-           ui.add(Slider::new(&mut global_config.size.x, 0.0..=500.0).text("width"));
-           ui.add(Slider::new(&mut global_config.size.y, 0.0..=500.0).text("height"));
-           ui.add(Slider::new(&mut global_config.rounding, 0.0..=50.0).text("rounding"));
-           ui.add(Slider::new(&mut global_config.stroke_width, 0.0..=10.0).text("stroke_width"));
-           ui.add(Slider::new(&mut global_config.num_boxes, 0..=8).text("num_boxes"));
-
-    */
     lights: Vec<LightConfig>,
 }
 
@@ -238,8 +206,8 @@ impl Default for GlobalConfig {
         Self {
             lights: (0..5)
                 .map(|_| LightConfig {
-                    brightness: 0.0,
                     position: Vec3::ZERO,
+                    brightness: 0.0,
                 })
                 .collect(),
         }
@@ -255,6 +223,7 @@ fn hud(
     let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
+            outer_margin: Margin::symmetric(10.0, 20.0),
             fill: Color32::TRANSPARENT,
             ..Default::default()
         })
