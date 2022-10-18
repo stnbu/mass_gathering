@@ -46,7 +46,7 @@ fn main() {
         .add_system(ft::steer)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(ft::move_forward)
+                //.with_system(ft::move_forward)
                 .with_system(ft::steer)
                 .with_system(physics::freefall)
                 .with_system(physics::collision_events),
@@ -83,7 +83,10 @@ struct GlobalConfigSubscriber;
 fn on_global_changes(
     global_config: Res<GlobalConfig>,
     mut query: Query<
-        (&mut Transform, Option<(&mut PointLight, &LightIndex)>),
+        (
+            &mut RelativeTransform,
+            Option<(&mut PointLight, &LightIndex)>,
+        ),
         With<GlobalConfigSubscriber>,
     >,
     camera_query: Query<&Transform, (With<Camera>, Without<GlobalConfigSubscriber>)>,
@@ -93,7 +96,7 @@ fn on_global_changes(
             if let Some((mut light, index)) = light_opt {
                 if let Ok(camera) = camera_query.get_single() {
                     if let Some(config) = global_config.lights.get(index.0) {
-                        transform.translation = (*config).position + camera.translation;
+                        transform.transform.translation = (*config).position + camera.translation;
                         light.intensity = (*config).brightness;
                     }
                 }
@@ -154,10 +157,10 @@ fn setup(
 
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    let pair_count = 20;
+    let pair_count = 40;
     for _ in 0..pair_count {
         let direction = Vec3::new(rf(), rf(), rf());
-        let position = direction * 80.0;
+        let position = (direction * 60.0) + 10.0;
         let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
         let velocity = (position + perturbence) * 0.1;
         let radius = rf() + 1.0;
@@ -176,13 +179,11 @@ fn setup(
     }
     let cam = commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_translation(Vec3::new(10.0, 10.0, 10.0))
-                .looking_at(Vec3::new(0.0, 0.0, 0.0), Vec3::Y),
+            transform: ft::FlyingTransform::default(),
             ..Default::default()
         })
         .insert(ft::Movement::default())
         .id();
-    ///
     for num in 0..global_config.lights.len() {
         commands
             .spawn_bundle(PointLightBundle {
@@ -195,7 +196,11 @@ fn setup(
                 ..Default::default()
             })
             .insert(LightIndex(num))
-            .insert(GlobalConfigSubscriber {});
+            .insert(GlobalConfigSubscriber {})
+            .insert(RelativeTransform {
+                entity: cam,
+                transform: Transform::default(),
+            });
     }
 }
 #[derive(Component)]
@@ -256,7 +261,7 @@ fn hud(
             ui.separator();
             ui.separator();
 
-            for (index, light) in global_config.lights.iter_mut().enumerate() {
+            for (index, mut light) in global_config.lights.iter_mut().enumerate() {
                 ui.label(RichText::new(format!("Light #{}", index)).color(Color32::GREEN));
                 ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
                 ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
