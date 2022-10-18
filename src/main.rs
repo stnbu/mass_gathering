@@ -27,9 +27,13 @@ use bevy_egui::{
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 
-mod flying_transform;
 mod physics;
+
+mod flying_transform;
 use flying_transform as ft;
+
+mod relative_transforms;
+use relative_transforms as rt;
 
 fn main() {
     App::new()
@@ -43,7 +47,7 @@ fn main() {
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
                 .with_system(ft::steer)
-                .with_system(follow)
+                .with_system(rt::update_relative_transforms)
                 .with_system(physics::freefall)
                 .with_system(physics::collision_events),
         )
@@ -56,23 +60,6 @@ fn main() {
         .run();
 }
 
-#[derive(Component)]
-struct RelativeTransform {
-    entity: Entity,
-    transform: Transform,
-}
-
-fn follow(
-    mut followers: Query<(&mut Transform, &RelativeTransform)>,
-    reference_frames: Query<&Transform, Without<RelativeTransform>>,
-) {
-    for (mut follower, relative_transform) in followers.iter_mut() {
-        if let Ok(frame) = reference_frames.get(relative_transform.entity) {
-            *follower = frame.mul_transform(relative_transform.transform);
-        }
-    }
-}
-
 #[derive(Component, Default)]
 struct GlobalConfigSubscriber;
 
@@ -80,7 +67,7 @@ fn on_global_changes(
     global_config: Res<GlobalConfig>,
     mut query: Query<
         (
-            &mut RelativeTransform,
+            &mut rt::RelativeTransform,
             Option<(&mut PointLight, &LightIndex)>,
         ),
         With<GlobalConfigSubscriber>,
@@ -193,7 +180,7 @@ fn setup(
             })
             .insert(LightIndex(num))
             .insert(GlobalConfigSubscriber {})
-            .insert(RelativeTransform {
+            .insert(rt::RelativeTransform {
                 entity: cam,
                 transform: Transform::default(),
             });
