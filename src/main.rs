@@ -24,10 +24,7 @@ use bevy_egui::{
     egui::{style::Margin, Color32, Frame, RichText, SidePanel, Slider},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::{
-    parry::query::visitors::CompositePointContainmentTest,
-    prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin},
-};
+use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 
 mod flying_transform;
