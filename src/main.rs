@@ -60,11 +60,36 @@ fn main() {
         .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
-        .add_startup_system(gf::setup_calibration_pattern)
+        .add_startup_system(calibration_pattern)
         .add_system_set(
             SystemSet::on_update(AppState::Menu).with_system(gf::global_config_gui), //                .with_(),
         )
         .run();
+}
+
+fn calibration_pattern(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    for x in 0..3 {
+        for y in 0..3 {
+            for z in 0..3 {
+                let [x, y, z] = [x, y, z].map(|i| i as f32 * 3.0);
+                [1.0, -1.0].iter().for_each(|side| {
+                    commands.spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.5,
+                            ..Default::default()
+                        })),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_xyz(side * x, side * y, side * z),
+                        ..Default::default()
+                    });
+                });
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
