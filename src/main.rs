@@ -46,7 +46,7 @@ fn main() {
         .add_system(ft::steer)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                //.with_system(ft::move_forward)
+                .with_system(ft::move_forward)
                 .with_system(ft::steer)
                 .with_system(physics::freefall)
                 .with_system(physics::collision_events),
