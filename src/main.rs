@@ -60,7 +60,11 @@ fn main() {
         .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
-        .add_system_set(SystemSet::on_update(AppState::Menu).with_system(gf::global_config_gui))
+        .add_system_set(
+            SystemSet::on_update(AppState::Menu)
+                .with_system(gf::global_config_gui)
+                .with_system(gf::setup_calibration_pattern),
+        )
         .run();
 }
 
@@ -77,7 +81,7 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
     use KeyCode::*;
     let next_state =
         keys.get_just_pressed()
-            .fold(None, |state, key| match (*app_state.current(), *key) {
+            .fold(None, |_state, key| match (*app_state.current(), *key) {
                 (Playing, Space) => Some(Paused),
                 (Paused, Space) => Some(Playing),
                 (Menu, M) => Some(Playing),
