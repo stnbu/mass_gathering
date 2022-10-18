@@ -44,17 +44,17 @@ fn main() {
         .add_system(on_global_changes)
         //.add_system(follow)
         .add_system(ft::steer)
-        //.add_system(hud)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                //.with_system(ft::move_forward)
-                .with_system(ft::steer), //.with_system(physics::freefall)
-                                         //.with_system(physics::collision_events),
+                .with_system(ft::move_forward)
+                .with_system(ft::steer)
+                .with_system(physics::freefall)
+                .with_system(physics::collision_events),
         )
         .add_startup_system(setup)
         // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
-        //.add_system(handle_game_state)
+        .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
