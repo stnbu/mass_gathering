@@ -42,12 +42,11 @@ fn main() {
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
         .add_system(on_global_changes)
-        .add_system(follow)
-        .add_system(ft::steer)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
                 .with_system(ft::steer)
+                .with_system(follow)
                 .with_system(physics::freefall)
                 .with_system(physics::collision_events),
         )
@@ -261,7 +260,7 @@ fn hud(
             ui.separator();
             ui.separator();
 
-            for (index, mut light) in global_config.lights.iter_mut().enumerate() {
+            for (index, light) in global_config.lights.iter_mut().enumerate() {
                 ui.label(RichText::new(format!("Light #{}", index)).color(Color32::GREEN));
                 ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
                 ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
