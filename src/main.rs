@@ -21,7 +21,7 @@
 /// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{style::Margin, Color32, Frame, RichText, SidePanel, Slider},
+    egui::{style::Margin, Color32, Frame, RichText, SidePanel},
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -35,14 +35,17 @@ use flying_transform as ft;
 mod relative_transforms;
 use relative_transforms as rt;
 
+mod global_config;
+use global_config as gf;
+
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-        .insert_resource(GlobalConfig::default())
+        .insert_resource(gf::GlobalConfig::default())
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
-        .add_system(on_global_changes)
+        .add_system(gf::on_global_config_changes)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
@@ -57,35 +60,8 @@ fn main() {
         .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
+        .add_system(gf::global_config_gui)
         .run();
-}
-
-#[derive(Component, Default)]
-struct GlobalConfigSubscriber;
-
-fn on_global_changes(
-    global_config: Res<GlobalConfig>,
-    mut query: Query<
-        (
-            &mut rt::RelativeTransform,
-            Option<(&mut PointLight, &LightIndex)>,
-        ),
-        With<GlobalConfigSubscriber>,
-    >,
-    camera_query: Query<&Transform, (With<Camera>, Without<GlobalConfigSubscriber>)>,
-) {
-    if global_config.is_changed() {
-        for (mut transform, light_opt) in query.iter_mut() {
-            if let Some((mut light, index)) = light_opt {
-                if let Ok(camera) = camera_query.get_single() {
-                    if let Some(config) = global_config.lights.get(index.0) {
-                        transform.transform.translation = (*config).position + camera.translation;
-                        light.intensity = (*config).brightness;
-                    }
-                }
-            }
-        }
-    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash)]
@@ -134,7 +110,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
-    global_config: Res<GlobalConfig>,
+    global_config: Res<gf::GlobalConfig>,
 ) {
     rapier_config.gravity = Vec3::ZERO;
 
@@ -178,45 +154,16 @@ fn setup(
                 },
                 ..Default::default()
             })
-            .insert(LightIndex(num))
-            .insert(GlobalConfigSubscriber {})
+            .insert(gf::LightIndex(num))
+            .insert(gf::GlobalConfigSubscriber {})
             .insert(rt::RelativeTransform {
                 entity: cam,
                 transform: Transform::default(),
             });
     }
 }
-#[derive(Component)]
-struct LightIndex(usize);
 
-struct LightConfig {
-    position: Vec3,
-    brightness: f32,
-}
-
-struct GlobalConfig {
-    lights: Vec<LightConfig>,
-}
-
-impl Default for GlobalConfig {
-    fn default() -> Self {
-        Self {
-            lights: (0..5)
-                .map(|_| LightConfig {
-                    position: Vec3::ZERO,
-                    brightness: 0.0,
-                })
-                .collect(),
-        }
-    }
-}
-
-fn hud(
-    mut ctx: ResMut<EguiContext>,
-    query: Query<(&ft::Movement, &Transform)>,
-    mut global_config: ResMut<GlobalConfig>,
-) {
-    //, Slider, Stroke, Sense
+fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
     let (movement, transform) = query.get_single().unwrap();
     SidePanel::left("hud")
         .frame(Frame {
@@ -241,16 +188,5 @@ fn hud(
                 ))
                 .color(Color32::GREEN),
             );
-            ui.separator();
-            ui.separator();
-
-            for (index, light) in global_config.lights.iter_mut().enumerate() {
-                ui.label(RichText::new(format!("Light #{}", index)).color(Color32::GREEN));
-                ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
-                ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
-                ui.add(Slider::new(&mut light.position.y, -200.0..=200.0).text("y"));
-                ui.add(Slider::new(&mut light.position.z, -200.0..=200.0).text("z"));
-                ui.separator();
-            }
         });
 }
