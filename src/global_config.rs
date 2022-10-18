@@ -34,9 +34,9 @@ pub fn setup_calibration_pattern(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for x in 0..1 {
-        for y in 0..1 {
-            for z in 0..1 {
+    for x in 0..3 {
+        for y in 0..3 {
+            for z in 0..3 {
                 let [x, y, z] = [x, y, z].map(|i| i as f32 * 3.0);
                 [1.0, -1.0].iter().for_each(|side| {
                     commands.spawn_bundle(PbrBundle {

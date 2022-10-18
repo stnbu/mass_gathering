@@ -48,7 +48,7 @@ fn main() {
         .add_system(gf::on_global_config_changes)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(ft::move_forward)
+                //.with_system(ft::move_forward)
                 .with_system(ft::steer)
                 .with_system(rt::update_relative_transforms)
                 .with_system(physics::freefall)
@@ -60,10 +60,9 @@ fn main() {
         .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
+        .add_startup_system(gf::setup_calibration_pattern)
         .add_system_set(
-            SystemSet::on_update(AppState::Menu)
-                .with_system(gf::global_config_gui)
-                .with_system(gf::setup_calibration_pattern),
+            SystemSet::on_update(AppState::Menu).with_system(gf::global_config_gui), //                .with_(),
         )
         .run();
 }
