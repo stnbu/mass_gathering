@@ -64,44 +64,31 @@ fn main() {
         .run();
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
 enum AppState {
     Startup,
     Playing,
     Paused,
+    Menu,
 }
 
-fn toggle_pause(current: &AppState) -> Option<AppState> {
-    match current {
-        AppState::Paused => Some(AppState::Playing),
-        AppState::Playing => Some(AppState::Paused),
-        _ => None,
-    }
-}
-
-fn handle_game_state(
-    mut app_state: ResMut<State<AppState>>,
-    keys: Res<Input<KeyCode>>,
-    mouse_buttons: Res<Input<MouseButton>>,
-) {
-    let mut poked = false; // space bar hit or window left-clicked
-    for key in keys.get_just_pressed() {
-        if *key == KeyCode::Space {
-            poked = !poked;
-        }
-    }
-    if mouse_buttons.any_just_pressed([MouseButton::Left, MouseButton::Right]) {
-        poked = !poked;
-    }
-
-    if poked {
-        if *(app_state.current()) == AppState::Startup {
-            app_state.overwrite_set(AppState::Playing).unwrap();
-        } else {
-            if let Some(new_state) = toggle_pause(app_state.current()) {
-                app_state.overwrite_set(new_state).unwrap();
+fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
+    use AppState::*;
+    use KeyCode::*;
+    let next_state = keys
+        .get_just_pressed()
+        .fold(Some(*app_state.current()), |state, key| {
+            match (state, *key) {
+                (Some(Playing), Space) => Some(Paused),
+                (Some(Paused), Space) => Some(Playing),
+                (Some(Menu), M) => Some(Playing),
+                (_, M) => Some(Menu),
+                (Some(Startup), _) => Some(Playing),
+                _ => None,
             }
-        }
+        });
+    if let Some(state) = next_state {
+        let _ = app_state.overwrite_set(state);
     }
 }
 
