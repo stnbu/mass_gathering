@@ -1,5 +1,3 @@
-////
-
 use bevy::prelude::{
     Camera, Component, PointLight, Query, Res, ResMut, Transform, Vec3, With, Without,
 };
@@ -8,7 +6,6 @@ use bevy_egui::{
     EguiContext,
 };
 
-//mod relative_transform;
 use crate::relative_transforms as rt;
 
 pub fn global_config_gui(mut ctx: ResMut<EguiContext>, mut global_config: ResMut<GlobalConfig>) {
