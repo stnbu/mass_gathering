@@ -42,7 +42,7 @@ fn main() {
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
         .add_system(on_global_changes)
-        //.add_system(follow)
+        .add_system(follow)
         .add_system(ft::steer)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
@@ -67,27 +67,35 @@ struct RelativeTransform {
 }
 
 fn follow(
-    mut follow_query: Query<(&mut Transform, &RelativeTransform)>,
-    transforms: Query<&Transform, Without<RelativeTransform>>,
+    mut followers: Query<(&mut Transform, &RelativeTransform)>,
+    reference_frames: Query<&Transform, Without<RelativeTransform>>,
 ) {
-    for (mut follow, rel) in follow_query.iter_mut() {
-        if let Ok(anchor_transform) = transforms.get(rel.entity) {
-            *follow = anchor_transform.mul_transform(rel.transform);
+    for (mut follower, relative_transform) in followers.iter_mut() {
+        if let Ok(frame) = reference_frames.get(relative_transform.entity) {
+            *follower = frame.mul_transform(relative_transform.transform);
         }
     }
 }
 
+#[derive(Component, Default)]
+struct GlobalConfigSubscriber;
+
 fn on_global_changes(
     global_config: Res<GlobalConfig>,
-    mut query: Query<(&mut Transform, &mut PointLight, &LightIndex), With<PointLight>>,
-    camera_query: Query<&Transform, (With<Camera>, Without<PointLight>)>,
+    mut query: Query<
+        (&mut Transform, Option<(&mut PointLight, &LightIndex)>),
+        With<GlobalConfigSubscriber>,
+    >,
+    camera_query: Query<&Transform, (With<Camera>, Without<GlobalConfigSubscriber>)>,
 ) {
     if global_config.is_changed() {
-        for (mut transform, mut light, index) in query.iter_mut() {
-            if let Ok(camera) = camera_query.get_single() {
-                if let Some(config) = global_config.lights.get(index.0) {
-                    transform.translation = (*config).position + camera.translation;
-                    light.intensity = (*config).brightness;
+        for (mut transform, light_opt) in query.iter_mut() {
+            if let Some((mut light, index)) = light_opt {
+                if let Ok(camera) = camera_query.get_single() {
+                    if let Some(config) = global_config.lights.get(index.0) {
+                        transform.translation = (*config).position + camera.translation;
+                        light.intensity = (*config).brightness;
+                    }
                 }
             }
         }
@@ -186,7 +194,8 @@ fn setup(
                 },
                 ..Default::default()
             })
-            .insert(LightIndex(num));
+            .insert(LightIndex(num))
+            .insert(GlobalConfigSubscriber {});
     }
 }
 #[derive(Component)]
