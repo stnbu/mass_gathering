@@ -75,18 +75,16 @@ enum AppState {
 fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
     use AppState::*;
     use KeyCode::*;
-    let next_state = keys
-        .get_just_pressed()
-        .fold(Some(*app_state.current()), |state, key| {
-            match (state, *key) {
-                (Some(Playing), Space) => Some(Paused),
-                (Some(Paused), Space) => Some(Playing),
-                (Some(Menu), M) => Some(Playing),
+    let next_state =
+        keys.get_just_pressed()
+            .fold(None, |state, key| match (*app_state.current(), *key) {
+                (Playing, Space) => Some(Paused),
+                (Paused, Space) => Some(Playing),
+                (Menu, M) => Some(Playing),
                 (_, M) => Some(Menu),
-                (Some(Startup), _) => Some(Playing),
+                (Startup, _) => Some(Playing),
                 _ => None,
-            }
-        });
+            });
     if let Some(state) = next_state {
         let _ = app_state.overwrite_set(state);
     }
