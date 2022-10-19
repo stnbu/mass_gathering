@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, GravityScale, RigidBody};
+use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody};
 use std::collections::HashSet;
 use std::f32::consts::PI;
 
