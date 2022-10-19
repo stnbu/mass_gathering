@@ -45,7 +45,7 @@ fn main() {
         //.add_system(gf::on_global_config_changes)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                //.with_system(ft::move_forward)
+                .with_system(ft::move_forward)
                 .with_system(ft::steer)
                 .with_system(ft::update_relative_transforms)
                 .with_system(physics::freefall)
