@@ -75,7 +75,7 @@ pub struct GlobalConfig {
 impl Default for GlobalConfig {
     fn default() -> Self {
         Self {
-            lights: (0..5)
+            lights: (0..2)
                 .map(|_| LightConfig {
                     position: Vec3::ZERO,
                     brightness: 0.0,
