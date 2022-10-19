@@ -41,13 +41,22 @@ pub fn on_global_config_changes(
         ),
         With<GlobalConfigSubscriber>,
     >,
-    camera_query: Query<&Transform, (With<ft::FlyingTransform>, Without<GlobalConfigSubscriber>)>,
+    camera_query: Query<
+        &ft::FlyingTransform,
+        (With<ft::Movement>, Without<GlobalConfigSubscriber>),
+    >,
 ) {
+    print!(".");
     if global_config.is_changed() {
+        print!("c");
         for (mut transform, light_opt) in query.iter_mut() {
+            print!("o");
             if let Some((mut light, index)) = light_opt {
+                print!("i");
                 if let Ok(camera) = camera_query.get_single() {
+                    print!("f");
                     if let Some(config) = global_config.lights.get(index.0) {
+                        print!("O");
                         transform.0.translation = (*config).position + camera.translation;
                         light.intensity = (*config).brightness;
                     }
@@ -60,11 +69,13 @@ pub fn on_global_config_changes(
 #[derive(Component)]
 pub struct LightIndex(pub usize);
 
+#[derive(Debug)]
 pub struct LightConfig {
     pub position: Vec3,
     pub brightness: f32,
 }
 
+#[derive(Debug)]
 pub struct GlobalConfig {
     pub lights: Vec<LightConfig>,
 }

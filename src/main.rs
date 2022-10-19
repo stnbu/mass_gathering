@@ -68,6 +68,12 @@ enum AppState {
     Menu,
 }
 
+pub fn dump_global_config(global_config: Res<gf::GlobalConfig>, keys: Res<Input<KeyCode>>) {
+    if keys.get_just_pressed().any(|&key| key == KeyCode::D) {
+        println!("{:?}", global_config);
+    }
+}
+
 fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
     use AppState::*;
     use KeyCode::*;
@@ -138,6 +144,14 @@ fn setup(
             .insert(gf::GlobalConfigSubscriber {})
             .insert(ft::RelativeTransform::default());
     }
+
+    /*
+                &mut ft::RelativeTransform,
+                Option<(&mut PointLight, &LightIndex)>,
+            ),
+            With<GlobalConfigSubscriber>,
+
+    */
 }
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
