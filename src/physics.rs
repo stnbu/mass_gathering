@@ -74,7 +74,6 @@ pub fn spawn_planet<'a>(
             transform: Transform::from_translation(position),
             ..Default::default()
         })
-        .insert(GravityScale(0.0)) // we supply our own gravity
         .insert(Momentum {
             velocity,
             mass,
@@ -158,7 +157,7 @@ pub fn freefall(mut query: Query<(Entity, &mut Transform, &mut Momentum)>, time:
             } else {
                 dir
             };
-            acceleration + grav_acc
+            acceleration + grav_acc * 0.1
         })
     });
     let dt = time.delta_seconds();

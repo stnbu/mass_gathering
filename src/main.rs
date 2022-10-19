@@ -41,8 +41,9 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
-                .with_system(ft::steer), //.with_system(physics::freefall)
-                                         //.with_system(physics::collision_events),
+                .with_system(ft::steer)
+                .with_system(physics::freefall)
+                .with_system(physics::collision_events),
         )
         .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc)
@@ -118,8 +119,8 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, 0.0)
-                .looking_at(Vec3::new(0.0, 1.0, 0.0), Vec3::Z),
+            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, -80.0)
+                .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
         .insert(ft::Movement::default());
