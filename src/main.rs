@@ -32,9 +32,6 @@ mod physics;
 mod flying_transform;
 use flying_transform as ft;
 
-mod relative_transforms;
-use relative_transforms as rt;
-
 mod global_config;
 use global_config as gf;
 
@@ -45,12 +42,12 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
-        .add_system(gf::on_global_config_changes)
+        //.add_system(gf::on_global_config_changes)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 //.with_system(ft::move_forward)
                 .with_system(ft::steer)
-                .with_system(rt::update_relative_transforms)
+                .with_system(ft::update_relative_transforms)
                 .with_system(physics::freefall)
                 .with_system(physics::collision_events),
         )
@@ -77,15 +74,20 @@ fn calibration_pattern(
             for z in 0..3 {
                 let [x, y, z] = [x, y, z].map(|i| i as f32 * 3.0);
                 [1.0, -1.0].iter().for_each(|side| {
-                    commands.spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.5,
+                    commands
+                        .spawn_bundle(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 0.5,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::WHITE.into()),
                             ..Default::default()
-                        })),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_xyz(side * x, side * y, side * z),
-                        ..Default::default()
-                    });
+                        })
+                        .insert(ft::RelativeTransform::from_xyz(
+                            side * x,
+                            side * y,
+                            side * z,
+                        ));
                 });
             }
         }
@@ -169,10 +171,7 @@ fn setup(
             })
             .insert(gf::LightIndex(num))
             .insert(gf::GlobalConfigSubscriber {})
-            .insert(rt::RelativeTransform {
-                entity: cam,
-                transform: Transform::default(),
-            });
+            .insert(ft::RelativeTransform::default());
     }
 }
 

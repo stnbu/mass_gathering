@@ -6,8 +6,6 @@ use bevy_egui::{
     EguiContext,
 };
 
-use crate::relative_transforms as rt;
-
 pub fn global_config_gui(mut ctx: ResMut<EguiContext>, mut global_config: ResMut<GlobalConfig>) {
     SidePanel::right("global_config")
         .frame(Frame {
@@ -32,30 +30,30 @@ use bevy::prelude::{Assets, Color, Commands, Mesh, PbrBundle, StandardMaterial};
 #[derive(Component, Default)]
 pub struct GlobalConfigSubscriber;
 
-pub fn on_global_config_changes(
-    global_config: Res<GlobalConfig>,
-    mut query: Query<
-        (
-            &mut rt::RelativeTransform,
-            Option<(&mut PointLight, &LightIndex)>,
-        ),
-        With<GlobalConfigSubscriber>,
-    >,
-    camera_query: Query<&Transform, (With<Camera>, Without<GlobalConfigSubscriber>)>,
-) {
-    if global_config.is_changed() {
-        for (mut transform, light_opt) in query.iter_mut() {
-            if let Some((mut light, index)) = light_opt {
-                if let Ok(camera) = camera_query.get_single() {
-                    if let Some(config) = global_config.lights.get(index.0) {
-                        transform.transform.translation = (*config).position + camera.translation;
-                        light.intensity = (*config).brightness;
-                    }
-                }
-            }
-        }
-    }
-}
+// pub fn on_global_config_changes(
+//     global_config: Res<GlobalConfig>,
+//     mut query: Query<
+//         (
+//             &mut rt::RelativeTransform,
+//             Option<(&mut PointLight, &LightIndex)>,
+//         ),
+//         With<GlobalConfigSubscriber>,
+//     >,
+//     camera_query: Query<&Transform, (With<SingletonCamera>, Without<GlobalConfigSubscriber>)>,
+// ) {
+//     if global_config.is_changed() {
+//         for (mut transform, light_opt) in query.iter_mut() {
+//             if let Some((mut light, index)) = light_opt {
+//                 if let Ok(camera) = camera_query.get_single() {
+//                     if let Some(config) = global_config.lights.get(index.0) {
+//                         transform.transform.translation = (*config).position + camera.translation;
+//                         light.intensity = (*config).brightness;
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
 
 #[derive(Component)]
 pub struct LightIndex(pub usize);

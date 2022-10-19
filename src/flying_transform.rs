@@ -95,3 +95,16 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
         transform.rotate(Quat::from_axis_angle(local_y, yaw));
     }
 }
+
+pub type RelativeTransform = Transform;
+
+pub fn update_relative_transforms(
+    mut followers: Query<(&mut Transform, &RelativeTransform)>,
+    flying_transform_query: Query<&FlyingTransform, Without<RelativeTransform>>,
+) {
+    for (mut follower, relative_transform) in followers.iter_mut() {
+        if let Ok(frame) = flying_transform_query.get_single() {
+            *follower = frame.mul_transform(*relative_transform);
+        }
+    }
+}
