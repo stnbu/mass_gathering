@@ -46,9 +46,8 @@ fn main() {
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
-                .with_system(ft::steer)
-                .with_system(physics::freefall)
-                .with_system(physics::collision_events),
+                .with_system(ft::steer), //.with_system(physics::freefall)
+                                         //.with_system(physics::collision_events),
         )
         .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc)
@@ -126,7 +125,7 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::default(),
+            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, -50.0),
             ..Default::default()
         })
         .insert(ft::Movement::default());
@@ -150,13 +149,6 @@ fn setup(
             .insert(gf::LightIndex(num))
             .insert(gf::GlobalConfigSubscriber {});
     }
-    /*
-        mut followers: Query<
-            (&mut Transform, &RelativeTransform),
-            (With<RelativeTransform>, Without<FlyingTransform>),
-        >,
-
-    */
 }
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
