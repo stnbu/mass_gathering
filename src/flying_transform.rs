@@ -106,8 +106,8 @@ pub fn update_relative_transforms(
 ) {
     for (mut follower, relative_transform) in followers.iter_mut() {
         if let Ok(frame) = flying_transform_query.get_single() {
-            //*follower = frame.mul_transform((*relative_transform).0);
-            *follower = (*relative_transform).0.mul_transform(*frame);
+            *follower = frame.mul_transform((*relative_transform).0);
+            //*follower = (*relative_transform).0.mul_transform(*frame);
         }
     }
 }
