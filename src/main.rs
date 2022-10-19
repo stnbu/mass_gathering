@@ -42,7 +42,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(EguiPlugin)
         .add_state(AppState::Startup)
-        //.add_system(gf::on_global_config_changes)
+        .add_system(gf::on_global_config_changes)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
@@ -52,46 +52,12 @@ fn main() {
                 .with_system(physics::collision_events),
         )
         .add_startup_system(setup)
-        // "for prototyping" -- unclean shutdown, havoc under wasm.
         .add_system(bevy::window::close_on_esc)
         .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
-        .add_startup_system(calibration_pattern)
-        .add_system_set(
-            SystemSet::on_update(AppState::Menu).with_system(gf::global_config_gui), //                .with_(),
-        )
+        .add_system_set(SystemSet::on_update(AppState::Menu).with_system(gf::global_config_gui))
         .run();
-}
-
-fn calibration_pattern(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    for x in 0..3 {
-        for y in 0..3 {
-            for z in 0..3 {
-                let [x, y, z] = [x, y, z].map(|i| i as f32 * 3.0);
-                [1.0, -1.0].iter().for_each(|side| {
-                    commands
-                        .spawn_bundle(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.5,
-                                ..Default::default()
-                            })),
-                            material: materials.add(Color::WHITE.into()),
-                            ..Default::default()
-                        })
-                        .insert(ft::RelativeTransform(Transform::from_xyz(
-                            side * x,
-                            side * y,
-                            side * z,
-                        )));
-                });
-            }
-        }
-    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
@@ -151,13 +117,12 @@ fn setup(
             );
         }
     }
-    let cam = commands
+    commands
         .spawn_bundle(Camera3dBundle {
             transform: ft::FlyingTransform::default(),
             ..Default::default()
         })
-        .insert(ft::Movement::default())
-        .id();
+        .insert(ft::Movement::default());
     for num in 0..global_config.lights.len() {
         commands
             .spawn_bundle(PointLightBundle {
@@ -187,8 +152,9 @@ fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) 
             ui.separator();
             ui.label(RichText::new("Keys:").color(Color32::GREEN));
             ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
-            ui.label(RichText::new("  Z & X:\tYaw").color(Color32::GREEN));
+            ui.label(RichText::new("  Z & X:\t\tYaw").color(Color32::GREEN));
             ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
+            ui.label(RichText::new("  M:\t\tMenu").color(Color32::GREEN));
             ui.separator();
             ui.label(
                 RichText::new(format!("Your Speed: {}", movement.speed)).color(Color32::GREEN),

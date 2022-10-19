@@ -1,6 +1,4 @@
-use bevy::prelude::{
-    shape, Camera, Component, PointLight, Query, Res, ResMut, Transform, Vec3, With, Without,
-};
+use bevy::prelude::{Component, ResMut, Vec3};
 use bevy_egui::{
     egui::{style::Margin, Color32, Frame, RichText, SidePanel, Slider},
     EguiContext,
@@ -25,35 +23,39 @@ pub fn global_config_gui(mut ctx: ResMut<EguiContext>, mut global_config: ResMut
         });
 }
 
-use bevy::prelude::{Assets, Color, Commands, Mesh, PbrBundle, StandardMaterial};
+use bevy::prelude::*;
+
+use crate::flying_transform as ft;
+
+//use crate::ft::FlyingTransform;
 
 #[derive(Component, Default)]
 pub struct GlobalConfigSubscriber;
 
-// pub fn on_global_config_changes(
-//     global_config: Res<GlobalConfig>,
-//     mut query: Query<
-//         (
-//             &mut rt::RelativeTransform,
-//             Option<(&mut PointLight, &LightIndex)>,
-//         ),
-//         With<GlobalConfigSubscriber>,
-//     >,
-//     camera_query: Query<&Transform, (With<SingletonCamera>, Without<GlobalConfigSubscriber>)>,
-// ) {
-//     if global_config.is_changed() {
-//         for (mut transform, light_opt) in query.iter_mut() {
-//             if let Some((mut light, index)) = light_opt {
-//                 if let Ok(camera) = camera_query.get_single() {
-//                     if let Some(config) = global_config.lights.get(index.0) {
-//                         transform.transform.translation = (*config).position + camera.translation;
-//                         light.intensity = (*config).brightness;
-//                     }
-//                 }
-//             }
-//         }
-//     }
-// }
+pub fn on_global_config_changes(
+    global_config: Res<GlobalConfig>,
+    mut query: Query<
+        (
+            &mut ft::RelativeTransform,
+            Option<(&mut PointLight, &LightIndex)>,
+        ),
+        With<GlobalConfigSubscriber>,
+    >,
+    camera_query: Query<&Transform, (With<ft::FlyingTransform>, Without<GlobalConfigSubscriber>)>,
+) {
+    if global_config.is_changed() {
+        for (mut transform, light_opt) in query.iter_mut() {
+            if let Some((mut light, index)) = light_opt {
+                if let Ok(camera) = camera_query.get_single() {
+                    if let Some(config) = global_config.lights.get(index.0) {
+                        transform.0.translation = (*config).position + camera.translation;
+                        light.intensity = (*config).brightness;
+                    }
+                }
+            }
+        }
+    }
+}
 
 #[derive(Component)]
 pub struct LightIndex(pub usize);
