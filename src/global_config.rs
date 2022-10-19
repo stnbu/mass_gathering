@@ -15,9 +15,9 @@ pub fn global_config_gui(mut ctx: ResMut<EguiContext>, mut global_config: ResMut
             for (index, light) in global_config.lights.iter_mut().enumerate() {
                 ui.label(RichText::new(format!("Light #{}", index)).color(Color32::GREEN));
                 ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
-                ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
-                ui.add(Slider::new(&mut light.position.y, -200.0..=200.0).text("y"));
-                ui.add(Slider::new(&mut light.position.z, -200.0..=200.0).text("z"));
+                ui.add(Slider::new(&mut light.position.x, -100.0..=100.0).text("x"));
+                ui.add(Slider::new(&mut light.position.y, -100.0..=100.0).text("y"));
+                ui.add(Slider::new(&mut light.position.z, -100.0..=100.0).text("z"));
                 ui.separator();
             }
         });

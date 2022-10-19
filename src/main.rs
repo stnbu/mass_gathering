@@ -125,7 +125,7 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, -50.0),
+            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, -75.0),
             ..Default::default()
         })
         .insert(ft::Movement::default());
