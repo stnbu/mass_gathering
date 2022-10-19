@@ -57,6 +57,7 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .add_system_set(SystemSet::on_update(AppState::Menu).with_system(gf::global_config_gui))
+        .add_system(dump_global_config)
         .run();
 }
 
