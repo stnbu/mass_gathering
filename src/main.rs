@@ -141,18 +141,15 @@ fn setup(
                 },
                 ..Default::default()
             })
+            .insert(meshes.add(Mesh::from(shape::Icosphere {
+                radius: 0.5,
+                ..Default::default()
+            })))
+            .insert(materials.add(Color::WHITE.into()))
+            .insert(ft::RelativeTransform::default())
             .insert(gf::LightIndex(num))
-            .insert(gf::GlobalConfigSubscriber {})
-            .insert(ft::RelativeTransform::default());
+            .insert(gf::GlobalConfigSubscriber {});
     }
-
-    /*
-                &mut ft::RelativeTransform,
-                Option<(&mut PointLight, &LightIndex)>,
-            ),
-            With<GlobalConfigSubscriber>,
-
-    */
 }
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
