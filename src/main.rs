@@ -139,13 +139,13 @@ fn setup(
         .spawn_bundle(PointLightBundle {
             transform: Transform::default(),
             point_light: PointLight {
-                intensity: 20000.0,
+                intensity: 1000000.0,
                 range: 1000.0,
                 ..Default::default()
             },
             ..Default::default()
         })
-        .insert(ft::RelativeTransform(Transform::from_xyz(0.0, 0.0, 25.0)));
+        .insert(ft::RelativeTransform(Transform::from_xyz(0.0, 0.0, 100.0)));
 }
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
