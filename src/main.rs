@@ -62,12 +62,6 @@ enum AppState {
     Menu,
 }
 
-// pub fn dump_global_config(global_config: Res<gf::GlobalConfig>, keys: Res<Input<KeyCode>>) {
-//     if keys.get_just_pressed().any(|&key| key == KeyCode::D) {
-//         println!("{:?}", global_config);
-//     }
-// }
-
 fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
     use AppState::*;
     use KeyCode::*;
@@ -102,7 +96,7 @@ fn setup(
         let direction = Vec3::new(rf(), rf(), rf());
         let position = (direction * 50.0) + 4.0;
         let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
-        let velocity = (position + perturbence) * 0.1;
+        let velocity = (position + perturbence) * 0.2;
         let radius = rf() + 1.0;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
@@ -163,7 +157,6 @@ fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) 
             ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
             ui.label(RichText::new("  Z & X:\t\tYaw").color(Color32::GREEN));
             ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
-            ui.label(RichText::new("  M:\t\tMenu").color(Color32::GREEN));
             ui.separator();
             ui.label(
                 RichText::new(format!("Your Speed: {}", movement.speed)).color(Color32::GREEN),
