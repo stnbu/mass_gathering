@@ -47,7 +47,6 @@ fn main() {
             SystemSet::on_update(AppState::Playing)
                 .with_system(ft::move_forward)
                 .with_system(ft::steer)
-                .with_system(ft::update_relative_transforms)
                 .with_system(physics::freefall)
                 .with_system(physics::collision_events),
         )
@@ -58,6 +57,7 @@ fn main() {
         .add_system(hud)
         .add_system_set(SystemSet::on_update(AppState::Menu).with_system(gf::global_config_gui))
         .add_system(dump_global_config)
+        .add_system(ft::update_relative_transforms)
         .run();
 }
 
@@ -150,6 +150,13 @@ fn setup(
             .insert(gf::LightIndex(num))
             .insert(gf::GlobalConfigSubscriber {});
     }
+    /*
+        mut followers: Query<
+            (&mut Transform, &RelativeTransform),
+            (With<RelativeTransform>, Without<FlyingTransform>),
+        >,
+
+    */
 }
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
