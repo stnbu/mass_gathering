@@ -96,15 +96,23 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
     }
 }
 
-pub type RelativeTransform = Transform;
+//pub type RelativeTransform = Transform;
+#[derive(Component, Default)]
+pub struct RelativeTransform(pub Transform);
 
 pub fn update_relative_transforms(
-    mut followers: Query<(&mut Transform, &RelativeTransform)>,
-    flying_transform_query: Query<&FlyingTransform, Without<RelativeTransform>>,
+    mut followers: Query<
+        (&mut Transform, &RelativeTransform),
+        (With<RelativeTransform>, Without<FlyingTransform>),
+    >,
+    flying_transform_query: Query<
+        &FlyingTransform,
+        (Without<RelativeTransform>, With<FlyingTransform>),
+    >,
 ) {
     for (mut follower, relative_transform) in followers.iter_mut() {
         if let Ok(frame) = flying_transform_query.get_single() {
-            *follower = frame.mul_transform(*relative_transform);
+            *follower = frame.mul_transform((*relative_transform).0);
         }
     }
 }

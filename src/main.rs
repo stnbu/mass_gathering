@@ -83,11 +83,11 @@ fn calibration_pattern(
                             material: materials.add(Color::WHITE.into()),
                             ..Default::default()
                         })
-                        .insert(ft::RelativeTransform::from_xyz(
+                        .insert(ft::RelativeTransform(Transform::from_xyz(
                             side * x,
                             side * y,
                             side * z,
-                        ));
+                        )));
                 });
             }
         }
