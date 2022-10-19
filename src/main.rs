@@ -21,7 +21,7 @@
 /// wrong. Probably.
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{style::Margin, Color32, Frame, RichText, SidePanel},
+    egui::{style::Margin, Color32, Frame, RichText, TopBottomPanel},
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -145,19 +145,18 @@ fn setup(
 
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
     let (movement, transform) = query.get_single().unwrap();
-    SidePanel::left("hud")
+    TopBottomPanel::top("hud")
         .frame(Frame {
             outer_margin: Margin::symmetric(10.0, 20.0),
             fill: Color32::TRANSPARENT,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            ui.separator();
             ui.label(RichText::new("Keys:").color(Color32::GREEN));
             ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
-            ui.label(RichText::new("  Z & X:\t\tYaw").color(Color32::GREEN));
+            ui.label(RichText::new("  Z & X:\t\t\tYaw").color(Color32::GREEN));
             ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
-            ui.separator();
+            ui.label(RichText::new("\n"));
             ui.label(
                 RichText::new(format!("Your Speed: {}", movement.speed)).color(Color32::GREEN),
             );
