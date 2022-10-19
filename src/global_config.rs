@@ -15,9 +15,9 @@ pub fn global_config_gui(mut ctx: ResMut<EguiContext>, mut global_config: ResMut
             for (index, light) in global_config.lights.iter_mut().enumerate() {
                 ui.label(RichText::new(format!("Light #{}", index)).color(Color32::GREEN));
                 ui.add(Slider::new(&mut light.brightness, 0.0..=1280000.0).text("brightness"));
-                ui.add(Slider::new(&mut light.position.x, -2000.0..=2000.0).text("x"));
-                ui.add(Slider::new(&mut light.position.y, -2000.0..=2000.0).text("y"));
-                ui.add(Slider::new(&mut light.position.z, -2000.0..=2000.0).text("z"));
+                ui.add(Slider::new(&mut light.position.x, -200.0..=200.0).text("x"));
+                ui.add(Slider::new(&mut light.position.y, -200.0..=200.0).text("y"));
+                ui.add(Slider::new(&mut light.position.z, -200.0..=200.0).text("z"));
                 ui.separator();
             }
         });
@@ -26,8 +26,6 @@ pub fn global_config_gui(mut ctx: ResMut<EguiContext>, mut global_config: ResMut
 use bevy::prelude::*;
 
 use crate::flying_transform as ft;
-
-//use crate::ft::FlyingTransform;
 
 #[derive(Component, Default)]
 pub struct GlobalConfigSubscriber;
@@ -48,13 +46,9 @@ pub fn on_global_config_changes(
 ) {
     if global_config.is_changed() {
         for (mut transform, light_opt) in query.iter_mut() {
-            //print!("a");
             if let Some((mut light, index)) = light_opt {
-                //print!("b");
                 if let Ok(camera) = camera_query.get_single() {
-                    //print!("c");
                     if let Some(config) = global_config.lights.get(index.0) {
-                        //print!("d");
                         transform.0.translation = (*config).position + camera.translation;
                         light.intensity = (*config).brightness;
                     }

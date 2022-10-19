@@ -100,15 +100,13 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
 #[derive(Component, Default)]
 pub struct RelativeTransform(pub Transform);
 
+// FIXME -- the Camera stuff is a hack. Should be "generalizable".
 pub fn update_relative_transforms(
     mut followers: Query<(&mut Transform, &RelativeTransform), Without<Camera>>,
     flying_transform_query: Query<&Transform, With<Camera>>,
 ) {
-    print!("x");
     for (mut follower, relative_transform) in followers.iter_mut() {
-        print!("y");
         if let Ok(frame) = flying_transform_query.get_single() {
-            print!("z");
             *follower = frame.mul_transform((*relative_transform).0);
         }
     }
