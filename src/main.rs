@@ -87,13 +87,21 @@ fn setup(
     mut rapier_config: ResMut<RapierConfiguration>,
     //global_config: Res<gf::GlobalConfig>,
 ) {
+    use std::f32::consts::TAU;
     rapier_config.gravity = Vec3::ZERO;
 
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
     let pair_count = 40;
     for _ in 0..pair_count {
-        let direction = Vec3::new(rf(), rf(), rf());
+        //let direction = Vec3::new(rf(), rf(), rf());
+        let phi = rf() * TAU;
+        let theta = (rf() * 2.0 - 1.0).acos();
+        let x = theta.sin() * phi.cos();
+        let y = theta.sin() * phi.sin();
+        let z = theta.cos();
+        let direction = Vec3::new(x, y, z).normalize();
+
         let position = (direction * 50.0) + 4.0;
         let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
         let velocity = (position + perturbence) * 0.2;
@@ -113,7 +121,7 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, -80.0)
+            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, -200.0)
                 .looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
@@ -169,3 +177,27 @@ fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) 
             );
         });
 }
+
+/*
+phi = random(0.0, TAU)
+theta = arccos(random(-1.0, 1.0))
+x = sin(theta) * cos(phi)
+y = sin(theta) * sin(phi)
+z = cos(theta)
+*/
+
+/*
+phi = r() * TAU;
+theta = arccos(r() * 2.0 - 1.0);
+x = sin(theta) * cos(phi);
+y = sin(theta) * sin(phi);
+z = cos(theta);
+*/
+
+/*
+phi = r() * TAU;
+theta = (r() * 2.0 - 1.0).acos();
+x = theta.sin() * phi.cos();
+y = theta.sin() * phi.sin();
+z = theta.cos();
+*/
