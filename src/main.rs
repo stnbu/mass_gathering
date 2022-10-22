@@ -106,6 +106,7 @@ fn setup(
         })
         .insert(ft::Movement::default());
 
+    // Headlights and taillights ...slightly caterwonky on purpose.
     commands
         .spawn_bundle(PointLightBundle {
             transform: Transform::default(),
@@ -119,8 +120,6 @@ fn setup(
         .insert(ft::RelativeTransform(Transform::from_xyz(
             10.0, -10.0, -25.0,
         )));
-
-    // Headlights and taillights ...slightly caterwonky on purpose.
     commands
         .spawn_bundle(PointLightBundle {
             transform: Transform::default(),
