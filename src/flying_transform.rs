@@ -26,6 +26,25 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
 
     let (mut transform, mut movement) = query.get_single_mut().unwrap();
 
+    // `just_presssed` ignores keys held down.
+    for key in keys.get_just_pressed() {
+        match key {
+            KeyCode::PageUp => {
+                movement.speed += 1.0 + movement.speed * 0.05;
+            }
+            KeyCode::PageDown => {
+                movement.speed -= 1.0 + movement.speed * 0.05;
+            }
+            _ => {}
+        }
+    }
+
+    // Make it easier to find "neutral"
+    if movement.speed.abs() < 0.5 {
+        movement.speed = 0.0
+    }
+
+    // `presssed` (contrast `just_pressed`) considers keys being _held_ down, which is good for rotation controls.
     for key in keys.get_pressed() {
         had_input = true;
         match key {
@@ -52,12 +71,6 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
             KeyCode::X => {
                 yaw -= nudge * (movement.gain.y + 1.0);
                 movement.gain.y += gain;
-            }
-            KeyCode::PageUp => {
-                movement.speed += 0.5;
-            }
-            KeyCode::PageDown => {
-                movement.speed -= 0.5;
             }
             _ => {
                 had_input = false;
@@ -107,7 +120,6 @@ pub fn update_relative_transforms(
     for (mut follower, relative_transform) in followers.iter_mut() {
         if let Ok(frame) = flying_transform_query.get_single() {
             *follower = frame.mul_transform((*relative_transform).0);
-            //*follower = (*relative_transform).0.mul_transform(*frame);
         }
     }
 }

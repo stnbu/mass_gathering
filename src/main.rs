@@ -5,29 +5,7 @@ use bevy_egui::{
 };
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
-/// FIXME
-///
-/// How Art Me Broken --
-///
-/// Before I forget, some longform about a recent new and terrible bug:
-/// Particular worked fine, needed to merge planets so dropped it and now
-/// use a `Query` as my particle set. Math should be same but gravity way
-/// stronger now. So naturally I just mul'd it by a tiny number. That fixes
-/// things sorta. I'm not sure it takes us back to where we were but it
-/// _looks_ like it does. But then I turn on the collision stuff.
-///
-/// The "merging" stuff is weird and messy. Reasonably we will see entities
-/// that we just despawned because of 3-way collisions in the queue, etc.
-/// I chose just to skip those collisions. That seems to solve problems to
-/// the point where all is as expected, except when we get to the last few
-/// planets, the merging accelerates and BWOOP all are one gigantic planet.
-/// (and that planet seems too big...) I'm not sure if this is a result of
-/// the initial "cloud" not having enough outward momentum or ...what.
-///
-/// The Final Planet being so large makes me wonder if our merging math is
-/// wrong. Probably.
-use std::f32::consts::PI;
-
+use std::f32::consts::TAU;
 mod physics;
 
 mod flying_transform;
@@ -81,12 +59,22 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
     }
 }
 
+// Take the latitude (poles are [1,-1]) and the longitude (portion around, starting at (0,0,1))
+// and return the x, y, z on the unit sphere.
+fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
+    let theta = (lat * 2.0 - 1.0).acos(); // latitude. -1 & 1 are poles. 0 is equator.
+    let phi = lon * TAU; // portion around the planet `[0,1)` (from Greenwich)
+    let x = theta.sin() * phi.cos();
+    let y = theta.sin() * phi.sin();
+    let z = theta.cos();
+    Vec3::new(x, y, z)
+}
+
 fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut rapier_config: ResMut<RapierConfiguration>,
-    //global_config: Res<gf::GlobalConfig>,
 ) {
     rapier_config.gravity = Vec3::ZERO;
 
@@ -94,16 +82,9 @@ fn setup(
     let mut rf = || rng.gen::<f32>();
     let pair_count = 40;
     for _ in 0..pair_count {
-        let phi = rf() * PI;
-        let theta = (rf() * 2.0 - 1.0).acos();
-        let x = theta.sin() * phi.cos();
-        let y = theta.sin() * phi.sin();
-        let z = theta.cos();
-
-        let position = Vec3::new(x, y, z).normalize() * (rf() * 40.0 + 10.0);
-        let perturbence = (position.length() * 0.1) * Vec3::new(rf(), rf(), rf());
-        let velocity = (position + perturbence) * 0.2;
-        let radius = rf() + 1.0;
+        let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
+        let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0);
+        let radius = rf() + 2.0;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
             physics::spawn_planet(
@@ -119,8 +100,8 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_xyz(0.0, 0.0, -200.0)
-                .looking_at(Vec3::ZERO, Vec3::Y),
+            transform: ft::FlyingTransform::from_xyz(0.0, 200.0, 0.0)
+                .looking_at(Vec3::ZERO, Vec3::Z),
             ..Default::default()
         })
         .insert(ft::Movement::default());
