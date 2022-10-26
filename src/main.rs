@@ -4,7 +4,7 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{
-    NoUserData, QueryFilter, RapierConfiguration, RapierContext, RapierPhysicsPlugin,
+    Collider, NoUserData, QueryFilter, RapierConfiguration, RapierContext, RapierPhysicsPlugin,
 };
 use rand::Rng;
 use std::f32::consts::TAU;
@@ -27,7 +27,7 @@ fn main() {
                 .with_system(steer)
                 .with_system(freefall)
                 .with_system(collision_events)
-                .with_system(cast_ray),
+                .with_system(handle_projectile),
         )
         .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc)
@@ -37,25 +37,60 @@ fn main() {
         .run();
 }
 
-fn cast_ray(
+#[derive(Component)]
+struct BallisticProjectileTarget {
+    planet: Entity,
+    local_impact_site: Vec3,
+}
+
+fn handle_projectile(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    optional_keys: Option<Res<Input<KeyCode>>>,
     mut crosshairs_query: Query<&mut Visibility, With<Crosshairs>>,
+    planet_query: Query<&Transform, With<Collider>>,
     rapier_context: Res<RapierContext>,
     craft: Query<&Transform, With<Spacecraft>>,
 ) {
     for pov in craft.iter() {
-        let hit = rapier_context.cast_ray(
-            pov.translation,
-            -1.0 * pov.local_z(),
+        let ray_origin = pov.translation;
+        let ray_direction = -1.0 * pov.local_z();
+        let intersection = rapier_context.cast_ray(
+            ray_origin,
+            ray_direction,
             150.0, // what's reasonable here...?
             true,
             QueryFilter::only_dynamic(),
         );
 
-        if let Some((entity, _toi)) = hit {
+        if let Some((planet, distance)) = intersection {
+            if let Some(ref keys) = optional_keys {
+                if keys.just_pressed(KeyCode::F) {
+                    let global_impact_site = ray_origin + (ray_direction * distance);
+                    let transform = planet_query.get(planet).unwrap();
+                    let local_impact_site = transform.translation - global_impact_site;
+                    commands
+                        .spawn_bundle(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 0.3,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::PINK.into()),
+                            transform: Transform::from_translation(ray_origin),
+                            ..Default::default()
+                        })
+                        .insert(BallisticProjectileTarget {
+                            planet,
+                            local_impact_site,
+                        });
+                }
+            }
             for mut crosshairs in crosshairs_query.iter_mut() {
                 crosshairs.is_visible = true;
             }
         } else {
+            // ////
             for mut crosshairs in crosshairs_query.iter_mut() {
                 crosshairs.is_visible = false;
             }
