@@ -6,10 +6,12 @@ use bevy_egui::{
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 use std::f32::consts::TAU;
-mod physics;
 
-mod flying_transform;
-use flying_transform as ft;
+mod physics;
+use physics::*;
+
+mod craft;
+use craft::*;
 
 fn main() {
     App::new()
@@ -19,10 +21,10 @@ fn main() {
         .add_state(AppState::Startup)
         .add_system_set(
             SystemSet::on_update(AppState::Playing)
-                .with_system(ft::move_forward)
-                .with_system(ft::steer)
-                .with_system(physics::freefall)
-                .with_system(physics::collision_events),
+                .with_system(move_forward)
+                .with_system(steer)
+                .with_system(freefall)
+                .with_system(collision_events),
         )
         .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc)
@@ -86,7 +88,7 @@ fn setup(
         let radius = rf() + 2.0;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
-            physics::spawn_planet(
+            spawn_planet(
                 radius,
                 position * side,
                 velocity * side,
@@ -103,7 +105,7 @@ fn setup(
             ..Default::default()
         })
         .insert_bundle(VisibilityBundle::default())
-        .insert(ft::Spacecraft::default())
+        .insert(Spacecraft::default())
         .with_children(|parent| {
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
@@ -144,7 +146,7 @@ fn setup(
         });
 }
 
-fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Spacecraft, &Transform)>) {
+fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
     let (spacecraft, transform) = query.get_single().unwrap();
     TopBottomPanel::top("hud")
         .frame(Frame {
