@@ -3,7 +3,9 @@ use bevy_egui::{
     egui::{style::Margin, Color32, Frame, RichText, TopBottomPanel},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_rapier3d::prelude::{
+    NoUserData, QueryFilter, RapierConfiguration, RapierContext, RapierPhysicsPlugin,
+};
 use rand::Rng;
 use std::f32::consts::TAU;
 
@@ -24,7 +26,8 @@ fn main() {
                 .with_system(move_forward)
                 .with_system(steer)
                 .with_system(freefall)
-                .with_system(collision_events),
+                .with_system(collision_events)
+                .with_system(cast_ray),
         )
         .add_startup_system(setup)
         .add_system(bevy::window::close_on_esc)
@@ -32,6 +35,23 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
+}
+
+fn cast_ray(rapier_context: Res<RapierContext>, craft: Query<&Transform, With<Spacecraft>>) {
+    for pov in craft.iter() {
+        let hit = rapier_context.cast_ray(
+            pov.translation,
+            -1.0 * pov.local_z(),
+            f32::MAX,
+            true,
+            QueryFilter::only_dynamic(),
+        );
+
+        if let Some((entity, _toi)) = hit {
+            println!("_toi: {:?}", _toi);
+            println!("entity: {:?}", entity);
+        }
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
