@@ -29,7 +29,6 @@ fn main() {
         .add_system(handle_game_state)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
-        .add_system(ft::update_relative_transforms)
         .run();
 }
 
@@ -100,69 +99,61 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: ft::FlyingTransform::from_xyz(0.0, 200.0, 0.0)
-                .looking_at(Vec3::ZERO, Vec3::Z),
+            transform: Transform::from_xyz(0.0, 200.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
             ..Default::default()
         })
-        .insert(ft::Movement::default());
-
-    // Headlights and taillights ...slightly caterwonky on purpose.
-    commands
-        .spawn_bundle(PointLightBundle {
-            transform: Transform::default(),
-            point_light: PointLight {
-                intensity: 5000.0 * 1.7,
-                range: 1000.0,
+        .insert(ft::Spacecraft::default())
+        .with_children(|parent| {
+            parent.spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius: 1.0,
+                    ..Default::default()
+                })),
+                material: materials.add(Color::WHITE.into()),
+                transform: Transform::from_xyz(0.0, 0.0, -8.0),
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(ft::RelativeTransform(Transform::from_xyz(
-            10.0, -10.0, -25.0,
-        )));
-    commands
-        .spawn_bundle(PointLightBundle {
-            transform: Transform::default(),
-            point_light: PointLight {
-                intensity: 5000.0 * 1.5,
-                range: 1000.0,
+            });
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(10.0, -10.0, -25.0),
+                point_light: PointLight {
+                    intensity: 5000.0 * 1.7,
+                    range: 1000.0,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(ft::RelativeTransform(Transform::from_xyz(
-            -10.0, 5.0, -35.0,
-        )));
-    commands
-        .spawn_bundle(PointLightBundle {
-            transform: Transform::default(),
-            point_light: PointLight {
-                intensity: 1000000.0 * 0.7,
-                range: 1000.0,
+            });
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(-10.0, 5.0, -35.0),
+                point_light: PointLight {
+                    intensity: 5000.0 * 1.5,
+                    range: 1000.0,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(ft::RelativeTransform(Transform::from_xyz(
-            30.0, -20.0, 80.0,
-        )));
-    commands
-        .spawn_bundle(PointLightBundle {
-            transform: Transform::default(),
-            point_light: PointLight {
-                intensity: 1000000.0 * 0.8,
-                range: 1000.0,
+            });
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(30.0, -20.0, 80.0),
+                point_light: PointLight {
+                    intensity: 1000000.0 * 0.7,
+                    range: 1000.0,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(ft::RelativeTransform(Transform::from_xyz(
-            -30.0, 10.0, 100.0,
-        )));
+            });
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(-30.0, 10.0, 100.0),
+                point_light: PointLight {
+                    intensity: 1000000.0 * 0.8,
+                    range: 1000.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
+        });
 }
 
-fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) {
-    let (movement, transform) = query.get_single().unwrap();
+fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Spacecraft, &Transform)>) {
+    let (spacecraft, transform) = query.get_single().unwrap();
     TopBottomPanel::top("hud")
         .frame(Frame {
             outer_margin: Margin::symmetric(10.0, 20.0),
@@ -176,7 +167,7 @@ fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Movement, &Transform)>) 
             ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
             ui.label(RichText::new("\n"));
             ui.label(
-                RichText::new(format!("Your Speed: {}", movement.speed)).color(Color32::GREEN),
+                RichText::new(format!("Your Speed: {}", spacecraft.speed)).color(Color32::GREEN),
             );
             ui.label(
                 RichText::new(format!(

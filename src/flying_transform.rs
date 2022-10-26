@@ -1,22 +1,26 @@
 use bevy::prelude::*;
 use std::f32::consts::TAU;
 
-pub type FlyingTransform = Transform;
-
 #[derive(Debug, Default, Component)]
-pub struct Movement {
+pub struct Spacecraft {
     gain: Vec3,
     pub speed: f32,
 }
 
-pub fn move_forward(mut query: Query<(&mut FlyingTransform, &Movement)>, time: Res<Time>) {
-    for (mut transform, movement) in query.iter_mut() {
+pub fn move_forward(
+    mut query: Query<(&mut Transform, &Spacecraft), With<Spacecraft>>,
+    time: Res<Time>,
+) {
+    for (mut transform, spacecraft) in query.iter_mut() {
         let direction = transform.local_z();
-        transform.translation -= direction * time.delta_seconds() * movement.speed;
+        transform.translation -= direction * time.delta_seconds() * spacecraft.speed;
     }
 }
 
-pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, &mut Movement)>) {
+pub fn steer(
+    keys: Res<Input<KeyCode>>,
+    mut query: Query<(&mut Transform, &mut Spacecraft), With<Spacecraft>>,
+) {
     let gain = 0.2;
     let nudge = TAU / 10000.0;
     let mut roll = 0.0;
@@ -24,24 +28,24 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
     let mut yaw = 0.0;
     let mut had_input = false;
 
-    let (mut transform, mut movement) = query.get_single_mut().unwrap();
+    let (mut transform, mut spacecraft) = query.get_single_mut().unwrap();
 
     // `just_presssed` ignores keys held down.
     for key in keys.get_just_pressed() {
         match key {
             KeyCode::PageUp => {
-                movement.speed += 1.0 + movement.speed * 0.05;
+                spacecraft.speed += 1.0 + spacecraft.speed * 0.05;
             }
             KeyCode::PageDown => {
-                movement.speed -= 1.0 + movement.speed * 0.05;
+                spacecraft.speed -= 1.0 + spacecraft.speed * 0.05;
             }
             _ => {}
         }
     }
 
     // Make it easier to find "neutral"
-    if movement.speed.abs() < 0.5 {
-        movement.speed = 0.0
+    if spacecraft.speed.abs() < 0.5 {
+        spacecraft.speed = 0.0
     }
 
     // `presssed` (contrast `just_pressed`) considers keys being _held_ down, which is good for rotation controls.
@@ -49,28 +53,28 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
         had_input = true;
         match key {
             KeyCode::Left => {
-                roll += nudge * (movement.gain.z + 1.0);
-                movement.gain.z += gain;
+                roll += nudge * (spacecraft.gain.z + 1.0);
+                spacecraft.gain.z += gain;
             }
             KeyCode::Right => {
-                roll -= nudge * (movement.gain.z + 1.0);
-                movement.gain.z += gain;
+                roll -= nudge * (spacecraft.gain.z + 1.0);
+                spacecraft.gain.z += gain;
             }
             KeyCode::Up => {
-                pitch += nudge * (movement.gain.x + 1.0);
-                movement.gain.x += gain;
+                pitch += nudge * (spacecraft.gain.x + 1.0);
+                spacecraft.gain.x += gain;
             }
             KeyCode::Down => {
-                pitch -= nudge * (movement.gain.x + 1.0);
-                movement.gain.x += gain;
+                pitch -= nudge * (spacecraft.gain.x + 1.0);
+                spacecraft.gain.x += gain;
             }
             KeyCode::Z => {
-                yaw += nudge * (movement.gain.y + 1.0);
-                movement.gain.y += gain;
+                yaw += nudge * (spacecraft.gain.y + 1.0);
+                spacecraft.gain.y += gain;
             }
             KeyCode::X => {
-                yaw -= nudge * (movement.gain.y + 1.0);
-                movement.gain.y += gain;
+                yaw -= nudge * (spacecraft.gain.y + 1.0);
+                spacecraft.gain.y += gain;
             }
             _ => {
                 had_input = false;
@@ -79,22 +83,22 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
     }
 
     if !had_input {
-        if movement.gain.x > 0.0 {
-            movement.gain.x -= gain;
-            if movement.gain.x < 0.0 {
-                movement.gain.x = 0.0;
+        if spacecraft.gain.x > 0.0 {
+            spacecraft.gain.x -= gain;
+            if spacecraft.gain.x < 0.0 {
+                spacecraft.gain.x = 0.0;
             }
         }
-        if movement.gain.y > 0.0 {
-            movement.gain.y -= gain;
-            if movement.gain.y < 0.0 {
-                movement.gain.y = 0.0;
+        if spacecraft.gain.y > 0.0 {
+            spacecraft.gain.y -= gain;
+            if spacecraft.gain.y < 0.0 {
+                spacecraft.gain.y = 0.0;
             }
         }
-        if movement.gain.z > 0.0 {
-            movement.gain.z -= gain;
-            if movement.gain.z < 0.0 {
-                movement.gain.z = 0.0;
+        if spacecraft.gain.z > 0.0 {
+            spacecraft.gain.z -= gain;
+            if spacecraft.gain.z < 0.0 {
+                spacecraft.gain.z = 0.0;
             }
         }
     }
@@ -106,20 +110,5 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut FlyingTransform, 
         transform.rotate(Quat::from_axis_angle(local_x, pitch));
         transform.rotate(Quat::from_axis_angle(local_z, roll));
         transform.rotate(Quat::from_axis_angle(local_y, yaw));
-    }
-}
-
-#[derive(Component, Default)]
-pub struct RelativeTransform(pub Transform);
-
-// FIXME -- the Camera stuff is a hack. Should be "generalizable".
-pub fn update_relative_transforms(
-    mut followers: Query<(&mut Transform, &RelativeTransform), Without<Camera>>,
-    flying_transform_query: Query<&Transform, With<Camera>>,
-) {
-    for (mut follower, relative_transform) in followers.iter_mut() {
-        if let Ok(frame) = flying_transform_query.get_single() {
-            *follower = frame.mul_transform((*relative_transform).0);
-        }
     }
 }
