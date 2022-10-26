@@ -37,19 +37,32 @@ fn main() {
         .run();
 }
 
-fn cast_ray(rapier_context: Res<RapierContext>, craft: Query<&Transform, With<Spacecraft>>) {
+fn cast_ray(
+    mut crosshairs_query: Query<&mut Visibility, With<Crosshairs>>,
+    rapier_context: Res<RapierContext>,
+    craft: Query<&Transform, With<Spacecraft>>,
+) {
     for pov in craft.iter() {
         let hit = rapier_context.cast_ray(
             pov.translation,
             -1.0 * pov.local_z(),
-            100.0,
+            150.0, // what's reasonable here...?
             true,
             QueryFilter::only_dynamic(),
         );
 
         if let Some((entity, _toi)) = hit {
-            println!("_toi: {:?}", _toi);
-            println!("entity: {:?}", entity);
+            if let Ok(mut crosshairs) = crosshairs_query.get_single_mut() {
+                crosshairs.is_visible = true;
+            } else {
+                println!("No crosshairs found.");
+            }
+        } else {
+            if let Ok(mut crosshairs) = crosshairs_query.get_single_mut() {
+                crosshairs.is_visible = false;
+            } else {
+                println!("No crosshairs found.");
+            }
         }
     }
 }
@@ -79,6 +92,9 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
         let _ = app_state.overwrite_set(state);
     }
 }
+
+#[derive(Component)]
+struct Crosshairs;
 
 // Take the latitude (poles are [1,-1]) and the longitude (portion around, starting at (0,0,1))
 // and return the x, y, z on the unit sphere.
@@ -127,6 +143,17 @@ fn setup(
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft::default())
         .with_children(|parent| {
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.2,
+                        ..Default::default()
+                    })),
+                    transform: Transform::from_xyz(0.0, 0.0, -8.0),
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
+                .insert(Crosshairs);
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
