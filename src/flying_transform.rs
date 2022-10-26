@@ -7,20 +7,14 @@ pub struct Spacecraft {
     pub speed: f32,
 }
 
-pub fn move_forward(
-    mut query: Query<(&mut Transform, &Spacecraft), With<Spacecraft>>,
-    time: Res<Time>,
-) {
+pub fn move_forward(mut query: Query<(&mut Transform, &Spacecraft)>, time: Res<Time>) {
     for (mut transform, spacecraft) in query.iter_mut() {
         let direction = transform.local_z();
         transform.translation -= direction * time.delta_seconds() * spacecraft.speed;
     }
 }
 
-pub fn steer(
-    keys: Res<Input<KeyCode>>,
-    mut query: Query<(&mut Transform, &mut Spacecraft), With<Spacecraft>>,
-) {
+pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut Spacecraft)>) {
     let gain = 0.2;
     let nudge = TAU / 10000.0;
     let mut roll = 0.0;
