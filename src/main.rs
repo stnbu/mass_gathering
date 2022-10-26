@@ -61,12 +61,10 @@ fn setup(
                 })),
                 material: materials.add(Color::WHITE.into()),
                 transform: Transform::from_xyz(0.0, 0.0, -8.0),
-                visibility: Visibility::visible(),
                 ..Default::default()
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
-                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.7,
                     range: 1000.0,
@@ -76,7 +74,6 @@ fn setup(
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(-10.0, 5.0, -35.0),
-                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.5,
                     range: 1000.0,
@@ -86,7 +83,6 @@ fn setup(
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(30.0, -20.0, 80.0),
-                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.7,
                     range: 1000.0,
@@ -96,7 +92,6 @@ fn setup(
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(-30.0, 10.0, 100.0),
-                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.8,
                     range: 1000.0,
