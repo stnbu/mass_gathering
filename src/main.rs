@@ -1,9 +1,4 @@
 use bevy::prelude::*;
-use bevy_egui::{
-    egui::{style::Margin, Color32, Frame, RichText, TopBottomPanel},
-    EguiContext, EguiPlugin,
-};
-//use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 use std::f32::consts::TAU;
 mod physics;
@@ -135,32 +130,5 @@ fn setup(
                 },
                 ..Default::default()
             });
-        });
-}
-
-fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&ft::Spacecraft, &Transform)>) {
-    let (spacecraft, transform) = query.get_single().unwrap();
-    TopBottomPanel::top("hud")
-        .frame(Frame {
-            outer_margin: Margin::symmetric(10.0, 20.0),
-            fill: Color32::TRANSPARENT,
-            ..Default::default()
-        })
-        .show(ctx.ctx_mut(), |ui| {
-            ui.label(RichText::new("Keys:").color(Color32::GREEN));
-            ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
-            ui.label(RichText::new("  Z & X:\t\t\tYaw").color(Color32::GREEN));
-            ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
-            ui.label(RichText::new("\n"));
-            ui.label(
-                RichText::new(format!("Your Speed: {}", spacecraft.speed)).color(Color32::GREEN),
-            );
-            ui.label(
-                RichText::new(format!(
-                    "Your Location:\n  x: {}\n  y:{}\n  z:{}",
-                    transform.translation.x, transform.translation.y, transform.translation.z
-                ))
-                .color(Color32::GREEN),
-            );
         });
 }
