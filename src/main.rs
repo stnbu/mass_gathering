@@ -47,17 +47,21 @@ struct BallisticProjectileTarget {
 fn handle_projectile_flight(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
-    planet_query: Query<&Transform, (With<Collider>, Without<BallisticProjectileTarget>)>,
+    planet_query: Query<
+        (&Transform, &Momentum),
+        (With<Collider>, Without<BallisticProjectileTarget>),
+    >,
     time: Res<Time>,
 ) {
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
-        if let Ok(planet_transform) = planet_query.get(target.planet) {
+        if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
             let gloal_impact_site = planet_transform.translation + target.local_impact_site;
             let distance = (projectile_transform.translation - gloal_impact_site).length();
             if distance > 5.0 {
                 // spot-the-bug
-                let direction = projectile_transform.translation - gloal_impact_site;
-                projectile_transform.translation -= direction * time.delta_seconds() * 0.8;
+                let direction = (projectile_transform.translation - gloal_impact_site).normalize();
+                projectile_transform.translation -=
+                    (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
             } else {
                 commands.entity(projectile).despawn();
             }
@@ -90,8 +94,8 @@ fn handle_projectile_engagement(
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    let transform = planet_query.get(planet).unwrap();
-                    let local_impact_site = transform.translation - global_impact_site;
+                    let planet_transform = planet_query.get(planet).unwrap();
+                    let local_impact_site = planet_transform.translation - global_impact_site;
                     commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
