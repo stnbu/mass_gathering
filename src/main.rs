@@ -1,6 +1,6 @@
-use bevy::{prelude::*, transform};
+use bevy::prelude::*;
 use bevy_egui::{
-    egui::{style::Margin, Color32, Frame, RichText, TopBottomPanel},
+    egui::{style::Margin, Color32, FontId, Frame, RichText, TopBottomPanel},
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{
@@ -269,6 +269,7 @@ fn setup(
         });
 }
 
+use bevy_egui::egui::FontFamily::Monospace;
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
     let (spacecraft, transform) = query.get_single().unwrap();
     TopBottomPanel::top("hud")
@@ -278,20 +279,61 @@ fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            ui.label(RichText::new("Keys:").color(Color32::GREEN));
-            ui.label(RichText::new("  Arrow Keys:\tPitch & Roll").color(Color32::GREEN));
-            ui.label(RichText::new("  Z & X:\t\t\tYaw").color(Color32::GREEN));
-            ui.label(RichText::new("  PgUp/PgDn:\tSpeed").color(Color32::GREEN));
+            ui.label(RichText::new("Keys:").color(Color32::GREEN).font(FontId {
+                size: 18.0,
+                family: Monospace,
+            }));
+            ui.label(
+                RichText::new("Arrow Keys -  Pitch & Roll")
+                    .color(Color32::GREEN)
+                    .font(FontId {
+                        size: 18.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.label(
+                RichText::new("Z & X      -  Yaw")
+                    .color(Color32::GREEN)
+                    .font(FontId {
+                        size: 18.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.label(
+                RichText::new("PgUp/PgDn  -  Speed")
+                    .color(Color32::GREEN)
+                    .font(FontId {
+                        size: 18.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.label(
+                RichText::new("F          -  Fire")
+                    .color(Color32::GREEN)
+                    .font(FontId {
+                        size: 18.0,
+                        family: Monospace,
+                    }),
+            );
             ui.label(RichText::new("\n"));
             ui.label(
-                RichText::new(format!("Your Speed: {}", spacecraft.speed)).color(Color32::GREEN),
+                RichText::new(format!("Your Speed - {}", spacecraft.speed))
+                    .color(Color32::GREEN)
+                    .font(FontId {
+                        size: 18.0,
+                        family: Monospace,
+                    }),
             );
             ui.label(
                 RichText::new(format!(
-                    "Your Location:\n  x: {}\n  y:{}\n  z:{}",
+                    "Your Location:\n     x - {}\n     y - {}\n     z - {}",
                     transform.translation.x, transform.translation.y, transform.translation.z
                 ))
-                .color(Color32::GREEN),
+                .color(Color32::GREEN)
+                .font(FontId {
+                    size: 18.0,
+                    family: Monospace,
+                }),
             );
         });
 }
