@@ -51,6 +51,7 @@ fn setup(
             transform: Transform::from_xyz(0.0, 75.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
             ..Default::default()
         })
+        .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft)
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
