@@ -272,6 +272,22 @@ fn setup(
 use bevy_egui::egui::FontFamily::Monospace;
 fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
     let (spacecraft, transform) = query.get_single().unwrap();
+    let hud_text = format!(
+        "
+Arrow Keys - Pitch & Roll
+Z & X      - Yaw
+PgUp/PgDn  - Speed
+F          - Fire
+
+Your Speed - {}
+Your Location
+  x        - {}
+  y        - {}
+  z        - {}
+",
+        spacecraft.speed, transform.translation.x, transform.translation.y, transform.translation.z
+    );
+
     TopBottomPanel::top("hud")
         .frame(Frame {
             outer_margin: Margin::symmetric(10.0, 20.0),
@@ -279,61 +295,9 @@ fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            ui.label(RichText::new("Keys:").color(Color32::GREEN).font(FontId {
+            ui.label(RichText::new(hud_text).color(Color32::GREEN).font(FontId {
                 size: 18.0,
                 family: Monospace,
             }));
-            ui.label(
-                RichText::new("Arrow Keys -  Pitch & Roll")
-                    .color(Color32::GREEN)
-                    .font(FontId {
-                        size: 18.0,
-                        family: Monospace,
-                    }),
-            );
-            ui.label(
-                RichText::new("Z & X      -  Yaw")
-                    .color(Color32::GREEN)
-                    .font(FontId {
-                        size: 18.0,
-                        family: Monospace,
-                    }),
-            );
-            ui.label(
-                RichText::new("PgUp/PgDn  -  Speed")
-                    .color(Color32::GREEN)
-                    .font(FontId {
-                        size: 18.0,
-                        family: Monospace,
-                    }),
-            );
-            ui.label(
-                RichText::new("F          -  Fire")
-                    .color(Color32::GREEN)
-                    .font(FontId {
-                        size: 18.0,
-                        family: Monospace,
-                    }),
-            );
-            ui.label(RichText::new("\n"));
-            ui.label(
-                RichText::new(format!("Your Speed - {}", spacecraft.speed))
-                    .color(Color32::GREEN)
-                    .font(FontId {
-                        size: 18.0,
-                        family: Monospace,
-                    }),
-            );
-            ui.label(
-                RichText::new(format!(
-                    "Your Location:\n     x - {}\n     y - {}\n     z - {}",
-                    transform.translation.x, transform.translation.y, transform.translation.z
-                ))
-                .color(Color32::GREEN)
-                .font(FontId {
-                    size: 18.0,
-                    family: Monospace,
-                }),
-            );
         });
 }
