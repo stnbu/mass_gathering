@@ -140,38 +140,39 @@ fn setup(
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft::default())
         .with_children(|parent| {
-            // haaaalp
+            // Possibly the worst way to implement "crosshairs" evar.
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.1,
+                        radius: 0.03,
                         ..Default::default()
                     })),
+                    material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -8.0),
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
                 .insert(Crosshairs);
-
             parent
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 10.0, 0.1))),
+                    mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.1))),
+                    material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -7.0),
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
                 .insert(Crosshairs);
-
             parent
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::new(0.10, 0.08, 0.1))),
-                    transform: Transform::from_xyz(0.0, 0.0, -7.0),
+                    mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.1))),
+                    material: materials.add(Color::GREEN.into()),
+                    transform: Transform::from_xyz(0.0, 0.0, -6.0),
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
                 .insert(Crosshairs);
 
-            // haaaalp
+            // Various lights for seeing
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
