@@ -27,7 +27,7 @@ fn main() {
                 .with_system(steer)
                 .with_system(freefall)
                 .with_system(collision_events)
-                .with_system(handle_projectile_fire)
+                .with_system(handle_projectile_engagement)
                 .with_system(handle_projectile_flight),
         )
         .add_startup_system(setup)
@@ -44,30 +44,28 @@ struct BallisticProjectileTarget {
     local_impact_site: Vec3,
 }
 
-/*
-pub fn move_forward(mut query: Query<(&mut Transform, &Spacecraft)>, time: Res<Time>) {
-    for (mut transform, spacecraft) in query.iter_mut() {
-        let direction = transform.local_z();
-        transform.translation -= direction * time.delta_seconds() * spacecraft.speed;
-    }
-}
-*/
-
 fn handle_projectile_flight(
-    mut projectile_query: Query<(&mut Transform, &BallisticProjectileTarget)>,
+    mut commands: Commands,
+    mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
     planet_query: Query<&Transform, (With<Collider>, Without<BallisticProjectileTarget>)>,
     time: Res<Time>,
 ) {
-    for (mut projectile_transform, target) in projectile_query.iter_mut() {
+    for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
         if let Ok(planet_transform) = planet_query.get(target.planet) {
             let gloal_impact_site = planet_transform.translation + target.local_impact_site;
-            let direction = projectile_transform.translation - gloal_impact_site;
-            projectile_transform.translation -= direction * time.delta_seconds() * 0.8;
+            let distance = (projectile_transform.translation - gloal_impact_site).length();
+            if distance > 5.0 {
+                // spot-the-bug
+                let direction = projectile_transform.translation - gloal_impact_site;
+                projectile_transform.translation -= direction * time.delta_seconds() * 0.8;
+            } else {
+                commands.entity(projectile).despawn();
+            }
         }
     }
 }
 
-fn handle_projectile_fire(
+fn handle_projectile_engagement(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
