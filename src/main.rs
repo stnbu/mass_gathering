@@ -3,47 +3,14 @@ use rand::Rng;
 use std::f32::consts::TAU;
 mod physics;
 
-mod flying_transform;
-use flying_transform as ft;
-
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .add_plugins(DefaultPlugins)
-        .add_system(ft::move_forward)
-        .add_system(ft::steer)
         .add_startup_system(setup)
         .run();
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
-enum AppState {
-    Startup,
-    Playing,
-    Paused,
-    Menu,
-}
-
-fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
-    use AppState::*;
-    use KeyCode::*;
-    let next_state =
-        keys.get_just_pressed()
-            .fold(None, |_state, key| match (*app_state.current(), *key) {
-                (Playing, Space) => Some(Paused),
-                (Paused, Space) => Some(Playing),
-                (Menu, M) => Some(Playing),
-                (_, M) => Some(Menu),
-                (Startup, _) => Some(Playing),
-                _ => None,
-            });
-    if let Some(state) = next_state {
-        let _ = app_state.overwrite_set(state);
-    }
-}
-
-// Take the latitude (poles are [1,-1]) and the longitude (portion around, starting at (0,0,1))
-// and return the x, y, z on the unit sphere.
 fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     let theta = (lat * 2.0 - 1.0).acos(); // latitude. -1 & 1 are poles. 0 is equator.
     let phi = lon * TAU; // portion around the planet `[0,1)` (from Greenwich)
@@ -52,6 +19,9 @@ fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     let z = theta.cos();
     Vec3::new(x, y, z)
 }
+
+#[derive(Component)]
+struct Spacecraft;
 
 fn setup(
     mut commands: Commands,
@@ -80,10 +50,10 @@ fn setup(
     }
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 200.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
+            transform: Transform::from_xyz(0.0, 75.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
             ..Default::default()
         })
-        .insert(ft::Spacecraft::default())
+        .insert(Spacecraft)
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -92,10 +62,12 @@ fn setup(
                 })),
                 material: materials.add(Color::WHITE.into()),
                 transform: Transform::from_xyz(0.0, 0.0, -8.0),
+                visibility: Visibility::visible(),
                 ..Default::default()
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
+                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.7,
                     range: 1000.0,
@@ -105,6 +77,7 @@ fn setup(
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(-10.0, 5.0, -35.0),
+                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.5,
                     range: 1000.0,
@@ -114,6 +87,7 @@ fn setup(
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(30.0, -20.0, 80.0),
+                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.7,
                     range: 1000.0,
@@ -123,6 +97,7 @@ fn setup(
             });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(-30.0, 10.0, 100.0),
+                visibility: Visibility::visible(),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.8,
                     range: 1000.0,
