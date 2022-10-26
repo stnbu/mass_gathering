@@ -102,17 +102,9 @@ fn setup(
             transform: Transform::from_xyz(0.0, 200.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
             ..Default::default()
         })
+        .insert_bundle(VisibilityBundle::default())
         .insert(ft::Spacecraft::default())
         .with_children(|parent| {
-            parent.spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 1.0,
-                    ..Default::default()
-                })),
-                material: materials.add(Color::WHITE.into()),
-                transform: Transform::from_xyz(0.0, 0.0, -8.0),
-                ..Default::default()
-            });
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
