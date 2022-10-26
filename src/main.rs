@@ -52,16 +52,12 @@ fn cast_ray(
         );
 
         if let Some((entity, _toi)) = hit {
-            if let Ok(mut crosshairs) = crosshairs_query.get_single_mut() {
+            for mut crosshairs in crosshairs_query.iter_mut() {
                 crosshairs.is_visible = true;
-            } else {
-                println!("No crosshairs found.");
             }
         } else {
-            if let Ok(mut crosshairs) = crosshairs_query.get_single_mut() {
+            for mut crosshairs in crosshairs_query.iter_mut() {
                 crosshairs.is_visible = false;
-            } else {
-                println!("No crosshairs found.");
             }
         }
     }
@@ -135,6 +131,7 @@ fn setup(
             );
         }
     }
+
     commands
         .spawn_bundle(Camera3dBundle {
             transform: Transform::from_xyz(0.0, 200.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
@@ -143,10 +140,11 @@ fn setup(
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft::default())
         .with_children(|parent| {
+            // haaaalp
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.2,
+                        radius: 0.1,
                         ..Default::default()
                     })),
                     transform: Transform::from_xyz(0.0, 0.0, -8.0),
@@ -154,6 +152,26 @@ fn setup(
                     ..Default::default()
                 })
                 .insert(Crosshairs);
+
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 10.0, 0.1))),
+                    transform: Transform::from_xyz(0.0, 0.0, -7.0),
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
+                .insert(Crosshairs);
+
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Box::new(0.10, 0.08, 0.1))),
+                    transform: Transform::from_xyz(0.0, 0.0, -7.0),
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
+                .insert(Crosshairs);
+
+            // haaaalp
             parent.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
