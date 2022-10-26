@@ -3,7 +3,7 @@ use bevy_egui::{
     egui::{style::Margin, Color32, Frame, RichText, TopBottomPanel},
     EguiContext, EguiPlugin,
 };
-use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+//use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 use std::f32::consts::TAU;
 mod physics;
@@ -15,20 +15,9 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .add_plugins(DefaultPlugins)
-        .add_plugin(EguiPlugin)
-        .add_state(AppState::Startup)
-        .add_system_set(
-            SystemSet::on_update(AppState::Playing)
-                .with_system(ft::move_forward)
-                .with_system(ft::steer)
-                .with_system(physics::freefall)
-                .with_system(physics::collision_events),
-        )
+        .add_system(ft::move_forward)
+        .add_system(ft::steer)
         .add_startup_system(setup)
-        .add_system(bevy::window::close_on_esc)
-        .add_system(handle_game_state)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-        .add_system(hud)
         .run();
 }
 
@@ -73,10 +62,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut rapier_config: ResMut<RapierConfiguration>,
 ) {
-    rapier_config.gravity = Vec3::ZERO;
-
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
     let pair_count = 40;
