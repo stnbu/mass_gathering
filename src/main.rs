@@ -42,7 +42,7 @@ fn cast_ray(rapier_context: Res<RapierContext>, craft: Query<&Transform, With<Sp
         let hit = rapier_context.cast_ray(
             pov.translation,
             -1.0 * pov.local_z(),
-            f32::MAX,
+            100.0,
             true,
             QueryFilter::only_dynamic(),
         );
