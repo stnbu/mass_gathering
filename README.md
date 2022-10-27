@@ -26,9 +26,9 @@ The binary is 19MB for the above web-version (WASM). You will see a blank page a
 1. Click anywhere in the game window (the WASM widow does not have focus until you do.)
 1. Click your space bar to un-pause (and re-pause) the game.
 
-> *   - Masses combine, radius grows in proportion.
-> **  - Oops. According to the above gameplay, _some particular player_ will own the largest planet,
->       meaning that the winner is pre-determined long before the game ends over.
+> `*`   - Masses combine, radius grows in proportion.
+> `**`  - Oops. According to the above gameplay, _some particular player_ will own the largest planet,
+>         meaning that the winner is pre-determined long before the game ends over.
 
 
 ---
