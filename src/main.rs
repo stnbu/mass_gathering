@@ -4,7 +4,6 @@ use bevy_rapier3d::prelude::{
     Collider, CollisionEvent, NoUserData, RapierConfiguration, RapierPhysicsPlugin,
 };
 use rand::Rng;
-use std::collections::HashSet;
 use std::f32::consts::TAU;
 
 mod physics;
@@ -38,57 +37,6 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
-}
-
-fn handle_projectile_flight(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
-    planet_query: Query<
-        (&Transform, &Momentum),
-        (With<Collider>, Without<BallisticProjectileTarget>),
-    >,
-    mut collision_events: EventReader<CollisionEvent>,
-    time: Res<Time>,
-) {
-    let mut collided = HashSet::new();
-    for event in collision_events.iter() {
-        if let CollisionEvent::Started(e0, e1, _) = event {
-            collided.insert(e0);
-            collided.insert(e1);
-        }
-        if let CollisionEvent::Stopped(e0, e1, _) = event {
-            collided.insert(e0);
-            collided.insert(e1);
-        }
-    }
-
-    for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
-        if collided.contains(&&projectile) {
-            let explosion = commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.2,
-                        ..Default::default()
-                    })),
-                    material: materials.add(Color::YELLOW.into()),
-                    transform: Transform::from_translation(target.local_impact_site),
-                    ..Default::default()
-                })
-                .id();
-            commands.entity(target.planet).push_children(&[explosion]);
-            info!("despawning {:?}", projectile);
-            commands.entity(projectile).despawn();
-            continue;
-        }
-        if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
-            let goal_impact_site = planet_transform.translation + target.local_impact_site;
-            let direction = (projectile_transform.translation - goal_impact_site).normalize();
-            projectile_transform.translation -=
-                (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
-        }
-    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
