@@ -335,8 +335,8 @@ pub fn animate_projectile_explosion(
     time: Res<Time>,
 ) {
     for (mut transform, mut explosion) in explosion_query.iter_mut() {
-        let animation_direction = if explosion.rising { 1.5 } else { -1.0 };
-        transform.scale += Vec3::splat(1.0) * 0.1 * animation_direction * time.delta_seconds();
+        let animation_direction = if explosion.rising { 3.3 } else { -2.0 };
+        transform.scale += Vec3::splat(1.0) * 0.2 * animation_direction * time.delta_seconds();
         if transform.scale.length() > 3.0 {
             explosion.rising = false;
         }
