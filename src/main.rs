@@ -76,12 +76,9 @@ fn handle_projectile_flight(
         }
         if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
             let gloal_impact_site = planet_transform.translation + target.local_impact_site;
-            //let distance = (projectile_transform.translation - gloal_impact_site).length();
-            // spot-the-bug
             let direction = (projectile_transform.translation - gloal_impact_site).normalize();
             projectile_transform.translation -=
-		    // número mágico
-                    (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
+                (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
         }
     }
 }
@@ -112,7 +109,7 @@ fn handle_projectile_engagement(
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let planet_transform = planet_query.get(planet).unwrap();
-                    let local_impact_site = planet_transform.translation - global_impact_site;
+                    let local_impact_site = global_impact_site - planet_transform.translation;
                     let radius = 0.25;
                     commands
                         .spawn_bundle(PbrBundle {
