@@ -3,46 +3,49 @@ use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, 
 use std::collections::HashSet;
 use std::f32::consts::PI;
 
+fn gdp(planets: &[(&mut Transform, &mut Momentum); 2]) -> [usize; 2] {
+    if planets[0].1.mass > planets[1].1.mass {
+        [0, 1]
+    } else {
+        [1, 0]
+    }
+}
+
 pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
-    query: Query<(&Transform, &Momentum), With<Collider>>,
+    mut planet_query: Query<(&mut Transform, &mut Momentum), With<Collider>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mut despawned = HashSet::new();
 
     for collision_event in events.iter() {
-        if let CollisionEvent::Started(e1, e2, flags) = collision_event {
-            if despawned.contains(e1) || despawned.contains(e2) {
+        if let CollisionEvent::Started(e0, e1, flags) = collision_event {
+            if despawned.contains(e0) || despawned.contains(e1) {
                 continue;
             }
             if !flags.is_empty() {
                 info!("planet-planet collision flags: {:?}", flags);
             }
-            if let Ok([planet0, planet1]) = query.get_many([*e1, *e2]) {
-                let (planet0_transform, planet0_momentum) = planet0;
-                let (planet1_transform, planet1_momentum) = planet1;
-                let (weight0, weight1) = planet0_momentum.get_apportionment(planet1_momentum);
-                let new_momentum = planet0_momentum.apportioned_new(planet1_momentum);
-                let new_position = planet0_transform.translation * weight0
-                    + planet1_transform.translation * weight1;
-                let new_radius = mass_to_radius(new_momentum.mass);
-                info!("despawning planet {:?}", e1);
-                commands.entity(*e1).despawn();
-                info!("despawning planet {:?}", e2);
-                commands.entity(*e2).despawn();
-                despawned.insert(e1);
-                despawned.insert(e2);
-                spawn_planet(
-                    new_radius,
-                    new_position,
-                    new_momentum.velocity,
-                    new_momentum.color,
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                );
+            if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
+                let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
+                    (p0, p1, e0)
+                } else {
+                    (p1, p0, e1)
+                };
+                // let (mut major_transform, mut major_momentum) = &planets[major_index];
+                // let (_, minor_momentum) = &planets[minor_index];
+                let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
+                major.1.mass += minor.1.mass;
+                major.1.velocity += minor.1.velocity * minor_factor;
+                let scale_up =
+                    (mass_to_radius(major.1.mass + minor.1.mass) / mass_to_radius(major.1.mass));
+                major.0.scale *= scale_up;
+
+                info!("despawning planet {:?}", cull);
+                commands.entity(*cull).despawn();
+                despawned.insert(cull);
             }
         }
     }
