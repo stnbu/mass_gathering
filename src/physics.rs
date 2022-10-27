@@ -34,8 +34,6 @@ pub fn collision_events(
                 } else {
                     (p1, p0, e1)
                 };
-                // let (mut major_transform, mut major_momentum) = &planets[major_index];
-                // let (_, minor_momentum) = &planets[minor_index];
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
                 major.1.mass += minor.1.mass;
                 major.1.velocity += minor.1.velocity * minor_factor;
