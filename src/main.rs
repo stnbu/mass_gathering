@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use bevy_rapier3d::prelude::{
-    Collider, CollisionEvent, NoUserData, RapierConfiguration, RapierPhysicsPlugin,
-};
+use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 use std::f32::consts::TAU;
 
