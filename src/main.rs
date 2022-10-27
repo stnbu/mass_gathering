@@ -39,7 +39,7 @@ fn main() {
         .run();
 }
 
-#[derive(Component)]
+#[derive(Component, Clone)]
 struct BallisticProjectileTarget {
     planet: Entity,
     local_impact_site: Vec3,
@@ -47,6 +47,8 @@ struct BallisticProjectileTarget {
 use std::collections::HashSet;
 fn handle_projectile_flight(
     mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
     planet_query: Query<
         (&Transform, &Momentum),
@@ -70,7 +72,21 @@ fn handle_projectile_flight(
 
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
         if collided.contains(&&projectile) {
-            println!("despawning {:?}", &&projectile);
+            let explosion = commands
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.2,
+                        ..Default::default()
+                    })),
+                    material: materials.add(Color::YELLOW.into()),
+                    transform: Transform::from_translation(target.local_impact_site),
+                    ..Default::default()
+                })
+                .id();
+            commands
+                .entity(target.planet.clone())
+                .push_children(&[explosion]);
+            info!("despawning {:?}", projectile);
             commands.entity(projectile).despawn();
             continue;
         }
@@ -109,15 +125,15 @@ fn handle_projectile_engagement(
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let planet_transform = planet_query.get(planet).unwrap();
-                    let local_impact_site = global_impact_site - planet_transform.translation;
-                    let radius = 0.25;
+                    let local_impact_site = planet_transform.translation - global_impact_site;
+                    let radius = 0.15;
                     commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
                                 radius,
                                 ..Default::default()
                             })),
-                            material: materials.add(Color::PINK.into()),
+                            material: materials.add(Color::WHITE.into()),
                             transform: Transform::from_translation(ray_origin),
                             ..Default::default()
                         })
@@ -213,7 +229,7 @@ fn setup(
 
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 200.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
+            transform: Transform::from_xyz(0.0, 0.01, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
             ..Default::default()
         })
         .insert_bundle(VisibilityBundle::default())
