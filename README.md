@@ -9,9 +9,9 @@ Your spacecraft spawns into a newly-formed solar system with chaotic orbits. You
 You do this by:
 
 * Shooting momentum-altering projectiles at planets. If you strike a planet, you clam it.
-* If a planet you have claimed collides with an unclaimed planet, the newly-formed planet, becomes yours. *
+* If a planet you have claimed collides with an unclaimed planet, the newly-formed planet becomes yours. <sup>*</sup>
 * If a planet you have claimed collides with a planet claimed by another player, the owner is determined by mass: largest planet wins.
-* When all planets merge into one, the game is over and, the owner of the last planet wins.**
+* When all planets merge into one, the game is over and, the owner of the last planet wins. <sup>**</sup>
 
 The key bindings are displayed on-screen in the upper-left corner.
 
