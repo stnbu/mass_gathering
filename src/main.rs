@@ -12,6 +12,36 @@ use craft::*;
 
 // PSA: see examples/3d/split_screen.rs
 
+pub struct Game;
+
+impl Plugin for Game {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
+            .add_plugins(DefaultPlugins)
+            .add_plugin(EguiPlugin)
+            .add_state(AppState::Startup)
+            .add_system_set(
+                SystemSet::on_update(AppState::Playing)
+                    .with_system(move_forward)
+                    .with_system(steer)
+                    .with_system(handle_projectile_engagement)
+                    .with_system(handle_projectile_flight)
+                    .with_system(animate_projectile_explosion),
+            )
+            .add_system_set(
+                SystemSet::on_update(AppState::Placeholder)
+                    .with_system(collision_events)
+                    .with_system(freefall),
+            )
+            .add_startup_system(setup)
+            .add_startup_system(spacecraft_setup)
+            .add_system(bevy::window::close_on_esc)
+            .add_system(handle_game_state)
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+            .add_system(hud);
+    }
+}
+
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
