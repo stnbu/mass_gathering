@@ -1,5 +1,5 @@
 use bevy::prelude::App;
-use the_resumator::Game;
+use mass_gathering::Game;
 
 fn main() {
     App::new().add_plugin(Game).run();
