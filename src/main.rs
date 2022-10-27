@@ -68,11 +68,8 @@ fn handle_projectile_flight(
         (With<Collider>, Without<BallisticProjectileTarget>),
     >,
     mut collision_events: EventReader<CollisionEvent>,
-    //query: Query<(&Transform, &Momentum), With<Collider>>,
     time: Res<Time>,
 ) {
-    //let collision_events = collision_events.iter().collect();
-
     'proj: for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
         for collision_event in collision_events.iter() {
             if let CollisionEvent::Started(e1, e2, _flags) = collision_event {
