@@ -17,14 +17,14 @@ The key bindings are displayed on-screen in the upper-left corner.
 
 To play, you can...
 
-### Play [here](https://unintuitive.org/mass_gathering/).
+### a) Play [here](https://unintuitive.org/mass_gathering/).
 
 The WASM binary is 19MB. You will see a blank page as this loads. Once the game loads...
 
   1. Click anywhere in the game window (the WASM widow does not have focus until you do.)
   1. Click your space bar to un-pause (and re-pause) the game.
 
-### Compile and run it locally with `cargo run`.
+### or b) Compile and run it locally with `cargo run`.
 
 No special toolchain or manual setup is required. Just...
 
