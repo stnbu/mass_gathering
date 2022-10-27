@@ -1,4 +1,3 @@
-use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use mass_gathering::prelude::*;
@@ -60,7 +59,7 @@ fn setup(
     });
 
     spawn_planet(
-        5.01,
+        5.0,
         Vec3::X * 10.0,
         Vec3::ZERO,
         Color::RED,

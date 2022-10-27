@@ -11,22 +11,33 @@ pub fn collision_events(
     let mut despawned = HashSet::new();
 
     for collision_event in events.iter() {
-        if let CollisionEvent::Started(e0, e1, flags) = collision_event {
+        if let CollisionEvent::Started(e0, e1, _) = collision_event {
             if despawned.contains(e0) || despawned.contains(e1) {
+                warn!("Trying to re-collide despawned planet.");
                 continue;
-            }
-            if !flags.is_empty() {
-                info!("planet-planet collision flags: {:?}", flags);
             }
             if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
                     (p0, p1, e1)
-                } else {
+                } else if p0.1.mass < p1.1.mass {
                     (p1, p0, e0)
+                } else {
+                    // FIXME -- a fair tie-breaker
+                    warn!("Colliding planets {:?} and {:?} have exactly the same mass. Picking major/minor arbitrarilly.", e0, e1);
+                    (p0, p1, e1)
                 };
+                let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
+                println!("major_factor: {}", major_factor);
+                println!("minor_factor: {}", minor_factor);
                 major.1.mass += minor.1.mass;
-                major.1.velocity += minor.1.velocity * minor_factor;
+                println!(
+                    "before collision: major - {:?}, minor - {:?}",
+                    major.1.velocity, minor.1.velocity
+                );
+                major.1.velocity =
+                    major.1.velocity * major_factor + minor.1.velocity * minor_factor;
+                println!("after collision: major - {:?}", major.1.velocity);
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
                 major.0.scale = scale_up * Vec3::splat(1.0);
@@ -67,11 +78,7 @@ pub fn spawn_planet<'a>(
             transform: Transform::from_translation(position),
             ..Default::default()
         })
-        .insert(Momentum {
-            velocity,
-            mass,
-            color,
-        })
+        .insert(Momentum { velocity, mass })
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(radius))
         .insert(ActiveEvents::COLLISION_EVENTS)
@@ -82,42 +89,6 @@ pub fn spawn_planet<'a>(
 pub struct Momentum {
     pub velocity: Vec3,
     mass: f32,
-    color: Color,
-}
-
-impl Momentum {
-    fn apportioned_new(&self, other: &Self) -> Self {
-        let (self_weight, other_weight) = self.get_apportionment(other);
-        let self_rgba = self
-            .color
-            .as_rgba_f32()
-            .iter()
-            .map(|f| *f * self_weight)
-            .collect::<Vec<f32>>();
-        let other_rgba = other
-            .color
-            .as_rgba_f32()
-            .iter()
-            .map(|f| *f * other_weight)
-            .collect::<Vec<f32>>();
-        let c = self_rgba
-            .iter()
-            .zip(other_rgba)
-            .map(|(s, o)| s + o)
-            .collect::<Vec<f32>>();
-        Self {
-            velocity: self_weight * self.velocity + other_weight * other.velocity,
-            mass: self.mass + other.mass,
-            color: Color::rgba(c[0], c[1], c[2], c[3]),
-        }
-    }
-
-    fn get_apportionment(&self, other: &Self) -> (f32, f32) {
-        (
-            self.mass / (self.mass + other.mass),
-            other.mass / (self.mass + other.mass),
-        )
-    }
 }
 
 impl Default for Momentum {
@@ -125,7 +96,6 @@ impl Default for Momentum {
         Momentum {
             velocity: Vec3::ZERO,
             mass: 0.0,
-            color: Color::default(),
         }
     }
 }
