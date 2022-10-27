@@ -23,11 +23,14 @@ fn main() {
             SystemSet::on_update(AppState::Playing)
                 .with_system(move_forward)
                 .with_system(steer)
-                .with_system(freefall)
                 .with_system(handle_projectile_engagement)
                 .with_system(handle_projectile_flight),
         )
-        .add_system_set(SystemSet::on_update(AppState::Placeholder).with_system(collision_events))
+        .add_system_set(
+            SystemSet::on_update(AppState::Placeholder)
+                .with_system(collision_events)
+                .with_system(freefall),
+        )
         .add_startup_system(setup)
         .add_startup_system(spacecraft_setup)
         .add_system(bevy::window::close_on_esc)
