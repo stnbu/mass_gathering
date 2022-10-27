@@ -27,7 +27,7 @@ fn main() {
                 .with_system(move_forward)
                 .with_system(steer)
                 .with_system(freefall)
-                .with_system(collision_events)
+                //.with_system(collision_events)
                 .with_system(handle_projectile_engagement)
                 .with_system(handle_projectile_flight),
         )
@@ -44,6 +44,7 @@ struct BallisticProjectileTarget {
     planet: Entity,
     local_impact_site: Vec3,
 }
+use std::collections::HashSet;
 fn handle_projectile_flight(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
@@ -54,29 +55,33 @@ fn handle_projectile_flight(
     mut collision_events: EventReader<CollisionEvent>,
     time: Res<Time>,
 ) {
-    'proj: for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
-        for collision_event in collision_events.iter() {
-            if let CollisionEvent::Started(e1, e2, _flags) = collision_event {
-                for entity in [*e1, *e2] {
-                    if projectile == entity {
-                        commands.entity(projectile).despawn();
-                        continue 'proj;
-                    }
-                }
-            }
+    let mut collided = HashSet::new();
+    //let mut collided = Vec::new();
+    for event in collision_events.iter() {
+        if let CollisionEvent::Started(e0, e1, _) = event {
+            collided.insert(e0);
+            collided.insert(e1);
+        }
+        if let CollisionEvent::Stopped(e0, e1, _) = event {
+            collided.insert(e0);
+            collided.insert(e1);
+        }
+    }
+
+    for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
+        if collided.contains(&&projectile) {
+            println!("despawning {:?}", &&projectile);
+            commands.entity(projectile).despawn();
+            continue;
         }
         if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
             let gloal_impact_site = planet_transform.translation + target.local_impact_site;
-            let distance = (projectile_transform.translation - gloal_impact_site).length();
-            if distance > 5.0 {
-                // spot-the-bug
-                let direction = (projectile_transform.translation - gloal_impact_site).normalize();
-                projectile_transform.translation -=
+            //let distance = (projectile_transform.translation - gloal_impact_site).length();
+            // spot-the-bug
+            let direction = (projectile_transform.translation - gloal_impact_site).normalize();
+            projectile_transform.translation -=
 		    // número mágico
                     (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
-            } else {
-                commands.entity(projectile).despawn();
-            }
         }
     }
 }
