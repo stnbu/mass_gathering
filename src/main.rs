@@ -1,8 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{
-    ActiveEvents, Collider, CollisionEvent, NoUserData, QueryFilter, RapierConfiguration,
-    RapierContext, RapierPhysicsPlugin, RigidBody, Sensor,
+    Collider, CollisionEvent, NoUserData, RapierConfiguration, RapierPhysicsPlugin,
 };
 use rand::Rng;
 use std::collections::HashSet;
@@ -25,10 +24,10 @@ fn main() {
                 .with_system(move_forward)
                 .with_system(steer)
                 .with_system(freefall)
-                //.with_system(collision_events)
                 .with_system(handle_projectile_engagement)
                 .with_system(handle_projectile_flight),
         )
+        .add_system_set(SystemSet::on_update(AppState::Placeholder).with_system(collision_events))
         .add_startup_system(setup)
         .add_startup_system(spacecraft_setup)
         .add_system(bevy::window::close_on_esc)
@@ -36,12 +35,6 @@ fn main() {
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .add_system(hud)
         .run();
-}
-
-#[derive(Component)]
-struct BallisticProjectileTarget {
-    planet: Entity,
-    local_impact_site: Vec3,
 }
 
 fn handle_projectile_flight(
@@ -95,71 +88,13 @@ fn handle_projectile_flight(
     }
 }
 
-fn handle_projectile_engagement(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    optional_keys: Option<Res<Input<KeyCode>>>,
-    mut crosshairs_query: Query<&mut Visibility, With<Crosshairs>>,
-    planet_query: Query<&Transform, With<Collider>>,
-    rapier_context: Res<RapierContext>,
-    craft: Query<&Transform, With<Spacecraft>>,
-) {
-    for pov in craft.iter() {
-        let ray_origin = pov.translation;
-        let ray_direction = -1.0 * pov.local_z();
-        let intersection = rapier_context.cast_ray(
-            ray_origin,
-            ray_direction,
-            150.0, // what's reasonable here...?
-            true,
-            QueryFilter::only_dynamic(),
-        );
-
-        if let Some((planet, distance)) = intersection {
-            if let Some(ref keys) = optional_keys {
-                if keys.just_pressed(KeyCode::F) {
-                    let global_impact_site = ray_origin + (ray_direction * distance);
-                    let planet_transform = planet_query.get(planet).unwrap();
-                    let local_impact_site = planet_transform.translation - global_impact_site;
-                    let radius = 0.15;
-                    commands
-                        .spawn_bundle(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius,
-                                ..Default::default()
-                            })),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_translation(ray_origin),
-                            ..Default::default()
-                        })
-                        .insert(BallisticProjectileTarget {
-                            planet,
-                            local_impact_site,
-                        })
-                        .insert(RigidBody::Dynamic)
-                        .insert(Collider::ball(radius))
-                        .insert(ActiveEvents::COLLISION_EVENTS)
-                        .insert(Sensor);
-                }
-            }
-            for mut crosshairs in crosshairs_query.iter_mut() {
-                crosshairs.is_visible = true;
-            }
-        } else {
-            for mut crosshairs in crosshairs_query.iter_mut() {
-                crosshairs.is_visible = false;
-            }
-        }
-    }
-}
-
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
 enum AppState {
     Startup,
     Playing,
     Paused,
     Menu,
+    Placeholder,
 }
 
 fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
