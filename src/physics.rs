@@ -18,7 +18,7 @@ pub fn collision_events(
                 continue;
             }
             if !flags.is_empty() {
-                warn!("Unexpected collision flags: {:?}", flags);
+                info!("planet-planet collision flags: {:?}", flags);
             }
             if let Ok([planet0, planet1]) = query.get_many([*e1, *e2]) {
                 let (planet0_transform, planet0_momentum) = planet0;
@@ -28,6 +28,12 @@ pub fn collision_events(
                 let new_position = planet0_transform.translation * weight0
                     + planet1_transform.translation * weight1;
                 let new_radius = mass_to_radius(new_momentum.mass);
+                info!("despawning planet {:?}", e1);
+                commands.entity(*e1).despawn();
+                info!("despawning planet {:?}", e2);
+                commands.entity(*e2).despawn();
+                despawned.insert(e1);
+                despawned.insert(e2);
                 spawn_planet(
                     new_radius,
                     new_position,
@@ -38,10 +44,6 @@ pub fn collision_events(
                     &mut materials,
                 );
             }
-            commands.entity(*e1).despawn();
-            commands.entity(*e2).despawn();
-            despawned.insert(e1);
-            despawned.insert(e2);
         }
     }
 }
