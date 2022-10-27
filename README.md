@@ -2,6 +2,8 @@
 
 _A WASM-capable, 3D, n-body simulation game written in [Rust](https://www.rust-lang.org/) using [Bevy](https://bevyengine.org/)._
 
+## Gameplay
+
 Your spacecraft spawns into a newly-formed solar system with chaotic orbits. Your job is to claim as much _mass_ as you can.
 
 You do this by:
@@ -14,6 +16,8 @@ You do this by:
 The key bindings are displayed on-screen in the upper-left corner.
 
 Play [here](https://unintuitive.org/mass_gathering/).
+
+Or, compile and run it locally with `cargo run` (ymmv).
 
 ### Issues/Notes
 
