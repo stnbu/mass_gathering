@@ -188,7 +188,6 @@ pub mod tests {
             ..Default::default()
         };
         let m01 = m0.apportioned_new(&m1);
-        println!("{:?}", m01);
         assert!(m01.mass == 69.0 + 42.0);
         let (m0_weight, m1_weight) = m0.get_apportionment(&m1);
         assert!(m0_weight == 69.0 / (69.0 + 42.0));
