@@ -1,4 +1,4 @@
-# Mass Gathering, a WASM-capable, 3D, N-Body Simulation Game Written in Rust and Implemented with Bevy [WIP]
+# Mass Gathering, a WASM-capable, 3D, N-Body Simulation Game Written in [Rust](https://www.rust-lang.org/) Using [Bevy](https://bevyengine.org/) [WIP]
 
 Your spacecraft spawns into a newly-formed solar system with chaotic orbits. Your job is to claim as much _mass_ as you can.
 
