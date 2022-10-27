@@ -15,19 +15,28 @@ You do this by:
 
 The key bindings are displayed on-screen in the upper-left corner.
 
-Play [here](https://unintuitive.org/mass_gathering/).
+To play, you can...
 
-Or, compile and run it locally with `cargo run` (ymmv).
+### Play [here](https://unintuitive.org/mass_gathering/).
 
-### Issues/Notes
+The WASM binary is 19MB. You will see a blank page as this loads. Once the game loads...
 
-The binary is 19MB for the above web-version (WASM). You will see a blank page as this loads. Once the game loads...
+  1. Click anywhere in the game window (the WASM widow does not have focus until you do.)
+  1. Click your space bar to un-pause (and re-pause) the game.
 
-1. Click anywhere in the game window (the WASM widow does not have focus until you do.)
-1. Click your space bar to un-pause (and re-pause) the game.
+### Compile and run it locally with `cargo run`.
+
+No special toolchain or manual setup is required. Just...
+
+1. [Install Rust](https://www.rust-lang.org/tools/install).
+1. `cd` to the root directory of the repository and execute the command `cargo run`.
+
+Please file a GitHub issue if you have difficulty compiling the project.
+
+### Notes
 
 > `*`   - Masses combine, radius grows in proportion.
-
+>
 > `**`  - Oops. According to the above gameplay, _some particular player_ will own the largest planet,
 >         meaning that the winner is pre-determined long before the game ends over.
 
