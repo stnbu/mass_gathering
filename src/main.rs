@@ -10,6 +10,8 @@ use physics::*;
 mod craft;
 use craft::*;
 
+// PSA: see examples/3d/split_screen.rs
+
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))

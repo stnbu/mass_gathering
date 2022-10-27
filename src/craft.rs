@@ -130,7 +130,7 @@ pub fn spacecraft_setup(
 ) {
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 0.01, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),
             ..Default::default()
         })
         .insert_bundle(VisibilityBundle::default())
@@ -275,6 +275,7 @@ pub fn handle_projectile_engagement(
 
 #[derive(Component)]
 pub struct ProjectileExplosion {
+    pub material: Handle<StandardMaterial>,
     pub rising: bool,
 }
 
@@ -304,17 +305,21 @@ pub fn handle_projectile_flight(
 
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
         if collided.contains(&&projectile) {
+            let material = materials.add(Color::YELLOW.into());
             let explosion = commands
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 0.2,
                         ..Default::default()
                     })),
-                    material: materials.add(Color::YELLOW.into()),
+                    material: material.clone_weak(),
                     transform: Transform::from_translation(target.local_impact_site),
                     ..Default::default()
                 })
-                .insert(ProjectileExplosion { rising: true })
+                .insert(ProjectileExplosion {
+                    material,
+                    rising: true,
+                })
                 .id();
             commands.entity(target.planet).push_children(&[explosion]);
             info!("despawning {:?}", projectile);
@@ -333,10 +338,16 @@ pub fn handle_projectile_flight(
 pub fn animate_projectile_explosion(
     mut commands: Commands,
     mut explosion_query: Query<(Entity, &mut Transform, &mut ProjectileExplosion)>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     time: Res<Time>,
 ) {
     for (entity, mut transform, mut explosion) in explosion_query.iter_mut() {
-        let animation_direction = if explosion.rising { 3.3 } else { -2.0 };
+        if let Some(material) = materials.get_mut(&explosion.material) {
+            // // FIXME: doesn't work...as expected
+            // let r = material.base_color.r();
+            // material.base_color.set_r(r * 0.001 * time.delta_seconds());
+        }
+        let animation_direction = if explosion.rising { 3.5 } else { -2.0 };
         transform.scale += Vec3::splat(1.0) * 0.2 * animation_direction * time.delta_seconds();
         if transform.scale.length() > 3.0 {
             explosion.rising = false;
@@ -350,7 +361,6 @@ pub fn animate_projectile_explosion(
                 return;
             }
         }
-        println!("{:?} ... {}", transform.scale, transform.scale.length());
     }
 }
 
