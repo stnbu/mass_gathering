@@ -3,20 +3,10 @@ use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, 
 use std::collections::HashSet;
 use std::f32::consts::PI;
 
-fn gdp(planets: &[(&mut Transform, &mut Momentum); 2]) -> [usize; 2] {
-    if planets[0].1.mass > planets[1].1.mass {
-        [0, 1]
-    } else {
-        [1, 0]
-    }
-}
-
 pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
     mut planet_query: Query<(&mut Transform, &mut Momentum), With<Collider>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let mut despawned = HashSet::new();
 
@@ -37,9 +27,9 @@ pub fn collision_events(
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
                 major.1.mass += minor.1.mass;
                 major.1.velocity += minor.1.velocity * minor_factor;
-                let scale_up =
-                    (mass_to_radius(major.1.mass + minor.1.mass) / mass_to_radius(major.1.mass));
-                major.0.scale *= scale_up;
+                let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
+                    / mass_to_radius(major.1.mass);
+                major.0.scale = scale_up * Vec3::splat(1.0);
 
                 info!("despawning planet {:?}", cull);
                 commands.entity(*cull).despawn();

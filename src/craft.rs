@@ -130,7 +130,7 @@ pub fn spacecraft_setup(
 ) {
     commands
         .spawn_bundle(Camera3dBundle {
-            transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),
+            transform: Transform::from_xyz(0.0, 0.0, 40.0).looking_at(-Vec3::Z, Vec3::Y),
             ..Default::default()
         })
         .insert_bundle(VisibilityBundle::default())
