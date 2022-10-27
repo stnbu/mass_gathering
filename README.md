@@ -26,14 +26,15 @@ The WASM binary is 19MB. You will see a blank page as this loads. Once the game 
   1. Click anywhere in the game window (the WASM widow does not have focus until you do.)
   1. Click your space bar to un-pause (and re-pause) the game.
 
-### B) Compile and run it locally with `cargo run`.
+### B) Compile and run locally.
 
 No special toolchain or manual setup is required. Just...
 
 1. [Install Rust](https://www.rust-lang.org/tools/install).
+1. Clone this repository somewhere locally.
 1. `cd` to the root directory of the repository and execute the command `cargo run`.
 
-Please file a GitHub issue if you have difficulty compiling the project.
+Please file a [GitHub Issue](https://github.com/stnbu/mass_gathering/issues/new/choose) if you have difficulty compiling the project.
 
 ### Notes
 
