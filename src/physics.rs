@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody};
+use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use std::collections::HashSet;
 use std::f32::consts::PI;
 
@@ -81,7 +81,8 @@ pub fn spawn_planet<'a>(
         })
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(radius))
-        .insert(ActiveEvents::COLLISION_EVENTS);
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(Sensor);
 }
 
 #[derive(Component, Debug)]

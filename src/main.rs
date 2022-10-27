@@ -5,7 +5,7 @@ use bevy_egui::{
 };
 use bevy_rapier3d::prelude::{
     ActiveEvents, Collider, CollisionEvent, NoUserData, QueryFilter, RapierConfiguration,
-    RapierContext, RapierPhysicsPlugin, RigidBody,
+    RapierContext, RapierPhysicsPlugin, RigidBody, Sensor,
 };
 use rand::Rng;
 use std::f32::consts::TAU;
@@ -127,7 +127,8 @@ fn handle_projectile_engagement(
                         })
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(radius))
-                        .insert(ActiveEvents::COLLISION_EVENTS);
+                        .insert(ActiveEvents::COLLISION_EVENTS)
+                        .insert(Sensor);
                 }
             }
             for mut crosshairs in crosshairs_query.iter_mut() {
