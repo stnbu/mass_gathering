@@ -240,7 +240,8 @@ pub fn handle_projectile_engagement(
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let planet_transform = planet_query.get(planet).unwrap();
-                    let local_impact_site = planet_transform.translation - global_impact_site;
+                    //let local_impact_site = planet_transform.translation - global_impact_site;
+                    let local_impact_site = global_impact_site - planet_transform.translation;
                     let radius = 0.15;
                     commands
                         .spawn_bundle(PbrBundle {
