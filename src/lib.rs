@@ -26,10 +26,7 @@ impl Plugin for Game {
                     .with_system(steer)
                     .with_system(handle_projectile_engagement)
                     .with_system(handle_projectile_flight)
-                    .with_system(animate_projectile_explosion),
-            )
-            .add_system_set(
-                SystemSet::on_update(AppState::Placeholder)
+                    .with_system(animate_projectile_explosion)
                     .with_system(collision_events)
                     .with_system(freefall),
             )
@@ -48,7 +45,6 @@ enum AppState {
     Playing,
     Paused,
     Menu,
-    Placeholder,
 }
 
 fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
