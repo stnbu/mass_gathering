@@ -331,15 +331,26 @@ pub fn handle_projectile_flight(
 }
 
 pub fn animate_projectile_explosion(
-    mut explosion_query: Query<(&mut Transform, &mut ProjectileExplosion)>,
+    mut commands: Commands,
+    mut explosion_query: Query<(Entity, &mut Transform, &mut ProjectileExplosion)>,
     time: Res<Time>,
 ) {
-    for (mut transform, mut explosion) in explosion_query.iter_mut() {
+    for (entity, mut transform, mut explosion) in explosion_query.iter_mut() {
         let animation_direction = if explosion.rising { 3.3 } else { -2.0 };
         transform.scale += Vec3::splat(1.0) * 0.2 * animation_direction * time.delta_seconds();
         if transform.scale.length() > 3.0 {
             explosion.rising = false;
         }
+        let mut coords = [0.0; 3];
+        transform.scale.write_to_slice(&mut coords);
+        for d in coords {
+            if d < 0.0 {
+                info!("despawning explosion entity {:?}", entity);
+                commands.entity(entity).despawn();
+                return;
+            }
+        }
+        println!("{:?} ... {}", transform.scale, transform.scale.length());
     }
 }
 
