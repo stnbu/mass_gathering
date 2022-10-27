@@ -15,16 +15,18 @@ You do this by:
 
 The key bindings are displayed on-screen in the upper-left corner.
 
-To play, you can...
+There are definitely bugs. Please do not hesitate to file a [GitHub Issue](https://github.com/stnbu/mass_gathering/issues/new/choose) or start a [Discussion](https://github.com/stnbu/mass_gathering/discussions/new).
 
-### a) Play [here](https://unintuitive.org/mass_gathering/).
+To play, you can do one of...
+
+### A) Play [here](https://unintuitive.org/mass_gathering/).
 
 The WASM binary is 19MB. You will see a blank page as this loads. Once the game loads...
 
   1. Click anywhere in the game window (the WASM widow does not have focus until you do.)
   1. Click your space bar to un-pause (and re-pause) the game.
 
-### or b) Compile and run it locally with `cargo run`.
+### B) Compile and run it locally with `cargo run`.
 
 No special toolchain or manual setup is required. Just...
 
@@ -43,7 +45,7 @@ Please file a GitHub issue if you have difficulty compiling the project.
 
 ---
 
-Ideas
+## Ideas/Misc
 
 * Firmament, with a few stars at least
 * Snow: render some fuzzy tiny specs only in-view, de-allocate when they disappear. Maybe give a bit of Brownian motion.
