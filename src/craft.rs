@@ -240,7 +240,6 @@ pub fn handle_projectile_engagement(
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let planet_transform = planet_query.get(planet).unwrap();
-                    //let local_impact_site = planet_transform.translation - global_impact_site;
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     let radius = 0.15;
                     commands
@@ -272,6 +271,11 @@ pub fn handle_projectile_engagement(
             }
         }
     }
+}
+
+#[derive(Component)]
+pub struct ProjectileExplosion {
+    pub rising: bool,
 }
 
 pub fn handle_projectile_flight(
@@ -310,6 +314,7 @@ pub fn handle_projectile_flight(
                     transform: Transform::from_translation(target.local_impact_site),
                     ..Default::default()
                 })
+                .insert(ProjectileExplosion { rising: true })
                 .id();
             commands.entity(target.planet).push_children(&[explosion]);
             info!("despawning {:?}", projectile);
@@ -321,6 +326,19 @@ pub fn handle_projectile_flight(
             let direction = (projectile_transform.translation - goal_impact_site).normalize();
             projectile_transform.translation -=
                 (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
+        }
+    }
+}
+
+pub fn animate_projectile_explosion(
+    mut explosion_query: Query<(&mut Transform, &mut ProjectileExplosion)>,
+    time: Res<Time>,
+) {
+    for (mut transform, mut explosion) in explosion_query.iter_mut() {
+        let animation_direction = if explosion.rising { 1.5 } else { -1.0 };
+        transform.scale += Vec3::splat(1.0) * 0.1 * animation_direction * time.delta_seconds();
+        if transform.scale.length() > 3.0 {
+            explosion.rising = false;
         }
     }
 }

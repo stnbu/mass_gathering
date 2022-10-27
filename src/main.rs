@@ -21,7 +21,8 @@ fn main() {
                 .with_system(move_forward)
                 .with_system(steer)
                 .with_system(handle_projectile_engagement)
-                .with_system(handle_projectile_flight),
+                .with_system(handle_projectile_flight)
+                .with_system(animate_projectile_explosion),
         )
         .add_system_set(
             SystemSet::on_update(AppState::Placeholder)
