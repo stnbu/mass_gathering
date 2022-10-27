@@ -8,6 +8,7 @@ use bevy_rapier3d::prelude::{
     RapierContext, RapierPhysicsPlugin, RigidBody, Sensor,
 };
 use rand::Rng;
+use std::collections::HashSet;
 use std::f32::consts::TAU;
 
 mod physics;
@@ -39,12 +40,12 @@ fn main() {
         .run();
 }
 
-#[derive(Component, Clone)]
+#[derive(Component)]
 struct BallisticProjectileTarget {
     planet: Entity,
     local_impact_site: Vec3,
 }
-use std::collections::HashSet;
+
 fn handle_projectile_flight(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -58,7 +59,6 @@ fn handle_projectile_flight(
     time: Res<Time>,
 ) {
     let mut collided = HashSet::new();
-    //let mut collided = Vec::new();
     for event in collision_events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = event {
             collided.insert(e0);
@@ -83,16 +83,14 @@ fn handle_projectile_flight(
                     ..Default::default()
                 })
                 .id();
-            commands
-                .entity(target.planet.clone())
-                .push_children(&[explosion]);
+            commands.entity(target.planet).push_children(&[explosion]);
             info!("despawning {:?}", projectile);
             commands.entity(projectile).despawn();
             continue;
         }
         if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
-            let gloal_impact_site = planet_transform.translation + target.local_impact_site;
-            let direction = (projectile_transform.translation - gloal_impact_site).normalize();
+            let goal_impact_site = planet_transform.translation + target.local_impact_site;
+            let direction = (projectile_transform.translation - goal_impact_site).normalize();
             projectile_transform.translation -=
                 (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
         }
