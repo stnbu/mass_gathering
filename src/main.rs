@@ -4,7 +4,8 @@ use bevy_egui::{
     EguiContext, EguiPlugin,
 };
 use bevy_rapier3d::prelude::{
-    Collider, NoUserData, QueryFilter, RapierConfiguration, RapierContext, RapierPhysicsPlugin,
+    ActiveEvents, Collider, CollisionEvent, NoUserData, QueryFilter, RapierConfiguration,
+    RapierContext, RapierPhysicsPlugin, RigidBody,
 };
 use rand::Rng;
 use std::f32::consts::TAU;
@@ -43,23 +44,6 @@ struct BallisticProjectileTarget {
     planet: Entity,
     local_impact_site: Vec3,
 }
-
-/*
-pub fn collision_events(
-    mut commands: Commands,
-    mut events: EventReader<CollisionEvent>,
-    query: Query<(&Transform, &Momentum), With<Collider>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let mut despawned = HashSet::new();
-
-    for collision_event in events.iter() {
-        if let CollisionEvent::Started(e1, e2, flags) = collision_event {
-            if despawned.contains(e1) || despawned.contains(e2) {
-
-*/
-use bevy_rapier3d::prelude::{ActiveEvents, CollisionEvent, RigidBody};
 fn handle_projectile_flight(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
@@ -148,7 +132,6 @@ fn handle_projectile_engagement(
                 crosshairs.is_visible = true;
             }
         } else {
-            // ////
             for mut crosshairs in crosshairs_query.iter_mut() {
                 crosshairs.is_visible = false;
             }
