@@ -44,6 +44,22 @@ struct BallisticProjectileTarget {
     local_impact_site: Vec3,
 }
 
+/*
+pub fn collision_events(
+    mut commands: Commands,
+    mut events: EventReader<CollisionEvent>,
+    query: Query<(&Transform, &Momentum), With<Collider>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let mut despawned = HashSet::new();
+
+    for collision_event in events.iter() {
+        if let CollisionEvent::Started(e1, e2, flags) = collision_event {
+            if despawned.contains(e1) || despawned.contains(e2) {
+
+*/
+use bevy_rapier3d::prelude::{ActiveEvents, CollisionEvent, RigidBody};
 fn handle_projectile_flight(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
@@ -51,9 +67,23 @@ fn handle_projectile_flight(
         (&Transform, &Momentum),
         (With<Collider>, Without<BallisticProjectileTarget>),
     >,
+    mut collision_events: EventReader<CollisionEvent>,
+    //query: Query<(&Transform, &Momentum), With<Collider>>,
     time: Res<Time>,
 ) {
-    for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
+    //let collision_events = collision_events.iter().collect();
+
+    'proj: for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
+        for collision_event in collision_events.iter() {
+            if let CollisionEvent::Started(e1, e2, _flags) = collision_event {
+                for entity in [*e1, *e2] {
+                    if projectile == entity {
+                        commands.entity(projectile).despawn();
+                        continue 'proj;
+                    }
+                }
+            }
+        }
         if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
             let gloal_impact_site = planet_transform.translation + target.local_impact_site;
             let distance = (projectile_transform.translation - gloal_impact_site).length();
@@ -61,6 +91,7 @@ fn handle_projectile_flight(
                 // spot-the-bug
                 let direction = (projectile_transform.translation - gloal_impact_site).normalize();
                 projectile_transform.translation -=
+		    // número mágico
                     (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
             } else {
                 commands.entity(projectile).despawn();
@@ -96,10 +127,11 @@ fn handle_projectile_engagement(
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let planet_transform = planet_query.get(planet).unwrap();
                     let local_impact_site = planet_transform.translation - global_impact_site;
+                    let radius = 0.25;
                     commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.3,
+                                radius,
                                 ..Default::default()
                             })),
                             material: materials.add(Color::PINK.into()),
@@ -109,7 +141,10 @@ fn handle_projectile_engagement(
                         .insert(BallisticProjectileTarget {
                             planet,
                             local_impact_site,
-                        });
+                        })
+                        .insert(RigidBody::Dynamic)
+                        .insert(Collider::ball(radius))
+                        .insert(ActiveEvents::COLLISION_EVENTS);
                 }
             }
             for mut crosshairs in crosshairs_query.iter_mut() {
