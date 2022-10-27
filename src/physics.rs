@@ -20,9 +20,9 @@ pub fn collision_events(
             }
             if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
-                    (p0, p1, e0)
+                    (p0, p1, e1)
                 } else {
-                    (p1, p0, e1)
+                    (p1, p0, e0)
                 };
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
                 major.1.mass += minor.1.mass;

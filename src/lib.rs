@@ -10,6 +10,8 @@ use physics::*;
 mod craft;
 use craft::*;
 
+pub mod prelude;
+
 // PSA: see examples/3d/split_screen.rs
 
 pub struct Game;
