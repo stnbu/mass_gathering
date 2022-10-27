@@ -275,7 +275,6 @@ pub fn handle_projectile_engagement(
 
 #[derive(Component)]
 pub struct ProjectileExplosion {
-    pub material: Handle<StandardMaterial>,
     pub rising: bool,
 }
 
@@ -305,24 +304,24 @@ pub fn handle_projectile_flight(
 
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
         if collided.contains(&&projectile) {
-            let material = materials.add(Color::YELLOW.into());
             let explosion = commands
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 0.2,
                         ..Default::default()
                     })),
-                    material: material.clone_weak(),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::YELLOW,
+                        perceptual_roughness: 0.99,
+                        ..default()
+                    }),
                     transform: Transform::from_translation(target.local_impact_site),
                     ..Default::default()
                 })
-                .insert(ProjectileExplosion {
-                    material,
-                    rising: true,
-                })
+                .insert(ProjectileExplosion { rising: true })
                 .id();
             commands.entity(target.planet).push_children(&[explosion]);
-            info!("despawning {:?}", projectile);
+            info!("despawning projectile entity {:?}", projectile);
             commands.entity(projectile).despawn();
             continue;
         }
@@ -338,15 +337,9 @@ pub fn handle_projectile_flight(
 pub fn animate_projectile_explosion(
     mut commands: Commands,
     mut explosion_query: Query<(Entity, &mut Transform, &mut ProjectileExplosion)>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     time: Res<Time>,
 ) {
     for (entity, mut transform, mut explosion) in explosion_query.iter_mut() {
-        if let Some(material) = materials.get_mut(&explosion.material) {
-            // // FIXME: doesn't work...as expected
-            // let r = material.base_color.r();
-            // material.base_color.set_r(r * 0.001 * time.delta_seconds());
-        }
         let animation_direction = if explosion.rising { 3.5 } else { -2.0 };
         transform.scale += Vec3::splat(1.0) * 0.2 * animation_direction * time.delta_seconds();
         if transform.scale.length() > 3.0 {
