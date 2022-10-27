@@ -1,4 +1,10 @@
 use bevy::prelude::*;
+use bevy_egui::{
+    egui::{
+        style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, TopBottomPanel,
+    },
+    EguiContext,
+};
 use std::f32::consts::TAU;
 
 #[derive(Debug, Default, Component)]
@@ -105,4 +111,124 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
         transform.rotate(Quat::from_axis_angle(local_z, roll));
         transform.rotate(Quat::from_axis_angle(local_y, yaw));
     }
+}
+
+#[derive(Component)]
+pub struct Crosshairs;
+
+pub fn spacecraft_setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    commands
+        .spawn_bundle(Camera3dBundle {
+            transform: Transform::from_xyz(0.0, 0.01, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
+            ..Default::default()
+        })
+        .insert_bundle(VisibilityBundle::default())
+        .insert(Spacecraft::default())
+        .with_children(|parent| {
+            // Possibly the worst way to implement "crosshairs" evar.
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.03,
+                        ..Default::default()
+                    })),
+                    material: materials.add(Color::GREEN.into()),
+                    transform: Transform::from_xyz(0.0, 0.0, -8.0),
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
+                .insert(Crosshairs);
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.1))),
+                    material: materials.add(Color::GREEN.into()),
+                    transform: Transform::from_xyz(0.0, 0.0, -7.0),
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
+                .insert(Crosshairs);
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.1))),
+                    material: materials.add(Color::GREEN.into()),
+                    transform: Transform::from_xyz(0.0, 0.0, -6.0),
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
+                .insert(Crosshairs);
+
+            // Various lights for seeing
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(10.0, -10.0, -25.0),
+                point_light: PointLight {
+                    intensity: 5000.0 * 1.7,
+                    range: 1000.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(-10.0, 5.0, -35.0),
+                point_light: PointLight {
+                    intensity: 5000.0 * 1.5,
+                    range: 1000.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(30.0, -20.0, 80.0),
+                point_light: PointLight {
+                    intensity: 1000000.0 * 0.7,
+                    range: 1000.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
+            parent.spawn_bundle(PointLightBundle {
+                transform: Transform::from_xyz(-30.0, 10.0, 100.0),
+                point_light: PointLight {
+                    intensity: 1000000.0 * 0.8,
+                    range: 1000.0,
+                    ..Default::default()
+                },
+                ..Default::default()
+            });
+        });
+}
+
+pub fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
+    let (spacecraft, transform) = query.get_single().unwrap();
+    let hud_text = format!(
+        "
+Arrow Keys - Pitch & Roll
+Z & X      - Yaw
+PgUp/PgDn  - Speed
+F          - Fire
+
+Your Speed - {}
+Your Location
+  x        - {}
+  y        - {}
+  z        - {}
+",
+        spacecraft.speed, transform.translation.x, transform.translation.y, transform.translation.z
+    );
+
+    TopBottomPanel::top("hud")
+        .frame(Frame {
+            outer_margin: Margin::symmetric(10.0, 20.0),
+            fill: Color32::TRANSPARENT,
+            ..Default::default()
+        })
+        .show(ctx.ctx_mut(), |ui| {
+            ui.label(RichText::new(hud_text).color(Color32::GREEN).font(FontId {
+                size: 18.0,
+                family: Monospace,
+            }));
+        });
 }
