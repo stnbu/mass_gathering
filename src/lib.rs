@@ -19,7 +19,15 @@ pub struct Game;
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-            .insert_resource(SpaceCraftConfig::default())
+            // begin diddling
+            .insert_resource(SpaceCraftConfig {
+                show_debug_markers: true,
+                show_impact_explosions: false,
+                projectile_radius: 0.01,
+            })
+            .add_system(do_blink)
+            .add_system(timer_despawn)
+            // end diddling
             .add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)

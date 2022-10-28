@@ -11,6 +11,7 @@ use bevy_rapier3d::prelude::{
 
 use std::collections::HashSet;
 use std::f32::consts::TAU;
+use std::time::Duration;
 
 use crate::physics::Momentum;
 
@@ -30,10 +31,28 @@ impl Default for SpaceCraftConfig {
     }
 }
 
+#[derive(Component)]
+pub struct DespawnTimer {
+    pub ttl: Timer,
+}
+
 #[derive(Debug, Default, Component)]
 pub struct Spacecraft {
     gain: Vec3,
     pub speed: f32,
+}
+
+pub fn timer_despawn(
+    mut commands: Commands,
+    mut despawn_query: Query<(Entity, &mut DespawnTimer)>,
+    time: Res<Time>,
+) {
+    for (entity, mut despawn_timer) in despawn_query.iter_mut() {
+        despawn_timer.ttl.tick(time.delta());
+        if despawn_timer.ttl.finished() {
+            commands.entity(entity).despawn();
+        }
+    }
 }
 
 pub fn move_forward(mut query: Query<(&mut Transform, &Spacecraft)>, time: Res<Time>) {
@@ -298,28 +317,34 @@ pub fn handle_projectile_engagement(
                         let planet_local_marker = commands
                             .spawn_bundle(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.1,
+                                    radius: 0.15,
                                     ..Default::default()
                                 })),
-                                material: materials.add(Color::ALICE_BLUE.into()),
+                                material: materials.add(Color::RED.into()),
                                 transform: Transform::from_translation(local_impact_site),
                                 ..Default::default()
                             })
                             .insert(Blink { hertz: 5.0 })
+                            .insert(DespawnTimer {
+                                ttl: Timer::new(Duration::from_secs(5), false),
+                            })
                             .id();
                         commands.entity(planet_id).add_child(planet_local_marker);
                         // global marker (should diverge as planet moves)
                         commands
                             .spawn_bundle(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.1,
+                                    radius: 0.15,
                                     ..Default::default()
                                 })),
-                                material: materials.add(Color::ORANGE_RED.into()),
+                                material: materials.add(Color::WHITE.into()),
                                 transform: Transform::from_translation(global_impact_site),
                                 ..Default::default()
                             })
-                            .insert(Blink { hertz: 5.0 });
+                            .insert(Blink { hertz: 5.0 })
+                            .insert(DespawnTimer {
+                                ttl: Timer::new(Duration::from_secs(5), false),
+                            });
                     }
                     let radius = config.projectile_radius;
                     commands
