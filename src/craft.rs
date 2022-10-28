@@ -329,8 +329,6 @@ pub fn handle_projectile_flight(
             collided.insert(e1);
         }
     }
-    // let mut combinations = projectile_query.iter_combinations_mut();
-    // while let Some([(projectile, mut projectile_transform, target)]) = combinations.fetch_next() {
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
         // FIXME -- ensure that target.planet is still there
         if despawned.0.contains(&projectile) {

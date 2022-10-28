@@ -1,3 +1,4 @@
+use crate::craft::BallisticProjectileTarget;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use std::collections::HashSet;
@@ -6,7 +7,8 @@ use std::f32::consts::PI;
 pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
-    mut planet_query: Query<(&mut Transform, &mut Momentum), With<Collider>>,
+    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity), With<Collider>>,
+    mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
 ) {
     let mut despawned = HashSet::new();
 
@@ -45,6 +47,12 @@ pub fn collision_events(
                     / mass_to_radius(major.1.mass);
                 major.0.scale = scale_up * Vec3::splat(1.0);
 
+                for (mut target, projectile_id) in target_query.iter_mut() {
+                    if target.planet == *cull {
+                        warn!("Projectile {projectile_id:?} has planet {:?} as its target. Re-mapping to merge-ee planet {:?}", target.planet, major.2);
+                        target.planet = major.2;
+                    }
+                }
                 debug!("despawning planet {:?}", cull);
                 commands.entity(*cull).despawn();
                 despawned.insert(cull);
