@@ -248,6 +248,7 @@ pub fn handle_projectile_engagement(
             QueryFilter::only_dynamic(),
         );
 
+        let mut hot_target = false;
         if let Some((planet, distance)) = intersection {
             match planet_query.get(planet) {
                 Ok(_) => (),
@@ -256,6 +257,7 @@ pub fn handle_projectile_engagement(
                     continue;
                 }
             }
+            hot_target = true;
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
@@ -282,22 +284,13 @@ pub fn handle_projectile_engagement(
                         .insert(Sensor);
                 }
             }
-            // Hot case
-            for (mut visibility, temp) in crosshairs_query.iter_mut() {
-                if *temp == Crosshairs2::Hot {
-                    visibility.is_visible = true;
-                } else {
-                    visibility.is_visible = false;
-                }
-            }
-        } else {
-            // Cold case
-            for (mut visibility, temp) in crosshairs_query.iter_mut() {
-                if *temp == Crosshairs2::Hot {
-                    visibility.is_visible = false;
-                } else {
-                    visibility.is_visible = true;
-                }
+        }
+        for (mut visibility, temp) in crosshairs_query.iter_mut() {
+            let hot_entity = *temp == Crosshairs2::Hot;
+            if hot_target {
+                visibility.is_visible = hot_entity;
+            } else {
+                visibility.is_visible = !hot_entity;
             }
         }
     }
