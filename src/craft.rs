@@ -60,11 +60,11 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
         had_input = true;
         match key {
             KeyCode::Left => {
-                roll += nudge * (spacecraft.gain.z + 1.0);
+                yaw += nudge * (spacecraft.gain.z + 1.0);
                 spacecraft.gain.z += gain;
             }
             KeyCode::Right => {
-                roll -= nudge * (spacecraft.gain.z + 1.0);
+                yaw -= nudge * (spacecraft.gain.z + 1.0);
                 spacecraft.gain.z += gain;
             }
             KeyCode::Up => {
@@ -76,11 +76,11 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
                 spacecraft.gain.x += gain;
             }
             KeyCode::Z => {
-                yaw += nudge * (spacecraft.gain.y + 1.0);
+                roll += nudge * (spacecraft.gain.y + 1.0);
                 spacecraft.gain.y += gain;
             }
             KeyCode::X => {
-                yaw -= nudge * (spacecraft.gain.y + 1.0);
+                roll -= nudge * (spacecraft.gain.y + 1.0);
                 spacecraft.gain.y += gain;
             }
             _ => {
@@ -352,7 +352,7 @@ pub fn handle_projectile_flight(
                 })
                 .insert(ProjectileExplosion { rising: true })
                 .id();
-            commands.entity(target.planet).push_children(&[explosion]);
+            commands.entity(target.planet).add_child(explosion);
             debug!("despawning projectile entity {:?}", projectile);
             commands.entity(projectile).despawn();
             despawned.0.insert(projectile);
@@ -393,9 +393,9 @@ pub fn animate_projectile_explosion(
 pub fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
     let (spacecraft, transform) = query.get_single().unwrap();
     let hud_text = format!(
-        "
-Arrow Keys - Pitch & Roll
-Z & X      - Yaw
+        " [ NOTE CHANGES ]
+Arrow Keys - Pitch & Yaw
+Z & X      - Roll
 PgUp/PgDn  - Speed
 F          - Fire
 

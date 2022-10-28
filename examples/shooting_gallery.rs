@@ -13,6 +13,7 @@ fn main() {
         .add_system(animate_projectile_explosion)
         .add_startup_system(setup)
         .add_startup_system(spacecraft_setup)
+        .add_system(freefall)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .run();
 }
@@ -26,10 +27,20 @@ fn setup(
     rapier_config.gravity = Vec3::ZERO;
 
     spawn_planet(
-        8.0,
-        Vec3::ZERO,
-        Vec3::ZERO,
-        Color::BEIGE,
+        5.0,
+        Vec3::X * -6.0,
+        Vec3::Z * -1.0,
+        Color::SILVER,
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+    );
+
+    spawn_planet(
+        5.0,
+        Vec3::X * 6.0,
+        Vec3::Z * 1.0,
+        Color::GOLD,
         &mut commands,
         &mut meshes,
         &mut materials,
