@@ -123,6 +123,12 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
 #[derive(Component)]
 pub struct Crosshairs;
 
+#[derive(Component, PartialEq, Eq)]
+pub enum Crosshairs2 {
+    Hot,
+    Cold,
+}
+
 pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -148,7 +154,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs);
+                .insert(Crosshairs2::Cold);
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.1))),
@@ -157,7 +163,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs);
+                .insert(Crosshairs2::Hot);
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.1))),
@@ -166,7 +172,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs);
+                .insert(Crosshairs2::Hot);
 
             // Various lights for seeing
             parent.spawn_bundle(PointLightBundle {
@@ -219,7 +225,7 @@ pub fn handle_projectile_engagement(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     optional_keys: Option<Res<Input<KeyCode>>>,
-    mut crosshairs_query: Query<&mut Visibility, With<Crosshairs>>,
+    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs2)>,
     planet_query: Query<
         &Transform,
         (
@@ -276,12 +282,22 @@ pub fn handle_projectile_engagement(
                         .insert(Sensor);
                 }
             }
-            for mut crosshairs in crosshairs_query.iter_mut() {
-                crosshairs.is_visible = true;
+            // Hot case
+            for (mut visibility, temp) in crosshairs_query.iter_mut() {
+                if *temp == Crosshairs2::Hot {
+                    visibility.is_visible = true;
+                } else {
+                    visibility.is_visible = false;
+                }
             }
         } else {
-            for mut crosshairs in crosshairs_query.iter_mut() {
-                crosshairs.is_visible = false;
+            // Cold case
+            for (mut visibility, temp) in crosshairs_query.iter_mut() {
+                if *temp == Crosshairs2::Hot {
+                    visibility.is_visible = false;
+                } else {
+                    visibility.is_visible = true;
+                }
             }
         }
     }
