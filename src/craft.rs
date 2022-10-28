@@ -8,6 +8,7 @@ use bevy_egui::{
 use bevy_rapier3d::prelude::{
     ActiveEvents, Collider, CollisionEvent, QueryFilter, RapierContext, RigidBody, Sensor,
 };
+use std::f64::consts::PI;
 
 use std::collections::HashSet;
 use std::f32::consts::TAU;
@@ -252,18 +253,22 @@ pub struct BallisticProjectileTarget {
     pub local_impact_site: Vec3,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Blink {
     pub hertz: f64,
+    pub start_angle: f64, // what the! not-zero seems to break.
 }
 
 pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<Time>) {
-    let elapsed = time.seconds_since_startup();
     for (mut visibility, blink_config) in blinker_query.iter_mut() {
+        assert!(blink_config.start_angle == 0.0, "This does not work.");
         let period = 1.0 / blink_config.hertz;
+        let portion = blink_config.start_angle / (2.0 * PI);
+        let offset = portion * period;
+        let elapsed = time.seconds_since_startup() + offset;
         let whole_cycles_elapsed = (elapsed / period).trunc();
-        let until_next_cycle = elapsed - (whole_cycles_elapsed * period);
-        if until_next_cycle < 1.0 / 59.9 {
+        let until_next_cycle = elapsed - (whole_cycles_elapsed * period) + offset;
+        if until_next_cycle < 1.0 / 60.1 {
             visibility.is_visible = !visibility.is_visible;
         }
     }
@@ -320,11 +325,14 @@ pub fn handle_projectile_engagement(
                                     radius: 0.15,
                                     ..Default::default()
                                 })),
-                                material: materials.add(Color::RED.into()),
+                                material: materials.add(Color::BLUE.into()),
                                 transform: Transform::from_translation(local_impact_site),
                                 ..Default::default()
                             })
-                            .insert(Blink { hertz: 5.0 })
+                            .insert(Blink {
+                                hertz: 5.0,
+                                ..default()
+                            })
                             .insert(DespawnTimer {
                                 ttl: Timer::new(Duration::from_secs(5), false),
                             })
@@ -334,14 +342,17 @@ pub fn handle_projectile_engagement(
                         commands
                             .spawn_bundle(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.2,
+                                    radius: 0.15,
                                     ..Default::default()
                                 })),
-                                material: materials.add(Color::WHITE.into()),
+                                material: materials.add(Color::RED.into()),
                                 transform: Transform::from_translation(global_impact_site),
                                 ..Default::default()
                             })
-                            .insert(Blink { hertz: 5.0 })
+                            .insert(Blink {
+                                hertz: 5.0,
+                                ..default()
+                            })
                             .insert(DespawnTimer {
                                 ttl: Timer::new(Duration::from_secs(5), false),
                             });
