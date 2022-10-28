@@ -49,7 +49,7 @@ pub fn collision_events(
 
                 for (mut target, projectile_id) in target_query.iter_mut() {
                     if target.planet == *cull {
-                        warn!("Projectile {projectile_id:?} has planet {:?} as its target. Re-mapping to merge-ee planet {:?}", target.planet, major.2);
+                        warn!("Projectile {projectile_id:?} has despawned planet {:?} as its target. Remapping to merge-ee planet {:?}", target.planet, major.2);
                         target.planet = major.2;
                     }
                 }
