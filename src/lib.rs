@@ -19,15 +19,7 @@ pub struct Game;
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-            // begin diddling
-            .insert_resource(SpaceCraftConfig {
-                show_debug_markers: true,
-                show_impact_explosions: false,
-                projectile_radius: 0.008,
-            })
-            .add_system(do_blink)
-            .add_system(timer_despawn)
-            // end diddling
+            .insert_resource(SpaceCraftConfig::default())
             .add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
@@ -44,7 +36,7 @@ impl Plugin for Game {
             .add_startup_system(setup)
             .add_startup_system(spacecraft_setup)
             .add_system(bevy::window::close_on_esc)
-            //.add_system(fix_inflight_projectiles)
+            .add_system(fix_inflight_projectiles)
             .add_system(handle_game_state)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
             .add_system(hud);

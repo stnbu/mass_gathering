@@ -8,7 +8,7 @@ fn main() {
         .insert_resource(SpaceCraftConfig {
             show_debug_markers: true,
             show_impact_explosions: false,
-            projectile_radius: 0.03,
+            projectile_radius: 0.01,
         })
         .add_plugins(DefaultPlugins)
         .add_system(move_forward)
@@ -19,6 +19,7 @@ fn main() {
         .add_startup_system(setup)
         .add_startup_system(spacecraft_setup)
         .add_system(freefall)
+        .add_system(timer_despawn)
         .add_system(do_blink)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
         .run();
