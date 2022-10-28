@@ -35,6 +35,7 @@ impl Plugin for Game {
             .add_startup_system(setup)
             .add_startup_system(spacecraft_setup)
             .add_system(bevy::window::close_on_esc)
+            .add_system(fix_inflight_projectiles)
             .add_system(handle_game_state)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
             .add_system(hud);

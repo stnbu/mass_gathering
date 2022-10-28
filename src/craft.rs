@@ -295,6 +295,20 @@ pub struct ProjectileExplosion {
 #[derive(Default)]
 pub struct Despawned(HashSet<Entity>);
 
+pub fn fix_inflight_projectiles(
+    mut commands: Commands,
+    planets: Query<Entity, With<Momentum>>,
+    targets: Query<(Entity, &BallisticProjectileTarget)>,
+) {
+    let planet_ids = planets.iter().collect::<HashSet<_>>();
+    for (projectile, target) in targets.iter() {
+        if !planet_ids.contains(&target.planet) {
+            warn!("Hack! -- Removing projectile {projectile:?} because its target planet has been despawned.");
+            commands.entity(projectile).despawn();
+        }
+    }
+}
+
 pub fn handle_projectile_flight(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
