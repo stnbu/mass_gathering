@@ -221,7 +221,7 @@ pub fn handle_projectile_engagement(
     optional_keys: Option<Res<Input<KeyCode>>>,
     mut crosshairs_query: Query<&mut Visibility, With<Crosshairs>>,
     planet_query: Query<
-        (Entity, &Transform),
+        &Transform,
         (
             With<Collider>,
             Without<BallisticProjectileTarget>,
@@ -245,16 +245,15 @@ pub fn handle_projectile_engagement(
         if let Some((planet, distance)) = intersection {
             match planet_query.get(planet) {
                 Ok(_) => (),
-                _ => continue,
+                _ => {
+                    info!("Skipping non-planet entity {planet:?}. Tune QueryFitler?");
+                    continue;
+                }
             }
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    println!("you are looking for a planet with id {planet:?}");
-                    for (p, _) in planet_query.iter() {
-                        println!("  {p:?} is in planet_query");
-                    }
-                    let (_, planet_transform) = planet_query.get(planet).unwrap();
+                    let planet_transform = planet_query.get(planet).unwrap();
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     let radius = 0.15;
                     commands
