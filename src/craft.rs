@@ -314,27 +314,27 @@ pub fn handle_projectile_engagement(
                     let (planet_id, planet_transform) = planet_query.get(planet).unwrap();
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     if config.show_debug_markers {
-                        let planet_local_marker = commands
-                            .spawn_bundle(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.15,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::RED.into()),
-                                transform: Transform::from_translation(local_impact_site),
-                                ..Default::default()
-                            })
-                            .insert(Blink { hertz: 5.0 })
-                            .insert(DespawnTimer {
-                                ttl: Timer::new(Duration::from_secs(5), false),
-                            })
-                            .id();
-                        commands.entity(planet_id).add_child(planet_local_marker);
+                        // let planet_local_marker = commands
+                        //     .spawn_bundle(PbrBundle {
+                        //         mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        //             radius: 0.15,
+                        //             ..Default::default()
+                        //         })),
+                        //         material: materials.add(Color::RED.into()),
+                        //         transform: Transform::from_translation(local_impact_site),
+                        //         ..Default::default()
+                        //     })
+                        //     .insert(Blink { hertz: 5.0 })
+                        //     .insert(DespawnTimer {
+                        //         ttl: Timer::new(Duration::from_secs(5), false),
+                        //     })
+                        //     .id();
+                        // commands.entity(planet_id).add_child(planet_local_marker);
                         // global marker (should diverge as planet moves)
                         commands
                             .spawn_bundle(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.15,
+                                    radius: 0.2,
                                     ..Default::default()
                                 })),
                                 material: materials.add(Color::WHITE.into()),

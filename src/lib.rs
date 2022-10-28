@@ -23,7 +23,7 @@ impl Plugin for Game {
             .insert_resource(SpaceCraftConfig {
                 show_debug_markers: true,
                 show_impact_explosions: false,
-                projectile_radius: 0.01,
+                projectile_radius: 0.008,
             })
             .add_system(do_blink)
             .add_system(timer_despawn)
