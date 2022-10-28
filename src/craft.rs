@@ -14,9 +14,20 @@ use std::f32::consts::TAU;
 
 use crate::physics::Momentum;
 
-#[derive(Default)]
 pub struct SpaceCraftConfig {
     pub show_debug_markers: bool,
+    pub show_impact_explosions: bool,
+    pub projectile_radius: f32,
+}
+
+impl Default for SpaceCraftConfig {
+    fn default() -> Self {
+        Self {
+            show_debug_markers: false,
+            show_impact_explosions: true,
+            projectile_radius: 0.15,
+        }
+    }
 }
 
 #[derive(Debug, Default, Component)]
@@ -222,6 +233,23 @@ pub struct BallisticProjectileTarget {
     pub local_impact_site: Vec3,
 }
 
+#[derive(Component)]
+pub struct Blink {
+    pub hertz: f64,
+}
+
+pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<Time>) {
+    let elapsed = time.seconds_since_startup();
+    for (mut visibility, blink_config) in blinker_query.iter_mut() {
+        let period = 1.0 / blink_config.hertz;
+        let whole_cycles_elapsed = (elapsed / period).trunc();
+        let until_next_cycle = elapsed - (whole_cycles_elapsed * period);
+        if until_next_cycle < 1.0 / 59.9 {
+            visibility.is_visible = !visibility.is_visible;
+        }
+    }
+}
+
 pub fn handle_projectile_engagement(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -270,27 +298,30 @@ pub fn handle_projectile_engagement(
                         let planet_local_marker = commands
                             .spawn_bundle(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 1.5,
+                                    radius: 0.1,
                                     ..Default::default()
                                 })),
-                                material: materials.add(Color::CYAN.into()),
+                                material: materials.add(Color::ALICE_BLUE.into()),
                                 transform: Transform::from_translation(local_impact_site),
                                 ..Default::default()
                             })
+                            .insert(Blink { hertz: 5.0 })
                             .id();
                         commands.entity(planet_id).add_child(planet_local_marker);
                         // global marker (should diverge as planet moves)
-                        commands.spawn_bundle(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 1.5,
+                        commands
+                            .spawn_bundle(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                    radius: 0.1,
+                                    ..Default::default()
+                                })),
+                                material: materials.add(Color::ORANGE_RED.into()),
+                                transform: Transform::from_translation(global_impact_site),
                                 ..Default::default()
-                            })),
-                            material: materials.add(Color::AQUAMARINE.into()),
-                            transform: Transform::from_translation(global_impact_site),
-                            ..Default::default()
-                        });
+                            })
+                            .insert(Blink { hertz: 5.0 });
                     }
-                    let radius = 0.15;
+                    let radius = config.projectile_radius;
                     commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -357,6 +388,7 @@ pub fn handle_projectile_flight(
     mut collision_events: EventReader<CollisionEvent>,
     mut despawned: Local<Despawned>,
     time: Res<Time>,
+    config: Res<SpaceCraftConfig>,
 ) {
     let mut collided = HashSet::new();
     for event in collision_events.iter() {
@@ -372,23 +404,25 @@ pub fn handle_projectile_flight(
             continue;
         }
         if collided.contains(&projectile) {
-            let explosion = commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.2,
+            if config.show_impact_explosions {
+                let explosion = commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.2,
+                            ..Default::default()
+                        })),
+                        material: materials.add(StandardMaterial {
+                            base_color: Color::YELLOW,
+                            perceptual_roughness: 0.99,
+                            ..default()
+                        }),
+                        transform: Transform::from_translation(target.local_impact_site),
                         ..Default::default()
-                    })),
-                    material: materials.add(StandardMaterial {
-                        base_color: Color::YELLOW,
-                        perceptual_roughness: 0.99,
-                        ..default()
-                    }),
-                    transform: Transform::from_translation(target.local_impact_site),
-                    ..Default::default()
-                })
-                .insert(ProjectileExplosion { rising: true })
-                .id();
-            commands.entity(target.planet).add_child(explosion);
+                    })
+                    .insert(ProjectileExplosion { rising: true })
+                    .id();
+                commands.entity(target.planet).add_child(explosion);
+            }
             debug!("despawning projectile entity {:?}", projectile);
             commands.entity(projectile).despawn();
             despawned.0.insert(projectile);
