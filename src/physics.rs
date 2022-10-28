@@ -125,38 +125,3 @@ pub fn freefall(mut query: Query<(Entity, &mut Transform, &mut Momentum)>, time:
         }
     }
 }
-
-#[cfg(test)]
-pub mod tests {
-    use super::mass_to_radius;
-    use super::radius_to_mass;
-    use super::Momentum;
-
-    #[test]
-    fn gemoetry() {
-        let mass = radius_to_mass(2.0);
-        assert!(mass == 33.510323);
-        let radius = mass_to_radius(33.510323);
-        assert!(radius == 2.0);
-    }
-
-    #[test]
-    fn apportionment() {
-        let m0 = Momentum {
-            mass: 69.0,
-            ..Default::default()
-        };
-        let m1 = Momentum {
-            mass: 42.0,
-            ..Default::default()
-        };
-        let m01 = m0.apportioned_new(&m1);
-        assert!(m01.mass == 69.0 + 42.0);
-        let (m0_weight, m1_weight) = m0.get_apportionment(&m1);
-        assert!(m0_weight == 69.0 / (69.0 + 42.0));
-        assert!(m1_weight == 42.0 / (69.0 + 42.0));
-        let (m1_weight_flip, m0_weight_flip) = m1.get_apportionment(&m0);
-        assert!(m0_weight == m0_weight_flip);
-        assert!(m1_weight == m1_weight_flip);
-    }
-}
