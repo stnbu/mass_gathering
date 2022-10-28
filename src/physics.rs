@@ -28,21 +28,24 @@ pub fn collision_events(
                 };
                 let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
-                println!("major_factor: {}", major_factor);
-                println!("minor_factor: {}", minor_factor);
+                debug!("Merge Math -- major_factor: {}", major_factor);
+                debug!("Merge Math -- minor_factor: {}", minor_factor);
                 major.1.mass += minor.1.mass;
-                println!(
-                    "before collision: major - {:?}, minor - {:?}",
+                debug!(
+                    "Merge Math -- before collision: major - {:?}, minor - {:?}",
                     major.1.velocity, minor.1.velocity
                 );
                 major.1.velocity =
                     major.1.velocity * major_factor + minor.1.velocity * minor_factor;
-                println!("after collision: major - {:?}", major.1.velocity);
+                debug!(
+                    "Merge Math -- after collision: major - {:?}",
+                    major.1.velocity
+                );
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
                 major.0.scale = scale_up * Vec3::splat(1.0);
 
-                info!("despawning planet {:?}", cull);
+                debug!("despawning planet {:?}", cull);
                 commands.entity(*cull).despawn();
                 despawned.insert(cull);
             }

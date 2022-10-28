@@ -246,7 +246,7 @@ pub fn handle_projectile_engagement(
             match planet_query.get(planet) {
                 Ok(_) => (),
                 _ => {
-                    info!("Skipping non-planet entity {planet:?}. Tune QueryFitler?");
+                    debug!("Skipping non-planet entity {planet:?}. Tune QueryFitler?");
                     continue;
                 }
             }
@@ -355,7 +355,7 @@ pub fn handle_projectile_flight(
                 .insert(ProjectileExplosion { rising: true })
                 .id();
             commands.entity(target.planet).push_children(&[explosion]);
-            info!("despawning projectile entity {:?}", projectile);
+            debug!("despawning projectile entity {:?}", projectile);
             commands.entity(projectile).despawn();
             despawned.0.insert(projectile);
             continue;
@@ -384,7 +384,7 @@ pub fn animate_projectile_explosion(
         transform.scale.write_to_slice(&mut coords);
         for d in coords {
             if d < 0.0 {
-                info!("despawning explosion entity {:?}", entity);
+                debug!("despawning explosion entity {:?}", entity);
                 commands.entity(entity).despawn();
                 return;
             }
