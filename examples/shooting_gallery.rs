@@ -35,9 +35,9 @@ fn setup(
     rapier_config.gravity = Vec3::ZERO;
 
     spawn_planet(
-        5.1,
-        Vec3::X * -6.0,
-        Vec3::X * -2.0,
+        5.001,
+        Vec3::X * -15.0,
+        Vec3::X * 0.8,
         Color::SILVER,
         &mut commands,
         &mut meshes,
@@ -46,8 +46,8 @@ fn setup(
 
     spawn_planet(
         5.0,
-        Vec3::X * 6.0,
-        Vec3::X * 2.0,
+        Vec3::X * 15.0,
+        Vec3::X * -0.8,
         Color::GOLD,
         &mut commands,
         &mut meshes,

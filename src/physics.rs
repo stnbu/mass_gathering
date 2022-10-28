@@ -7,17 +7,18 @@ use std::f32::consts::PI;
 pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
-    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity), With<Collider>>,
+    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity, &mut Collider)>,
     mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
 ) {
     let mut despawned = HashSet::new();
 
     for collision_event in events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            if despawned.contains(e0) || despawned.contains(e1) {
-                warn!("Trying to re-collide despawned planet.");
-                continue;
-            }
+            assert!(
+                !(despawned.contains(e0) || despawned.contains(e1)),
+                "Encountered already-despawned planet."
+            );
+
             if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
                     (p0, p1, e1)
@@ -45,7 +46,9 @@ pub fn collision_events(
                 );
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
+                //*major.3 = Collider::ball(mass_to_radius(major.1.mass));
                 major.0.scale = scale_up * Vec3::splat(1.0);
+                //major.3.promote_scaled_shape();
 
                 for (mut target, projectile_id) in target_query.iter_mut() {
                     if target.planet == *cull {
@@ -92,6 +95,7 @@ pub fn spawn_planet<'a>(
         .insert(Momentum { velocity, mass })
         .insert(RigidBody::Dynamic)
         .insert(Collider::ball(radius))
+        //.insert(ColliderScale::Relative(Vec3::splat(1.0)))
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(Sensor);
 }
