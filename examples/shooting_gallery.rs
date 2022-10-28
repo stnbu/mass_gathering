@@ -8,7 +8,7 @@ fn main() {
         .insert_resource(SpaceCraftConfig {
             show_debug_markers: true,
             show_impact_explosions: false,
-            projectile_radius: 0.01,
+            projectile_radius: 0.02,
         })
         .add_plugins(DefaultPlugins)
         .add_system(move_forward)
@@ -19,6 +19,7 @@ fn main() {
         .add_startup_system(setup)
         .add_startup_system(spacecraft_setup)
         .add_system(freefall)
+        .add_system(collision_events)
         .add_system(timer_despawn)
         .add_system(do_blink)
         .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
@@ -34,9 +35,9 @@ fn setup(
     rapier_config.gravity = Vec3::ZERO;
 
     spawn_planet(
-        5.0,
+        5.1,
         Vec3::X * -6.0,
-        Vec3::Z * -1.0,
+        Vec3::X * -2.0,
         Color::SILVER,
         &mut commands,
         &mut meshes,
@@ -46,7 +47,7 @@ fn setup(
     spawn_planet(
         5.0,
         Vec3::X * 6.0,
-        Vec3::Z * 1.0,
+        Vec3::X * 2.0,
         Color::GOLD,
         &mut commands,
         &mut meshes,
