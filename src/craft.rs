@@ -220,7 +220,14 @@ pub fn handle_projectile_engagement(
     mut materials: ResMut<Assets<StandardMaterial>>,
     optional_keys: Option<Res<Input<KeyCode>>>,
     mut crosshairs_query: Query<&mut Visibility, With<Crosshairs>>,
-    planet_query: Query<&Transform, With<Collider>>,
+    planet_query: Query<
+        (Entity, &Transform),
+        (
+            With<Collider>,
+            Without<BallisticProjectileTarget>,
+            With<Momentum>,
+        ),
+    >,
     rapier_context: Res<RapierContext>,
     craft: Query<&Transform, With<Spacecraft>>,
 ) {
@@ -236,10 +243,18 @@ pub fn handle_projectile_engagement(
         );
 
         if let Some((planet, distance)) = intersection {
+            match planet_query.get(planet) {
+                Ok(_) => (),
+                _ => continue,
+            }
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    let planet_transform = planet_query.get(planet).unwrap();
+                    println!("you are looking for a planet with id {planet:?}");
+                    for (p, _) in planet_query.iter() {
+                        println!("  {p:?} is in planet_query");
+                    }
+                    let (_, planet_transform) = planet_query.get(planet).unwrap();
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     let radius = 0.15;
                     commands
@@ -278,6 +293,9 @@ pub struct ProjectileExplosion {
     pub rising: bool,
 }
 
+#[derive(Default)]
+pub struct Despawned(HashSet<Entity>);
+
 pub fn handle_projectile_flight(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -288,6 +306,7 @@ pub fn handle_projectile_flight(
         (With<Collider>, Without<BallisticProjectileTarget>),
     >,
     mut collision_events: EventReader<CollisionEvent>,
+    mut despawned: Local<Despawned>,
     time: Res<Time>,
 ) {
     let mut collided = HashSet::new();
@@ -296,14 +315,15 @@ pub fn handle_projectile_flight(
             collided.insert(e0);
             collided.insert(e1);
         }
-        if let CollisionEvent::Stopped(e0, e1, _) = event {
-            collided.insert(e0);
-            collided.insert(e1);
-        }
     }
-
+    // let mut combinations = projectile_query.iter_combinations_mut();
+    // while let Some([(projectile, mut projectile_transform, target)]) = combinations.fetch_next() {
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
-        if collided.contains(&&projectile) {
+        if despawned.0.contains(&projectile) {
+            warn!("We already despawned {:?}", projectile);
+            continue;
+        }
+        if collided.contains(&projectile) {
             let explosion = commands
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -323,6 +343,7 @@ pub fn handle_projectile_flight(
             commands.entity(target.planet).push_children(&[explosion]);
             info!("despawning projectile entity {:?}", projectile);
             commands.entity(projectile).despawn();
+            despawned.0.insert(projectile);
             continue;
         }
         if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
