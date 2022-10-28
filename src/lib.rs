@@ -19,6 +19,7 @@ pub struct Game;
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
+            .insert_resource(SpaceCraftConfig::default())
             .add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)

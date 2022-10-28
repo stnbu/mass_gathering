@@ -14,6 +14,11 @@ use std::f32::consts::TAU;
 
 use crate::physics::Momentum;
 
+#[derive(Default)]
+pub struct SpaceCraftConfig {
+    pub show_debug_markers: bool,
+}
+
 #[derive(Debug, Default, Component)]
 pub struct Spacecraft {
     gain: Vec3,
@@ -120,11 +125,8 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
     }
 }
 
-#[derive(Component)]
-pub struct Crosshairs;
-
 #[derive(Component, PartialEq, Eq)]
-pub enum Crosshairs2 {
+pub enum Crosshairs {
     Hot,
     Cold,
 }
@@ -154,7 +156,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs2::Cold);
+                .insert(Crosshairs::Cold);
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.1))),
@@ -163,7 +165,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs2::Hot);
+                .insert(Crosshairs::Hot);
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.1))),
@@ -172,7 +174,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs2::Hot);
+                .insert(Crosshairs::Hot);
 
             // Various lights for seeing
             parent.spawn_bundle(PointLightBundle {
@@ -225,9 +227,9 @@ pub fn handle_projectile_engagement(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     optional_keys: Option<Res<Input<KeyCode>>>,
-    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs2)>,
+    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
     planet_query: Query<
-        &Transform,
+        (Entity, &Transform),
         (
             With<Collider>,
             Without<BallisticProjectileTarget>,
@@ -236,6 +238,7 @@ pub fn handle_projectile_engagement(
     >,
     rapier_context: Res<RapierContext>,
     craft: Query<&Transform, With<Spacecraft>>,
+    config: Res<SpaceCraftConfig>,
 ) {
     for pov in craft.iter() {
         let ray_origin = pov.translation;
@@ -261,8 +264,32 @@ pub fn handle_projectile_engagement(
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    let planet_transform = planet_query.get(planet).unwrap();
+                    let (planet_id, planet_transform) = planet_query.get(planet).unwrap();
                     let local_impact_site = global_impact_site - planet_transform.translation;
+                    if config.show_debug_markers {
+                        let planet_local_marker = commands
+                            .spawn_bundle(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                    radius: 1.5,
+                                    ..Default::default()
+                                })),
+                                material: materials.add(Color::CYAN.into()),
+                                transform: Transform::from_translation(local_impact_site),
+                                ..Default::default()
+                            })
+                            .id();
+                        commands.entity(planet_id).add_child(planet_local_marker);
+                        // global marker (should diverge as planet moves)
+                        commands.spawn_bundle(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 1.5,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::AQUAMARINE.into()),
+                            transform: Transform::from_translation(global_impact_site),
+                            ..Default::default()
+                        });
+                    }
                     let radius = 0.15;
                     commands
                         .spawn_bundle(PbrBundle {
@@ -286,7 +313,7 @@ pub fn handle_projectile_engagement(
             }
         }
         for (mut visibility, temp) in crosshairs_query.iter_mut() {
-            let hot_entity = *temp == Crosshairs2::Hot;
+            let hot_entity = *temp == Crosshairs::Hot;
             if hot_target {
                 visibility.is_visible = hot_entity;
             } else {

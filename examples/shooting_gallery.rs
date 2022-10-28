@@ -5,6 +5,9 @@ use mass_gathering::prelude::*;
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::WHITE * 0.8))
+        .insert_resource(SpaceCraftConfig {
+            show_debug_markers: true,
+        })
         .add_plugins(DefaultPlugins)
         .add_system(move_forward)
         .add_system(steer)
