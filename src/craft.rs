@@ -16,6 +16,18 @@ use std::time::Duration;
 
 use crate::physics::Momentum;
 
+#[derive(Component, PartialEq, Eq)]
+pub enum Crosshairs {
+    Hot,
+    Cold,
+}
+
+#[derive(Debug, Default, Component)]
+pub struct Spacecraft {
+    gain: Vec3,
+    pub speed: f32,
+}
+
 pub struct SpaceCraftConfig {
     pub show_debug_markers: bool,
     pub show_impact_explosions: bool,
@@ -37,11 +49,25 @@ pub struct DespawnTimer {
     pub ttl: Timer,
 }
 
-#[derive(Debug, Default, Component)]
-pub struct Spacecraft {
-    gain: Vec3,
-    pub speed: f32,
+#[derive(Component)]
+pub struct BallisticProjectileTarget {
+    pub planet: Entity,
+    pub local_impact_site: Vec3,
 }
+
+#[derive(Component, Default)]
+pub struct Blink {
+    pub hertz: f64,
+    pub start_angle: f64, // what the! not-zero seems to break.
+}
+
+#[derive(Component)]
+pub struct ProjectileExplosion {
+    pub rising: bool,
+}
+
+#[derive(Default)]
+pub struct Despawned(HashSet<Entity>);
 
 pub fn timer_despawn(
     mut commands: Commands,
@@ -156,12 +182,6 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
     }
 }
 
-#[derive(Component, PartialEq, Eq)]
-pub enum Crosshairs {
-    Hot,
-    Cold,
-}
-
 pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -247,18 +267,6 @@ pub fn spacecraft_setup(
         });
 }
 
-#[derive(Component)]
-pub struct BallisticProjectileTarget {
-    pub planet: Entity,
-    pub local_impact_site: Vec3,
-}
-
-#[derive(Component, Default)]
-pub struct Blink {
-    pub hertz: f64,
-    pub start_angle: f64, // what the! not-zero seems to break.
-}
-
 pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<Time>) {
     for (mut visibility, blink_config) in blinker_query.iter_mut() {
         assert!(blink_config.start_angle == 0.0, "This does not work.");
@@ -308,12 +316,12 @@ pub fn handle_projectile_engagement(
                         continue;
                     }
                 } else {
-                    // debug!("Collider {intersected_collider_id:?} not found in our query."); //we need to filter projectile!!!
-                    // let all_colliders = collider_query
-                    //     .iter()
-                    //     .map(|(_, e)| format!("{e:?},"))
-                    //     .collect::<String>();
-                    // debug!("  The query contains entities: {:?}", all_colliders);
+                    // FIXME -- if we had a better query for `rapier_context.cast_ray()` we would need this.
+                    debug!("Collider {intersected_collider_id:?} not found in our query."); //we need to filter projectile!!!
+                    debug!(
+                        "\tThe query contains entities: {:?}",
+                        collider_query.iter().map(|(_, e)| e).collect::<Vec<_>>()
+                    );
                     continue;
                 };
             hot_target = true;
@@ -398,28 +406,6 @@ pub fn handle_projectile_engagement(
     }
 }
 
-#[derive(Component)]
-pub struct ProjectileExplosion {
-    pub rising: bool,
-}
-
-#[derive(Default)]
-pub struct Despawned(HashSet<Entity>);
-
-pub fn fix_inflight_projectiles(
-    mut commands: Commands,
-    planets: Query<Entity, With<Momentum>>,
-    targets: Query<(Entity, &BallisticProjectileTarget)>,
-) {
-    let planet_ids = planets.iter().collect::<HashSet<_>>();
-    for (projectile, target) in targets.iter() {
-        if !planet_ids.contains(&target.planet) {
-            warn!("Hack! -- Removing projectile {projectile:?} because its target planet has been despawned.");
-            commands.entity(projectile).despawn();
-        }
-    }
-}
-
 pub fn handle_projectile_flight(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -474,7 +460,7 @@ pub fn handle_projectile_flight(
             commands.entity(projectile).despawn();
             despawned.0.insert(projectile);
             continue;
-        } else {
+        } else if !collided.is_empty() {
             debug!(
                 "Projectile {projectile:?} not in collision entity list: {:?}",
                 collided

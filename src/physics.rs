@@ -7,13 +7,15 @@ pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
     mut planet_query: Query<(&mut Transform, &mut Momentum, Entity)>,
-    collider_query: Query<&Parent, With<Collider>>,
+    planet_collider_query: Query<&Parent, (With<Collider>, Without<BallisticProjectileTarget>)>,
     mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
 ) {
     // FIXME -- need to handle 3-way collisions IF it ever happens...
+    // FIXME -- "projectiles" still needlessly show up in planet_collider_query
+    //          because we are not filtering `events` enough/at all.
     for collision_event in events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            let collider_parents = [e0, e1].map(|col| match collider_query.get(*col) {
+            let collider_parents = [e0, e1].map(|col| match planet_collider_query.get(*col) {
                 Ok(p) => Some(p.get()),
                 _ => None,
             });
