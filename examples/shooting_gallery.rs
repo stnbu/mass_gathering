@@ -10,7 +10,7 @@ fn main() {
         .insert_resource(SpaceCraftConfig {
             show_debug_markers: true,
             show_impact_explosions: false,
-            projectile_radius: 0.02,
+            projectile_radius: 0.08,
         });
 
     app.insert_resource(LogSettings {

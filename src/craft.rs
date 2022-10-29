@@ -299,24 +299,23 @@ pub fn handle_projectile_engagement(
 
         let mut hot_target = false;
         if let Some((intersected_collider_id, distance)) = intersection {
-            let (planet_id, planet_transform) = if let Ok((collider_parent_id, collider_id)) =
-                collider_query.get(intersected_collider_id)
-            {
-                if let Ok(result) = planet_query.get(**collider_parent_id) {
-                    result
+            let (planet_id, planet_transform) =
+                if let Ok((collider_parent_id, _)) = collider_query.get(intersected_collider_id) {
+                    if let Ok(result) = planet_query.get(**collider_parent_id) {
+                        result
+                    } else {
+                        debug!("No planet found with id {collider_parent_id:?}.");
+                        continue;
+                    }
                 } else {
-                    debug!("No planet found with id {collider_parent_id:?}.");
+                    // debug!("Collider {intersected_collider_id:?} not found in our query."); //we need to filter projectile!!!
+                    // let all_colliders = collider_query
+                    //     .iter()
+                    //     .map(|(_, e)| format!("{e:?},"))
+                    //     .collect::<String>();
+                    // debug!("  The query contains entities: {:?}", all_colliders);
                     continue;
-                }
-            } else {
-                debug!("Collider {intersected_collider_id:?} not found in our query.");
-                let all_colliders = collider_query
-                    .iter()
-                    .map(|(_, e)| format!("{e:?},"))
-                    .collect::<String>();
-                debug!("  The query contains entities: {:?}", all_colliders);
-                continue;
-            };
+                };
             hot_target = true;
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
