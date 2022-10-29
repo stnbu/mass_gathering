@@ -327,6 +327,7 @@ pub fn handle_projectile_engagement(
             hot_target = true;
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
+                    debug!("Firing projectile!");
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     if config.show_debug_markers {
@@ -348,7 +349,6 @@ pub fn handle_projectile_engagement(
                                 ttl: Timer::new(Duration::from_secs(5), false),
                             })
                             .id();
-                        debug!("Planet-local debug marker entity: {planet_local_marker:?}");
                         commands.entity(planet_id).add_child(planet_local_marker);
                         //global marker (should diverge as planet moves)
                         let global_marker = commands
@@ -369,7 +369,7 @@ pub fn handle_projectile_engagement(
                                 ttl: Timer::new(Duration::from_secs(5), false),
                             })
                             .id();
-                        debug!("Global debug marker entity: {global_marker:?}");
+                        debug!("Placing two debug markers. global={global_marker:?} and local={planet_local_marker:?}[parent={planet_id:?}]");
                     }
                     let radius = config.projectile_radius;
                     let projectile = commands
@@ -392,6 +392,10 @@ pub fn handle_projectile_engagement(
                         .insert(Sensor)
                         .id();
                     debug!("Projectile entity: {projectile:?}");
+                    debug!("\tray_origin={ray_origin:?}");
+                    debug!("\tray_direction={ray_direction:?}");
+                    debug!("\tglobal_impact_site={global_impact_site:?}");
+                    debug!("\tlocal_impact_site={local_impact_site:?}");
                 }
             }
         }
