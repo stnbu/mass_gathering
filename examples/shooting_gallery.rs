@@ -44,8 +44,17 @@ fn setup(
 
     spawn_planet(
         5.0,
-        Vec3::ZERO,
-        Vec3::ZERO,
+        Vec3::X * -5.5,
+        Vec3::X * 0.2,
+        Color::GOLD,
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+    );
+    spawn_planet(
+        5.0,
+        Vec3::X * 5.5,
+        Vec3::X * -0.2,
         Color::SILVER,
         &mut commands,
         &mut meshes,
