@@ -7,7 +7,8 @@ use std::f32::consts::PI;
 pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
-    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity, &mut Collider)>,
+    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity)>,
+    mut collider_query: Query<&Parent, With<Collider>>,
     mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
 ) {
     let mut despawned = HashSet::new();
@@ -19,7 +20,19 @@ pub fn collision_events(
                 "Encountered already-despawned planet."
             );
 
-            if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
+            let p_inds = [e0, e1].map(|col| match collider_query.get(*col) {
+                Ok(p) => Some(p),
+                _ => None,
+            });
+
+            // let mut p0 = planet_query
+            //     .get_mut(collider_query.get(*e0).unwrap().get())
+            //     .unwrap();
+            // let mut p1 = planet_query
+            //     .get_mut(collider_query.get(*e1).unwrap().get())
+            //     .unwrap();
+            if let [Some(p0_p), Some(p1_p)] = p_inds {
+                let [p0, p1] = planet_query.get_many_mut([**p0_p, **p1_p]).unwrap();
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
                     (p0, p1, e1)
                 } else if p0.1.mass < p1.1.mass {
@@ -86,18 +99,22 @@ pub fn spawn_planet<'a>(
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
                 radius,
-                ..Default::default()
+                ..default()
             })),
             material: materials.add(color.into()),
             transform: Transform::from_translation(position),
-            ..Default::default()
+            ..default()
         })
         .insert(Momentum { velocity, mass })
         .insert(RigidBody::Dynamic)
-        .insert(Collider::ball(radius))
-        //.insert(ColliderScale::Relative(Vec3::splat(1.0)))
-        .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(Sensor);
+        .with_children(|parent| {
+            parent
+                .spawn()
+                .insert_bundle(TransformBundle::default())
+                .insert(Collider::ball(radius))
+                .insert(ActiveEvents::COLLISION_EVENTS)
+                .insert(Sensor);
+        });
 }
 
 #[derive(Component, Debug)]
