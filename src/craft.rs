@@ -392,10 +392,10 @@ pub fn handle_projectile_engagement(
                         .insert(Sensor)
                         .id();
                     debug!("Projectile entity: {projectile:?}");
-                    debug!("\tray_origin={ray_origin:?}");
-                    debug!("\tray_direction={ray_direction:?}");
-                    debug!("\tglobal_impact_site={global_impact_site:?}");
-                    debug!("\tlocal_impact_site={local_impact_site:?}");
+                    debug!("-	ray_origin={ray_origin:?}");
+                    debug!("-	ray_direction={ray_direction:?}");
+                    debug!("-	global_impact_site={global_impact_site:?}");
+                    debug!("-	local_impact_site={local_impact_site:?}");
                 }
             }
         }

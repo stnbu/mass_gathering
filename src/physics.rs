@@ -21,8 +21,8 @@ pub fn collision_events(
             });
             if let [Some(p0_p), Some(p1_p)] = collider_parents {
                 debug!("Collision-started event for:");
-                debug!("\tplanet={p0_p:?} with collider={e0:?}");
-                debug!("\tplanet={p1_p:?} with collider={e1:?}");
+                debug!("-	planet={p0_p:?} with collider={e0:?}");
+                debug!("-	planet={p1_p:?} with collider={e1:?}");
                 let [p0, p1] = planet_query.get_many_mut([p0_p, p1_p]).unwrap();
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
                     (p0, p1, p1_p)
@@ -46,7 +46,7 @@ pub fn collision_events(
                 major.1.velocity =
                     major.1.velocity * major_factor + minor.1.velocity * minor_factor;
                 debug!("Merge Math -- velocity after collision:");
-                debug!("\tmajor={:?} / minor=RIP", major.1.velocity);
+                debug!("-	major={:?} / minor=RIP", major.1.velocity);
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
                 major.0.scale = scale_up * Vec3::splat(1.0);
