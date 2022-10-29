@@ -301,7 +301,7 @@ pub fn handle_projectile_engagement(
         if let Some((intersected_collider_id, distance)) = intersection {
             let (planet_id, planet_transform) =
                 if let Ok((collider_parent_id, _)) = collider_query.get(intersected_collider_id) {
-                    if let Ok(result) = planet_query.get(**collider_parent_id) {
+                    if let Ok(result) = planet_query.get(collider_parent_id.get()) {
                         result
                     } else {
                         debug!("No planet found with id {collider_parent_id:?}.");
@@ -425,10 +425,7 @@ pub fn handle_projectile_flight(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
-    collider_query: Query<
-        (&Transform, &Momentum),
-        (With<Collider>, Without<BallisticProjectileTarget>),
-    >,
+    planet_query: Query<(&Transform, &Momentum, Entity), Without<BallisticProjectileTarget>>,
     mut collision_events: EventReader<CollisionEvent>,
     mut despawned: Local<Despawned>,
     time: Res<Time>,
@@ -447,7 +444,12 @@ pub fn handle_projectile_flight(
             warn!("We already despawned {:?}", projectile);
             continue;
         }
+        debug!(
+            "Handling flight of projectile {projectile:?} with target {:?}",
+            target.planet
+        );
         if collided.contains(&projectile) {
+            debug!("We have a collision start event for projectile {projectile:?}.");
             if config.show_impact_explosions {
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
@@ -465,18 +467,35 @@ pub fn handle_projectile_flight(
                     })
                     .insert(ProjectileExplosion { rising: true })
                     .id();
+                debug!("Explosion animation entity: {explosion:?}");
                 commands.entity(target.planet).add_child(explosion);
             }
-            debug!("despawning projectile entity {:?}", projectile);
+            debug!("Despawning projectile entity {projectile:?}");
             commands.entity(projectile).despawn();
             despawned.0.insert(projectile);
             continue;
+        } else {
+            debug!(
+                "Projectile {projectile:?} not in collision entity list: {:?}",
+                collided
+            );
         }
-        if let Ok((planet_transform, planet_momentum)) = collider_query.get(target.planet) {
+        if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let goal_impact_site = planet_transform.translation + target.local_impact_site;
             let direction = (projectile_transform.translation - goal_impact_site).normalize();
-            projectile_transform.translation -=
+            let translation =
                 (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
+            projectile_transform.translation -= translation;
+            debug!(
+                "Projectile entity {projectile:?} traveled {:?}",
+                translation.length()
+            );
+        } else {
+            debug!(
+                "No projectile movement. Target planet {:?} not in collider query contents: {:?}",
+                target.planet,
+                planet_query.iter().map(|(_, _, e)| e).collect::<Vec<_>>()
+            );
         }
     }
 }
