@@ -11,14 +11,9 @@ pub fn collision_events(
     collider_query: Query<&Parent, With<Collider>>,
     mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
 ) {
-    let mut despawned = HashSet::new();
+    // FIXME -- need to handle 3-way collisions IF it ever happens...
     for collision_event in events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            assert!(
-                // Does this ever happen? If not, remove assert.
-                !(despawned.contains(e0) || despawned.contains(e1)),
-                "Encountered already-despawned planet."
-            );
             debug!("Collision-started event for {:?} and {:?}", e0, e1);
             let collider_parents = [e0, e1].map(|col| match collider_query.get(*col) {
                 Ok(p) => Some(p),
@@ -27,13 +22,13 @@ pub fn collision_events(
             if let [Some(p0_p), Some(p1_p)] = collider_parents {
                 let [p0, p1] = planet_query.get_many_mut([**p0_p, **p1_p]).unwrap();
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
-                    (p0, p1, e1)
+                    (p0, p1, p1_p)
                 } else if p0.1.mass < p1.1.mass {
-                    (p1, p0, e0)
+                    (p1, p0, p0_p)
                 } else {
                     // FIXME -- a fair tie-breaker
                     warn!("Colliding planets {:?} and {:?} have exactly the same mass. Picking major/minor arbitrarilly.", e0, e1);
-                    (p0, p1, e1)
+                    (p0, p1, p1_p)
                 };
                 let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
@@ -41,27 +36,26 @@ pub fn collision_events(
                 debug!("Merge Math -- minor_factor: {}", minor_factor);
                 major.1.mass += minor.1.mass;
                 debug!(
-                    "Merge Math -- before collision: major - {:?}, minor - {:?}",
+                    "Merge Math -- velocity before collision:\n\tmajor={:?}\n\tminor={:?}",
                     major.1.velocity, minor.1.velocity
                 );
                 major.1.velocity =
                     major.1.velocity * major_factor + minor.1.velocity * minor_factor;
                 debug!(
-                    "Merge Math -- after collision: major - {:?}",
+                    "Merge Math -- velocity after collision:\n\tmajor={:?}\n\tminor=RIP",
                     major.1.velocity
                 );
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
                 major.0.scale = scale_up * Vec3::splat(1.0);
                 for (mut target, projectile_id) in target_query.iter_mut() {
-                    if target.planet == *cull {
+                    if target.planet == **cull {
                         warn!("Projectile {projectile_id:?} has despawned planet {:?} as its target. Remapping to merge-ee planet {:?}", target.planet, major.2);
                         target.planet = major.2;
                     }
                 }
                 debug!("despawning planet {:?}", cull);
-                commands.entity(*cull).despawn();
-                despawned.insert(cull);
+                commands.entity(**cull).despawn();
             } else {
                 debug!("One of {:?} or {:?} has no parent.", e0, e1);
             }
@@ -87,7 +81,7 @@ pub fn spawn_planet<'a>(
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) {
     let mass = radius_to_mass(radius);
-    commands
+    let planet_id = commands
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
                 radius,
@@ -106,7 +100,9 @@ pub fn spawn_planet<'a>(
                 .insert(Collider::ball(radius))
                 .insert(ActiveEvents::COLLISION_EVENTS)
                 .insert(Sensor);
-        });
+        })
+        .id();
+    debug!("Spawned planet entity: {planet_id:?}");
 }
 
 #[derive(Component, Debug)]

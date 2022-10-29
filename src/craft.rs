@@ -281,7 +281,7 @@ pub fn handle_projectile_engagement(
     optional_keys: Option<Res<Input<KeyCode>>>,
     mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
     planet_query: Query<(Entity, &Transform), (Without<BallisticProjectileTarget>, With<Momentum>)>,
-    collider_query: Query<&Parent, With<Collider>>,
+    collider_query: Query<(&Parent, Entity), With<Collider>>,
     rapier_context: Res<RapierContext>,
     craft: Query<&Transform, With<Spacecraft>>,
     config: Res<SpaceCraftConfig>,
@@ -298,19 +298,25 @@ pub fn handle_projectile_engagement(
         );
 
         let mut hot_target = false;
-        if let Some((collider, distance)) = intersection {
-            let (planet_id, planet_transform) =
-                if let Ok(collider_parent) = collider_query.get(collider) {
-                    if let Ok(result) = planet_query.get(**collider_parent) {
-                        result
-                    } else {
-                        debug!("No planet found with id {collider_parent:?}.");
-                        continue;
-                    }
+        if let Some((intersected_collider_id, distance)) = intersection {
+            let (planet_id, planet_transform) = if let Ok((collider_parent_id, collider_id)) =
+                collider_query.get(intersected_collider_id)
+            {
+                if let Ok(result) = planet_query.get(**collider_parent_id) {
+                    result
                 } else {
-                    debug!("Collider {collider:?} not found in our query.");
+                    debug!("No planet found with id {collider_parent_id:?}.");
                     continue;
-                };
+                }
+            } else {
+                debug!("Collider {intersected_collider_id:?} not found in our query.");
+                let all_colliders = collider_query
+                    .iter()
+                    .map(|(_, e)| format!("{e:?},"))
+                    .collect::<String>();
+                debug!("  The query contains entities: {:?}", all_colliders);
+                continue;
+            };
             hot_target = true;
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
@@ -335,9 +341,10 @@ pub fn handle_projectile_engagement(
                                 ttl: Timer::new(Duration::from_secs(5), false),
                             })
                             .id();
+                        debug!("Planet-local debug marker entity: {planet_local_marker:?}");
                         commands.entity(planet_id).add_child(planet_local_marker);
                         //global marker (should diverge as planet moves)
-                        commands
+                        let global_marker = commands
                             .spawn_bundle(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                                     radius: 0.15,
@@ -353,10 +360,12 @@ pub fn handle_projectile_engagement(
                             })
                             .insert(DespawnTimer {
                                 ttl: Timer::new(Duration::from_secs(5), false),
-                            });
+                            })
+                            .id();
+                        debug!("Global debug marker entity: {global_marker:?}");
                     }
                     let radius = config.projectile_radius;
-                    commands
+                    let projectile = commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
                                 radius,
@@ -373,7 +382,9 @@ pub fn handle_projectile_engagement(
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(radius))
                         .insert(ActiveEvents::COLLISION_EVENTS)
-                        .insert(Sensor);
+                        .insert(Sensor)
+                        .id();
+                    debug!("Projectile entity: {projectile:?}");
                 }
             }
         }
