@@ -280,14 +280,8 @@ pub fn handle_projectile_engagement(
     mut materials: ResMut<Assets<StandardMaterial>>,
     optional_keys: Option<Res<Input<KeyCode>>>,
     mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
-    planet_query: Query<
-        (Entity, &Transform),
-        (
-            With<Collider>,
-            Without<BallisticProjectileTarget>,
-            With<Momentum>,
-        ),
-    >,
+    planet_query: Query<(Entity, &Transform), (Without<BallisticProjectileTarget>, With<Momentum>)>,
+    collider_query: Query<&Parent, With<Collider>>,
     rapier_context: Res<RapierContext>,
     craft: Query<&Transform, With<Spacecraft>>,
     config: Res<SpaceCraftConfig>,
@@ -304,19 +298,23 @@ pub fn handle_projectile_engagement(
         );
 
         let mut hot_target = false;
-        if let Some((planet, distance)) = intersection {
-            match planet_query.get(planet) {
-                Ok(_) => (),
-                _ => {
-                    debug!("Skipping non-planet entity {planet:?}. Tune QueryFitler?");
+        if let Some((collider, distance)) = intersection {
+            let (planet_id, planet_transform) =
+                if let Ok(collider_parent) = collider_query.get(collider) {
+                    if let Ok(result) = planet_query.get(**collider_parent) {
+                        result
+                    } else {
+                        debug!("No planet found with id {collider_parent:?}.");
+                        continue;
+                    }
+                } else {
+                    debug!("Collider {collider:?} not found in our query.");
                     continue;
-                }
-            }
+                };
             hot_target = true;
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    let (planet_id, planet_transform) = planet_query.get(planet).unwrap();
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     if config.show_debug_markers {
                         let planet_local_marker = commands
@@ -369,7 +367,7 @@ pub fn handle_projectile_engagement(
                             ..Default::default()
                         })
                         .insert(BallisticProjectileTarget {
-                            planet,
+                            planet: planet_id,
                             local_impact_site,
                         })
                         .insert(RigidBody::Dynamic)
@@ -417,7 +415,7 @@ pub fn handle_projectile_flight(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
-    planet_query: Query<
+    collider_query: Query<
         (&Transform, &Momentum),
         (With<Collider>, Without<BallisticProjectileTarget>),
     >,
@@ -464,7 +462,7 @@ pub fn handle_projectile_flight(
             despawned.0.insert(projectile);
             continue;
         }
-        if let Ok((planet_transform, planet_momentum)) = planet_query.get(target.planet) {
+        if let Ok((planet_transform, planet_momentum)) = collider_query.get(target.planet) {
             let goal_impact_site = planet_transform.translation + target.local_impact_site;
             let direction = (projectile_transform.translation - goal_impact_site).normalize();
             projectile_transform.translation -=

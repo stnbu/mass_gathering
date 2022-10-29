@@ -8,30 +8,23 @@ pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
     mut planet_query: Query<(&mut Transform, &mut Momentum, Entity)>,
-    mut collider_query: Query<&Parent, With<Collider>>,
+    collider_query: Query<&Parent, With<Collider>>,
     mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
 ) {
     let mut despawned = HashSet::new();
-
     for collision_event in events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
             assert!(
+                // Does this ever happen? If not, remove assert.
                 !(despawned.contains(e0) || despawned.contains(e1)),
                 "Encountered already-despawned planet."
             );
-
-            let p_inds = [e0, e1].map(|col| match collider_query.get(*col) {
+            debug!("Collision-started event for {:?} and {:?}", e0, e1);
+            let collider_parents = [e0, e1].map(|col| match collider_query.get(*col) {
                 Ok(p) => Some(p),
                 _ => None,
             });
-
-            // let mut p0 = planet_query
-            //     .get_mut(collider_query.get(*e0).unwrap().get())
-            //     .unwrap();
-            // let mut p1 = planet_query
-            //     .get_mut(collider_query.get(*e1).unwrap().get())
-            //     .unwrap();
-            if let [Some(p0_p), Some(p1_p)] = p_inds {
+            if let [Some(p0_p), Some(p1_p)] = collider_parents {
                 let [p0, p1] = planet_query.get_many_mut([**p0_p, **p1_p]).unwrap();
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
                     (p0, p1, e1)
@@ -59,10 +52,7 @@ pub fn collision_events(
                 );
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
-                //*major.3 = Collider::ball(mass_to_radius(major.1.mass));
                 major.0.scale = scale_up * Vec3::splat(1.0);
-                //major.3.promote_scaled_shape();
-
                 for (mut target, projectile_id) in target_query.iter_mut() {
                     if target.planet == *cull {
                         warn!("Projectile {projectile_id:?} has despawned planet {:?} as its target. Remapping to merge-ee planet {:?}", target.planet, major.2);
@@ -72,6 +62,8 @@ pub fn collision_events(
                 debug!("despawning planet {:?}", cull);
                 commands.entity(*cull).despawn();
                 despawned.insert(cull);
+            } else {
+                debug!("One of {:?} or {:?} has no parent.", e0, e1);
             }
         }
     }

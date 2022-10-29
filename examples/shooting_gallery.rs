@@ -14,7 +14,7 @@ fn main() {
         });
 
     app.insert_resource(LogSettings {
-        filter: "debug".into(),
+        filter: "warn,mass_gathering=debug".into(),
         level: bevy::log::Level::DEBUG,
     })
     .add_plugins(DefaultPlugins)
