@@ -49,6 +49,8 @@ pub fn collision_events(
                 debug!("-	major={:?} / minor=RIP", major.1.velocity);
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
+                major.0.translation =
+                    (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
                 major.0.scale = scale_up * Vec3::splat(1.0);
                 for (mut target, projectile_id) in target_query.iter_mut() {
                     if target.planet == cull {
