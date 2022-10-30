@@ -1,13 +1,14 @@
 use crate::craft::BallisticProjectileTarget;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
+use bevy_rapier3d::prelude::{
+    ActiveEvents, Collider, ColliderScale, CollisionEvent, RigidBody, Sensor,
+};
 use std::f32::consts::PI;
 
 pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
-    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity)>,
-    planet_collider_query: Query<&Parent, (With<Collider>, Without<BallisticProjectileTarget>)>,
+    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity, &mut Collider)>,
     mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
 ) {
     // FIXME -- need to handle 3-way collisions IF it ever happens...
@@ -15,23 +16,19 @@ pub fn collision_events(
     //          because we are not filtering `events` enough/at all.
     for collision_event in events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            let collider_parents = [e0, e1].map(|col| match planet_collider_query.get(*col) {
-                Ok(p) => Some(p.get()),
-                _ => None,
-            });
-            if let [Some(p0_p), Some(p1_p)] = collider_parents {
-                debug!("Collision-started event for:");
-                debug!("-	planet={p0_p:?} with collider={e0:?}");
-                debug!("-	planet={p1_p:?} with collider={e1:?}");
-                let [p0, p1] = planet_query.get_many_mut([p0_p, p1_p]).unwrap();
+            if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
+                debug!(
+                    "Collision-started event for planets {:?} and {:?}",
+                    p0.2, p1.2
+                );
                 let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
-                    (p0, p1, p1_p)
+                    (p0, p1, e1)
                 } else if p0.1.mass < p1.1.mass {
-                    (p1, p0, p0_p)
+                    (p1, p0, e0)
                 } else {
                     // FIXME -- a fair tie-breaker
                     warn!("Colliding planets {:?} and {:?} have exactly the same mass. Picking major/minor arbitrarilly.", e0, e1);
-                    (p0, p1, p1_p)
+                    (p0, p1, e1)
                 };
                 let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
@@ -52,14 +49,15 @@ pub fn collision_events(
                 major.0.translation =
                     (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
                 major.0.scale = scale_up * Vec3::splat(1.0);
+                major.3.promote_scaled_shape();
                 for (mut target, projectile_id) in target_query.iter_mut() {
-                    if target.planet == cull {
+                    if target.planet == *cull {
                         warn!("Projectile {projectile_id:?} has despawned planet {:?} as its target. Remapping to merge-ee planet {:?}", target.planet, major.2);
                         target.planet = major.2;
                     }
                 }
                 debug!("despawning planet {:?}", cull);
-                commands.entity(cull).despawn();
+                commands.entity(*cull).despawn();
             } else {
                 debug!("One of {:?} or {:?} has no parent.", e0, e1);
             }
@@ -85,7 +83,6 @@ pub fn spawn_planet<'a>(
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) {
     let mass = radius_to_mass(radius);
-    let mut collider_id = Entity::from_raw(33333); // but how
     let planet_id = commands
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -98,17 +95,11 @@ pub fn spawn_planet<'a>(
         })
         .insert(Momentum { velocity, mass })
         .insert(RigidBody::Dynamic)
-        .with_children(|parent| {
-            collider_id = parent
-                .spawn()
-                .insert_bundle(TransformBundle::default())
-                .insert(Collider::ball(radius))
-                .insert(ActiveEvents::COLLISION_EVENTS)
-                .insert(Sensor)
-                .id();
-        })
+        .insert(Collider::ball(radius))
+        .insert(ActiveEvents::COLLISION_EVENTS)
+        .insert(Sensor)
         .id();
-    debug!("Spawned planet={planet_id:?} and collider={collider_id:?}");
+    debug!("Spawned planet={planet_id:?}");
 }
 
 #[derive(Component, Debug)]

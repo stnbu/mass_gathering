@@ -288,8 +288,14 @@ pub fn handle_projectile_engagement(
     mut materials: ResMut<Assets<StandardMaterial>>,
     optional_keys: Option<Res<Input<KeyCode>>>,
     mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
-    planet_query: Query<(Entity, &Transform), (Without<BallisticProjectileTarget>, With<Momentum>)>,
-    collider_query: Query<(&Parent, Entity), With<Collider>>,
+    planet_query: Query<
+        (Entity, &Transform),
+        (
+            Without<BallisticProjectileTarget>,
+            With<Momentum>,
+            With<Collider>,
+        ),
+    >,
     rapier_context: Res<RapierContext>,
     craft: Query<&Transform, With<Spacecraft>>,
     config: Res<SpaceCraftConfig>,
@@ -308,20 +314,10 @@ pub fn handle_projectile_engagement(
         let mut hot_target = false;
         if let Some((intersected_collider_id, distance)) = intersection {
             let (planet_id, planet_transform) =
-                if let Ok((collider_parent_id, _)) = collider_query.get(intersected_collider_id) {
-                    if let Ok(result) = planet_query.get(collider_parent_id.get()) {
-                        result
-                    } else {
-                        debug!("No planet found with id {collider_parent_id:?}.");
-                        continue;
-                    }
+                if let Ok(result) = planet_query.get(intersected_collider_id) {
+                    result
                 } else {
-                    // FIXME -- if we had a better query for `rapier_context.cast_ray()` we would need this.
-                    debug!("Collider {intersected_collider_id:?} not found in our query."); //we need to filter projectile!!!
-                    debug!(
-                        "\tThe query contains entities: {:?}",
-                        collider_query.iter().map(|(_, e)| e).collect::<Vec<_>>()
-                    );
+                    debug!("No planet found with id {intersected_collider_id:?}.");
                     continue;
                 };
             hot_target = true;
@@ -329,7 +325,13 @@ pub fn handle_projectile_engagement(
                 if keys.just_pressed(KeyCode::F) {
                     debug!("Firing projectile!");
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    let local_impact_site = global_impact_site - planet_transform.translation;
+                    // Foxtrot indeed! I do not understand what is going on here.
+                    // It might not be a factor but rather a function (like cube root something)
+                    // but I commit this version because it's the first time it appears to be
+                    // "fixed".
+                    let surprise_wtf_factor = 0.55;
+                    let local_impact_site =
+                        (global_impact_site - planet_transform.translation) * surprise_wtf_factor;
                     if config.show_debug_markers {
                         let planet_local_marker = commands
                             .spawn_bundle(PbrBundle {
