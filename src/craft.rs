@@ -194,10 +194,7 @@ pub fn spacecraft_setup(
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft::default())
         .with_children(|parent| {
-            parent.spawn_bundle(Camera3dBundle {
-                transform: Transform::from_xyz(0.0, 0.0, 40.0).looking_at(-Vec3::Z, Vec3::Y),
-                ..Default::default()
-            });
+            parent.spawn_bundle(Camera3dBundle::default());
             // Possibly the worst way to implement "crosshairs" evar.
             parent
                 .spawn_bundle(PbrBundle {
