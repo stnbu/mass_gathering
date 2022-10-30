@@ -49,7 +49,6 @@ pub fn collision_events(
                 major.0.translation =
                     (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
                 major.0.scale = scale_up * Vec3::splat(1.0);
-                major.3.promote_scaled_shape();
                 for (mut target, projectile_id) in target_query.iter_mut() {
                     if target.planet == *cull {
                         warn!("Projectile {projectile_id:?} has despawned planet {:?} as its target. Remapping to merge-ee planet {:?}", target.planet, major.2);
