@@ -44,6 +44,9 @@ pub struct SpaceCraftConfig {
     pub show_debug_markers: bool,
     pub show_impact_explosions: bool,
     pub projectile_radius: f32,
+    pub stereo_enabled: bool,
+    /// Hint: use a netative value for "crosseyed" mode.
+    pub stereo_iod: f32, // interocular distance
 }
 
 impl Default for SpaceCraftConfig {
@@ -52,6 +55,8 @@ impl Default for SpaceCraftConfig {
             show_debug_markers: false,
             show_impact_explosions: true,
             projectile_radius: 0.15,
+            stereo_enabled: false,
+            stereo_iod: 0.0,
         }
     }
 }
@@ -198,6 +203,7 @@ pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    config: Res<SpaceCraftConfig>,
 ) {
     commands
         .spawn_bundle(TransformBundle::from_transform(
@@ -206,27 +212,34 @@ pub fn spacecraft_setup(
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft::default())
         .with_children(|parent| {
-            // yes, TWO cameras!
-            parent
-                .spawn_bundle(Camera3dBundle {
-                    transform: Transform::from_xyz(1.0, 0.0, 0.0),
-                    ..default()
-                })
-                .insert(LeftCamera);
-            parent
-                .spawn_bundle(Camera3dBundle {
-                    transform: Transform::from_xyz(-1.0, 0.0, 0.0),
-                    camera: Camera {
-                        priority: 1,
+            if config.stereo_enabled {
+                let offset = config.stereo_iod / 2.0;
+                parent
+                    .spawn_bundle(Camera3dBundle {
+                        transform: Transform::from_xyz(offset, 0.0, 0.0),
                         ..default()
-                    },
-                    camera_3d: Camera3d {
-                        clear_color: ClearColorConfig::None,
+                    })
+                    .insert(LeftCamera);
+                parent
+                    .spawn_bundle(Camera3dBundle {
+                        transform: Transform::from_xyz(-offset, 0.0, 0.0),
+                        camera: Camera {
+                            priority: 1,
+                            ..default()
+                        },
+                        camera_3d: Camera3d {
+                            clear_color: ClearColorConfig::None,
+                            ..default()
+                        },
                         ..default()
-                    },
+                    })
+                    .insert(RightCamera);
+            } else {
+                parent.spawn_bundle(Camera3dBundle {
+                    transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),
                     ..default()
-                })
-                .insert(RightCamera);
+                });
+            }
             // Possibly the worst way to implement "crosshairs" evar.
             parent
                 .spawn_bundle(PbrBundle {
@@ -582,21 +595,28 @@ Your Location
 pub fn set_camera_viewports(
     windows: Res<Windows>,
     mut resize_events: EventReader<WindowResized>,
-    mut right_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
-    mut left_camera: Query<&mut Camera, With<RightCamera>>,
+    mut left_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
+    mut right_camera: Query<&mut Camera, (With<RightCamera>, Without<LeftCamera>)>,
+    config: Res<SpaceCraftConfig>,
 ) {
+    // FIXME vvv
+    if !config.stereo_enabled {
+        return;
+    }
     for resize_event in resize_events.iter() {
         if resize_event.id == WindowId::primary() {
             let window = windows.primary();
-            let mut left_camera = left_camera.single_mut();
-            left_camera.viewport = Some(Viewport {
+
+            let mut left_viewport = left_camera.single_mut();
+            let mut right_viewport = right_camera.single_mut();
+
+            left_viewport.viewport = Some(Viewport {
                 physical_position: UVec2::new(0, 0),
                 physical_size: UVec2::new(window.physical_width() / 2, window.physical_height()),
                 ..default()
             });
 
-            let mut right_camera = right_camera.single_mut();
-            right_camera.viewport = Some(Viewport {
+            right_viewport.viewport = Some(Viewport {
                 physical_position: UVec2::new(window.physical_width() / 2, 0),
                 physical_size: UVec2::new(window.physical_width() / 2, window.physical_height()),
                 ..default()

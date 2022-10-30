@@ -19,7 +19,11 @@ impl Plugin for Game {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
         app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-            .insert_resource(SpaceCraftConfig::default())
+            .insert_resource(SpaceCraftConfig {
+                stereo_enabled: true,
+                stereo_iod: -2.0,
+                ..default()
+            })
             .add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
