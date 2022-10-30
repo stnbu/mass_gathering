@@ -12,12 +12,12 @@ use craft::*;
 
 pub mod prelude;
 
-// PSA: see examples/3d/split_screen.rs
-
 pub struct Game;
 
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
+        #[cfg(target_arch = "wasm32")]
+        app.add_system(handle_browser_resize);
         app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
             .insert_resource(SpaceCraftConfig::default())
             .add_plugins(DefaultPlugins)
@@ -107,5 +107,19 @@ fn setup(
                 &mut materials,
             );
         }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn handle_browser_resize(mut windows: ResMut<Windows>) {
+    let window = windows.get_primary_mut().unwrap();
+    let wasm_window = web_sys::window().unwrap();
+    let (target_width, target_height) = (
+        wasm_window.inner_width().unwrap().as_f64().unwrap() as f32,
+        wasm_window.inner_height().unwrap().as_f64().unwrap() as f32,
+    );
+
+    if window.width() != target_width || window.height() != target_height {
+        window.set_resolution(target_width, target_height);
     }
 }

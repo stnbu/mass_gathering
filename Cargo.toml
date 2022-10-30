@@ -6,9 +6,10 @@ edition = "2021"
 [dependencies]
 bevy = "0.8.1"
 bevy_egui = "0.16.1"
-#bevy_rapier3d = { git = "https://github.com/dimforge/bevy_rapier.git" }
-bevy_rapier3d = { path = "/Users/mburr/git/bevy_rapier/bevy_rapier3d" }
+bevy_rapier3d = { git = "https://github.com/dimforge/bevy_rapier.git" }
+#bevy_rapier3d = { path = "/Users/mburr/git/bevy_rapier/bevy_rapier3d" }
 rand = "0.8.5"
+web-sys = { version = "0.3.60", features = ["Window"] }
 
 [profile.release]
 opt-level = "s"
