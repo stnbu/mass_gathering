@@ -1,11 +1,10 @@
-use bevy::prelude::*;
-
+use bevy::transform::TransformBundle;
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
+    prelude::*,
     render::camera::Viewport,
     window::{WindowId, WindowResized},
 };
-
 use bevy_egui::{
     egui::{
         style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, TopBottomPanel,
@@ -194,14 +193,12 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
         transform.rotate(Quat::from_axis_angle(local_y, yaw));
     }
 }
-use bevy::transform::TransformBundle;
+
 pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    /*
-     */
     commands
         .spawn_bundle(TransformBundle::from_transform(
             Transform::from_xyz(0.0, 0.0, 40.0).looking_at(-Vec3::Z, Vec3::Y),
@@ -212,13 +209,13 @@ pub fn spacecraft_setup(
             // yes, TWO cameras!
             parent
                 .spawn_bundle(Camera3dBundle {
-                    transform: Transform::from_xyz(10.0, 0.0, 0.0),
+                    transform: Transform::from_xyz(1.0, 0.0, 0.0),
                     ..default()
                 })
                 .insert(LeftCamera);
             parent
                 .spawn_bundle(Camera3dBundle {
-                    transform: Transform::from_xyz(-10.0, 0.0, 0.0),
+                    transform: Transform::from_xyz(-1.0, 0.0, 0.0),
                     camera: Camera {
                         priority: 1,
                         ..default()
@@ -588,9 +585,6 @@ pub fn set_camera_viewports(
     mut left_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
     mut right_camera: Query<&mut Camera, With<RightCamera>>,
 ) {
-    // We need to dynamically resize the camera's viewports whenever the window size changes
-    // so then each camera always takes up half the screen.
-    // A resize_event is sent when the window is first created, allowing us to reuse this system for initial setup.
     for resize_event in resize_events.iter() {
         if resize_event.id == WindowId::primary() {
             let window = windows.primary();
