@@ -1,8 +1,6 @@
 use crate::craft::BallisticProjectileTarget;
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{
-    ActiveEvents, Collider, ColliderScale, CollisionEvent, RigidBody, Sensor,
-};
+use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use std::f32::consts::PI;
 
 pub fn collision_events(
