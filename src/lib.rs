@@ -30,7 +30,7 @@ impl Plugin for Game {
                     .with_system(handle_projectile_engagement)
                     .with_system(handle_projectile_flight)
                     .with_system(animate_projectile_explosion)
-                    //.with_system(collision_events)
+                    .with_system(collision_events)
                     .with_system(freefall),
             )
             .add_startup_system(setup)
