@@ -582,8 +582,8 @@ Your Location
 pub fn set_camera_viewports(
     windows: Res<Windows>,
     mut resize_events: EventReader<WindowResized>,
-    mut left_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
-    mut right_camera: Query<&mut Camera, With<RightCamera>>,
+    mut right_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
+    mut left_camera: Query<&mut Camera, With<RightCamera>>,
 ) {
     for resize_event in resize_events.iter() {
         if resize_event.id == WindowId::primary() {

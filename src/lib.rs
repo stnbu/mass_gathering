@@ -38,8 +38,8 @@ impl Plugin for Game {
             .add_system(bevy::window::close_on_esc)
             .add_system(handle_game_state)
             .add_system(set_camera_viewports)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-            .add_system(hud);
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        //.add_system(hud);
     }
 }
 
