@@ -1,4 +1,11 @@
 use bevy::prelude::*;
+
+use bevy::{
+    core_pipeline::clear_color::ClearColorConfig,
+    render::camera::Viewport,
+    window::{WindowId, WindowResized},
+};
+
 use bevy_egui::{
     egui::{
         style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, TopBottomPanel,
@@ -27,6 +34,12 @@ pub struct Spacecraft {
     gain: Vec3,
     pub speed: f32,
 }
+
+#[derive(Component)]
+pub struct LeftCamera;
+
+#[derive(Component)]
+pub struct RightCamera;
 
 pub struct SpaceCraftConfig {
     pub show_debug_markers: bool,
@@ -187,6 +200,8 @@ pub fn spacecraft_setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    /*
+     */
     commands
         .spawn_bundle(TransformBundle::from_transform(
             Transform::from_xyz(0.0, 0.0, 40.0).looking_at(-Vec3::Z, Vec3::Y),
@@ -194,11 +209,27 @@ pub fn spacecraft_setup(
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft::default())
         .with_children(|parent| {
-            parent.spawn_bundle(Camera3dBundle {
-                // sitting slightly behind the center-of-rotation "feels" kinda cool.
-                transform: Transform::from_xyz(0.0, 0.0, 5.0).looking_at(-Vec3::Z, Vec3::Y),
-                ..default()
-            });
+            // yes, TWO cameras!
+            parent
+                .spawn_bundle(Camera3dBundle {
+                    transform: Transform::from_xyz(10.0, 0.0, 0.0),
+                    ..default()
+                })
+                .insert(LeftCamera);
+            parent
+                .spawn_bundle(Camera3dBundle {
+                    transform: Transform::from_xyz(-10.0, 0.0, 0.0),
+                    camera: Camera {
+                        priority: 1,
+                        ..default()
+                    },
+                    camera_3d: Camera3d {
+                        clear_color: ClearColorConfig::None,
+                        ..default()
+                    },
+                    ..default()
+                })
+                .insert(RightCamera);
             // Possibly the worst way to implement "crosshairs" evar.
             parent
                 .spawn_bundle(PbrBundle {
@@ -549,4 +580,33 @@ Your Location
                 family: Monospace,
             }));
         });
+}
+
+pub fn set_camera_viewports(
+    windows: Res<Windows>,
+    mut resize_events: EventReader<WindowResized>,
+    mut left_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
+    mut right_camera: Query<&mut Camera, With<RightCamera>>,
+) {
+    // We need to dynamically resize the camera's viewports whenever the window size changes
+    // so then each camera always takes up half the screen.
+    // A resize_event is sent when the window is first created, allowing us to reuse this system for initial setup.
+    for resize_event in resize_events.iter() {
+        if resize_event.id == WindowId::primary() {
+            let window = windows.primary();
+            let mut left_camera = left_camera.single_mut();
+            left_camera.viewport = Some(Viewport {
+                physical_position: UVec2::new(0, 0),
+                physical_size: UVec2::new(window.physical_width() / 2, window.physical_height()),
+                ..default()
+            });
+
+            let mut right_camera = right_camera.single_mut();
+            right_camera.viewport = Some(Viewport {
+                physical_position: UVec2::new(window.physical_width() / 2, 0),
+                physical_size: UVec2::new(window.physical_width() / 2, window.physical_height()),
+                ..default()
+            });
+        }
+    }
 }
