@@ -370,13 +370,7 @@ pub fn handle_projectile_engagement(
                 if keys.just_pressed(KeyCode::F) {
                     debug!("Firing projectile!");
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    // Foxtrot indeed! I do not understand what is going on here.
-                    // It might not be a factor but rather a function (like cube root something)
-                    // but I commit this version because it's the first time it appears to be
-                    // "fixed".
-                    let surprise_wtf_factor = 1.0;
-                    let local_impact_site =
-                        (global_impact_site - planet_transform.translation()) * surprise_wtf_factor;
+                    let local_impact_site = (global_impact_site - planet_transform.translation());
                     if config.show_debug_markers {
                         let planet_local_marker = commands
                             .spawn_bundle(PbrBundle {
