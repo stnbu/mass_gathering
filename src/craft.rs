@@ -55,7 +55,7 @@ impl Default for SpacecraftConfig {
         Self {
             show_debug_markers: false,
             show_impact_explosions: true,
-            projectile_radius: 0.15,
+            projectile_radius: 0.1,
             stereo_enabled: false,
             stereo_iod: 0.0,
         }
@@ -364,7 +364,7 @@ pub fn handle_projectile_engagement(
     config: Res<SpacecraftConfig>,
 ) {
     for pov in craft.iter() {
-        let ray_origin = pov.translation;
+        let ray_origin = pov.translation - pov.local_y() * config.projectile_radius * 1.2;
         let ray_direction = -1.0 * pov.local_z();
         let intersection = rapier_context.cast_ray(
             ray_origin,
@@ -443,10 +443,6 @@ pub fn handle_projectile_engagement(
                             material: materials.add(Color::WHITE.into()),
                             transform: Transform::from_translation(ray_origin),
                             ..Default::default()
-                        })
-                        .insert(Visibility { is_visible: false })
-                        .insert(DelayedVisibility {
-                            timer: Timer::new(Duration::from_millis(300), false),
                         })
                         .insert(BallisticProjectileTarget {
                             planet: planet_id,
