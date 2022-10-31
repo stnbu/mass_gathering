@@ -13,17 +13,17 @@ use craft::*;
 
 pub mod prelude;
 
-pub struct Game;
+pub struct Core;
 
 pub struct FullGame;
 
 impl PluginGroup for FullGame {
     fn build(&mut self, group: &mut PluginGroupBuilder) {
-        group.add(Game);
+        group.add(Core);
     }
 }
 
-impl Plugin for Game {
+impl Plugin for Core {
     fn build(&self, app: &mut App) {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
