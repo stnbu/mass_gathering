@@ -5,7 +5,7 @@ use mass_gathering::prelude::*;
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::WHITE * 0.8))
-        .insert_resource(SpaceCraftConfig::default())
+        .insert_resource(SpacecraftConfig::default())
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup)
         .add_system(collision_events)

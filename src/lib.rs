@@ -28,7 +28,7 @@ impl Plugin for Core {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
         app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-            .insert_resource(SpaceCraftConfig::default())
+            .insert_resource(SpacecraftConfig::default())
             .add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)

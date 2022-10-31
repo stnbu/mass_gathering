@@ -40,7 +40,7 @@ pub struct LeftCamera;
 #[derive(Component)]
 pub struct RightCamera;
 
-pub struct SpaceCraftConfig {
+pub struct SpacecraftConfig {
     pub show_debug_markers: bool,
     pub show_impact_explosions: bool,
     pub projectile_radius: f32,
@@ -49,7 +49,7 @@ pub struct SpaceCraftConfig {
     pub stereo_iod: f32, // interocular distance
 }
 
-impl Default for SpaceCraftConfig {
+impl Default for SpacecraftConfig {
     fn default() -> Self {
         Self {
             show_debug_markers: false,
@@ -203,7 +203,7 @@ pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    config: Res<SpaceCraftConfig>,
+    config: Res<SpacecraftConfig>,
 ) {
     commands
         .spawn_bundle(TransformBundle::from_transform(
@@ -343,7 +343,7 @@ pub fn handle_projectile_engagement(
     >,
     rapier_context: Res<RapierContext>,
     craft: Query<&Transform, With<Spacecraft>>,
-    config: Res<SpaceCraftConfig>,
+    config: Res<SpacecraftConfig>,
 ) {
     for pov in craft.iter() {
         let ray_origin = pov.translation;
@@ -466,7 +466,7 @@ pub fn handle_projectile_flight(
     mut collision_events: EventReader<CollisionEvent>,
     mut despawned: Local<Despawned>,
     time: Res<Time>,
-    config: Res<SpaceCraftConfig>,
+    config: Res<SpacecraftConfig>,
 ) {
     let mut collided = HashSet::new();
     for event in collision_events.iter() {
@@ -563,7 +563,7 @@ pub fn animate_projectile_explosion(
 pub fn hud(
     mut ctx: ResMut<EguiContext>,
     query: Query<(&Spacecraft, &Transform)>,
-    config: Res<SpaceCraftConfig>,
+    config: Res<SpacecraftConfig>,
 ) {
     // FIXME vvv
     if config.stereo_enabled {
@@ -605,7 +605,7 @@ pub fn set_camera_viewports(
     mut resize_events: EventReader<WindowResized>,
     mut left_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
     mut right_camera: Query<&mut Camera, (With<RightCamera>, Without<LeftCamera>)>,
-    config: Res<SpaceCraftConfig>,
+    config: Res<SpacecraftConfig>,
 ) {
     // FIXME vvv
     if !config.stereo_enabled {

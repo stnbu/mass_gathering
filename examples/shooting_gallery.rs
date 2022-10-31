@@ -7,7 +7,7 @@ use mass_gathering::prelude::*;
 fn main() {
     let mut app = App::new();
     app.insert_resource(ClearColor(Color::WHITE * 0.8))
-        .insert_resource(SpaceCraftConfig {
+        .insert_resource(SpacecraftConfig {
             show_debug_markers: true,
             show_impact_explosions: true,
             projectile_radius: 0.2,
