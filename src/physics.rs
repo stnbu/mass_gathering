@@ -88,6 +88,7 @@ pub fn spawn_planet<'a>(
             })),
             material: materials.add(color.into()),
             transform: Transform::from_translation(position),
+            visibility: Visibility { is_visible: true },
             ..default()
         })
         .insert(Momentum { velocity, mass })

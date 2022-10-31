@@ -382,7 +382,7 @@ pub fn handle_projectile_engagement(
                                 })),
                                 material: materials.add(Color::BLUE.into()),
                                 transform: Transform::from_translation(
-                                    local_impact_site / (scale_factor / 1.7),
+                                    local_impact_site / (scale_factor / 1.7), // yeah
                                 ),
                                 ..Default::default()
                             })
@@ -429,7 +429,7 @@ pub fn handle_projectile_engagement(
                         })
                         .insert(BallisticProjectileTarget {
                             planet: planet_id,
-                            local_impact_site,
+                            local_impact_site: local_impact_site / (scale_factor / 1.7), // yeah
                         })
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(radius))
