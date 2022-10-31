@@ -27,7 +27,7 @@ pub struct SpacecraftPlugin;
 
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(SpacecraftConfig::default())
+        app.init_resource::<SpacecraftConfig>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
