@@ -429,7 +429,7 @@ pub fn handle_projectile_engagement(
                         })
                         .insert(BallisticProjectileTarget {
                             planet: planet_id,
-                            local_impact_site: local_impact_site / (scale_factor / 1.7), // yeah
+                            local_impact_site,
                         })
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(radius))
@@ -455,6 +455,7 @@ pub fn handle_projectile_engagement(
     }
 }
 
+// FIXME -- it may make more sense for the "target" to be a _child_ of the target planet.
 pub fn handle_projectile_flight(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -486,24 +487,31 @@ pub fn handle_projectile_flight(
         if collided.contains(&projectile) {
             debug!("We have a collision start event for projectile {projectile:?}.");
             if config.show_impact_explosions {
-                let explosion = commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.2,
+                // FIXME -- the fact that we are getting the target planet here and also
+                //          below where we move the planet...says we need refactoring.
+                if let Ok((planet_transform, _, _)) = planet_query.get(target.planet) {
+                    let scale_factor = planet_transform.scale.length();
+                    let explosion = commands
+                        .spawn_bundle(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 0.2,
+                                ..Default::default()
+                            })),
+                            material: materials.add(StandardMaterial {
+                                base_color: Color::YELLOW,
+                                perceptual_roughness: 0.99,
+                                ..default()
+                            }),
+                            transform: Transform::from_translation(
+                                target.local_impact_site / (scale_factor / 1.7),
+                            ),
                             ..Default::default()
-                        })),
-                        material: materials.add(StandardMaterial {
-                            base_color: Color::YELLOW,
-                            perceptual_roughness: 0.99,
-                            ..default()
-                        }),
-                        transform: Transform::from_translation(target.local_impact_site),
-                        ..Default::default()
-                    })
-                    .insert(ProjectileExplosion { rising: true })
-                    .id();
-                debug!("Explosion animation entity: {explosion:?}");
-                commands.entity(target.planet).add_child(explosion);
+                        })
+                        .insert(ProjectileExplosion { rising: true })
+                        .id();
+                    debug!("Explosion animation entity: {explosion:?}");
+                    commands.entity(target.planet).add_child(explosion);
+                }
             }
             debug!("Despawning projectile entity {projectile:?}");
             commands.entity(projectile).despawn();

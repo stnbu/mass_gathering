@@ -28,25 +28,20 @@ pub fn collision_events(
                     warn!("Colliding planets {:?} and {:?} have exactly the same mass. Picking major/minor arbitrarilly.", e0, e1);
                     (p0, p1, e1)
                 };
+
+                // Merge Math
                 let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
                 let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
-                debug!("Merge Math -- major_factor: {}", major_factor);
-                debug!("Merge Math -- minor_factor: {}", minor_factor);
-                major.1.mass += minor.1.mass;
-                debug!("Merge Math -- velocity before collision:");
-                debug!(
-                    "\tmajor={:?} / minor={:?}",
-                    major.1.velocity, minor.1.velocity
-                );
-                major.1.velocity =
-                    major.1.velocity * major_factor + minor.1.velocity * minor_factor;
-                debug!("Merge Math -- velocity after collision:");
-                debug!("-	major={:?} / minor=RIP", major.1.velocity);
                 let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
                     / mass_to_radius(major.1.mass);
+                major.1.mass += minor.1.mass;
+                major.1.velocity =
+                    major.1.velocity * major_factor + minor.1.velocity * minor_factor;
                 major.0.translation =
                     (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
                 major.0.scale = scale_up * Vec3::splat(1.0);
+                // End Merge Math
+
                 for (mut target, projectile_id) in target_query.iter_mut() {
                     if target.planet == *cull {
                         warn!("Projectile {projectile_id:?} has despawned planet {:?} as its target. Remapping to merge-ee planet {:?}", target.planet, major.2);
