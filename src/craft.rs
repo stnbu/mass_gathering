@@ -370,7 +370,7 @@ pub fn handle_projectile_engagement(
                 if keys.just_pressed(KeyCode::F) {
                     debug!("Firing projectile!");
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    let local_impact_site = (global_impact_site - planet_transform.translation());
+                    let local_impact_site = global_impact_site - planet_transform.translation();
                     if config.show_debug_markers {
                         let planet_local_marker = commands
                             .spawn_bundle(PbrBundle {

@@ -3,7 +3,6 @@ use bevy::log::LogSettings;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use mass_gathering::prelude::*;
-
 fn main() {
     let mut app = App::new();
     app.insert_resource(ClearColor(Color::WHITE * 0.8))
