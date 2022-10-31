@@ -369,8 +369,9 @@ pub fn handle_projectile_engagement(
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     debug!("Firing projectile!");
+                    let scale_factor = planet_transform.scale.length();
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    println!("{:?}", planet_transform.scale);
+                    println!("{scale_factor:?}");
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     if config.show_debug_markers {
                         let planet_local_marker = commands
@@ -380,15 +381,17 @@ pub fn handle_projectile_engagement(
                                     ..Default::default()
                                 })),
                                 material: materials.add(Color::BLUE.into()),
-                                transform: Transform::from_translation(local_impact_site),
+                                transform: Transform::from_translation(
+                                    local_impact_site / (scale_factor / 1.7),
+                                ),
                                 ..Default::default()
                             })
                             .insert(Blink {
-                                hertz: 5.0,
+                                hertz: 4.9,
                                 ..default()
                             })
                             .insert(DespawnTimer {
-                                ttl: Timer::new(Duration::from_secs(5), false),
+                                ttl: Timer::new(Duration::from_secs(500), false),
                             })
                             .id();
                         commands.entity(planet_id).add_child(planet_local_marker);
@@ -404,11 +407,11 @@ pub fn handle_projectile_engagement(
                                 ..Default::default()
                             })
                             .insert(Blink {
-                                hertz: 5.0,
+                                hertz: 5.1,
                                 ..default()
                             })
                             .insert(DespawnTimer {
-                                ttl: Timer::new(Duration::from_secs(5), false),
+                                ttl: Timer::new(Duration::from_secs(500), false),
                             })
                             .id();
                         debug!("Placing two debug markers. global={global_marker:?} and local={planet_local_marker:?}[parent={planet_id:?}]");
