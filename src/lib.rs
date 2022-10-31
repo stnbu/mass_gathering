@@ -20,6 +20,26 @@ pub struct FullGame;
 impl PluginGroup for FullGame {
     fn build(&mut self, group: &mut PluginGroupBuilder) {
         group.add(Core);
+        group.add(SpacecraftPlugin);
+    }
+}
+
+pub struct SpacecraftPlugin;
+
+impl Plugin for SpacecraftPlugin {
+    fn build(&self, app: &mut App) {
+        app.insert_resource(SpacecraftConfig::default())
+            .add_system_set(
+                SystemSet::on_update(AppState::Playing)
+                    .with_system(move_forward)
+                    .with_system(steer)
+                    .with_system(handle_projectile_engagement)
+                    .with_system(handle_projectile_flight)
+                    .with_system(animate_projectile_explosion),
+            )
+            .add_startup_system(spacecraft_setup)
+            .add_system(hud)
+            .add_system(set_camera_viewports);
     }
 }
 
@@ -28,27 +48,18 @@ impl Plugin for Core {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
         app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-            .insert_resource(SpacecraftConfig::default())
             .add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
-                    .with_system(move_forward)
-                    .with_system(steer)
-                    .with_system(handle_projectile_engagement)
-                    .with_system(handle_projectile_flight)
-                    .with_system(animate_projectile_explosion)
-                    .with_system(collision_events)
-                    .with_system(freefall),
+                    .with_system(freefall)
+                    .with_system(collision_events),
             )
             .add_startup_system(setup)
-            .add_startup_system(spacecraft_setup)
             .add_system(bevy::window::close_on_esc)
             .add_system(handle_game_state)
-            .add_system(set_camera_viewports)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
-            .add_system(hud);
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
 
