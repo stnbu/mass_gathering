@@ -371,7 +371,6 @@ pub fn handle_projectile_engagement(
                     debug!("Firing projectile!");
                     let scale_factor = planet_transform.scale.length();
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    println!("{scale_factor:?}");
                     let local_impact_site = global_impact_site - planet_transform.translation;
                     if config.show_debug_markers {
                         let planet_local_marker = commands
