@@ -19,8 +19,7 @@ pub struct FullGame;
 
 impl PluginGroup for FullGame {
     fn build(&mut self, group: &mut PluginGroupBuilder) {
-        group.add(Core);
-        group.add(SpacecraftPlugin);
+        group.add(Core).add(SpacecraftPlugin).add(Spacetime);
     }
 }
 
@@ -43,6 +42,18 @@ impl Plugin for SpacecraftPlugin {
     }
 }
 
+pub struct Spacetime;
+
+impl Plugin for Spacetime {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(
+            SystemSet::on_update(AppState::Playing)
+                .with_system(freefall)
+                .with_system(collision_events),
+        );
+    }
+}
+
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
         #[cfg(target_arch = "wasm32")]
@@ -51,12 +62,6 @@ impl Plugin for Core {
             .add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
-            .add_system_set(
-                SystemSet::on_update(AppState::Playing)
-                    .with_system(freefall)
-                    .with_system(collision_events),
-            )
-            .add_startup_system(setup)
             .add_system(bevy::window::close_on_esc)
             .add_system(handle_game_state)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
@@ -100,7 +105,7 @@ fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     Vec3::new(x, y, z)
 }
 
-fn setup(
+pub fn my_planets(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
