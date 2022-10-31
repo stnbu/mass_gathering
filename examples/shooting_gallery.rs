@@ -11,6 +11,7 @@ fn main() {
             show_debug_markers: true,
             show_impact_explosions: true,
             projectile_radius: 0.2,
+            ..default()
         });
 
     app.insert_resource(LogSettings {
