@@ -34,7 +34,8 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(steer)
                     .with_system(handle_projectile_engagement)
                     .with_system(handle_projectile_flight)
-                    .with_system(animate_projectile_explosion),
+                    .with_system(animate_projectile_explosion)
+                    .with_system(delayed_visibility),
             )
             .add_startup_system(spacecraft_setup)
             .add_system(hud)

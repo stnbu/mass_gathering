@@ -1,3 +1,4 @@
+use bevy::render::view::visibility;
 use bevy::transform::TransformBundle;
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
@@ -95,6 +96,23 @@ pub fn timer_despawn(
         despawn_timer.ttl.tick(time.delta());
         if despawn_timer.ttl.finished() {
             commands.entity(entity).despawn();
+        }
+    }
+}
+
+#[derive(Component)]
+pub struct DelayedVisibility {
+    pub timer: Timer,
+}
+
+pub fn delayed_visibility(
+    mut delayed_visibility_query: Query<(&mut Visibility, &mut DelayedVisibility)>,
+    time: Res<Time>,
+) {
+    for (mut visibility, mut delay) in delayed_visibility_query.iter_mut() {
+        delay.timer.tick(time.delta());
+        if delay.timer.finished() {
+            visibility.is_visible = !visibility.is_visible;
         }
     }
 }
@@ -425,6 +443,10 @@ pub fn handle_projectile_engagement(
                             material: materials.add(Color::WHITE.into()),
                             transform: Transform::from_translation(ray_origin),
                             ..Default::default()
+                        })
+                        .insert(Visibility { is_visible: false })
+                        .insert(DelayedVisibility {
+                            timer: Timer::new(Duration::from_secs(2), false),
                         })
                         .insert(BallisticProjectileTarget {
                             planet: planet_id,
