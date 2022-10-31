@@ -13,23 +13,23 @@ fn main() {
             ..default()
         });
 
-    app.insert_resource(LogSettings {
-        filter: "warn,mass_gathering=debug".into(),
-        level: bevy::log::Level::DEBUG,
-    })
-    .add_plugins(DefaultPlugins)
-    .add_system(move_forward)
-    .add_system(steer)
-    .add_system(handle_projectile_engagement)
-    .add_system(handle_projectile_flight)
-    .add_system(animate_projectile_explosion)
-    .add_startup_system(setup)
-    .add_startup_system(spacecraft_setup)
-    .add_system(freefall)
-    .add_system(collision_events)
-    .add_system(timer_despawn)
-    .add_system(do_blink)
-    .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+    // app.insert_resource(LogSettings {
+    //     filter: "warn,mass_gathering=debug".into(),
+    //     level: bevy::log::Level::DEBUG,
+    // })
+    app.add_plugins(DefaultPlugins)
+        .add_system(move_forward)
+        .add_system(steer)
+        .add_system(handle_projectile_engagement)
+        .add_system(handle_projectile_flight)
+        .add_system(animate_projectile_explosion)
+        .add_startup_system(setup)
+        .add_startup_system(spacecraft_setup)
+        .add_system(freefall)
+        .add_system(collision_events)
+        .add_system(timer_despawn)
+        .add_system(do_blink)
+        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
 
     app.run();
 }
