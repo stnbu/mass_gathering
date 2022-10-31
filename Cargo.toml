@@ -6,8 +6,7 @@ edition = "2021"
 [dependencies]
 bevy = "0.8.1"
 bevy_egui = "0.16.1"
-bevy_rapier3d = { git = "https://github.com/dimforge/bevy_rapier.git" }
-#bevy_rapier3d = { path = "/Users/mburr/git/bevy_rapier/bevy_rapier3d" }
+bevy_rapier3d = "0.18.0"
 rand = "0.8.5"
 web-sys = { version = "0.3.60", features = ["Window"] }
 
@@ -19,11 +18,8 @@ lto = "thin"
 name = "index"
 path = "src/main.rs"
 
-# Oops. Forgot about these (recommended by Bevy Book. Likewise above `"dynamic"`)
-
 [profile.dev]
 opt-level = 1
-#debug = 1 # <-- a "maybe"
 
 [profile.dev.package."*"]
 opt-level = 3
