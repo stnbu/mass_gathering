@@ -1,3 +1,4 @@
+use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -13,6 +14,14 @@ use craft::*;
 pub mod prelude;
 
 pub struct Game;
+
+pub struct FullGame;
+
+impl PluginGroup for FullGame {
+    fn build(&mut self, group: &mut PluginGroupBuilder) {
+        group.add(Game);
+    }
+}
 
 impl Plugin for Game {
     fn build(&self, app: &mut App) {
@@ -38,8 +47,8 @@ impl Plugin for Game {
             .add_system(bevy::window::close_on_esc)
             .add_system(handle_game_state)
             .add_system(set_camera_viewports)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-        //.add_system(hud);
+            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default())
+            .add_system(hud);
     }
 }
 

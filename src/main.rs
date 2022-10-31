@@ -1,6 +1,6 @@
 use bevy::prelude::App;
-use mass_gathering::Game;
+use mass_gathering::FullGame;
 
 fn main() {
-    App::new().add_plugin(Game).run();
+    App::new().add_plugins(FullGame).run();
 }

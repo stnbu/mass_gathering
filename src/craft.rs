@@ -560,7 +560,15 @@ pub fn animate_projectile_explosion(
     }
 }
 
-pub fn hud(mut ctx: ResMut<EguiContext>, query: Query<(&Spacecraft, &Transform)>) {
+pub fn hud(
+    mut ctx: ResMut<EguiContext>,
+    query: Query<(&Spacecraft, &Transform)>,
+    config: Res<SpaceCraftConfig>,
+) {
+    // FIXME vvv
+    if config.stereo_enabled {
+        return;
+    }
     let (spacecraft, transform) = query.get_single().unwrap();
     let hud_text = format!(
         " [ NOTE CHANGES ]
