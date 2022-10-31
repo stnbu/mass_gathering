@@ -6,7 +6,7 @@ fn main() {
     App::new()
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
-            stereo_iod: -2.0,
+            stereo_iod: 6.0,
             ..Default::default()
         })
         .add_plugins(FullGame)
