@@ -334,7 +334,7 @@ pub fn handle_projectile_engagement(
     optional_keys: Option<Res<Input<KeyCode>>>,
     mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
     planet_query: Query<
-        (Entity, &Transform),
+        (Entity, &GlobalTransform),
         (
             Without<BallisticProjectileTarget>,
             With<Momentum>,
@@ -374,9 +374,9 @@ pub fn handle_projectile_engagement(
                     // It might not be a factor but rather a function (like cube root something)
                     // but I commit this version because it's the first time it appears to be
                     // "fixed".
-                    let surprise_wtf_factor = 0.55;
+                    let surprise_wtf_factor = 1.0;
                     let local_impact_site =
-                        (global_impact_site - planet_transform.translation) * surprise_wtf_factor;
+                        (global_impact_site - planet_transform.translation()) * surprise_wtf_factor;
                     if config.show_debug_markers {
                         let planet_local_marker = commands
                             .spawn_bundle(PbrBundle {
@@ -462,7 +462,7 @@ pub fn handle_projectile_flight(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
-    planet_query: Query<(&Transform, &Momentum, Entity), Without<BallisticProjectileTarget>>,
+    planet_query: Query<(&GlobalTransform, &Momentum, Entity), Without<BallisticProjectileTarget>>,
     mut collision_events: EventReader<CollisionEvent>,
     mut despawned: Local<Despawned>,
     time: Res<Time>,
@@ -518,7 +518,7 @@ pub fn handle_projectile_flight(
             );
         }
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
-            let goal_impact_site = planet_transform.translation + target.local_impact_site;
+            let goal_impact_site = planet_transform.translation() + target.local_impact_site;
             let direction = (projectile_transform.translation - goal_impact_site).normalize();
             let translation =
                 (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
