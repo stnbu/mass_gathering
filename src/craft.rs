@@ -446,7 +446,7 @@ pub fn handle_projectile_engagement(
                         })
                         .insert(Visibility { is_visible: false })
                         .insert(DelayedVisibility {
-                            timer: Timer::new(Duration::from_secs(2), false),
+                            timer: Timer::new(Duration::from_millis(300), false),
                         })
                         .insert(BallisticProjectileTarget {
                             planet: planet_id,
