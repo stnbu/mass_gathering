@@ -62,6 +62,6 @@ Please file a [GitHub Issue](https://github.com/stnbu/mass_gathering/issues/new/
 
 * Time:
   * Since you and the other players don't _directly_ interact, you might be able to have different perceptions of time. You go slow,
-  they go fast.
+  they go fast. [actually...not the case? weird. Depends on whether/when planets are fired upon.]
   * If sharing a common "rate" for the passage of time, player 1 could set a min/max and player 2 could have a separate min/max, and the
   "speed" at which time passes could stay where its bounded by both. For example `[....m1.m2.....[T]..M1....M2.....]` (obvious, yes?)
