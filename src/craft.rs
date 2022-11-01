@@ -346,9 +346,22 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
-pub fn markup_invisible_by_default(mut markup_query: Query<&mut Visibility, With<PlanetMarkup>>) {
+pub fn set_planet_markup_default_visibility(
+    mut markup_query: Query<&mut Visibility, With<PlanetMarkup>>,
+) {
     for mut visibility in markup_query.iter_mut() {
         visibility.is_visible = false;
+    }
+}
+
+pub fn set_crosshairs_default_visibility(
+    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
+) {
+    for (mut visibility, mode) in crosshairs_query.iter_mut() {
+        match mode {
+            Crosshairs::Cold => visibility.is_visible = true,
+            Crosshairs::Hot => visibility.is_visible = false,
+        }
     }
 }
 
@@ -358,6 +371,7 @@ pub fn handle_hot_planet(
     mut crosshairs_query: Query<(&mut Visibility, &Crosshairs), Without<PlanetMarkup>>,
     mut markup_query: Query<&mut Visibility, With<PlanetMarkup>>,
 ) {
+    // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet_id) = spacecraft.hot_planet {
             for child_id in children.iter() {
