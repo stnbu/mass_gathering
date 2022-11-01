@@ -37,13 +37,8 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(handle_projectile_engagement)
                     .with_system(handle_projectile_flight)
                     .with_system(animate_projectile_explosion)
-                    .with_system(set_planet_markup_default_visibility)
-                    .with_system(set_crosshairs_default_visibility)
-                    .with_system(
-                        handle_hot_planet
-                            .after(set_planet_markup_default_visibility)
-                            .after(set_crosshairs_default_visibility),
-                    ),
+                    .with_system(handle_hot_planet)
+                    .with_system(set_ar_default_visibility),
             )
             .add_startup_system(spacecraft_setup)
             .add_system(hud)

@@ -20,13 +20,13 @@ use std::collections::HashSet;
 use std::f32::consts::TAU;
 use std::time::Duration;
 
-use crate::physics::Momentum;
-use crate::prelude::PlanetMarkup;
+use crate::physics::{mass_to_radius, Momentum};
 
 #[derive(Component, PartialEq, Eq)]
-pub enum Crosshairs {
-    Hot,
-    Cold,
+pub enum SpacecraftAR {
+    CrosshairsHot,
+    CrosshairsCold,
+    MomentumVector,
 }
 
 #[derive(Debug, Default, Component)]
@@ -271,7 +271,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs::Cold);
+                .insert(SpacecraftAR::CrosshairsCold);
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.1))),
@@ -280,7 +280,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs::Hot);
+                .insert(SpacecraftAR::CrosshairsHot);
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.1))),
@@ -289,7 +289,7 @@ pub fn spacecraft_setup(
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
-                .insert(Crosshairs::Hot);
+                .insert(SpacecraftAR::CrosshairsHot);
 
             // Various lights for seeing
             parent.spawn_bundle(PointLightBundle {
@@ -328,6 +328,14 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
+            parent
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 5.0))),
+                    material: materials.add(Color::GREEN.into()),
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
+                .insert(SpacecraftAR::MomentumVector);
         });
 }
 
@@ -346,52 +354,53 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
-pub fn set_planet_markup_default_visibility(
-    mut markup_query: Query<&mut Visibility, With<PlanetMarkup>>,
-) {
-    for mut visibility in markup_query.iter_mut() {
-        visibility.is_visible = false;
-    }
-}
-
-pub fn set_crosshairs_default_visibility(
-    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
-) {
+pub fn set_ar_default_visibility(mut crosshairs_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in crosshairs_query.iter_mut() {
         match mode {
-            Crosshairs::Cold => visibility.is_visible = true,
-            Crosshairs::Hot => visibility.is_visible = false,
+            SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
+            SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
+            SpacecraftAR::MomentumVector => visibility.is_visible = false,
         }
     }
 }
 
 pub fn handle_hot_planet(
-    spacecraft_query: Query<(&Children, &Spacecraft)>,
-    planet_query: Query<&Children, With<Momentum>>,
-    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs), Without<PlanetMarkup>>,
-    mut markup_query: Query<&mut Visibility, With<PlanetMarkup>>,
+    spacecraft_query: Query<(&Children, &Spacecraft), Without<SpacecraftAR>>,
+    planet_query: Query<(&Transform, &Momentum), Without<SpacecraftAR>>,
+    mut ar_query: Query<(&mut Visibility, &mut Transform, &SpacecraftAR)>,
 ) {
     // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet_id) = spacecraft.hot_planet {
             for child_id in children.iter() {
-                if let Ok((mut visibility, temp)) = crosshairs_query.get_mut(*child_id) {
-                    let hot_entity = *temp == Crosshairs::Hot;
-                    visibility.is_visible = hot_entity;
-                }
-            }
-            if let Ok(children) = planet_query.get(planet_id) {
-                for &child in children.iter() {
-                    if let Ok(mut visibility) = markup_query.get_mut(child) {
-                        visibility.is_visible = true;
+                if let Ok((mut visibility, mut element_transform, ar_element)) =
+                    ar_query.get_mut(*child_id)
+                {
+                    match *ar_element {
+                        SpacecraftAR::CrosshairsHot => {
+                            visibility.is_visible = true;
+                        }
+                        SpacecraftAR::CrosshairsCold => {
+                            visibility.is_visible = false;
+                        }
+                        SpacecraftAR::MomentumVector => {
+                            if let Ok((transform, momentum)) = planet_query.get(planet_id) {
+                                let radius = mass_to_radius(momentum.mass);
+                                let momentum = momentum.velocity * momentum.mass;
+                                *element_transform = Transform {
+                                    translation: Vec3::new(0.0, 0.0, -(2.5 + radius)),
+                                    rotation: Quat::from_rotation_arc(
+                                        Vec3::Z,
+                                        momentum.normalize(),
+                                    ),
+                                    ..default()
+                                };
+                                visibility.is_visible = true;
+                            } else {
+                                warn!("Missing hot planet {planet_id:?}");
+                            }
+                        }
                     }
-                }
-            }
-        } else {
-            for child_id in children.iter() {
-                if let Ok((mut visibility, temp)) = crosshairs_query.get_mut(*child_id) {
-                    let hot_entity = *temp == Crosshairs::Hot;
-                    visibility.is_visible = !hot_entity;
                 }
             }
         }

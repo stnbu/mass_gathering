@@ -61,7 +61,7 @@ fn radius_to_mass(radius: f32) -> f32 {
     (4.0 / 3.0) * PI * radius.powf(3.0)
 }
 
-fn mass_to_radius(mass: f32) -> f32 {
+pub fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 
@@ -114,7 +114,7 @@ pub fn spawn_planet<'a>(
 #[derive(Component, Debug)]
 pub struct Momentum {
     pub velocity: Vec3,
-    mass: f32,
+    pub mass: f32,
 }
 
 impl Default for Momentum {
