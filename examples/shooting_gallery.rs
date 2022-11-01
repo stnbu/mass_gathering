@@ -1,5 +1,3 @@
-use bevy::log::LogSettings;
-
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use mass_gathering::prelude::*;
@@ -13,10 +11,6 @@ fn main() {
             ..default()
         });
 
-    // app.insert_resource(LogSettings {
-    //     filter: "warn,mass_gathering=debug".into(),
-    //     level: bevy::log::Level::DEBUG,
-    // })
     app.add_plugins(DefaultPlugins)
         .add_system(move_forward)
         .add_system(steer)

@@ -1,4 +1,3 @@
-use bevy::render::view::visibility;
 use bevy::transform::TransformBundle;
 use bevy::{
     core_pipeline::clear_color::ClearColorConfig,
