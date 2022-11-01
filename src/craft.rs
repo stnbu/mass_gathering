@@ -21,6 +21,7 @@ use std::f32::consts::TAU;
 use std::time::Duration;
 
 use crate::physics::Momentum;
+use crate::prelude::PlanetMarkup;
 
 #[derive(Component, PartialEq, Eq)]
 pub enum Crosshairs {
@@ -347,7 +348,9 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
 
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
-    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
+    planet_query: Query<&Children, With<Momentum>>,
+    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs), Without<PlanetMarkup>>,
+    mut markup_query: Query<&mut Visibility, With<PlanetMarkup>>,
 ) {
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet_id) = spacecraft.hot_planet {
@@ -355,6 +358,13 @@ pub fn handle_hot_planet(
                 if let Ok((mut visibility, temp)) = crosshairs_query.get_mut(*child_id) {
                     let hot_entity = *temp == Crosshairs::Hot;
                     visibility.is_visible = hot_entity;
+                }
+            }
+            if let Ok(children) = planet_query.get(planet_id) {
+                for &child in children.iter() {
+                    if let Ok(mut visibility) = markup_query.get_mut(child) {
+                        visibility.is_visible = true;
+                    }
                 }
             }
         } else {
@@ -367,6 +377,10 @@ pub fn handle_hot_planet(
         }
     }
 }
+
+/*
+Query<&mut Visibility, With<PlanetMarkup>> in systemhandle_hot_planet accesses component(s) Visibility in a way that conflicts with a previous system parameter. Consider using `Without<T>` to create disjoint Queries or merging conflicting Queries into a `ParamSet`.', /Users/mburr/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_ecs-0.8.1/src/system/system_param.rs:205:5
+*/
 
 pub fn handle_projectile_engagement(
     mut commands: Commands,
