@@ -328,14 +328,6 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            parent
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 5.0))),
-                    material: materials.add(Color::GREEN.into()),
-                    visibility: Visibility { is_visible: false },
-                    ..Default::default()
-                })
-                .insert(SpacecraftAR::MomentumVector);
         });
 }
 
@@ -364,7 +356,28 @@ pub fn set_ar_default_visibility(mut crosshairs_query: Query<(&mut Visibility, &
     }
 }
 
+/*
+
+                            if let Ok((transform, momentum)) = planet_query.get(planet_id) {
+                                let radius = mass_to_radius(momentum.mass);
+                                let momentum = momentum.velocity * momentum.mass;
+                                *element_transform = Transform {
+                                    translation: transform.translation
+                                        + Vec3::new(0.0, 0.0, -(2.5 + radius)),
+                                    rotation: Quat::from_rotation_arc(
+                                        Vec3::Z,
+                                        momentum.normalize(),
+                                    ),
+                                    ..default()
+                                };
+                                visibility.is_visible = true;
+
+
+*/
 pub fn handle_hot_planet(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     spacecraft_query: Query<(&Children, &Spacecraft), Without<SpacecraftAR>>,
     planet_query: Query<(&Transform, &Momentum), Without<SpacecraftAR>>,
     mut ar_query: Query<(&mut Visibility, &mut Transform, &SpacecraftAR)>,
@@ -383,23 +396,23 @@ pub fn handle_hot_planet(
                         SpacecraftAR::CrosshairsCold => {
                             visibility.is_visible = false;
                         }
-                        SpacecraftAR::MomentumVector => {
-                            if let Ok((transform, momentum)) = planet_query.get(planet_id) {
-                                let radius = mass_to_radius(momentum.mass);
-                                let momentum = momentum.velocity * momentum.mass;
-                                *element_transform = Transform {
-                                    translation: Vec3::new(0.0, 0.0, -(2.5 + radius)),
-                                    rotation: Quat::from_rotation_arc(
-                                        Vec3::Z,
-                                        momentum.normalize(),
-                                    ),
-                                    ..default()
-                                };
-                                visibility.is_visible = true;
-                            } else {
-                                warn!("Missing hot planet {planet_id:?}");
-                            }
-                        }
+                        SpacecraftAR::MomentumVector => (),
+                    }
+
+                    if let Ok((transform, momentum)) = planet_query.get(planet_id) {
+                        let radius = mass_to_radius(momentum.mass);
+                        let momentum = momentum.velocity * momentum.mass;
+                        commands.spawn_bundle(PbrBundle {
+                            transform: Transform {
+                                translation: transform.translation
+                                    + Vec3::new(0.0, 0.0, -(2.5 + radius)),
+                                rotation: Quat::from_rotation_arc(Vec3::Z, momentum.normalize()),
+                                ..default()
+                            },
+                            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 5.0))),
+                            material: materials.add(Color::GREEN.into()),
+                            ..Default::default()
+                        });
                     }
                 }
             }
