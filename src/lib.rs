@@ -11,6 +11,8 @@ use physics::*;
 mod craft;
 use craft::*;
 
+mod lines;
+
 pub mod prelude;
 
 pub struct Core;

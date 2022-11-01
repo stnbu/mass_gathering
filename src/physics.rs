@@ -91,6 +91,17 @@ pub fn spawn_planet<'a>(
         .insert(Collider::ball(radius))
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(Sensor)
+        .with_children(|parent| {
+            let length = 5.0;
+            let side = 0.1;
+            parent.spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Box::new(side, length, side))),
+                material: materials.add(Color::WHITE.into()),
+                transform: Transform::from_xyz(0.0, radius + length / 2.0, 0.0),
+                visibility: Visibility { is_visible: true },
+                ..Default::default()
+            });
+        })
         .id();
     debug!("Spawned planet={planet_id:?}");
 }
