@@ -32,6 +32,7 @@ pub enum Crosshairs {
 pub struct Spacecraft {
     gain: Vec3,
     pub speed: f32,
+    pub hot_planet: Option<Entity>,
 }
 
 #[derive(Component)]
@@ -344,12 +345,34 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
+pub fn handle_hot_planet(
+    spacecraft_query: Query<(&Children, &Spacecraft)>,
+    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
+) {
+    for (children, spacecraft) in spacecraft_query.iter() {
+        if let Some(planet_id) = spacecraft.hot_planet {
+            for child_id in children.iter() {
+                if let Ok((mut visibility, temp)) = crosshairs_query.get_mut(*child_id) {
+                    let hot_entity = *temp == Crosshairs::Hot;
+                    visibility.is_visible = hot_entity;
+                }
+            }
+        } else {
+            for child_id in children.iter() {
+                if let Ok((mut visibility, temp)) = crosshairs_query.get_mut(*child_id) {
+                    let hot_entity = *temp == Crosshairs::Hot;
+                    visibility.is_visible = !hot_entity;
+                }
+            }
+        }
+    }
+}
+
 pub fn handle_projectile_engagement(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     optional_keys: Option<Res<Input<KeyCode>>>,
-    mut crosshairs_query: Query<(&mut Visibility, &Crosshairs)>,
     planet_query: Query<
         (Entity, &Transform),
         (
@@ -359,10 +382,10 @@ pub fn handle_projectile_engagement(
         ),
     >,
     rapier_context: Res<RapierContext>,
-    craft: Query<&Transform, With<Spacecraft>>,
+    mut spacecraft_query: Query<(&Transform, &mut Spacecraft)>,
     config: Res<SpacecraftConfig>,
 ) {
-    for pov in craft.iter() {
+    for (pov, mut spacecraft) in spacecraft_query.iter_mut() {
         let ray_origin = pov.translation - pov.local_y() * config.projectile_radius * 1.2;
         let ray_direction = -1.0 * pov.local_z();
         let intersection = rapier_context.cast_ray(
@@ -373,7 +396,6 @@ pub fn handle_projectile_engagement(
             QueryFilter::only_dynamic(),
         );
 
-        let mut hot_target = false;
         if let Some((intersected_collider_id, distance)) = intersection {
             let (planet_id, planet_transform) =
                 if let Ok(result) = planet_query.get(intersected_collider_id) {
@@ -382,7 +404,7 @@ pub fn handle_projectile_engagement(
                     debug!("No planet found with id {intersected_collider_id:?}.");
                     continue;
                 };
-            hot_target = true;
+            spacecraft.hot_planet = Some(planet_id);
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::F) {
                     debug!("Firing projectile!");
@@ -459,14 +481,8 @@ pub fn handle_projectile_engagement(
                     debug!("-	local_impact_site={local_impact_site:?}");
                 }
             }
-        }
-        for (mut visibility, temp) in crosshairs_query.iter_mut() {
-            let hot_entity = *temp == Crosshairs::Hot;
-            if hot_target {
-                visibility.is_visible = hot_entity;
-            } else {
-                visibility.is_visible = !hot_entity;
-            }
+        } else {
+            spacecraft.hot_planet = None;
         }
     }
 }
