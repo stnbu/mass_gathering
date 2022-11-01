@@ -346,6 +346,12 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
+pub fn markup_invisible_by_default(mut markup_query: Query<&mut Visibility, With<PlanetMarkup>>) {
+    for mut visibility in markup_query.iter_mut() {
+        visibility.is_visible = false;
+    }
+}
+
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
     planet_query: Query<&Children, With<Momentum>>,

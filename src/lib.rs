@@ -37,7 +37,8 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(handle_projectile_engagement)
                     .with_system(handle_projectile_flight)
                     .with_system(animate_projectile_explosion)
-                    .with_system(handle_hot_planet),
+                    .with_system(markup_invisible_by_default)
+                    .with_system(handle_hot_planet.after(markup_invisible_by_default)),
             )
             .add_startup_system(spacecraft_setup)
             .add_system(hud)
