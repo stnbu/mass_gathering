@@ -49,7 +49,7 @@ pub fn collision_events(
                     }
                 }
                 debug!("despawning planet {:?}", cull);
-                commands.entity(*cull).despawn();
+                commands.entity(*cull).despawn_recursive();
             } else {
                 debug!("One of {:?} or {:?} has no parent.", e0, e1);
             }
