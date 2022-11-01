@@ -96,7 +96,7 @@ pub fn spawn_planet<'a>(
         .insert(Sensor)
         .with_children(|parent| {
             let length = 5.0;
-            let side = 0.5;
+            let side = 0.03;
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(side, length, side))),
