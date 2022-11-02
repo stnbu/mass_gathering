@@ -329,6 +329,13 @@ pub fn spacecraft_setup(
                 ..Default::default()
             });
         });
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 5.0))),
+            material: materials.add(Color::GREEN.into()),
+            ..Default::default()
+        })
+        .insert(MomentumVector);
 }
 
 pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<Time>) {
@@ -358,33 +365,48 @@ pub fn set_ar_default_visibility(mut crosshairs_query: Query<(&mut Visibility, &
 
 /*
 
-                            if let Ok((transform, momentum)) = planet_query.get(planet_id) {
-                                let radius = mass_to_radius(momentum.mass);
-                                let momentum = momentum.velocity * momentum.mass;
-                                *element_transform = Transform {
-                                    translation: transform.translation
-                                        + Vec3::new(0.0, 0.0, -(2.5 + radius)),
-                                    rotation: Quat::from_rotation_arc(
-                                        Vec3::Z,
-                                        momentum.normalize(),
-                                    ),
-                                    ..default()
-                                };
-                                visibility.is_visible = true;
+                           if let Ok((transform, momentum)) = planet_query.get(planet_id) {
+                               let radius = mass_to_radius(momentum.mass);
+                               let momentum = momentum.velocity * momentum.mass;
+                               *element_transform = Transform {
+                                   translation: transform.translation
+                                       + Vec3::new(0.0, 0.0, -(2.5 + radius)),
+                                   rotation: Quat::from_rotation_arc(
+                                       Vec3::Z,
+                                       momentum.normalize(),
+                                   ),
+                                   ..default()
+                               };
+                               visibility.is_visible = true;
 
 
 */
+
+#[derive(Component)]
+pub struct MomentumVector;
 pub fn handle_hot_planet(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    spacecraft_query: Query<(&Children, &Spacecraft), Without<SpacecraftAR>>,
-    planet_query: Query<(&Transform, &Momentum), Without<SpacecraftAR>>,
-    mut ar_query: Query<(&mut Visibility, &mut Transform, &SpacecraftAR)>,
+    spacecraft_query: Query<
+        (&Children, &Spacecraft),
+        (Without<SpacecraftAR>, Without<MomentumVector>),
+    >,
+    planet_query: Query<(&Transform, &Momentum), (Without<SpacecraftAR>, Without<MomentumVector>)>,
+    mut ar_query: Query<(&mut Visibility, &mut Transform, &SpacecraftAR), Without<MomentumVector>>,
+    mut the_momentum_vector: Query<&mut Transform, With<MomentumVector>>,
 ) {
     // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet_id) = spacecraft.hot_planet {
+            if let Ok((transform, momentum)) = planet_query.get(planet_id) {
+                let radius = mass_to_radius(momentum.mass);
+                let momentum = momentum.velocity * momentum.mass;
+                let mut momentum_vector_transform = the_momentum_vector.get_single_mut().unwrap();
+
+                *momentum_vector_transform = Transform {
+                    translation: transform.translation + Vec3::new(5.0 + radius, 0.0, 0.0),
+                    rotation: Quat::from_rotation_arc(Vec3::Z, momentum.normalize()),
+                    ..default()
+                };
+            }
             for child_id in children.iter() {
                 if let Ok((mut visibility, mut element_transform, ar_element)) =
                     ar_query.get_mut(*child_id)
@@ -397,22 +419,6 @@ pub fn handle_hot_planet(
                             visibility.is_visible = false;
                         }
                         SpacecraftAR::MomentumVector => (),
-                    }
-
-                    if let Ok((transform, momentum)) = planet_query.get(planet_id) {
-                        let radius = mass_to_radius(momentum.mass);
-                        let momentum = momentum.velocity * momentum.mass;
-                        commands.spawn_bundle(PbrBundle {
-                            transform: Transform {
-                                translation: transform.translation
-                                    + Vec3::new(0.0, 0.0, -(2.5 + radius)),
-                                rotation: Quat::from_rotation_arc(Vec3::Z, momentum.normalize()),
-                                ..default()
-                            },
-                            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 5.0))),
-                            material: materials.add(Color::GREEN.into()),
-                            ..Default::default()
-                        });
                     }
                 }
             }
