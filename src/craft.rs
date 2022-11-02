@@ -26,7 +26,6 @@ use crate::physics::{mass_to_radius, Momentum};
 pub enum SpacecraftAR {
     CrosshairsHot,
     CrosshairsCold,
-    MomentumVector,
 }
 
 #[derive(Debug, Default, Component)]
@@ -331,7 +330,7 @@ pub fn spacecraft_setup(
         });
     commands
         .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 1.0))),
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, -1.0))),
             material: materials.add(Color::GREEN.into()),
             ..Default::default()
         })
@@ -363,7 +362,6 @@ pub fn set_ar_default_visibility(
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
             SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
-            SpacecraftAR::MomentumVector => visibility.is_visible = false,
         }
     }
 }
@@ -406,16 +404,17 @@ pub fn handle_hot_planet(
         if let Some(planet_id) = spacecraft.hot_planet {
             if let Ok((transform, momentum)) = planet_query.get_mut(planet_id) {
                 let radius = mass_to_radius(momentum.mass);
-                let momentum = momentum.velocity * momentum.mass;
+                //let momentum_vec3 = momentum.velocity * momentum.mass;
                 let (mut momentum_vector_transform, mut visibility) =
                     the_momentum_vector.get_single_mut().unwrap();
 
                 visibility.is_visible = true;
+                let magnitude = (momentum.velocity * momentum.mass).length();
                 *momentum_vector_transform = Transform {
                     translation: transform.translation
-                        + Vec3::new(0.0, 0.0, (momentum.length() / 2.0 + radius) * 0.01),
-                    rotation: transform.rotation,
-                    scale: Vec3::new(1.0, 1.0, momentum.length() / 2.0),
+                        + momentum.velocity.normalize() * ((magnitude / 2.0) + radius),
+                    rotation: Quat::from_rotation_arc(-Vec3::Z, momentum.velocity.normalize()),
+                    scale: Vec3::new(1.0, 1.0, magnitude),
                 };
             }
             for child_id in children.iter() {
@@ -429,7 +428,6 @@ pub fn handle_hot_planet(
                         SpacecraftAR::CrosshairsCold => {
                             visibility.is_visible = false;
                         }
-                        SpacecraftAR::MomentumVector => (),
                     }
                 }
             }
