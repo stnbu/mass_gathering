@@ -20,7 +20,7 @@ use std::collections::HashSet;
 use std::f32::consts::TAU;
 use std::time::Duration;
 
-use crate::physics::{mass_to_radius, Momentum};
+use crate::physics::Momentum;
 
 #[derive(Component, PartialEq, Eq)]
 pub enum SpacecraftAR {
@@ -328,13 +328,6 @@ pub fn spacecraft_setup(
                 ..Default::default()
             });
         });
-    commands
-        .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, -1.0))),
-            material: materials.add(Color::GREEN.into()),
-            ..Default::default()
-        })
-        .insert(MomentumVector);
 }
 
 pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<Time>) {
@@ -352,12 +345,7 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
-pub fn set_ar_default_visibility(
-    mut crosshairs_query: Query<(&mut Visibility, &SpacecraftAR), Without<MomentumVector>>,
-
-    mut the_momentum_vector: Query<&mut Visibility, With<MomentumVector>>,
-) {
-    the_momentum_vector.get_single_mut().unwrap().is_visible = false;
+pub fn set_ar_default_visibility(mut crosshairs_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in crosshairs_query.iter_mut() {
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
@@ -366,61 +354,15 @@ pub fn set_ar_default_visibility(
     }
 }
 
-/*
-
-                           if let Ok((transform, momentum)) = planet_query.get(planet_id) {
-                               let radius = mass_to_radius(momentum.mass);
-                               let momentum = momentum.velocity * momentum.mass;
-                               *element_transform = Transform {
-                                   translation: transform.translation
-                                       + Vec3::new(0.0, 0.0, -(2.5 + radius)),
-                                   rotation: Quat::from_rotation_arc(
-                                       Vec3::Z,
-                                       momentum.normalize(),
-                                   ),
-                                   ..default()
-                               };
-                               visibility.is_visible = true;
-
-
-*/
-
-#[derive(Component)]
-pub struct MomentumVector;
 pub fn handle_hot_planet(
-    spacecraft_query: Query<
-        (&Children, &Spacecraft),
-        (Without<SpacecraftAR>, Without<MomentumVector>),
-    >,
-    mut planet_query: Query<
-        (&Transform, &Momentum),
-        (Without<SpacecraftAR>, Without<MomentumVector>),
-    >,
-    mut ar_query: Query<(&mut Visibility, &mut Transform, &SpacecraftAR), Without<MomentumVector>>,
-    mut the_momentum_vector: Query<(&mut Transform, &mut Visibility), With<MomentumVector>>,
+    spacecraft_query: Query<(&Children, &Spacecraft), Without<SpacecraftAR>>,
+    mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>,
 ) {
     // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
-        if let Some(planet_id) = spacecraft.hot_planet {
-            if let Ok((transform, momentum)) = planet_query.get_mut(planet_id) {
-                let radius = mass_to_radius(momentum.mass);
-                //let momentum_vec3 = momentum.velocity * momentum.mass;
-                let (mut momentum_vector_transform, mut visibility) =
-                    the_momentum_vector.get_single_mut().unwrap();
-
-                visibility.is_visible = true;
-                let magnitude = (momentum.velocity * momentum.mass).length() * 0.01;
-                *momentum_vector_transform = Transform {
-                    translation: transform.translation
-                        + momentum.velocity.normalize() * ((magnitude / 2.0) + radius),
-                    rotation: Quat::from_rotation_arc(-Vec3::Z, momentum.velocity.normalize()),
-                    scale: Vec3::new(1.0, 1.0, magnitude),
-                };
-            }
+        if spacecraft.hot_planet.is_some() {
             for child_id in children.iter() {
-                if let Ok((mut visibility, mut element_transform, ar_element)) =
-                    ar_query.get_mut(*child_id)
-                {
+                if let Ok((mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
                     match *ar_element {
                         SpacecraftAR::CrosshairsHot => {
                             visibility.is_visible = true;
@@ -434,10 +376,6 @@ pub fn handle_hot_planet(
         }
     }
 }
-
-/*
-Query<&mut Visibility, With<PlanetMarkup>> in systemhandle_hot_planet accesses component(s) Visibility in a way that conflicts with a previous system parameter. Consider using `Without<T>` to create disjoint Queries or merging conflicting Queries into a `ParamSet`.', /Users/mburr/.cargo/registry/src/github.com-1ecc6299db9ec823/bevy_ecs-0.8.1/src/system/system_param.rs:205:5
-*/
 
 pub fn handle_projectile_engagement(
     mut commands: Commands,
@@ -680,8 +618,7 @@ pub fn hud(
     }
     let (spacecraft, transform) = query.get_single().unwrap();
     let hud_text = format!(
-        " [ NOTE CHANGES ]
-Arrow Keys - Pitch & Yaw
+        "Arrow Keys - Pitch & Yaw
 Z & X      - Roll
 PgUp/PgDn  - Speed
 F          - Fire

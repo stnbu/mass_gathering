@@ -61,12 +61,9 @@ fn radius_to_mass(radius: f32) -> f32 {
     (4.0 / 3.0) * PI * radius.powf(3.0)
 }
 
-pub fn mass_to_radius(mass: f32) -> f32 {
+fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
-
-#[derive(Component)]
-pub struct PlanetMarkup;
 
 pub fn spawn_planet<'a>(
     radius: f32,
@@ -94,19 +91,6 @@ pub fn spawn_planet<'a>(
         .insert(Collider::ball(radius))
         .insert(ActiveEvents::COLLISION_EVENTS)
         .insert(Sensor)
-        .with_children(|parent| {
-            let length = 5.0;
-            let side = 0.03;
-            parent
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::new(side, length, side))),
-                    material: materials.add(Color::WHITE.into()),
-                    transform: Transform::from_xyz(0.0, radius + length / 2.0, 0.0),
-                    visibility: Visibility { is_visible: false },
-                    ..Default::default()
-                })
-                .insert(PlanetMarkup);
-        })
         .id();
     debug!("Spawned planet={planet_id:?}");
 }
@@ -114,7 +98,7 @@ pub fn spawn_planet<'a>(
 #[derive(Component, Debug)]
 pub struct Momentum {
     pub velocity: Vec3,
-    pub mass: f32,
+    mass: f32,
 }
 
 impl Default for Momentum {
