@@ -265,7 +265,7 @@ pub fn spacecraft_setup(
                         radius: 0.03,
                         ..Default::default()
                     })),
-                    material: materials.add(Color::GREEN.into()),
+                    material: materials.add(Color::ORANGE.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -8.0),
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
