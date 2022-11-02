@@ -5,12 +5,7 @@ use mass_gathering::FullGame;
 use std::env;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let stereo_enabled = if let Some(arg) = args.get(1) {
-        matches!(arg.as_str(), "--stereo")
-    } else {
-        false
-    };
+    let stereo_enabled = env::var("STEREO").is_ok();
 
     App::new()
         .insert_resource(SpacecraftConfig {
