@@ -409,7 +409,7 @@ pub fn handle_hot_planet(
                     the_momentum_vector.get_single_mut().unwrap();
 
                 visibility.is_visible = true;
-                let magnitude = (momentum.velocity * momentum.mass).length() * 0.1;
+                let magnitude = (momentum.velocity * momentum.mass).length() * 0.01;
                 *momentum_vector_transform = Transform {
                     translation: transform.translation
                         + momentum.velocity.normalize() * ((magnitude / 2.0) + radius),
