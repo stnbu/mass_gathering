@@ -2,14 +2,10 @@ use bevy::prelude::App;
 use mass_gathering::prelude::{my_planets, SpacecraftConfig};
 use mass_gathering::FullGame;
 
-use std::env;
-
 fn main() {
-    let stereo_enabled = env::var("STEREO").is_ok();
-
     App::new()
         .insert_resource(SpacecraftConfig {
-            stereo_enabled,
+            stereo_enabled: false,
             stereo_iod: 2.0,
             ..Default::default()
         })
