@@ -331,7 +331,7 @@ pub fn spacecraft_setup(
         });
     commands
         .spawn_bundle(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 5.0))),
+            mesh: meshes.add(Mesh::from(shape::Box::new(0.08, 0.08, 1.0))),
             material: materials.add(Color::GREEN.into()),
             ..Default::default()
         })
@@ -353,7 +353,12 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
-pub fn set_ar_default_visibility(mut crosshairs_query: Query<(&mut Visibility, &SpacecraftAR)>) {
+pub fn set_ar_default_visibility(
+    mut crosshairs_query: Query<(&mut Visibility, &SpacecraftAR), Without<MomentumVector>>,
+
+    mut the_momentum_vector: Query<&mut Visibility, With<MomentumVector>>,
+) {
+    the_momentum_vector.get_single_mut().unwrap().is_visible = false;
     for (mut visibility, mode) in crosshairs_query.iter_mut() {
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
@@ -389,22 +394,28 @@ pub fn handle_hot_planet(
         (&Children, &Spacecraft),
         (Without<SpacecraftAR>, Without<MomentumVector>),
     >,
-    planet_query: Query<(&Transform, &Momentum), (Without<SpacecraftAR>, Without<MomentumVector>)>,
+    mut planet_query: Query<
+        (&Transform, &Momentum),
+        (Without<SpacecraftAR>, Without<MomentumVector>),
+    >,
     mut ar_query: Query<(&mut Visibility, &mut Transform, &SpacecraftAR), Without<MomentumVector>>,
-    mut the_momentum_vector: Query<&mut Transform, With<MomentumVector>>,
+    mut the_momentum_vector: Query<(&mut Transform, &mut Visibility), With<MomentumVector>>,
 ) {
     // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet_id) = spacecraft.hot_planet {
-            if let Ok((transform, momentum)) = planet_query.get(planet_id) {
+            if let Ok((transform, momentum)) = planet_query.get_mut(planet_id) {
                 let radius = mass_to_radius(momentum.mass);
                 let momentum = momentum.velocity * momentum.mass;
-                let mut momentum_vector_transform = the_momentum_vector.get_single_mut().unwrap();
+                let (mut momentum_vector_transform, mut visibility) =
+                    the_momentum_vector.get_single_mut().unwrap();
 
+                visibility.is_visible = true;
                 *momentum_vector_transform = Transform {
-                    translation: transform.translation + Vec3::new(5.0 + radius, 0.0, 0.0),
-                    rotation: Quat::from_rotation_arc(Vec3::Z, momentum.normalize()),
-                    ..default()
+                    translation: transform.translation
+                        + Vec3::new(0.0, 0.0, (momentum.length() / 2.0 + radius) * 0.01),
+                    rotation: transform.rotation,
+                    scale: Vec3::new(1.0, 1.0, momentum.length() / 2.0),
                 };
             }
             for child_id in children.iter() {
