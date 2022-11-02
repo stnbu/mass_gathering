@@ -262,18 +262,18 @@ pub fn spacecraft_setup(
             parent
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.03,
+                        radius: 0.01,
                         ..Default::default()
                     })),
-                    material: materials.add(Color::ORANGE.into()),
-                    transform: Transform::from_xyz(0.0, 0.0, -8.0),
+                    material: materials.add(Color::LIME_GREEN.into()),
+                    transform: Transform::from_xyz(0.0, 0.0, -7.0),
                     visibility: Visibility { is_visible: false },
                     ..Default::default()
                 })
                 .insert(SpacecraftAR::CrosshairsCold);
             parent
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.1))),
+                    mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.08))),
                     material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -7.0),
                     visibility: Visibility { is_visible: false },
@@ -282,7 +282,7 @@ pub fn spacecraft_setup(
                 .insert(SpacecraftAR::CrosshairsHot);
             parent
                 .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.1))),
+                    mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.08))),
                     material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -6.0),
                     visibility: Visibility { is_visible: false },
