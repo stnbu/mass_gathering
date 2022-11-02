@@ -36,7 +36,8 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(handle_projectile_flight)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
-                    .with_system(set_ar_default_visibility.before(handle_hot_planet)),
+                    .with_system(set_ar_default_visibility.before(handle_hot_planet))
+                    .with_system(stars),
             )
             .add_system(hud)
             .add_startup_system(spacecraft_setup)
@@ -107,6 +108,9 @@ fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     Vec3::new(x, y, z)
 }
 
+#[derive(Component)]
+pub struct Star;
+
 pub fn my_planets(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -135,6 +139,42 @@ pub fn my_planets(
             );
         }
     }
+
+    // poorly implemented stars!!
+    let star_count = 40 / 2;
+    for _ in 0..star_count {
+        let position = latlon_to_cartesian(rf(), rf()) * 400.0;
+        let radius = 1.0;
+        for side in [-1.0, 1.0] {
+            commands
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius,
+                        ..default()
+                    })),
+                    material: materials.add((Color::WHITE * 1000.0).into()),
+                    transform: Transform::from_translation(position * side),
+                    ..default()
+                })
+                .insert(Star);
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct Prev(pub Vec3);
+
+fn stars(
+    mut stars_query: Query<&mut Transform, (With<Star>, Without<Spacecraft>)>,
+
+    spacecraft_query: Query<&mut Transform, With<Spacecraft>>,
+    mut previous: Local<Prev>,
+) {
+    let spacecraft = spacecraft_query.get_single().unwrap();
+    for mut star in stars_query.iter_mut() {
+        star.translation += spacecraft.translation - previous.0;
+    }
+    previous.0 = spacecraft.translation;
 }
 
 #[cfg(target_arch = "wasm32")]
