@@ -156,19 +156,19 @@ pub fn steer(keys: Res<Input<KeyCode>>, mut query: Query<(&mut Transform, &mut S
     for key in keys.get_pressed() {
         had_input = true;
         match key {
-            KeyCode::Left => {
+            KeyCode::A => {
                 yaw += nudge * (spacecraft.gain.z + 1.0);
                 spacecraft.gain.z += gain;
             }
-            KeyCode::Right => {
+            KeyCode::D => {
                 yaw -= nudge * (spacecraft.gain.z + 1.0);
                 spacecraft.gain.z += gain;
             }
-            KeyCode::Up => {
+            KeyCode::W => {
                 pitch += nudge * (spacecraft.gain.x + 1.0);
                 spacecraft.gain.x += gain;
             }
-            KeyCode::Down => {
+            KeyCode::S => {
                 pitch -= nudge * (spacecraft.gain.x + 1.0);
                 spacecraft.gain.x += gain;
             }
@@ -618,11 +618,14 @@ pub fn hud(
     }
     let (spacecraft, transform) = query.get_single().unwrap();
     let hud_text = format!(
-        "Arrow Keys - Pitch & Yaw
+        "\
+W & S      - Pitch
+A & D      - Yaw
 Z & X      - Roll
 PgUp/PgDn  - Speed
 F          - Fire
-
+Space      - Pause
+------------------
 Your Speed - {}
 Your Location
   x        - {}
