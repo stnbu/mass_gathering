@@ -141,23 +141,23 @@ pub fn my_planets(
     }
 
     // poorly implemented stars!!
-    let star_count = 40 / 2;
+    let star_count = 40;
     for _ in 0..star_count {
         let position = latlon_to_cartesian(rf(), rf()) * 400.0;
-        let radius = 1.0;
-        for side in [-1.0, 1.0] {
-            commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius,
-                        ..default()
-                    })),
-                    material: materials.add((Color::WHITE * 1000.0).into()),
-                    transform: Transform::from_translation(position * side),
+        let radius = rf() * 0.3 + 0.7;
+        let (r, w, y) = (rf() * 0.1, rf() * 1.0, rf() * 0.2);
+        let star_colored = Color::RED * r + Color::WHITE * w + Color::YELLOW * y;
+        commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius,
                     ..default()
-                })
-                .insert(Star);
-        }
+                })),
+                material: materials.add(star_colored.into()),
+                transform: Transform::from_translation(position),
+                ..default()
+            })
+            .insert(Star);
     }
 }
 
