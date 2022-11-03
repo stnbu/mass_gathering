@@ -4,6 +4,7 @@ use mass_gathering::FullGame;
 
 fn main() {
     App::new()
+        .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
             stereo_iod: 2.0,

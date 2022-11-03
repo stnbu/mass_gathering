@@ -61,8 +61,7 @@ impl Plugin for Core {
     fn build(&self, app: &mut App) {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
-        app.insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-            .add_plugins(DefaultPlugins)
+        app.add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
             .add_system(bevy::window::close_on_esc)
@@ -145,8 +144,8 @@ pub fn my_planets(
     for _ in 0..star_count {
         let position = latlon_to_cartesian(rf(), rf()) * 400.0;
         let radius = rf() * 0.3 + 0.7;
-        let (r, w, y) = (rf() * 0.1, rf() * 1.0, rf() * 0.2);
-        let star_colored = Color::RED * r + Color::WHITE * w + Color::YELLOW * y;
+        let (r, w, y) = (rf() * 40.0, rf() * 400.0, rf() * 20.0);
+        let star_colored = (Color::RED * r + Color::WHITE * w + Color::YELLOW * y) * 1000.0;
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {

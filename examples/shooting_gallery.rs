@@ -1,31 +1,11 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_rapier3d::prelude::RapierConfiguration;
 use mass_gathering::prelude::*;
 fn main() {
-    let mut app = App::new();
-    app.insert_resource(ClearColor(Color::WHITE * 0.8))
-        .insert_resource(SpacecraftConfig {
-            show_debug_markers: true,
-            show_impact_explosions: true,
-            projectile_radius: 0.2,
-            ..default()
-        });
-
-    app.add_plugins(DefaultPlugins)
-        .add_system(move_forward)
-        .add_system(steer)
-        .add_system(handle_projectile_engagement)
-        .add_system(handle_projectile_flight)
-        .add_system(animate_projectile_explosion)
+    App::new()
+        .add_plugins(FullGame)
         .add_startup_system(setup)
-        .add_startup_system(spacecraft_setup)
-        .add_system(freefall)
-        .add_system(collision_events)
-        .add_system(timer_despawn)
-        .add_system(do_blink)
-        .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-
-    app.run();
+        .run();
 }
 
 fn setup(
