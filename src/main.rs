@@ -6,7 +6,7 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(PhysicsConfig {
-            sims_per_frame: 150,
+            sims_per_frame: 10,
             ..Default::default()
         })
         .insert_resource(SpacecraftConfig {
