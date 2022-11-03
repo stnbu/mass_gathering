@@ -28,7 +28,7 @@ fn setup(
     spawn_planet(
         1.0,
         Vec3::X * sun_radius * 3.0,
-        Vec3::Z * 20.0,
+        Vec3::Z * (20.0_f32).powf(0.5),
         Color::SILVER,
         &mut commands,
         &mut meshes,

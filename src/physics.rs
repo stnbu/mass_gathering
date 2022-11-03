@@ -111,22 +111,27 @@ impl Default for Momentum {
 }
 
 pub fn freefall(mut query: Query<(Entity, &mut Transform, &mut Momentum)>, time: Res<Time>) {
-    let masses = query
-        .iter()
-        .map(|t| (t.0, t.1.translation, t.2.mass))
-        .collect::<Vec<_>>();
-    let accelerations = masses.iter().map(|particle1| {
-        masses.iter().fold(Vec3::ZERO, |acceleration, particle2| {
-            let dir = particle2.1 - particle1.1;
-            let mag_2 = dir.length();
-            let grav_acc = if mag_2 != 0.0 {
-                dir * particle2.2 / (mag_2 * mag_2.sqrt())
-            } else {
-                dir
-            };
-            acceleration + grav_acc * 0.1
-        })
-    });
+    let mut masses;
+    let mut accelerations;
+    loop {
+        masses = query
+            .iter()
+            .map(|t| (t.0, t.1.translation, t.2.mass))
+            .collect::<Vec<_>>();
+        accelerations = masses.iter().map(|particle1| {
+            masses.iter().fold(Vec3::ZERO, |acceleration, particle2| {
+                let dir = particle2.1 - particle1.1;
+                let mag_2 = dir.length();
+                let grav_acc = if mag_2 != 0.0 {
+                    dir * particle2.2 / (mag_2 * mag_2.sqrt())
+                } else {
+                    dir
+                };
+                acceleration + grav_acc * 0.01
+            })
+        });
+        break;
+    }
     let dt = time.delta_seconds();
     for ((entity, _, mass), force) in masses.iter().zip(accelerations) {
         if let Ok((_, mut transform, mut momentum)) = query.get_mut(*entity) {
