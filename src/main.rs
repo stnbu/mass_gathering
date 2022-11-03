@@ -1,4 +1,4 @@
-use bevy::prelude::App;
+use bevy::prelude::{App, ClearColor, Color};
 use mass_gathering::prelude::{my_planets, SpacecraftConfig};
 use mass_gathering::FullGame;
 

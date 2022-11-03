@@ -65,6 +65,7 @@ impl Plugin for Core {
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
             .add_system(bevy::window::close_on_esc)
+            .add_system(core_setup)
             .add_system(handle_game_state)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
@@ -76,6 +77,10 @@ enum AppState {
     Playing,
     Paused,
     Menu,
+}
+
+fn core_setup(mut rapier_config: ResMut<RapierConfiguration>) {
+    rapier_config.gravity = Vec3::ZERO;
 }
 
 fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
@@ -114,10 +119,7 @@ pub fn my_planets(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut rapier_config: ResMut<RapierConfiguration>,
 ) {
-    rapier_config.gravity = Vec3::ZERO;
-
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
     let pair_count = 40;

@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::RapierConfiguration;
 use mass_gathering::prelude::*;
 fn main() {
     App::new()
@@ -12,10 +11,7 @@ fn setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut rapier_config: ResMut<RapierConfiguration>,
 ) {
-    rapier_config.gravity = Vec3::ZERO;
-
     spawn_planet(
         5.0,
         Vec3::X * -5.5,
