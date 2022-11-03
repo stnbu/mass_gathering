@@ -1,7 +1,7 @@
 use crate::craft::BallisticProjectileTarget;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
-use std::f32::consts::PI;
+use std::{f32::consts::PI, time::Duration};
 
 pub fn collision_events(
     mut commands: Commands,
@@ -110,13 +110,37 @@ impl Default for Momentum {
     }
 }
 
-pub fn freefall(mut query: Query<(Entity, &mut Transform, &mut Momentum)>, time: Res<Time>) {
+pub struct SpaceTick {
+    pub interval: Timer,
+}
+
+impl Default for SpaceTick {
+    fn default() -> Self {
+        Self {
+            interval: Timer::new(Duration::from_millis(500), true),
+        }
+    }
+}
+
+use std::collections::HashMap;
+
+#[derive(Default)]
+pub struct LastFrame {
+    locations: HashMap<Entity, Vec3>,
+}
+
+pub fn freefall(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut query: Query<(Entity, &mut Transform, &mut Momentum)>,
+    time: Res<Time>,
+    mut locations: Local<LastFrame>,
+) {
     // PSA: very very rough n-th pass at implimenting "gravity"; It. gets. better.
     let mut masses = Vec::new();
     let mut accelerations = Vec::new();
-    let mut x = 0;
     for pass in (0..10).rev() {
-        x += 1;
         masses = query
             .iter()
             .map(|t| (t.0, t.1.translation, t.2.mass))
@@ -138,12 +162,34 @@ pub fn freefall(mut query: Query<(Entity, &mut Transform, &mut Momentum)>, time:
             accelerations = accelerations_.collect::<Vec<_>>();
         }
     }
-    //println!("{x}");
+
     let dt = time.delta_seconds();
     for ((entity, _, mass), force) in masses.iter().zip(accelerations) {
         if let Ok((_, mut transform, mut momentum)) = query.get_mut(*entity) {
             momentum.velocity += (force * dt) / *mass;
             transform.translation += momentum.velocity * dt;
+            let current = transform.translation;
+            if let Some(prev) = locations.locations.get(entity) {
+                println!("X");
+                if (*prev - current).length() > 1.0 {
+                    println!("yes");
+                    commands.spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.05,
+                            ..Default::default()
+                        })),
+                        transform: Transform::from_translation(current),
+                        material: materials.add(Color::GREEN.into()),
+                        ..Default::default()
+                    });
+                    locations.locations.insert(*entity, current);
+                } else {
+                    println!("no");
+                }
+            } else {
+                println!("Y");
+                locations.locations.insert(*entity, current);
+            }
         }
     }
 }
