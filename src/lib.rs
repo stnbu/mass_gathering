@@ -125,7 +125,7 @@ pub fn my_planets(
     let pair_count = 40;
     for _ in 0..pair_count {
         let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
-        let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0);
+        let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
         let radius = rf() + 2.0;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());

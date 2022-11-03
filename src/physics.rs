@@ -4,8 +4,8 @@ use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, 
 use std::{f32::consts::PI, time::Duration};
 
 pub struct PhysicsConfig {
-    trails: bool,
-    sims_per_frame: u8,
+    pub trails: bool,
+    pub sims_per_frame: u8,
 }
 
 impl Default for PhysicsConfig {
