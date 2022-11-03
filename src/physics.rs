@@ -138,13 +138,11 @@ pub fn freefall(
     mut locations: Local<LastFrame>,
 ) {
     let dt = time.delta_seconds();
-    // PSA: very very rough n-th pass at implimenting "gravity"; It. gets. better.
     let mut masses = query
         .iter()
         .map(|t| (t.0, t.1.translation, t.2.mass, t.2.velocity))
         .collect::<Vec<_>>();
-    //let dt = dt / 20.0;
-    for pass in (0..20).rev() {
+    for _ in (0..20).rev() {
         let accelerations = masses.iter().map(|particle1| {
             masses.iter().fold(Vec3::ZERO, |acceleration, particle2| {
                 let dir = particle2.1 - particle1.1;
@@ -176,6 +174,22 @@ pub fn freefall(
             transform.translation = *translation;
             momentum.velocity = *velocity;
             momentum.mass = *mass;
+            if let Some(prev) = locations.locations.get(entity) {
+                if (*prev - *translation).length() > 1.0 {
+                    commands.spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.05,
+                            ..Default::default()
+                        })),
+                        transform: Transform::from_translation(*translation),
+                        material: materials.add(Color::GREEN.into()),
+                        ..Default::default()
+                    });
+                    locations.locations.insert(*entity, *translation);
+                }
+            } else {
+                locations.locations.insert(*entity, *translation);
+            }
         }
     }
 
