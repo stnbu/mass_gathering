@@ -170,9 +170,7 @@ pub fn freefall(
             transform.translation += momentum.velocity * dt;
             let current = transform.translation;
             if let Some(prev) = locations.locations.get(entity) {
-                println!("X");
                 if (*prev - current).length() > 1.0 {
-                    println!("yes");
                     commands.spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
                             radius: 0.05,
@@ -183,11 +181,8 @@ pub fn freefall(
                         ..Default::default()
                     });
                     locations.locations.insert(*entity, current);
-                } else {
-                    println!("no");
                 }
             } else {
-                println!("Y");
                 locations.locations.insert(*entity, current);
             }
         }
