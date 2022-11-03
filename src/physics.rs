@@ -3,6 +3,20 @@ use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use std::{f32::consts::PI, time::Duration};
 
+pub struct PhysicsConfig {
+    trails: bool,
+    sims_per_frame: u8,
+}
+
+impl Default for PhysicsConfig {
+    fn default() -> Self {
+        Self {
+            trails: false,
+            sims_per_frame: 20,
+        }
+    }
+}
+
 pub fn collision_events(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
@@ -136,13 +150,14 @@ pub fn freefall(
     mut query: Query<(Entity, &mut Transform, &mut Momentum)>,
     time: Res<Time>,
     mut locations: Local<LastFrame>,
+    physics_config: Res<PhysicsConfig>,
 ) {
     let dt = time.delta_seconds();
     let mut masses = query
         .iter()
         .map(|t| (t.0, t.1.translation, t.2.mass, t.2.velocity))
         .collect::<Vec<_>>();
-    for _ in (0..20).rev() {
+    for _ in (0..physics_config.sims_per_frame).rev() {
         let accelerations = masses.iter().map(|particle1| {
             masses.iter().fold(Vec3::ZERO, |acceleration, particle2| {
                 let dir = particle2.1 - particle1.1;
@@ -174,21 +189,23 @@ pub fn freefall(
             transform.translation = *translation;
             momentum.velocity = *velocity;
             momentum.mass = *mass;
-            if let Some(prev) = locations.locations.get(entity) {
-                if (*prev - *translation).length() > 1.0 {
-                    commands.spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.05,
+            if physics_config.trails {
+                if let Some(prev) = locations.locations.get(entity) {
+                    if (*prev - *translation).length() > 1.0 {
+                        commands.spawn_bundle(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 0.05,
+                                ..Default::default()
+                            })),
+                            transform: Transform::from_translation(*translation),
+                            material: materials.add(Color::GREEN.into()),
                             ..Default::default()
-                        })),
-                        transform: Transform::from_translation(*translation),
-                        material: materials.add(Color::GREEN.into()),
-                        ..Default::default()
-                    });
+                        });
+                        locations.locations.insert(*entity, *translation);
+                    }
+                } else {
                     locations.locations.insert(*entity, *translation);
                 }
-            } else {
-                locations.locations.insert(*entity, *translation);
             }
         }
     }

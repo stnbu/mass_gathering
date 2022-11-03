@@ -49,7 +49,7 @@ pub struct Spacetime;
 
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
+        app.init_resource::<PhysicsConfig>().add_system_set(
             SystemSet::on_update(AppState::Playing)
                 .with_system(freefall)
                 .with_system(collision_events),
