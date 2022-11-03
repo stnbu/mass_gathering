@@ -113,7 +113,7 @@ pub fn spawn_planet<'a>(
 #[derive(Component, Debug)]
 pub struct Momentum {
     pub velocity: Vec3,
-    mass: f32,
+    pub mass: f32,
 }
 
 impl Default for Momentum {

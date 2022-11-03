@@ -497,7 +497,10 @@ pub fn handle_projectile_flight(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
-    planet_query: Query<(&Transform, &Momentum, Entity), Without<BallisticProjectileTarget>>,
+    mut planet_query: Query<
+        (&Transform, &mut Momentum, Entity),
+        Without<BallisticProjectileTarget>,
+    >,
     mut collision_events: EventReader<CollisionEvent>,
     mut despawned: Local<Despawned>,
     time: Res<Time>,
@@ -525,8 +528,15 @@ pub fn handle_projectile_flight(
             if config.show_impact_explosions {
                 // FIXME -- the fact that we are getting the target planet here and also
                 //          below where we move the planet...says we need refactoring.
-                if let Ok((planet_transform, _, _)) = planet_query.get(target.planet) {
+                if let Ok((planet_transform, mut momentum, _)) = planet_query.get_mut(target.planet)
+                {
                     let scale_factor = planet_transform.scale.length();
+                    let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
+                    let impact_direction =
+                        (planet_transform.translation - local_impact_site).normalize();
+                    let mass = momentum.mass;
+                    momentum.velocity += impact_direction * 100.0 / mass; // UNITS OF IMPACT!!
+
                     let explosion = commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -538,9 +548,7 @@ pub fn handle_projectile_flight(
                                 perceptual_roughness: 0.99,
                                 ..default()
                             }),
-                            transform: Transform::from_translation(
-                                target.local_impact_site / (scale_factor / 1.7),
-                            ),
+                            transform: Transform::from_translation(local_impact_site),
                             ..Default::default()
                         })
                         .insert(ProjectileExplosion { rising: true })
