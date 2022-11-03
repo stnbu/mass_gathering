@@ -8,6 +8,7 @@ fn main() {
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
             stereo_iod: 2.0,
+            recoil: 0.025,
             ..Default::default()
         })
         .add_plugins(FullGame)

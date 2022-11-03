@@ -16,6 +16,7 @@ use bevy_rapier3d::prelude::{
 };
 use std::f64::consts::PI;
 
+use rand::Rng;
 use std::collections::HashSet;
 use std::f32::consts::TAU;
 use std::time::Duration;
@@ -48,6 +49,7 @@ pub struct SpacecraftConfig {
     pub stereo_enabled: bool,
     /// Hint: use a netative value for "crosseyed" mode.
     pub stereo_iod: f32, // interocular distance
+    pub recoil: f32,
 }
 
 impl Default for SpacecraftConfig {
@@ -58,6 +60,7 @@ impl Default for SpacecraftConfig {
             projectile_radius: 0.1,
             stereo_enabled: false,
             stereo_iod: 0.0,
+            recoil: 0.0,
         }
     }
 }
@@ -388,13 +391,14 @@ pub fn handle_projectile_engagement(
             Without<BallisticProjectileTarget>,
             With<Momentum>,
             With<Collider>,
+            Without<Spacecraft>,
         ),
     >,
     rapier_context: Res<RapierContext>,
-    mut spacecraft_query: Query<(&Transform, &mut Spacecraft)>,
+    mut spacecraft_query: Query<(&mut Transform, &mut Spacecraft)>,
     config: Res<SpacecraftConfig>,
 ) {
-    for (pov, mut spacecraft) in spacecraft_query.iter_mut() {
+    for (mut pov, mut spacecraft) in spacecraft_query.iter_mut() {
         let ray_origin = pov.translation - pov.local_y() * config.projectile_radius * 1.2;
         let ray_direction = -1.0 * pov.local_z();
         let intersection = rapier_context.cast_ray(
@@ -488,6 +492,14 @@ pub fn handle_projectile_engagement(
                     debug!("-	ray_direction={ray_direction:?}");
                     debug!("-	global_impact_site={global_impact_site:?}");
                     debug!("-	local_impact_site={local_impact_site:?}");
+                    // Add some recoil excitement
+                    if config.recoil != 0.0 {
+                        let mut rng = rand::thread_rng();
+                        let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
+                        let bump_y = (rng.gen::<f32>() - 0.5) * config.recoil;
+                        let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
+                        pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
+                    }
                 }
             }
         } else {
