@@ -12,19 +12,23 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let sun_radius = 8.0;
+
+    // The sun, beautiful
     spawn_planet(
-        5.0,
-        Vec3::X * -5.5,
-        Vec3::X * 0.2,
+        sun_radius,
+        Vec3::ZERO,
+        Vec3::ZERO,
         Color::GOLD,
         &mut commands,
         &mut meshes,
         &mut materials,
     );
+    // The moon, even more beautiful
     spawn_planet(
-        5.0,
-        Vec3::X * 5.5,
-        Vec3::X * -0.2,
+        1.0,
+        Vec3::X * sun_radius * 3.0,
+        Vec3::Z * 20.0,
         Color::SILVER,
         &mut commands,
         &mut meshes,
