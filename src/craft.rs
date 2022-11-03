@@ -22,6 +22,7 @@ use std::f32::consts::TAU;
 use std::time::Duration;
 
 use crate::physics::Momentum;
+use crate::DespawnTimer;
 
 #[derive(Component, PartialEq, Eq)]
 pub enum SpacecraftAR {
@@ -66,11 +67,6 @@ impl Default for SpacecraftConfig {
 }
 
 #[derive(Component)]
-pub struct DespawnTimer {
-    pub ttl: Timer,
-}
-
-#[derive(Component)]
 pub struct BallisticProjectileTarget {
     pub planet: Entity,
     pub local_impact_site: Vec3,
@@ -89,19 +85,6 @@ pub struct ProjectileExplosion {
 
 #[derive(Default)]
 pub struct Despawned(HashSet<Entity>);
-
-pub fn timer_despawn(
-    mut commands: Commands,
-    mut despawn_query: Query<(Entity, &mut DespawnTimer)>,
-    time: Res<Time>,
-) {
-    for (entity, mut despawn_timer) in despawn_query.iter_mut() {
-        despawn_timer.ttl.tick(time.delta());
-        if despawn_timer.ttl.finished() {
-            commands.entity(entity).despawn();
-        }
-    }
-}
 
 #[derive(Component)]
 pub struct DelayedVisibility {

@@ -67,6 +67,7 @@ impl Plugin for Core {
             .add_system(bevy::window::close_on_esc)
             .add_system(core_setup)
             .add_system(handle_game_state)
+            .add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
@@ -114,6 +115,24 @@ fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
 
 #[derive(Component)]
 pub struct Star;
+
+#[derive(Component)]
+pub struct DespawnTimer {
+    pub ttl: Timer,
+}
+
+pub fn timer_despawn(
+    mut commands: Commands,
+    mut despawn_query: Query<(Entity, &mut DespawnTimer)>,
+    time: Res<Time>,
+) {
+    for (entity, mut despawn_timer) in despawn_query.iter_mut() {
+        despawn_timer.ttl.tick(time.delta());
+        if despawn_timer.ttl.finished() {
+            commands.entity(entity).despawn();
+        }
+    }
+}
 
 pub fn my_planets(
     mut commands: Commands,

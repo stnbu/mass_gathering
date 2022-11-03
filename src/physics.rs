@@ -1,4 +1,5 @@
 use crate::craft::BallisticProjectileTarget;
+use crate::DespawnTimer;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use std::{f32::consts::PI, time::Duration};
@@ -191,16 +192,20 @@ pub fn freefall(
             momentum.mass = *mass;
             if physics_config.trails {
                 if let Some(prev) = locations.locations.get(entity) {
-                    if (*prev - *translation).length() > 1.0 {
-                        commands.spawn_bundle(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.05,
+                    if (*prev - *translation).length() > 0.25 {
+                        commands
+                            .spawn_bundle(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                    radius: 0.05,
+                                    ..Default::default()
+                                })),
+                                transform: Transform::from_translation(*translation),
+                                material: materials.add((Color::LIME_GREEN * 0.3).into()),
                                 ..Default::default()
-                            })),
-                            transform: Transform::from_translation(*translation),
-                            material: materials.add(Color::GREEN.into()),
-                            ..Default::default()
-                        });
+                            })
+                            .insert(DespawnTimer {
+                                ttl: Timer::new(Duration::from_millis(2500), false),
+                            });
                         locations.locations.insert(*entity, *translation);
                     }
                 } else {
@@ -209,28 +214,4 @@ pub fn freefall(
             }
         }
     }
-
-    // for ((entity, _, mass), force) in masses.iter().zip(accelerations) {
-    //     if let Ok((_, mut transform, mut momentum)) = query.get_mut(*entity) {
-    //         momentum.velocity += (force * dt) / *mass;
-    //         transform.translation += momentum.velocity * dt;
-    //         let current = transform.translation;
-    //         if let Some(prev) = locations.locations.get(entity) {
-    //             if (*prev - current).length() > 1.0 {
-    //                 commands.spawn_bundle(PbrBundle {
-    //                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-    //                         radius: 0.05,
-    //                         ..Default::default()
-    //                     })),
-    //                     transform: Transform::from_translation(current),
-    //                     material: materials.add(Color::GREEN.into()),
-    //                     ..Default::default()
-    //                 });
-    //                 locations.locations.insert(*entity, current);
-    //             }
-    //         } else {
-    //             locations.locations.insert(*entity, current);
-    //         }
-    //     }
-    // }
 }
