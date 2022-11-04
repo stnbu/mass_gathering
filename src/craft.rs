@@ -534,7 +534,7 @@ pub fn handle_projectile_flight(
                     let scale_factor = planet_transform.scale.length();
                     let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
                     let impact_direction =
-                        (planet_transform.translation - local_impact_site).normalize();
+                        (local_impact_site - planet_transform.translation).normalize();
                     let mass = momentum.mass;
                     momentum.velocity +=
                         impact_direction * 1000.0 / mass / physics_config.sims_per_frame as f32; // UNITS OF IMPACT!!
