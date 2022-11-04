@@ -21,7 +21,7 @@ use std::collections::HashSet;
 use std::f32::consts::TAU;
 use std::time::Duration;
 
-use crate::physics::Momentum;
+use crate::physics::{Momentum, PhysicsConfig};
 use crate::DespawnTimer;
 
 #[derive(Component, PartialEq, Eq)]
@@ -51,6 +51,7 @@ pub struct SpacecraftConfig {
     /// Hint: use a netative value for "crosseyed" mode.
     pub stereo_iod: f32, // interocular distance
     pub recoil: f32,
+    pub start_transform: Transform,
 }
 
 impl Default for SpacecraftConfig {
@@ -62,6 +63,7 @@ impl Default for SpacecraftConfig {
             stereo_enabled: false,
             stereo_iod: 0.0,
             recoil: 0.0,
+            start_transform: Default::default(),
         }
     }
 }
@@ -210,9 +212,7 @@ pub fn spacecraft_setup(
     config: Res<SpacecraftConfig>,
 ) {
     commands
-        .spawn_bundle(TransformBundle::from_transform(
-            Transform::from_xyz(0.0, 0.0, 40.0).looking_at(-Vec3::Z, Vec3::Y),
-        ))
+        .spawn_bundle(TransformBundle::from_transform(config.start_transform))
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft::default())
         .with_children(|parent| {
@@ -505,6 +505,7 @@ pub fn handle_projectile_flight(
     mut despawned: Local<Despawned>,
     time: Res<Time>,
     config: Res<SpacecraftConfig>,
+    physics_config: Res<PhysicsConfig>,
 ) {
     let mut collided = HashSet::new();
     for event in collision_events.iter() {
@@ -535,7 +536,8 @@ pub fn handle_projectile_flight(
                     let impact_direction =
                         (planet_transform.translation - local_impact_site).normalize();
                     let mass = momentum.mass;
-                    momentum.velocity += impact_direction * 100.0 / mass; // UNITS OF IMPACT!!
+                    momentum.velocity +=
+                        impact_direction * 300.0 / mass / physics_config.sims_per_frame as f32; // UNITS OF IMPACT!!
 
                     let explosion = commands
                         .spawn_bundle(PbrBundle {

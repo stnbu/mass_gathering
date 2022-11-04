@@ -7,13 +7,15 @@ use std::{f32::consts::PI, time::Duration};
 pub struct PhysicsConfig {
     pub trails: bool,
     pub sims_per_frame: u8,
+    pub trail_ttl: u64,
 }
 
 impl Default for PhysicsConfig {
     fn default() -> Self {
         Self {
             trails: false,
-            sims_per_frame: 20,
+            sims_per_frame: 10,
+            trail_ttl: 2500,
         }
     }
 }
@@ -204,7 +206,10 @@ pub fn freefall(
                                 ..Default::default()
                             })
                             .insert(DespawnTimer {
-                                ttl: Timer::new(Duration::from_millis(2500), false),
+                                ttl: Timer::new(
+                                    Duration::from_millis(physics_config.trail_ttl),
+                                    false,
+                                ),
                             });
                         locations.locations.insert(*entity, *translation);
                     }
