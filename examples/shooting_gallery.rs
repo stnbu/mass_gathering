@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_rapier3d::na::Translation;
 use mass_gathering::prelude::*;
 fn main() {
     App::new()
