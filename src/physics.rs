@@ -211,14 +211,17 @@ pub fn freefall(
     }
 
     for (entity, translation, mass, velocity) in masses.iter() {
-        if let Ok((_, mut transform, mut momentum)) = query.get_mut(*entity) {
+        if let Ok((id, mut transform, mut momentum)) = query.get_mut(*entity) {
+            debug!("Updating translation and momentum for planet {id:?}");
             transform.translation = *translation;
             momentum.velocity = *velocity;
             momentum.mass = *mass;
             if physics_config.trails {
                 if let Some(prev) = locations.locations.get(entity) {
+                    debug!("  Last location was {prev:?}");
                     if (*prev - *translation).length() > 0.25 {
-                        commands
+                        debug!("  Time to add a new breadcrumb");
+                        let breadcrumb = commands
                             .spawn_bundle(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                                     radius: 0.05,
@@ -234,10 +237,13 @@ pub fn freefall(
                                     false,
                                 ),
                             })
-                            .insert(SpacecraftAR::PlanetMarkup(*entity));
+                            .insert(SpacecraftAR::PlanetMarkup(*entity))
+                            .id();
+                        debug!("  Spawned new breadcrumb PBR {breadcrumb:?}");
                         locations.locations.insert(*entity, *translation);
                     }
                 } else {
+                    debug!("  Recording first location");
                     locations.locations.insert(*entity, *translation);
                 }
             }

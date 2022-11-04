@@ -377,7 +377,7 @@ pub fn handle_hot_planet(
                 match *ar_element {
                     SpacecraftAR::PlanetMarkup(entity) => {
                         if entity == planet {
-                            debug!("    Set planet breadcrumb {id:?} to visible");
+                            debug!("  Set planet breadcrumb {id:?} to visible");
                             visibility.is_visible = true;
                         }
                     }
@@ -386,12 +386,16 @@ pub fn handle_hot_planet(
             }
             for child_id in children.iter() {
                 if let Ok((id, mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
-                    debug!("    Setting visibility for crosshairs child component {id:?} for hot planet");
+                    debug!(
+                        "  Setting visibility for crosshairs child component {id:?} for hot planet {planet:?}"
+                    );
                     match *ar_element {
                         SpacecraftAR::CrosshairsHot => {
+                            debug!("    Showing hot component");
                             visibility.is_visible = true;
                         }
                         SpacecraftAR::CrosshairsCold => {
+                            debug!("    Hiding cold component");
                             visibility.is_visible = false;
                         }
                         _ => (),

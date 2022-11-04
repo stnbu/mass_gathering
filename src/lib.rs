@@ -138,6 +138,7 @@ pub fn timer_despawn(
     for (entity, mut despawn_timer) in despawn_query.iter_mut() {
         despawn_timer.ttl.tick(time.delta());
         if despawn_timer.ttl.finished() {
+            debug!("Despawning by timer: {entity:?}");
             commands.entity(entity).despawn();
         }
     }
