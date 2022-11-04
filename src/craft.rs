@@ -367,22 +367,28 @@ pub fn reap_orphaned_planet_markup(
 
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
+    planet_query: Query<Entity, (With<Momentum>, Without<SpacecraftAR>)>,
     mut ar_query: Query<(Entity, &mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
 ) {
     // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet) = spacecraft.hot_planet {
             debug!("Planet hot: {planet:?}");
-            for (id, mut visibility, ar_element) in ar_query.iter_mut() {
-                match *ar_element {
-                    SpacecraftAR::PlanetMarkup(entity) => {
-                        if entity == planet {
-                            debug!("  Set planet breadcrumb {id:?} to visible");
-                            visibility.is_visible = true;
+            if planet_query.get(planet).is_ok() {
+                for (id, mut visibility, ar_element) in ar_query.iter_mut() {
+                    match *ar_element {
+                        SpacecraftAR::PlanetMarkup(entity) => {
+                            if entity == planet {
+                                debug!("  Set planet breadcrumb {id:?} to visible");
+                                visibility.is_visible = true;
+                            }
                         }
+                        _ => (),
                     }
-                    _ => (),
                 }
+            } else {
+                warn!("  Hot planet {planet:?} despawned? Skipping");
+                continue;
             }
             for child_id in children.iter() {
                 if let Ok((id, mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
@@ -572,7 +578,7 @@ pub fn handle_projectile_flight(
                     let scale_factor = planet_transform.scale.length();
                     let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
                     let mass = momentum.mass;
-                    momentum.velocity += -local_impact_site.normalize() * 3.0 / mass; // UNITS OF IMPACT!!
+                    momentum.velocity += -local_impact_site.normalize() * 10.0 / mass; // UNITS OF IMPACT!!
 
                     let explosion = commands
                         .spawn_bundle(PbrBundle {
