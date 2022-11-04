@@ -332,12 +332,33 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
-pub fn set_ar_default_visibility(mut crosshairs_query: Query<(&mut Visibility, &SpacecraftAR)>) {
-    for (mut visibility, mode) in crosshairs_query.iter_mut() {
+pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
+    for (mut visibility, mode) in ar_query.iter_mut() {
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
             SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
             SpacecraftAR::PlanetMarkup(_) => visibility.is_visible = false,
+        }
+    }
+}
+
+/// Ooops no need for this. The timer ensures no orphans. What we need, though
+/// is to handle this and other stuff in planet collisions.
+pub fn reap_orphaned_planet_markup(
+    mut commands: Commands,
+    ar_query: Query<(Entity, &SpacecraftAR)>,
+    planet_query: Query<Entity, With<Momentum>>, // fixme
+) {
+    for (ar_id, ar_kind) in ar_query.iter() {
+        match *ar_kind {
+            SpacecraftAR::PlanetMarkup(id) => {
+                if let Ok(_id) = planet_query.get(id) {
+                    // wut
+                } else {
+                    commands.entity(ar_id).despawn_recursive();
+                }
+            }
+            _ => (),
         }
     }
 }
