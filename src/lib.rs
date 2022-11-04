@@ -1,4 +1,5 @@
 use bevy::app::PluginGroupBuilder;
+use bevy::log::LogSettings;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -62,6 +63,13 @@ impl Plugin for Core {
     fn build(&self, app: &mut App) {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
+
+        //#[cfg(debugging_)]
+        app.insert_resource(LogSettings {
+            filter: "warn,mass_gathering=debug".into(),
+            level: bevy::log::Level::DEBUG,
+        });
+
         app.add_plugins(DefaultPlugins)
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
