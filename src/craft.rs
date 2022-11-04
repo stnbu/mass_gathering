@@ -333,7 +333,9 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
 }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
+    debug!("Setting default visibility for AR components");
     for (mut visibility, mode) in ar_query.iter_mut() {
+        debug!("    .");
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
             SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
@@ -365,15 +367,17 @@ pub fn reap_orphaned_planet_markup(
 
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
-    mut ar_query: Query<(&mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
+    mut ar_query: Query<(Entity, &mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
 ) {
     // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet) = spacecraft.hot_planet {
-            for (mut visibility, ar_element) in ar_query.iter_mut() {
+            debug!("Planet hot: {planet:?}");
+            for (id, mut visibility, ar_element) in ar_query.iter_mut() {
                 match *ar_element {
                     SpacecraftAR::PlanetMarkup(entity) => {
                         if entity == planet {
+                            debug!("    Set planet breadcrumb {id:?} to visible");
                             visibility.is_visible = true;
                         }
                     }
@@ -381,7 +385,8 @@ pub fn handle_hot_planet(
                 }
             }
             for child_id in children.iter() {
-                if let Ok((mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
+                if let Ok((id, mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
+                    debug!("    Setting visibility for crosshairs child component {id:?} for hot planet");
                     match *ar_element {
                         SpacecraftAR::CrosshairsHot => {
                             visibility.is_visible = true;
@@ -536,7 +541,6 @@ pub fn handle_projectile_flight(
         Without<BallisticProjectileTarget>,
     >,
     mut collision_events: EventReader<CollisionEvent>,
-    mut despawned: Local<Despawned>,
     time: Res<Time>,
     config: Res<SpacecraftConfig>,
 ) {
@@ -548,11 +552,6 @@ pub fn handle_projectile_flight(
         }
     }
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
-        // FIXME -- ensure that target.planet is still there
-        if despawned.0.contains(&projectile) {
-            warn!("We already despawned {:?}", projectile);
-            continue;
-        }
         debug!(
             "Handling flight of projectile {projectile:?} with target {:?}",
             target.planet
@@ -562,6 +561,8 @@ pub fn handle_projectile_flight(
             if config.show_impact_explosions {
                 // FIXME -- the fact that we are getting the target planet here and also
                 //          below where we move the planet...says we need refactoring.
+                // FIXME -- target.planet is NOT guaranteed to be the planet we collided!
+                //          we want the planet that was actually struck!
                 if let Ok((planet_transform, mut momentum, _)) = planet_query.get_mut(target.planet)
                 {
                     let scale_factor = planet_transform.scale.length();
@@ -591,7 +592,6 @@ pub fn handle_projectile_flight(
             }
             debug!("Despawning projectile entity {projectile:?}");
             commands.entity(projectile).despawn();
-            despawned.0.insert(projectile);
             continue;
         } else if !collided.is_empty() {
             debug!(
