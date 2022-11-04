@@ -8,7 +8,7 @@ fn main() {
         .insert_resource(PhysicsConfig {
             sims_per_frame: 10,
             trails: true,
-            ..Default::default()
+            trail_ttl: 2500 * 5,
         })
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
