@@ -1,4 +1,5 @@
 use crate::craft::BallisticProjectileTarget;
+use crate::craft::SpacecraftAR;
 use crate::DespawnTimer;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
@@ -232,7 +233,8 @@ pub fn freefall(
                                     Duration::from_millis(physics_config.trail_ttl),
                                     false,
                                 ),
-                            });
+                            })
+                            .insert(SpacecraftAR::PlanetMarkup(*entity));
                         locations.locations.insert(*entity, *translation);
                     }
                 } else {

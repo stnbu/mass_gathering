@@ -28,6 +28,7 @@ use crate::DespawnTimer;
 pub enum SpacecraftAR {
     CrosshairsHot,
     CrosshairsCold,
+    PlanetMarkup(Entity),
 }
 
 #[derive(Debug, Default, Component)]
@@ -336,17 +337,28 @@ pub fn set_ar_default_visibility(mut crosshairs_query: Query<(&mut Visibility, &
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
             SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
+            SpacecraftAR::PlanetMarkup(_) => visibility.is_visible = false,
         }
     }
 }
 
 pub fn handle_hot_planet(
-    spacecraft_query: Query<(&Children, &Spacecraft), Without<SpacecraftAR>>,
-    mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>,
+    spacecraft_query: Query<(&Children, &Spacecraft)>,
+    mut ar_query: Query<(&mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
 ) {
     // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
-        if spacecraft.hot_planet.is_some() {
+        if let Some(planet) = spacecraft.hot_planet {
+            for (mut visibility, ar_element) in ar_query.iter_mut() {
+                match *ar_element {
+                    SpacecraftAR::PlanetMarkup(entity) => {
+                        if entity == planet {
+                            visibility.is_visible = true;
+                        }
+                    }
+                    _ => (),
+                }
+            }
             for child_id in children.iter() {
                 if let Ok((mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
                     match *ar_element {
@@ -356,6 +368,7 @@ pub fn handle_hot_planet(
                         SpacecraftAR::CrosshairsCold => {
                             visibility.is_visible = false;
                         }
+                        _ => (),
                     }
                 }
             }
