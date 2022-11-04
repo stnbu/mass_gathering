@@ -3,7 +3,7 @@ use mass_gathering::prelude::*;
 fn main() {
     App::new()
         .insert_resource(SpacecraftConfig {
-            start_transform: Transform::from_xyz(0.0, 100.0, 0.0).looking_at(Vec3::ZERO, Vec3::Z),
+            start_transform: Transform::from_xyz(0.0, 0.0, 24.0).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         })
         .insert_resource(PhysicsConfig {
