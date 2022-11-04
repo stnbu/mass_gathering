@@ -90,8 +90,8 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
     let next_state =
         keys.get_just_pressed()
             .fold(None, |_state, key| match (*app_state.current(), *key) {
-                (Playing, Space) => Some(Paused),
-                (Paused, Space) => Some(Playing),
+                (Playing, P) => Some(Paused),
+                (Paused, P) => Some(Playing),
                 (Menu, M) => Some(Playing),
                 (_, M) => Some(Menu),
                 (Startup, _) => Some(Playing),

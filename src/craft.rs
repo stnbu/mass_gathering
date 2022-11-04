@@ -402,7 +402,7 @@ pub fn handle_projectile_engagement(
                 };
             spacecraft.hot_planet = Some(planet_id);
             if let Some(ref keys) = optional_keys {
-                if keys.just_pressed(KeyCode::F) {
+                if keys.just_pressed(KeyCode::Space) {
                     debug!("Firing projectile!");
                     let scale_factor = planet_transform.scale.length();
                     let global_impact_site = ray_origin + (ray_direction * distance);
@@ -534,7 +534,7 @@ pub fn handle_projectile_flight(
                     let scale_factor = planet_transform.scale.length();
                     let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
                     let mass = momentum.mass;
-                    momentum.velocity += -local_impact_site.normalize() * 10.0 / mass; // UNITS OF IMPACT!!
+                    momentum.velocity += -local_impact_site.normalize() * 3.0 / mass; // UNITS OF IMPACT!!
 
                     let explosion = commands
                         .spawn_bundle(PbrBundle {
@@ -625,8 +625,8 @@ W & S      - Pitch
 A & D      - Yaw
 Z & X      - Roll
 PgUp/PgDn  - Speed
-F          - Fire
-Space      - Pause
+Space      - Fire
+P          - Pause
 ------------------
 Your Speed - {}
 Your Location

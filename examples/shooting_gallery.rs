@@ -9,7 +9,7 @@ fn main() {
         .insert_resource(PhysicsConfig {
             sims_per_frame: 1,
             trails: true,
-            trail_ttl: 1000 * 600,
+            trail_ttl: 10_000,
         })
         .add_plugins(FullGame)
         .add_startup_system(setup)
