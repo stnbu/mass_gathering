@@ -1,7 +1,17 @@
 use bevy::prelude::*;
+use bevy_rapier3d::na::Translation;
 use mass_gathering::prelude::*;
 fn main() {
     App::new()
+        .insert_resource(SpacecraftConfig {
+            start_transform: Transform::from_xyz(0.0, 0.0, 40.0),
+            ..Default::default()
+        })
+        .insert_resource(PhysicsConfig {
+            sims_per_frame: 5,
+            trails: true,
+            trail_ttl: 1000 * 600,
+        })
         .add_plugins(FullGame)
         .add_startup_system(setup)
         .run();
