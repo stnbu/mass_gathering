@@ -53,6 +53,7 @@ pub struct SpacecraftConfig {
     pub stereo_iod: f32, // interocular distance
     pub recoil: f32,
     pub start_transform: Transform,
+    pub impact_magnitude: f32,
 }
 
 impl Default for SpacecraftConfig {
@@ -65,6 +66,7 @@ impl Default for SpacecraftConfig {
             stereo_iod: 0.0,
             recoil: 0.0,
             start_transform: Default::default(),
+            impact_magnitude: 10.0,
         }
     }
 }
@@ -110,6 +112,20 @@ pub fn move_forward(mut query: Query<(&mut Transform, &Spacecraft)>, time: Res<T
     for (mut transform, spacecraft) in query.iter_mut() {
         let direction = transform.local_z();
         transform.translation -= direction * time.delta_seconds() * spacecraft.speed;
+    }
+}
+
+pub fn drift(mut query: Query<&mut Transform, With<Spacecraft>>) {
+    for mut transform in query.iter_mut() {
+        let mut rng = rand::thread_rng();
+        let rot_x = (rng.gen::<f32>() - 0.5) * 0.0003;
+        let rot_y = (rng.gen::<f32>() - 0.5) * 0.0003;
+        let rot_z = (rng.gen::<f32>() - 0.5) * 0.0003;
+        transform.rotate(Quat::from_euler(EulerRot::XYZ, rot_x, rot_y, rot_z));
+        let mov_x = (rng.gen::<f32>() - 0.5) * 0.001;
+        let mov_y = (rng.gen::<f32>() - 0.5) * 0.001;
+        let mov_z = (rng.gen::<f32>() - 0.5) * 0.001;
+        transform.translation += Vec3::new(mov_x, mov_y, mov_z)
     }
 }
 
@@ -578,7 +594,8 @@ pub fn handle_projectile_flight(
                     let scale_factor = planet_transform.scale.length();
                     let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
                     let mass = momentum.mass;
-                    momentum.velocity += -local_impact_site.normalize() * 10.0 / mass; // UNITS OF IMPACT!!
+                    momentum.velocity +=
+                        -local_impact_site.normalize() * config.impact_magnitude / mass; // UNITS OF IMPACT!!
 
                     let explosion = commands
                         .spawn_bundle(PbrBundle {

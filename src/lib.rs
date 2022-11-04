@@ -39,7 +39,8 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(handle_hot_planet)
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
                     //.with_system(set_planet_markup_default_visibility.before(handle_hot_planet))
-                    .with_system(stars),
+                    .with_system(stars)
+                    .with_system(drift),
             )
             .add_system(hud)
             .add_startup_system(spacecraft_setup)
