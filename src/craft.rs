@@ -533,11 +533,8 @@ pub fn handle_projectile_flight(
                 {
                     let scale_factor = planet_transform.scale.length();
                     let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
-                    let impact_direction =
-                        (local_impact_site - planet_transform.translation).normalize();
                     let mass = momentum.mass;
-                    momentum.velocity +=
-                        impact_direction * 10.0 / mass / physics_config.sims_per_frame as f32; // UNITS OF IMPACT!!
+                    momentum.velocity += -local_impact_site.normalize() * 10.0 / mass; // UNITS OF IMPACT!!
 
                     let explosion = commands
                         .spawn_bundle(PbrBundle {
