@@ -7,7 +7,7 @@ fn main() {
             ..Default::default()
         })
         .insert_resource(PhysicsConfig {
-            sims_per_frame: 10 * 20,
+            sims_per_frame: 1,
             trails: true,
             trail_ttl: 1000 * 600,
         })
