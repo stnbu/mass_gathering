@@ -82,24 +82,6 @@ fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 
-/*
-       .spawn_bundle(PbrBundle {
-           mesh: meshes.add(Mesh::from(shape::Icosphere {
-               radius,
-               ..default()
-           })),
-           material: materials.add(color.into()),
-           transform: Transform::from_translation(position),
-           visibility: Visibility { is_visible: true },
-           ..default()
-       })
-       .insert(Momentum { velocity, mass })
-       .insert(RigidBody::Dynamic)
-       .insert(Collider::ball(radius))
-       .insert(ActiveEvents::COLLISION_EVENTS)
-       .insert(Sensor)
-*/
-
 #[derive(Bundle)]
 pub struct PlanetBundle {
     #[bundle]
