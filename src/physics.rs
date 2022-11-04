@@ -225,7 +225,7 @@ pub fn freefall(
                                     ..Default::default()
                                 })),
                                 transform: Transform::from_translation(*translation),
-                                material: materials.add((Color::LIME_GREEN * 0.3).into()),
+                                material: materials.add((Color::ANTIQUE_WHITE).into()),
                                 ..Default::default()
                             })
                             .insert(DespawnTimer {

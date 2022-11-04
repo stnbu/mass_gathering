@@ -21,7 +21,7 @@ use std::collections::HashSet;
 use std::f32::consts::TAU;
 use std::time::Duration;
 
-use crate::physics::{Momentum, PhysicsConfig};
+use crate::physics::Momentum;
 use crate::DespawnTimer;
 
 #[derive(Component, PartialEq, Eq)]
@@ -518,7 +518,6 @@ pub fn handle_projectile_flight(
     mut despawned: Local<Despawned>,
     time: Res<Time>,
     config: Res<SpacecraftConfig>,
-    physics_config: Res<PhysicsConfig>,
 ) {
     let mut collided = HashSet::new();
     for event in collision_events.iter() {
