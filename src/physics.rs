@@ -82,6 +82,48 @@ fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 
+/*
+       .spawn_bundle(PbrBundle {
+           mesh: meshes.add(Mesh::from(shape::Icosphere {
+               radius,
+               ..default()
+           })),
+           material: materials.add(color.into()),
+           transform: Transform::from_translation(position),
+           visibility: Visibility { is_visible: true },
+           ..default()
+       })
+       .insert(Momentum { velocity, mass })
+       .insert(RigidBody::Dynamic)
+       .insert(Collider::ball(radius))
+       .insert(ActiveEvents::COLLISION_EVENTS)
+       .insert(Sensor)
+*/
+
+#[derive(Bundle)]
+pub struct PlanetBundle {
+    #[bundle]
+    pbr: PbrBundle,
+    momentum: Momentum,
+    rigid_body: RigidBody,
+    collider: Collider,
+    active_events: ActiveEvents,
+    sensor: Sensor,
+}
+
+impl Default for PlanetBundle {
+    fn default() -> Self {
+        Self {
+            pbr: Default::default(),
+            momentum: Default::default(),
+            rigid_body: RigidBody::Dynamic,
+            collider: Default::default(),
+            active_events: ActiveEvents::COLLISION_EVENTS,
+            sensor: Default::default(),
+        }
+    }
+}
+
 pub fn spawn_planet<'a>(
     radius: f32,
     position: Vec3,
@@ -92,23 +134,21 @@ pub fn spawn_planet<'a>(
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) {
     let mass = radius_to_mass(radius);
-    let planet_id = commands
-        .spawn_bundle(PbrBundle {
+    let planet_bundle = PlanetBundle {
+        pbr: PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
                 radius,
                 ..default()
             })),
             material: materials.add(color.into()),
             transform: Transform::from_translation(position),
-            visibility: Visibility { is_visible: true },
             ..default()
-        })
-        .insert(Momentum { velocity, mass })
-        .insert(RigidBody::Dynamic)
-        .insert(Collider::ball(radius))
-        .insert(ActiveEvents::COLLISION_EVENTS)
-        .insert(Sensor)
-        .id();
+        },
+        momentum: Momentum { velocity, mass },
+        collider: Collider::ball(radius),
+        ..Default::default()
+    };
+    let planet_id = commands.spawn_bundle(planet_bundle).id();
     debug!("Spawned planet={planet_id:?}");
 }
 

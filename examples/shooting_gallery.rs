@@ -1,5 +1,16 @@
 use bevy::prelude::*;
 use mass_gathering::prelude::*;
+
+/*
+Reference:
+
+Masses:
+
+ earth - 5.97217×10^24 kg
+ moon  - 7.34200×10^22 kg
+ sun   - 1.98850×10^30 kg
+
+*/
 fn main() {
     App::new()
         .insert_resource(SpacecraftConfig {
