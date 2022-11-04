@@ -3,7 +3,7 @@ use mass_gathering::prelude::*;
 fn main() {
     App::new()
         .insert_resource(SpacecraftConfig {
-            start_transform: Transform::from_xyz(0.0, 0.0, 40.0),
+            start_transform: Transform::from_xyz(0.0, 0.0, 200.0),
             ..Default::default()
         })
         .insert_resource(PhysicsConfig {
@@ -21,7 +21,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let sun_radius = 8.0;
+    let sun_radius = 32.0;
     let earth_color = Color::rgb(23.0, 57.0, 61.0);
     let sun_color = Color::rgb(244.0, 233.0, 155.0);
     let moon_color = Color::rgb(149.0, 136.0, 132.0);
@@ -38,7 +38,7 @@ fn setup(
     );
     // The moon, even more beautiful
     spawn_planet(
-        1.0,
+        4.0,
         Vec3::X * sun_radius * 3.0,
         Vec3::Z * (20.0_f32).powf(0.5) * 0.5,
         moon_color,
