@@ -66,7 +66,7 @@ impl Plugin for Core {
 
         //#[cfg(debugging_)]
         app.insert_resource(LogSettings {
-            filter: "warn,mass_gathering=debug".into(),
+            filter: "warn,mass_gathering=warn".into(),
             level: bevy::log::Level::DEBUG,
         });
 

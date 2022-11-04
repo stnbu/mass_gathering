@@ -8,7 +8,7 @@ fn main() {
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(PhysicsConfig {
             sims_per_frame: 10,
-            trails: true,
+            trails: false,
             trail_ttl: 2500 * 5,
         })
         .insert_resource(SpacecraftConfig {
