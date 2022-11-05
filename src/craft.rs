@@ -24,6 +24,8 @@ use std::time::Duration;
 use crate::physics::Momentum;
 use crate::DespawnTimer;
 
+pub const SQRT_3: f32 = 1.7320508_f32;
+
 #[derive(Component, PartialEq, Eq)]
 pub enum SpacecraftAR {
     CrosshairsHot,
@@ -443,7 +445,7 @@ pub fn handle_projectile_engagement(
                                 })),
                                 material: materials.add(Color::BLUE.into()),
                                 transform: Transform::from_translation(
-                                    local_impact_site / (scale_factor / 1.7), // yeah
+                                    local_impact_site / (scale_factor / SQRT_3),
                                 ),
                                 ..Default::default()
                             })
@@ -580,64 +582,72 @@ pub fn signal_projectile_collision(
     });
 }
 
-pub fn handle_projectile_collision(
+// WARNING: order matters
+pub fn handle_projectile_despawn(
+    mut commands: Commands,
+    mut projectile_events: EventReader<ProjectileCollision>,
+) {
+    for projectile_collision in projectile_events.iter() {
+        commands.entity(projectile_collision.projectile).despawn();
+    }
+}
+
+pub fn spawn_projectile_explosion_animation(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    projectile_query: Query<(Entity, &Transform, &BallisticProjectileTarget)>,
-    mut planet_query: Query<
-        (&Transform, &mut Momentum, Entity),
-        Without<BallisticProjectileTarget>,
-    >,
-    mut collision_events: EventReader<CollisionEvent>,
-    config: Res<SpacecraftConfig>,
+    projectile_query: Query<&BallisticProjectileTarget>,
+    planet_query: Query<&Transform, Without<BallisticProjectileTarget>>,
+    mut projectile_events: EventReader<ProjectileCollision>,
 ) {
-    let mut collided = HashSet::new();
-    for event in collision_events.iter() {
-        if let CollisionEvent::Started(e0, e1, _) = event {
-            collided.insert(e0);
-            collided.insert(e1);
+    for event in projectile_events.iter() {
+        if let Ok(projectile_target) = projectile_query.get(event.projectile) {
+            if let Ok(planet_transform) = planet_query.get(event.planet) {
+                let scale_factor = planet_transform.scale.length();
+                let local_impact_site =
+                    projectile_target.local_impact_site / (scale_factor / SQRT_3);
+                let explosion = commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.2,
+                            ..Default::default()
+                        })),
+                        material: materials.add(StandardMaterial {
+                            base_color: Color::YELLOW,
+                            perceptual_roughness: 0.99,
+                            ..default()
+                        }),
+                        transform: Transform::from_translation(local_impact_site),
+                        ..Default::default()
+                    })
+                    .insert(ProjectileExplosion { rising: true })
+                    .id();
+                debug!("Explosion animation entity: {explosion:?}");
+                commands
+                    .entity(projectile_target.planet)
+                    .add_child(explosion);
+            }
         }
     }
-    for (projectile, _, target) in projectile_query.iter() {
-        if collided.contains(&projectile) {
-            debug!("We have a collision start event for projectile {projectile:?}.");
-            if config.show_impact_explosions {
-                if let Ok((planet_transform, mut momentum, _)) = planet_query.get_mut(target.planet)
-                {
-                    let scale_factor = planet_transform.scale.length();
-                    let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
-                    let mass = momentum.mass;
-                    momentum.velocity +=
-                        -local_impact_site.normalize() * config.impact_magnitude / mass;
-                    let explosion = commands
-                        .spawn_bundle(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.2,
-                                ..Default::default()
-                            })),
-                            material: materials.add(StandardMaterial {
-                                base_color: Color::YELLOW,
-                                perceptual_roughness: 0.99,
-                                ..default()
-                            }),
-                            transform: Transform::from_translation(local_impact_site),
-                            ..Default::default()
-                        })
-                        .insert(ProjectileExplosion { rising: true })
-                        .id();
-                    debug!("Explosion animation entity: {explosion:?}");
-                    commands.entity(target.planet).add_child(explosion);
-                }
+}
+
+pub fn transfer_projectile_momentum(
+    projectile_query: Query<&BallisticProjectileTarget>,
+    mut planet_query: Query<(&Transform, &mut Momentum), Without<BallisticProjectileTarget>>,
+    mut projectile_events: EventReader<ProjectileCollision>,
+    config: Res<SpacecraftConfig>,
+) {
+    for event in projectile_events.iter() {
+        if let Ok(projectile_target) = projectile_query.get(event.projectile) {
+            if let Ok((planet_transform, mut planet_momentum)) = planet_query.get_mut(event.planet)
+            {
+                let scale_factor = planet_transform.scale.length();
+                let local_impact_site =
+                    projectile_target.local_impact_site / (scale_factor / SQRT_3);
+                let mass = planet_momentum.mass;
+                planet_momentum.velocity +=
+                    -local_impact_site.normalize() * config.impact_magnitude / mass;
             }
-            debug!("Despawning projectile entity {projectile:?}");
-            commands.entity(projectile).despawn();
-            continue;
-        } else if !collided.is_empty() {
-            debug!(
-                "Projectile {projectile:?} not in collision entity list: {:?}",
-                collided
-            );
         }
     }
 }

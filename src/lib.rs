@@ -27,17 +27,25 @@ pub struct SpacecraftPlugin;
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
+            .add_event::<ProjectileCollision>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
                     .with_system(steer)
                     .with_system(handle_projectile_engagement)
-                    .with_system(move_projectiles)
                     .with_system(animate_projectile_explosion)
+                    .with_system(move_projectiles)
                     .with_system(handle_hot_planet)
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
                     .with_system(stars)
-                    .with_system(drift),
+                    .with_system(drift)
+                    .with_system(signal_projectile_collision)
+                    .with_system(handle_projectile_despawn)
+                    .with_system(move_projectiles.before(handle_projectile_despawn))
+                    .with_system(transfer_projectile_momentum.before(handle_projectile_despawn))
+                    .with_system(
+                        spawn_projectile_explosion_animation.before(handle_projectile_despawn),
+                    ),
             )
             .add_system(hud)
             .add_startup_system(spacecraft_setup)
