@@ -66,9 +66,9 @@ impl Default for SpacecraftConfig {
             projectile_radius: 0.1,
             stereo_enabled: false,
             stereo_iod: 0.0,
-            recoil: 0.0,
+            recoil: 0.025,
             start_transform: Default::default(),
-            impact_magnitude: 10.0,
+            impact_magnitude: 25.0,
         }
     }
 }
@@ -561,24 +561,24 @@ pub struct ProjectileCollision {
     pub projectile: Entity,
 }
 
-use rapier3d::geometry::CollisionEventFlags;
-
 pub fn signal_projectile_collision(
     mut projectile_collision: EventWriter<ProjectileCollision>,
     projectile_query: Query<&BallisticProjectileTarget>,
     mut collision_events: EventReader<CollisionEvent>,
 ) {
-    collision_events.iter().for_each(|event| match event {
-        // FIXME: Do we need to tweak the flags filter? "SENSOR" means "equal to" or "contains"
-        CollisionEvent::Started(e0, e1, CollisionEventFlags::SENSOR) => {
-            for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
-                if projectile_query.get(projectile).is_ok() {
-                    // NOTE: things go sidewaze if "&planet" is also a `Projectile`
-                    projectile_collision.send(ProjectileCollision { planet, projectile });
+    collision_events.iter().for_each(|event| {
+        match event {
+            // FIXME: Filter events?!
+            CollisionEvent::Started(e0, e1, _) => {
+                for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
+                    if projectile_query.get(projectile).is_ok() {
+                        // NOTE: Projectiles don't collied with each other (currently)
+                        projectile_collision.send(ProjectileCollision { planet, projectile });
+                    }
                 }
             }
+            _ => (),
         }
-        _ => (),
     });
 }
 
