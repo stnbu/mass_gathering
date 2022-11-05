@@ -49,7 +49,7 @@ pub struct SpacecraftConfig {
     pub show_impact_explosions: bool,
     pub projectile_radius: f32,
     pub stereo_enabled: bool,
-    /// Hint: use a netative value for "crosseyed" mode.
+    /// Hint: use a negative value for "crosseyed" mode.
     pub stereo_iod: f32, // interocular distance
     pub recoil: f32,
     pub start_transform: Transform,
@@ -90,23 +90,6 @@ pub struct ProjectileExplosion {
 
 #[derive(Default)]
 pub struct Despawned(HashSet<Entity>);
-
-#[derive(Component)]
-pub struct DelayedVisibility {
-    pub timer: Timer,
-}
-
-pub fn delayed_visibility(
-    mut delayed_visibility_query: Query<(&mut Visibility, &mut DelayedVisibility)>,
-    time: Res<Time>,
-) {
-    for (mut visibility, mut delay) in delayed_visibility_query.iter_mut() {
-        delay.timer.tick(time.delta());
-        if delay.timer.finished() {
-            visibility.is_visible = !visibility.is_visible;
-        }
-    }
-}
 
 pub fn move_forward(mut query: Query<(&mut Transform, &Spacecraft)>, time: Res<Time>) {
     for (mut transform, spacecraft) in query.iter_mut() {
