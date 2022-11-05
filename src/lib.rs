@@ -36,7 +36,9 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(animate_projectile_explosion)
                     .with_system(move_projectiles)
                     .with_system(handle_hot_planet)
-                    .with_system(set_ar_default_visibility.before(handle_hot_planet))
+                    .with_system(
+                        (set_ar_default_visibility.before(handle_hot_planet)).before(timer_despawn),
+                    )
                     .with_system(stars)
                     .with_system(drift)
                     .with_system(signal_projectile_collision)
