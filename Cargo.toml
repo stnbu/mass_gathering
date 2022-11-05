@@ -8,6 +8,7 @@ bevy = "0.8.1"
 bevy_egui = "0.16.1"
 bevy_rapier3d = "0.18.0"
 rand = "0.8.5"
+rapier3d = "0.16.0"
 web-sys = { version = "0.3.60", features = ["Window"] }
 
 [profile.release]

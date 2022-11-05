@@ -14,11 +14,11 @@ use bevy_egui::{
 use bevy_rapier3d::prelude::{
     ActiveEvents, Collider, CollisionEvent, QueryFilter, RapierContext, RigidBody, Sensor,
 };
-use std::f64::consts::PI;
 
 use rand::Rng;
 use std::collections::HashSet;
 use std::f32::consts::TAU;
+use std::f64::consts::PI;
 use std::time::Duration;
 
 use crate::physics::Momentum;
@@ -518,18 +518,78 @@ pub fn handle_projectile_engagement(
     }
 }
 
-// FIXME -- it may make more sense for the "target" to be a _child_ of the target planet.
-pub fn handle_projectile_flight(
+pub struct PlanetCollision {
+    pub major: (f32, Entity),
+    pub minor: (f32, Entity),
+}
+
+pub fn signal_planet_collision(
+    mut planet_collision: EventWriter<PlanetCollision>,
+    planet_query: Query<&Momentum>,
+    mut collision_events: EventReader<CollisionEvent>,
+) {
+    collision_events.iter().for_each(|event| match event {
+        CollisionEvent::Started(e0, e1, _flags) => {
+            for [m0, m1] in planet_query.get_many([*e0, *e1]) {
+                let event = if m0.mass > m1.mass {
+                    let major_weight = m0.mass / (m0.mass + m1.mass);
+                    let minor_weight = 1.0 - major_weight;
+                    PlanetCollision {
+                        major: (major_weight, *e0),
+                        minor: (minor_weight, *e1),
+                    }
+                } else {
+                    // FIXME: Tiebreaker?
+                    let major_weight = m1.mass / (m0.mass + m1.mass);
+                    let minor_weight = 1.0 - major_weight;
+                    PlanetCollision {
+                        major: (major_weight, *e1),
+                        minor: (minor_weight, *e0),
+                    }
+                };
+                planet_collision.send(event);
+            }
+        }
+        _ => (),
+    });
+}
+
+pub struct ProjectileCollision {
+    pub planet: Entity,
+    pub projectile: Entity,
+}
+
+use rapier3d::geometry::CollisionEventFlags;
+
+pub fn signal_projectile_collision(
+    mut projectile_collision: EventWriter<ProjectileCollision>,
+    projectile_query: Query<&BallisticProjectileTarget>,
+    mut collision_events: EventReader<CollisionEvent>,
+) {
+    collision_events.iter().for_each(|event| match event {
+        // FIXME: Do we need to tweak the flags filter? "SENSOR" means "equal to" or "contains"
+        CollisionEvent::Started(e0, e1, CollisionEventFlags::SENSOR) => {
+            for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
+                if projectile_query.get(projectile).is_ok() {
+                    // NOTE: things go sidewaze if "&planet" is also a `Projectile`
+                    projectile_collision.send(ProjectileCollision { planet, projectile });
+                }
+            }
+        }
+        _ => (),
+    });
+}
+
+pub fn handle_projectile_collision(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
+    projectile_query: Query<(Entity, &Transform, &BallisticProjectileTarget)>,
     mut planet_query: Query<
         (&Transform, &mut Momentum, Entity),
         Without<BallisticProjectileTarget>,
     >,
     mut collision_events: EventReader<CollisionEvent>,
-    time: Res<Time>,
     config: Res<SpacecraftConfig>,
 ) {
     let mut collided = HashSet::new();
@@ -539,26 +599,17 @@ pub fn handle_projectile_flight(
             collided.insert(e1);
         }
     }
-    for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
-        debug!(
-            "Handling flight of projectile {projectile:?} with target {:?}",
-            target.planet
-        );
+    for (projectile, _, target) in projectile_query.iter() {
         if collided.contains(&projectile) {
             debug!("We have a collision start event for projectile {projectile:?}.");
             if config.show_impact_explosions {
-                // FIXME -- the fact that we are getting the target planet here and also
-                //          below where we move the planet...says we need refactoring.
-                // FIXME -- target.planet is NOT guaranteed to be the planet we collided!
-                //          we want the planet that was actually struck!
                 if let Ok((planet_transform, mut momentum, _)) = planet_query.get_mut(target.planet)
                 {
                     let scale_factor = planet_transform.scale.length();
                     let local_impact_site = target.local_impact_site / (scale_factor / 1.7); // yeah
                     let mass = momentum.mass;
                     momentum.velocity +=
-                        -local_impact_site.normalize() * config.impact_magnitude / mass; // UNITS OF IMPACT!!
-
+                        -local_impact_site.normalize() * config.impact_magnitude / mass;
                     let explosion = commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -588,6 +639,19 @@ pub fn handle_projectile_flight(
                 collided
             );
         }
+    }
+}
+
+pub fn move_projectiles(
+    mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
+    planet_query: Query<(&Transform, &mut Momentum, Entity), Without<BallisticProjectileTarget>>,
+    time: Res<Time>,
+) {
+    for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
+        debug!(
+            "Handling flight of projectile {projectile:?} with target {:?}",
+            target.planet
+        );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let goal_impact_site = planet_transform.translation + target.local_impact_site;
             let direction = (projectile_transform.translation - goal_impact_site).normalize();

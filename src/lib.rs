@@ -32,7 +32,7 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(move_forward)
                     .with_system(steer)
                     .with_system(handle_projectile_engagement)
-                    .with_system(handle_projectile_flight)
+                    .with_system(move_projectiles)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
