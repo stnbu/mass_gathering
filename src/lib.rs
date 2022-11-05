@@ -14,8 +14,6 @@ use craft::*;
 
 pub mod prelude;
 
-pub struct Core;
-
 pub struct FullGame;
 
 impl PluginGroup for FullGame {
@@ -38,7 +36,6 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
-                    //.with_system(set_planet_markup_default_visibility.before(handle_hot_planet))
                     .with_system(stars)
                     .with_system(drift),
             )
@@ -59,6 +56,8 @@ impl Plugin for Spacetime {
         );
     }
 }
+
+pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
@@ -216,7 +215,6 @@ fn handle_browser_resize(mut windows: ResMut<Windows>) {
         wasm_window.inner_width().unwrap().as_f64().unwrap() as f32,
         wasm_window.inner_height().unwrap().as_f64().unwrap() as f32,
     );
-
     if window.width() != target_width || window.height() != target_height {
         window.set_resolution(target_width, target_height);
     }
