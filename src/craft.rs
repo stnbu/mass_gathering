@@ -343,27 +343,6 @@ pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &Spacecra
     }
 }
 
-/// Ooops no need for this. The timer ensures no orphans. What we need, though
-/// is to handle this and other stuff in planet collisions.
-pub fn reap_orphaned_planet_markup(
-    mut commands: Commands,
-    ar_query: Query<(Entity, &SpacecraftAR)>,
-    planet_query: Query<Entity, With<Momentum>>, // fixme
-) {
-    for (ar_id, ar_kind) in ar_query.iter() {
-        match *ar_kind {
-            SpacecraftAR::PlanetMarkup(id) => {
-                if let Ok(_id) = planet_query.get(id) {
-                    // wut
-                } else {
-                    commands.entity(ar_id).despawn_recursive();
-                }
-            }
-            _ => (),
-        }
-    }
-}
-
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
     planet_query: Query<Entity, (With<Momentum>, Without<SpacecraftAR>)>,
