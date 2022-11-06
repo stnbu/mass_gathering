@@ -30,7 +30,6 @@ pub const SQRT_3: f32 = 1.7320508_f32;
 pub enum SpacecraftAR {
     CrosshairsHot,
     CrosshairsCold,
-    PlanetMarkup(Entity),
 }
 
 #[derive(Debug, Default, Component)]
@@ -340,36 +339,17 @@ pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &Spacecra
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
             SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
-            SpacecraftAR::PlanetMarkup(_) => visibility.is_visible = true,
         }
     }
 }
 
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
-    planet_query: Query<Entity, (With<Momentum>, Without<SpacecraftAR>)>,
     mut ar_query: Query<(Entity, &mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
 ) {
-    // FIXME -- Gets hairy when multiple "spacecraft". We want only _our_ markup to be visible.
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet) = spacecraft.hot_planet {
             debug!("Planet hot: {planet:?}");
-            if planet_query.get(planet).is_ok() {
-                for (id, mut visibility, ar_element) in ar_query.iter_mut() {
-                    match *ar_element {
-                        SpacecraftAR::PlanetMarkup(entity) => {
-                            if entity == planet {
-                                debug!("  Set planet breadcrumb {id:?} to visible");
-                                visibility.is_visible = true;
-                            }
-                        }
-                        _ => (),
-                    }
-                }
-            } else {
-                warn!("  Hot planet {planet:?} despawned? Skipping");
-                continue;
-            }
             for child_id in children.iter() {
                 if let Ok((id, mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
                     debug!(
@@ -520,60 +500,6 @@ pub fn handle_projectile_engagement(
     }
 }
 
-use std::collections::HashMap;
-#[derive(Default)]
-pub struct PreviousLocations(pub HashMap<Entity, Vec3>);
-
-pub struct Breadcrumb {
-    entity: Entity,
-    location: Vec3,
-}
-
-pub fn signal_breadcrumbs(
-    planet_query: Query<(Entity, &Transform), With<Momentum>>,
-    mut previous_locations: Local<PreviousLocations>,
-    mut breadcrumb_events: EventWriter<Breadcrumb>,
-) {
-    let mut current_locations = PreviousLocations::default();
-    for (entity, transform) in planet_query.iter() {
-        current_locations.0.insert(entity, transform.translation);
-        if let Some(prev) = previous_locations.0.get(&entity) {
-            if (transform.translation - *prev).length() > 0.25 {
-                breadcrumb_events.send(Breadcrumb {
-                    entity,
-                    location: transform.translation,
-                });
-            }
-        }
-    }
-    *previous_locations = current_locations;
-}
-
-pub fn spawn_breadcrumbs(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut breadcrumb_events: EventReader<Breadcrumb>,
-) {
-    for event in breadcrumb_events.iter() {
-        commands
-            .spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 0.05,
-                    ..Default::default()
-                })),
-                transform: Transform::from_translation(event.location),
-                visibility: Visibility { is_visible: true },
-                material: materials.add((Color::ANTIQUE_WHITE).into()),
-                ..Default::default()
-            })
-            .insert(DespawnTimer {
-                ttl: Timer::new(Duration::from_millis(3000), false),
-            });
-        //.insert(SpacecraftAR::PlanetMarkup(event.entity));
-    }
-}
-
 pub struct ProjectileCollision {
     pub planet: Entity,
     pub projectile: Entity,
@@ -590,7 +516,6 @@ pub fn signal_projectile_collision(
             CollisionEvent::Started(e0, e1, _) => {
                 for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                     if projectile_query.get(projectile).is_ok() {
-                        warn!("SIGNALING PROJECTILE COLLISION");
                         // NOTE: Projectiles don't collied with each other (currently)
                         projectile_collision.send(ProjectileCollision { planet, projectile });
                     }
@@ -608,7 +533,6 @@ pub fn handle_projectile_despawn(
 ) {
     //return;
     for projectile_collision in projectile_events.iter() {
-        warn!("DESPAWNING PROJECTILE");
         commands.entity(projectile_collision.projectile).despawn();
     }
 }
@@ -624,7 +548,6 @@ pub fn spawn_projectile_explosion_animation(
     for event in projectile_events.iter() {
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok(planet_transform) = planet_query.get(event.planet) {
-                warn!("SPAWNING PROJECTILE EXPLOSION");
                 let scale_factor = planet_transform.scale.length();
                 let local_impact_site =
                     projectile_target.local_impact_site / (scale_factor / SQRT_3);
@@ -663,7 +586,6 @@ pub fn transfer_projectile_momentum(
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok((planet_transform, mut planet_momentum)) = planet_query.get_mut(event.planet)
             {
-                warn!("TRANSFERING PROJECTILE MOMENTUM");
                 let scale_factor = planet_transform.scale.length();
                 let local_impact_site =
                     projectile_target.local_impact_site / (scale_factor / SQRT_3);

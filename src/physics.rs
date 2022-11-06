@@ -21,7 +21,7 @@ impl Default for PhysicsConfig {
     }
 }
 
-pub fn collision_events(
+pub fn handle_planet_collisions(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
     mut planet_query: Query<(&mut Transform, &mut Momentum, Entity, &mut Collider)>,
@@ -150,25 +150,13 @@ impl Default for Momentum {
     }
 }
 
-pub struct SpaceTick {
-    pub interval: Timer,
-}
-
-impl Default for SpaceTick {
-    fn default() -> Self {
-        Self {
-            interval: Timer::new(Duration::from_millis(500), true),
-        }
-    }
-}
-
 pub fn freefall(
-    mut query: Query<(Entity, &mut Transform, &mut Momentum)>,
+    mut planet_query: Query<(Entity, &mut Transform, &mut Momentum)>,
     time: Res<Time>,
     physics_config: Res<PhysicsConfig>,
 ) {
     let dt = time.delta_seconds();
-    let mut masses = query
+    let mut masses = planet_query
         .iter()
         .map(|t| (t.0, t.1.translation, t.2.mass, t.2.velocity))
         .collect::<Vec<_>>();
@@ -185,6 +173,8 @@ pub fn freefall(
                 acceleration + grav_acc * 0.001
             })
         });
+        // What would happen if each pass re-re-randomized the order of masses? Good?
+        // Actually, ordering by mass might be a thing too.
         masses = masses
             .iter()
             .zip(accelerations)
@@ -199,11 +189,68 @@ pub fn freefall(
             .collect::<Vec<_>>();
     }
     for (entity, translation, mass, velocity) in masses.iter() {
-        if let Ok((id, mut transform, mut momentum)) = query.get_mut(*entity) {
+        if let Ok((id, mut transform, mut momentum)) = planet_query.get_mut(*entity) {
             debug!("Updating translation and momentum for planet {id:?}");
             transform.translation = *translation;
             momentum.velocity = *velocity;
             momentum.mass = *mass;
         }
+    }
+}
+
+use std::collections::HashMap;
+#[derive(Default)]
+pub struct PreviousLocations(pub HashMap<Entity, Vec3>);
+
+pub struct BreadcrumbEvent {
+    entity: Entity,
+    location: Vec3,
+}
+
+#[derive(Component)]
+pub struct Breadcrumb(pub Entity);
+
+pub fn signal_breadcrumbs(
+    planet_query: Query<(Entity, &Transform), With<Momentum>>,
+    mut previous_locations: Local<PreviousLocations>,
+    mut breadcrumb_events: EventWriter<BreadcrumbEvent>,
+) {
+    let mut current_locations = PreviousLocations::default();
+    for (entity, transform) in planet_query.iter() {
+        current_locations.0.insert(entity, transform.translation);
+        if let Some(prev) = previous_locations.0.get(&entity) {
+            if (transform.translation - *prev).length() > 0.25 {
+                breadcrumb_events.send(BreadcrumbEvent {
+                    entity,
+                    location: transform.translation,
+                });
+            }
+        }
+    }
+    *previous_locations = current_locations;
+}
+
+pub fn spawn_breadcrumbs(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut breadcrumb_events: EventReader<BreadcrumbEvent>,
+) {
+    for event in breadcrumb_events.iter() {
+        commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius: 0.12,
+                    ..Default::default()
+                })),
+                transform: Transform::from_translation(event.location),
+                visibility: Visibility { is_visible: true },
+                material: materials.add((Color::WHITE).into()),
+                ..Default::default()
+            })
+            .insert(DespawnTimer {
+                ttl: Timer::new(Duration::from_millis(3000), false),
+            })
+            .insert(Breadcrumb(event.entity));
     }
 }

@@ -28,7 +28,6 @@ impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
             .add_event::<ProjectileCollision>()
-            .add_event::<Breadcrumb>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
@@ -38,8 +37,6 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(handle_projectile_engagement)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
-                    //.with_system(signal_breadcrumbs)
-                    //.with_system(spawn_breadcrumbs.after(signal_breadcrumbs))
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
                     .with_system(move_projectiles)
                     .with_system(signal_projectile_collision.after(move_projectiles))
@@ -61,11 +58,14 @@ pub struct Spacetime;
 
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
-        app.init_resource::<PhysicsConfig>().add_system_set(
-            SystemSet::on_update(AppState::Playing)
-                .with_system(freefall)
-                .with_system(collision_events),
-        );
+        app.init_resource::<PhysicsConfig>()
+            .add_event::<BreadcrumbEvent>()
+            .add_system_set(
+                SystemSet::on_update(AppState::Playing)
+                    .with_system(freefall)
+                    .with_system(signal_breadcrumbs.after(freefall))
+                    .with_system(spawn_breadcrumbs.after(signal_breadcrumbs)),
+            );
     }
 }
 
@@ -88,7 +88,7 @@ impl Plugin for Core {
             .add_system(bevy::window::close_on_esc)
             .add_system(core_setup)
             .add_system(handle_game_state)
-            .add_system(timer_despawn)
+            //.add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
@@ -163,7 +163,7 @@ pub fn my_planets(
 ) {
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    let pair_count = 10;
+    let pair_count = 40;
     for _ in 0..pair_count {
         let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
         let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
