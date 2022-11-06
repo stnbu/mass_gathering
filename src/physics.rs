@@ -162,20 +162,9 @@ impl Default for SpaceTick {
     }
 }
 
-use std::collections::HashMap;
-
-#[derive(Default)]
-pub struct LastFrame {
-    locations: HashMap<Entity, Vec3>,
-}
-
 pub fn freefall(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     mut query: Query<(Entity, &mut Transform, &mut Momentum)>,
     time: Res<Time>,
-    mut locations: Local<LastFrame>,
     physics_config: Res<PhysicsConfig>,
 ) {
     let dt = time.delta_seconds();
@@ -209,44 +198,12 @@ pub fn freefall(
             })
             .collect::<Vec<_>>();
     }
-
     for (entity, translation, mass, velocity) in masses.iter() {
         if let Ok((id, mut transform, mut momentum)) = query.get_mut(*entity) {
             debug!("Updating translation and momentum for planet {id:?}");
             transform.translation = *translation;
             momentum.velocity = *velocity;
             momentum.mass = *mass;
-            if physics_config.trails {
-                if let Some(prev) = locations.locations.get(entity) {
-                    debug!("  Last location was {prev:?}");
-                    if (*prev - *translation).length() > 0.25 {
-                        debug!("  Time to add a new breadcrumb");
-                        let breadcrumb = commands
-                            .spawn_bundle(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.05,
-                                    ..Default::default()
-                                })),
-                                transform: Transform::from_translation(*translation),
-                                material: materials.add((Color::ANTIQUE_WHITE).into()),
-                                ..Default::default()
-                            })
-                            .insert(DespawnTimer {
-                                ttl: Timer::new(
-                                    Duration::from_millis(physics_config.trail_ttl),
-                                    false,
-                                ),
-                            })
-                            .insert(SpacecraftAR::PlanetMarkup(*entity))
-                            .id();
-                        debug!("  Spawned new breadcrumb PBR {breadcrumb:?}");
-                        locations.locations.insert(*entity, *translation);
-                    }
-                } else {
-                    debug!("  Recording first location");
-                    locations.locations.insert(*entity, *translation);
-                }
-            }
         }
     }
 }

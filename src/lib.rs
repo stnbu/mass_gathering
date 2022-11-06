@@ -28,25 +28,27 @@ impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
             .add_event::<ProjectileCollision>()
+            .add_event::<Breadcrumb>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
                     .with_system(steer)
-                    .with_system(handle_projectile_engagement)
-                    .with_system(animate_projectile_explosion)
-                    .with_system(move_projectiles)
-                    .with_system(handle_hot_planet)
-                    .with_system(
-                        (set_ar_default_visibility.before(handle_hot_planet)).before(timer_despawn),
-                    )
                     .with_system(stars)
                     .with_system(drift)
-                    .with_system(signal_projectile_collision)
-                    .with_system(handle_projectile_despawn)
-                    .with_system(move_projectiles.before(handle_projectile_despawn))
-                    .with_system(transfer_projectile_momentum.before(handle_projectile_despawn))
+                    .with_system(handle_projectile_engagement)
+                    .with_system(animate_projectile_explosion)
+                    .with_system(handle_hot_planet)
+                    //.with_system(signal_breadcrumbs)
+                    //.with_system(spawn_breadcrumbs.after(signal_breadcrumbs))
+                    .with_system(set_ar_default_visibility.before(handle_hot_planet))
+                    .with_system(move_projectiles)
+                    .with_system(signal_projectile_collision.after(move_projectiles))
+                    .with_system(transfer_projectile_momentum.after(signal_projectile_collision))
                     .with_system(
-                        spawn_projectile_explosion_animation.before(handle_projectile_despawn),
+                        spawn_projectile_explosion_animation.after(transfer_projectile_momentum),
+                    )
+                    .with_system(
+                        handle_projectile_despawn.after(spawn_projectile_explosion_animation),
                     ),
             )
             .add_system(hud)
@@ -161,7 +163,7 @@ pub fn my_planets(
 ) {
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    let pair_count = 40;
+    let pair_count = 10;
     for _ in 0..pair_count {
         let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
         let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
