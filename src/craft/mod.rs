@@ -350,6 +350,7 @@ pub fn set_ar_default_visibility(
 }
 
 use crate::physics::Breadcrumb;
+use crate::prelude::DeltaEvent;
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
     mut ar_query: Query<
@@ -520,27 +521,6 @@ pub struct ProjectileCollision {
     pub projectile: Entity,
 }
 
-pub fn signal_projectile_collision(
-    mut projectile_collision: EventWriter<ProjectileCollision>,
-    projectile_query: Query<&BallisticProjectileTarget>,
-    mut collision_events: EventReader<CollisionEvent>,
-) {
-    collision_events.iter().for_each(|event| {
-        match event {
-            // FIXME: Filter events?!
-            CollisionEvent::Started(e0, e1, _) => {
-                for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
-                    if projectile_query.get(projectile).is_ok() {
-                        // NOTE: Projectiles don't collied with each other (currently)
-                        projectile_collision.send(ProjectileCollision { planet, projectile });
-                    }
-                }
-            }
-            _ => (),
-        }
-    });
-}
-
 // WARNING: order matters
 pub fn handle_projectile_despawn(
     mut commands: Commands,
@@ -593,20 +573,24 @@ pub fn spawn_projectile_explosion_animation(
 
 pub fn transfer_projectile_momentum(
     projectile_query: Query<&BallisticProjectileTarget>,
-    mut planet_query: Query<(&Transform, &mut Momentum), Without<BallisticProjectileTarget>>,
+    planet_query: Query<(&Transform, &Momentum), Without<BallisticProjectileTarget>>,
     mut projectile_events: EventReader<ProjectileCollision>,
+    mut delta_events: EventWriter<DeltaEvent>,
     config: Res<SpacecraftConfig>,
 ) {
     for event in projectile_events.iter() {
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
-            if let Ok((planet_transform, mut planet_momentum)) = planet_query.get_mut(event.planet)
-            {
+            if let Ok((planet_transform, planet_momentum)) = planet_query.get(event.planet) {
                 let scale_factor = planet_transform.scale.length();
                 let local_impact_site =
                     projectile_target.local_impact_site / (scale_factor / SQRT_3);
                 let mass = planet_momentum.mass;
-                planet_momentum.velocity +=
-                    -local_impact_site.normalize() * config.impact_magnitude / mass;
+                let delta_v = -local_impact_site.normalize() * config.impact_magnitude / mass;
+                delta_events.send(DeltaEvent {
+                    entity: event.planet,
+                    delta_p: Vec3::ZERO,
+                    delta_v,
+                });
             }
         }
     }

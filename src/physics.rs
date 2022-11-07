@@ -20,11 +20,14 @@ impl Default for PhysicsConfig {
     }
 }
 
+use crate::craft::ProjectileCollision;
+
 pub fn handle_planet_collisions(
     mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
     mut planet_query: Query<(&mut Transform, &mut Momentum, Entity, &mut Collider)>,
-    mut target_query: Query<(&mut BallisticProjectileTarget, Entity)>,
+    mut projectile_collision_events: EventWriter<ProjectileCollision>,
+    projectile_query: Query<&BallisticProjectileTarget>,
 ) {
     // FIXME -- need to handle 3-way collisions IF it ever happens...
     // FIXME -- "projectiles" still needlessly show up in planet_collider_query
@@ -59,16 +62,15 @@ pub fn handle_planet_collisions(
                 major.0.scale = scale_up * Vec3::splat(1.0);
                 // End Merge Math
 
-                for (mut target, projectile_id) in target_query.iter_mut() {
-                    if target.planet == *cull {
-                        warn!("Projectile {projectile_id:?} has despawned planet {:?} as its target. Remapping to merge-ee planet {:?}", target.planet, major.2);
-                        target.planet = major.2;
-                    }
-                }
                 debug!("despawning planet {:?}", cull);
                 commands.entity(*cull).despawn_recursive();
-            } else {
-                debug!("One of {:?} or {:?} has no parent.", e0, e1);
+                continue;
+            }
+            for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
+                if projectile_query.get(projectile).is_ok() {
+                    // NOTE: Projectiles don't collied with each other (currently)
+                    projectile_collision_events.send(ProjectileCollision { planet, projectile });
+                }
             }
         }
     }
@@ -149,10 +151,17 @@ impl Default for Momentum {
     }
 }
 
-pub fn freefall(
-    mut planet_query: Query<(Entity, &mut Transform, &mut Momentum)>,
+pub struct DeltaEvent {
+    pub entity: Entity,
+    pub delta_p: Vec3,
+    pub delta_v: Vec3,
+}
+
+pub fn signal_freefall_delta(
+    planet_query: Query<(Entity, &Transform, &Momentum)>,
     time: Res<Time>,
     physics_config: Res<PhysicsConfig>,
+    mut delta_events: EventWriter<DeltaEvent>,
 ) {
     let dt = time.delta_seconds();
     let mut masses = planet_query
@@ -178,21 +187,27 @@ pub fn freefall(
             .iter()
             .zip(accelerations)
             .map(|((entity, translation, mass, velocity), force)| {
-                (
-                    *entity,
-                    *translation + *velocity * dt,
-                    *mass,
-                    *velocity + (force * dt) / *mass,
-                )
+                let delta_p = *velocity * dt;
+                let delta_v = (force * dt) / *mass;
+                delta_events.send(DeltaEvent {
+                    entity: *entity,
+                    delta_p,
+                    delta_v,
+                });
+                (*entity, *translation + delta_p, *mass, *velocity + delta_v)
             })
             .collect::<Vec<_>>();
     }
-    for (entity, translation, mass, velocity) in masses.iter() {
-        if let Ok((id, mut transform, mut momentum)) = planet_query.get_mut(*entity) {
-            debug!("Updating translation and momentum for planet {id:?}");
-            transform.translation = *translation;
-            momentum.velocity = *velocity;
-            momentum.mass = *mass;
+}
+
+pub fn handle_freefall(
+    mut planet_query: Query<(&mut Transform, &mut Momentum)>,
+    mut delta_events: EventReader<DeltaEvent>,
+) {
+    for event in delta_events.iter() {
+        if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
+            transform.translation += event.delta_p;
+            momentum.velocity += event.delta_v;
         }
     }
 }

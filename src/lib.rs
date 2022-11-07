@@ -39,8 +39,7 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(handle_hot_planet)
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
                     .with_system(move_projectiles)
-                    .with_system(signal_projectile_collision.after(move_projectiles))
-                    .with_system(transfer_projectile_momentum.after(signal_projectile_collision))
+                    .with_system(transfer_projectile_momentum)
                     .with_system(
                         spawn_projectile_explosion_animation.after(transfer_projectile_momentum),
                     )
@@ -60,12 +59,13 @@ impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
         app.init_resource::<PhysicsConfig>()
             .add_event::<BreadcrumbEvent>()
+            .add_event::<DeltaEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
-                    .with_system(freefall)
-                    .with_system(handle_planet_collisions.before(freefall))
-                    .with_system(signal_breadcrumbs.after(freefall))
-                    .with_system(spawn_breadcrumbs.after(signal_breadcrumbs)),
+                    .with_system(signal_freefall_delta)
+                    .with_system(handle_freefall)
+                    .with_system(signal_breadcrumbs)
+                    .with_system(spawn_breadcrumbs),
             );
     }
 }
