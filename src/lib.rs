@@ -63,6 +63,7 @@ impl Plugin for Spacetime {
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(freefall)
+                    .with_system(handle_planet_collisions.before(freefall))
                     .with_system(signal_breadcrumbs.after(freefall))
                     .with_system(spawn_breadcrumbs.after(signal_breadcrumbs)),
             );
