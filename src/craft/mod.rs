@@ -364,7 +364,6 @@ pub fn handle_hot_planet(
                             debug!("    Hiding cold component");
                             visibility.is_visible = false;
                         }
-                        _ => (),
                     }
                 }
             }
