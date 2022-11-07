@@ -38,7 +38,7 @@ fn setup(
 ) {
     let sun_radius = 8.0;
     let earth_color = Color::rgb(23.0, 57.0, 61.0);
-    let sun_color = Color::rgb(244.0, 233.0, 155.0);
+    //let sun_color = Color::rgb(244.0, 233.0, 155.0);
     let moon_color = Color::rgb(149.0, 136.0, 132.0);
 
     // The sun, beautiful
