@@ -613,8 +613,11 @@ pub fn move_projectiles(
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let goal_impact_site = planet_transform.translation + target.local_impact_site;
             let direction = (projectile_transform.translation - goal_impact_site).normalize();
-            let translation =
-                (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
+            let speed_coefficient = 0.32 * 10.0;
+            let absolute_velocity = direction * speed_coefficient;
+            let velocity = absolute_velocity + planet_momentum.velocity;
+            // (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
+            let translation = velocity * time.delta_seconds();
             projectile_transform.translation -= translation;
             debug!(
                 "Projectile entity {projectile:?} traveled {:?}",

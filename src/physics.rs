@@ -34,12 +34,17 @@ pub fn handle_planet_collisions(
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
+            warn!("Collision of collider entities {e0:?} and {e1:?}");
             // if planet_query.get_many([*e0, *e1]).is_ok() {
             //     planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
             // }
             for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                 if projectile_query.get(projectile).is_ok() {
                     // NOTE: Projectiles don't collied with each other (currently)
+                    warn!(
+                        "Signaling collision of projectile {:?} with planet {:?}",
+                        projectile, planet
+                    );
                     projectile_collision_events
                         .send(ProjectileCollisionEvent { planet, projectile });
                 }
@@ -67,7 +72,7 @@ pub fn transfer_planet_momentum(
 ) {
     for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
         if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
-            let (major, minor) = if p0.1.mass > p1.1.mass {
+            let (mut major, minor) = if p0.1.mass > p1.1.mass {
                 (p0, p1)
             // FIXME: tie-breaker!
             } else {
@@ -80,8 +85,13 @@ pub fn transfer_planet_momentum(
             let delta_v = (combined_momentum / combined_mass) - major.1.velocity;
             let major_factor = major.1.mass / combined_mass;
             let minor_factor = minor.1.mass / combined_mass;
+            // Weird: update mass here...
+            major.1.mass = combined_mass;
             let delta_p =
                 (major_factor * major.0.translation) - (minor_factor * minor.0.translation);
+            // ...and change translation via an event BUT, don't update velocity here
+            // (even though you could have) because "DeltaEvent" is handled elsewhere,
+            // including velocity.
             delta_events.send(DeltaEvent {
                 entity: major.2,
                 delta_p,
