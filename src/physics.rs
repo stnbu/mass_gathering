@@ -1,6 +1,6 @@
 use crate::craft::BallisticProjectileTarget;
 use crate::DespawnTimer;
-use bevy::{prelude::*, utils::tracing::instrument::WithSubscriber};
+use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use std::{f32::consts::PI, time::Duration};
 
