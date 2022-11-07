@@ -214,9 +214,7 @@ pub fn signal_breadcrumbs(
     mut previous_locations: Local<PreviousLocations>,
     mut breadcrumb_events: EventWriter<BreadcrumbEvent>,
 ) {
-    let mut current_locations = PreviousLocations::default();
     for (entity, transform) in planet_query.iter() {
-        current_locations.0.insert(entity, transform.translation);
         if let Some(prev) = previous_locations.0.get(&entity) {
             if (transform.translation - *prev).length() > 0.25 {
                 breadcrumb_events.send(BreadcrumbEvent {
@@ -224,9 +222,10 @@ pub fn signal_breadcrumbs(
                     location: transform.translation,
                 });
             }
+        } else {
+            previous_locations.0.insert(entity, transform.translation);
         }
     }
-    *previous_locations = current_locations;
 }
 
 pub fn spawn_breadcrumbs(
