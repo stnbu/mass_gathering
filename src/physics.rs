@@ -216,11 +216,12 @@ pub fn signal_breadcrumbs(
 ) {
     for (entity, transform) in planet_query.iter() {
         if let Some(prev) = previous_locations.0.get(&entity) {
-            if (transform.translation - *prev).length() > 0.25 {
+            if (transform.translation - *prev).length() > 2.0 / 3.0 {
                 breadcrumb_events.send(BreadcrumbEvent {
                     entity,
                     location: transform.translation,
                 });
+                previous_locations.0.insert(entity, transform.translation);
             }
         } else {
             previous_locations.0.insert(entity, transform.translation);
@@ -238,7 +239,7 @@ pub fn spawn_breadcrumbs(
         commands
             .spawn_bundle(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 0.12,
+                    radius: 0.1,
                     ..Default::default()
                 })),
                 transform: Transform::from_translation(event.location),
