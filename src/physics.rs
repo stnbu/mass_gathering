@@ -34,40 +34,41 @@ pub fn handle_planet_collisions(
     //          because we are not filtering `events` enough/at all.
     for collision_event in events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
-                debug!(
-                    "Collision-started event for planets {:?} and {:?}",
-                    p0.2, p1.2
-                );
-                let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
-                    (p0, p1, e1)
-                } else if p0.1.mass < p1.1.mass {
-                    (p1, p0, e0)
-                } else {
-                    // FIXME -- a fair tie-breaker
-                    warn!("Colliding planets {:?} and {:?} have exactly the same mass. Picking major/minor arbitrarilly.", e0, e1);
-                    (p0, p1, e1)
-                };
+            // if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
+            //     debug!(
+            //         "Collision-started event for planets {:?} and {:?}",
+            //         p0.2, p1.2
+            //     );
+            //     let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
+            //         (p0, p1, e1)
+            //     } else if p0.1.mass < p1.1.mass {
+            //         (p1, p0, e0)
+            //     } else {
+            //         // FIXME -- a fair tie-breaker
+            //         warn!("Colliding planets {:?} and {:?} have exactly the same mass. Picking major/minor arbitrarilly.", e0, e1);
+            //         (p0, p1, e1)
+            //     };
 
-                // Merge Math
-                let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
-                let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
-                let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
-                    / mass_to_radius(major.1.mass);
-                major.1.mass += minor.1.mass;
-                major.1.velocity =
-                    major.1.velocity * major_factor + minor.1.velocity * minor_factor;
-                major.0.translation =
-                    (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
-                major.0.scale = scale_up * Vec3::splat(1.0);
-                // End Merge Math
+            //     // Merge Math
+            //     let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
+            //     let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
+            //     let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
+            //         / mass_to_radius(major.1.mass);
+            //     major.1.mass += minor.1.mass;
+            //     major.1.velocity =
+            //         major.1.velocity * major_factor + minor.1.velocity * minor_factor;
+            //     major.0.translation =
+            //         (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
+            //     major.0.scale = scale_up * Vec3::splat(1.0);
+            //     // End Merge Math
 
-                debug!("despawning planet {:?}", cull);
-                commands.entity(*cull).despawn_recursive();
-                continue;
-            }
+            //     debug!("despawning planet {:?}", cull);
+            //     commands.entity(*cull).despawn_recursive();
+            //     continue;
+            // }
             for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                 if projectile_query.get(projectile).is_ok() {
+                    warn!("XXXXXXXXXXX");
                     // NOTE: Projectiles don't collied with each other (currently)
                     projectile_collision_events.send(ProjectileCollision { planet, projectile });
                 }

@@ -65,7 +65,8 @@ impl Plugin for Spacetime {
                     .with_system(signal_freefall_delta)
                     .with_system(handle_freefall)
                     .with_system(signal_breadcrumbs)
-                    .with_system(spawn_breadcrumbs),
+                    .with_system(spawn_breadcrumbs)
+                    .with_system(handle_planet_collisions),
             );
     }
 }
