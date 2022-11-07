@@ -242,7 +242,7 @@ pub fn spawn_breadcrumbs(
                     ..Default::default()
                 })),
                 transform: Transform::from_translation(event.location),
-                visibility: Visibility { is_visible: true },
+                visibility: Visibility { is_visible: false },
                 material: materials.add((Color::WHITE).into()),
                 ..Default::default()
             })
