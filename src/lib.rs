@@ -86,9 +86,9 @@ impl Plugin for Core {
             .add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
             .add_system(bevy::window::close_on_esc)
-            .add_system(core_setup)
+            .add_startup_system(core_setup)
             .add_system(handle_game_state)
-            //.add_system(timer_despawn)
+            .add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
