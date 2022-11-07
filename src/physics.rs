@@ -35,9 +35,9 @@ pub fn handle_planet_collisions(
         // FIXME: Filter events (for "Sensor")
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
             warn!("Collision of collider entities {e0:?} and {e1:?}");
-            // if planet_query.get_many([*e0, *e1]).is_ok() {
-            //     planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
-            // }
+            if planet_query.get_many([*e0, *e1]).is_ok() {
+                planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
+            }
             for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                 if projectile_query.get(projectile).is_ok() {
                     // NOTE: Projectiles don't collied with each other (currently)
