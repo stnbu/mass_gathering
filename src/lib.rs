@@ -70,13 +70,13 @@ impl Plugin for Spacetime {
             .add_event::<DespawnSelfEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
-                    .with_system(signal_freefall_delta)
-                    .with_system(handle_freefall)
-                    .with_system(signal_breadcrumbs)
-                    .with_system(spawn_breadcrumbs)
-                    .with_system(handle_planet_collisions)
                     .with_system(handle_despawn_self)
-                    .with_system(transfer_planet_momentum),
+                    .with_system(signal_freefall_delta.before(handle_despawn_self))
+                    .with_system(handle_freefall.before(handle_despawn_self))
+                    .with_system(signal_breadcrumbs.before(handle_despawn_self))
+                    .with_system(spawn_breadcrumbs.before(handle_despawn_self))
+                    .with_system(handle_planet_collisions.before(handle_despawn_self))
+                    .with_system(transfer_planet_momentum.before(handle_despawn_self)),
             );
     }
 }

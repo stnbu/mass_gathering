@@ -586,6 +586,10 @@ pub fn transfer_projectile_momentum(
                     projectile_target.local_impact_site / (scale_factor / SQRT_3);
                 let mass = planet_momentum.mass;
                 let delta_v = -local_impact_site.normalize() * config.impact_magnitude / mass;
+                warn!(
+                    "Projectile {:?} impacting planet {:?}, delta_v={:?}",
+                    event.projectile, event.planet, delta_v,
+                );
                 delta_events.send(DeltaEvent {
                     entity: event.planet,
                     delta_p: Vec3::ZERO,

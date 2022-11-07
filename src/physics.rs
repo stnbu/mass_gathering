@@ -34,10 +34,9 @@ pub fn handle_planet_collisions(
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            if let Ok([m0, m1]) = planet_query.get_many([*e0, *e1]) {
-                warn!("signal!!");
-                planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
-            }
+            // if planet_query.get_many([*e0, *e1]).is_ok() {
+            //     planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
+            // }
             for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                 if projectile_query.get(projectile).is_ok() {
                     // NOTE: Projectiles don't collied with each other (currently)
@@ -90,38 +89,11 @@ pub fn transfer_planet_momentum(
             });
             despawn_self_events.send(DespawnSelfEvent(minor.2));
         }
-
-        // ///////
-        //major.0.scale = scale_up * Vec3::splat(1.0);
-
-        // if let Ok(projectile_target) = projectile_query.get(event.projectile) {
-        //     if let Ok((planet_transform, planet_momentum)) = planet_query.get(event.planet) {
-        //         let scale_factor = planet_transform.scale.length();
-        //         let local_impact_site =
-        //             projectile_target.local_impact_site / (scale_factor / SQRT_3);
-        //         let mass = planet_momentum.mass;
-        //         let delta_v = -local_impact_site.normalize() * config.impact_magnitude / mass;
-        //         delta_events.send(DeltaEvent {
-        //             entity: event.planet,
-        //             delta_p: Vec3::ZERO,
-        //             delta_v,
-        //         });
-        //     }
-        // }
-        //     major.0.scale = scale_up * Vec3::splat(1.0);
-        //     // End Merge Math
-
-        //     debug!("despawning planet {:?}", cull);
-        //     commands.entity(*cull).despawn_recursive();
     }
 }
 
 fn radius_to_mass(radius: f32) -> f32 {
     (4.0 / 3.0) * PI * radius.powf(3.0)
-}
-
-fn mass_to_radius(mass: f32) -> f32 {
-    ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 
 #[derive(Bundle)]
@@ -246,6 +218,7 @@ pub fn handle_freefall(
 ) {
     for event in delta_events.iter() {
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
+            // warn!(" Some delta for planet {:?}", event.entity);
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
         }
