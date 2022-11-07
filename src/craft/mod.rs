@@ -586,7 +586,7 @@ pub fn transfer_projectile_momentum(
                     projectile_target.local_impact_site / (scale_factor / SQRT_3);
                 let mass = planet_momentum.mass;
                 let delta_v = -local_impact_site.normalize() * config.impact_magnitude / mass;
-                warn!(
+                debug!(
                     "Projectile {:?} impacting planet {:?}, delta_v={:?}",
                     event.projectile, event.planet, delta_v,
                 );
@@ -618,7 +618,7 @@ pub fn move_projectiles(
             // guarantee a "collision" event, which is not always the case when you are
             // incrementing toward a point _on the boundary_ of the collider. Probably still
             // a bug here.
-            let speed_coefficient = 0.32 * 10.0 * 50.0;
+            let speed_coefficient = 0.32 * 10.0 * 50.0 * 2.0;
             let absolute_velocity = direction * speed_coefficient;
             // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
