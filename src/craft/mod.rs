@@ -613,10 +613,15 @@ pub fn move_projectiles(
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let goal_impact_site = planet_transform.translation + target.local_impact_site;
             let direction = (projectile_transform.translation - goal_impact_site).normalize();
-            let speed_coefficient = 0.32 * 10.0;
+            // FIXME: Missiles should ultimately "seek" the center. Because we don't do that,
+            // we have to ensure that the "step" of our projectile flight is big enough to
+            // guarantee a "collision" event, which is not always the case when you are
+            // incrementing toward a point _on the boundary_ of the collider. Probably still
+            // a bug here.
+            let speed_coefficient = 0.32 * 10.0 * 50.0;
             let absolute_velocity = direction * speed_coefficient;
+            // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
-            // (direction + (planet_momentum.velocity * time.delta_seconds() * 0.8)) * 0.4;
             let translation = velocity * time.delta_seconds();
             projectile_transform.translation -= translation;
             debug!(
