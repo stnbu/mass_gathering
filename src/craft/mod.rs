@@ -12,7 +12,7 @@ use bevy_egui::{
     EguiContext,
 };
 use bevy_rapier3d::prelude::{
-    ActiveEvents, Collider, CollisionEvent, QueryFilter, RapierContext, RigidBody, Sensor,
+    ActiveEvents, Collider, QueryFilter, RapierContext, RigidBody, Sensor,
 };
 
 use rand::Rng;
@@ -516,7 +516,7 @@ pub fn handle_projectile_engagement(
     }
 }
 
-pub struct ProjectileCollision {
+pub struct ProjectileCollisionEvent {
     pub planet: Entity,
     pub projectile: Entity,
 }
@@ -524,7 +524,7 @@ pub struct ProjectileCollision {
 // WARNING: order matters
 pub fn handle_projectile_despawn(
     mut commands: Commands,
-    mut projectile_events: EventReader<ProjectileCollision>,
+    mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     //return;
     for projectile_collision in projectile_events.iter() {
@@ -538,7 +538,7 @@ pub fn spawn_projectile_explosion_animation(
     mut materials: ResMut<Assets<StandardMaterial>>,
     projectile_query: Query<&BallisticProjectileTarget>,
     planet_query: Query<&Transform, Without<BallisticProjectileTarget>>,
-    mut projectile_events: EventReader<ProjectileCollision>,
+    mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     for event in projectile_events.iter() {
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
@@ -574,7 +574,7 @@ pub fn spawn_projectile_explosion_animation(
 pub fn transfer_projectile_momentum(
     projectile_query: Query<&BallisticProjectileTarget>,
     planet_query: Query<(&Transform, &Momentum), Without<BallisticProjectileTarget>>,
-    mut projectile_events: EventReader<ProjectileCollision>,
+    mut projectile_events: EventReader<ProjectileCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     config: Res<SpacecraftConfig>,
 ) {

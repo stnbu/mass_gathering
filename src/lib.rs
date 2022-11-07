@@ -27,7 +27,7 @@ pub struct SpacecraftPlugin;
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
-            .add_event::<ProjectileCollision>()
+            .add_event::<ProjectileCollisionEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
@@ -55,18 +55,28 @@ impl Plugin for SpacecraftPlugin {
 
 pub struct Spacetime;
 
+/*
++pub fn handle_despawn_self(
++pub fn transfer_planet_momentum(
+
+*/
+
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
         app.init_resource::<PhysicsConfig>()
             .add_event::<BreadcrumbEvent>()
             .add_event::<DeltaEvent>()
+            .add_event::<PlanetCollisionEvent>()
+            .add_event::<DespawnSelfEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(signal_freefall_delta)
                     .with_system(handle_freefall)
                     .with_system(signal_breadcrumbs)
                     .with_system(spawn_breadcrumbs)
-                    .with_system(handle_planet_collisions),
+                    .with_system(handle_planet_collisions)
+                    .with_system(handle_despawn_self)
+                    .with_system(transfer_planet_momentum),
             );
     }
 }

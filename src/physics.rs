@@ -1,6 +1,6 @@
 use crate::craft::BallisticProjectileTarget;
 use crate::DespawnTimer;
-use bevy::prelude::*;
+use bevy::{prelude::*, utils::tracing::instrument::WithSubscriber};
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use std::{f32::consts::PI, time::Duration};
 
@@ -20,60 +20,99 @@ impl Default for PhysicsConfig {
     }
 }
 
-use crate::craft::ProjectileCollision;
+use crate::craft::ProjectileCollisionEvent;
+
+pub struct PlanetCollisionEvent(pub Entity, pub Entity);
 
 pub fn handle_planet_collisions(
-    mut commands: Commands,
     mut events: EventReader<CollisionEvent>,
-    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity, &mut Collider)>,
-    mut projectile_collision_events: EventWriter<ProjectileCollision>,
+    mut projectile_collision_events: EventWriter<ProjectileCollisionEvent>,
+    mut planet_collision_events: EventWriter<PlanetCollisionEvent>,
+    planet_query: Query<&Momentum>,
     projectile_query: Query<&BallisticProjectileTarget>,
 ) {
-    // FIXME -- need to handle 3-way collisions IF it ever happens...
-    // FIXME -- "projectiles" still needlessly show up in planet_collider_query
-    //          because we are not filtering `events` enough/at all.
     for collision_event in events.iter() {
+        // FIXME: Filter events (for "Sensor")
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            // if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
-            //     debug!(
-            //         "Collision-started event for planets {:?} and {:?}",
-            //         p0.2, p1.2
-            //     );
-            //     let (mut major, minor, cull) = if p0.1.mass > p1.1.mass {
-            //         (p0, p1, e1)
-            //     } else if p0.1.mass < p1.1.mass {
-            //         (p1, p0, e0)
-            //     } else {
-            //         // FIXME -- a fair tie-breaker
-            //         warn!("Colliding planets {:?} and {:?} have exactly the same mass. Picking major/minor arbitrarilly.", e0, e1);
-            //         (p0, p1, e1)
-            //     };
-
-            //     // Merge Math
-            //     let major_factor = major.1.mass / (major.1.mass + minor.1.mass);
-            //     let minor_factor = minor.1.mass / (major.1.mass + minor.1.mass);
-            //     let scale_up = (mass_to_radius(major.1.mass) + mass_to_radius(minor.1.mass))
-            //         / mass_to_radius(major.1.mass);
-            //     major.1.mass += minor.1.mass;
-            //     major.1.velocity =
-            //         major.1.velocity * major_factor + minor.1.velocity * minor_factor;
-            //     major.0.translation =
-            //         (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
-            //     major.0.scale = scale_up * Vec3::splat(1.0);
-            //     // End Merge Math
-
-            //     debug!("despawning planet {:?}", cull);
-            //     commands.entity(*cull).despawn_recursive();
-            //     continue;
-            // }
+            if let Ok([m0, m1]) = planet_query.get_many([*e0, *e1]) {
+                warn!("signal!!");
+                planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
+            }
             for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                 if projectile_query.get(projectile).is_ok() {
-                    warn!("XXXXXXXXXXX");
                     // NOTE: Projectiles don't collied with each other (currently)
-                    projectile_collision_events.send(ProjectileCollision { planet, projectile });
+                    projectile_collision_events
+                        .send(ProjectileCollisionEvent { planet, projectile });
                 }
             }
         }
+    }
+}
+
+pub struct DespawnSelfEvent(pub Entity);
+
+pub fn handle_despawn_self(
+    mut commands: Commands,
+    mut despawn_self_events: EventReader<DespawnSelfEvent>,
+) {
+    for DespawnSelfEvent(entity) in despawn_self_events.iter() {
+        commands.entity(*entity).despawn();
+    }
+}
+
+pub fn transfer_planet_momentum(
+    mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
+    mut planet_events: EventReader<PlanetCollisionEvent>,
+    mut delta_events: EventWriter<DeltaEvent>,
+    mut despawn_self_events: EventWriter<DespawnSelfEvent>,
+) {
+    for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
+        if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
+            let (major, minor) = if p0.1.mass > p1.1.mass {
+                (p0, p1)
+            // FIXME: tie-breaker!
+            } else {
+                (p1, p0)
+            };
+
+            let combined_momentum =
+                (major.1.velocity * major.1.mass) + (minor.1.velocity * minor.1.mass);
+            let combined_mass = major.1.mass + minor.1.mass;
+            let delta_v = (combined_momentum / combined_mass) - major.1.velocity;
+            let major_factor = major.1.mass / combined_mass;
+            let minor_factor = minor.1.mass / combined_mass;
+            let delta_p =
+                (major_factor * major.0.translation) - (minor_factor * minor.0.translation);
+            delta_events.send(DeltaEvent {
+                entity: major.2,
+                delta_p,
+                delta_v,
+            });
+            despawn_self_events.send(DespawnSelfEvent(minor.2));
+        }
+
+        // ///////
+        //major.0.scale = scale_up * Vec3::splat(1.0);
+
+        // if let Ok(projectile_target) = projectile_query.get(event.projectile) {
+        //     if let Ok((planet_transform, planet_momentum)) = planet_query.get(event.planet) {
+        //         let scale_factor = planet_transform.scale.length();
+        //         let local_impact_site =
+        //             projectile_target.local_impact_site / (scale_factor / SQRT_3);
+        //         let mass = planet_momentum.mass;
+        //         let delta_v = -local_impact_site.normalize() * config.impact_magnitude / mass;
+        //         delta_events.send(DeltaEvent {
+        //             entity: event.planet,
+        //             delta_p: Vec3::ZERO,
+        //             delta_v,
+        //         });
+        //     }
+        // }
+        //     major.0.scale = scale_up * Vec3::splat(1.0);
+        //     // End Merge Math
+
+        //     debug!("despawning planet {:?}", cull);
+        //     commands.entity(*cull).despawn_recursive();
     }
 }
 
