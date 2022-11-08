@@ -2,6 +2,7 @@ use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
 use crate::{mass_to_radius, radius_to_mass, DespawnTimer};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
+use std::f32::consts::SQRT_2;
 use std::time::Duration;
 
 pub struct PhysicsConfig {
@@ -38,18 +39,22 @@ pub fn handle_planet_collisions(
                 for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                     if let Ok(projectile_transform) = projectile_query.get(projectile) {
                         if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
-                            // NOTE: Projectiles don't collied with each other (currently)
-                            debug!(
-                                "Signaling collision of projectile {:?} with planet {:?}",
-                                projectile, planet
-                            );
-                            // FIXME: sign change needed somewhere else!
+                            let radius = mass_to_radius(planet_momentum.mass);
+                            warn!(" radius {radius:?}");
                             // unit vector at planet center pointing at projectile
+                            warn!(
+                                " projectile_transform.translation: {:?}",
+                                projectile_transform.translation
+                            );
+                            warn!(
+                                " planet_transform.translation: {:?}",
+                                planet_transform.translation
+                            );
                             let direction = (projectile_transform.translation
                                 - planet_transform.translation)
                                 .normalize();
-                            let local_impact_site =
-                                direction * mass_to_radius(planet_momentum.mass);
+                            warn!(" direction: {direction:?}");
+                            let local_impact_site = direction * radius;
                             let event = ProjectileCollisionEvent {
                                 planet,
                                 projectile,
@@ -79,7 +84,7 @@ pub fn handle_despawn_self(
 
 pub fn transfer_planet_momentum(
     // FIXME: make Transform mutable for now to scale. But...
-    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity)>,
+    mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
     mut planet_events: EventReader<PlanetCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_self_events: EventWriter<DespawnSelfEvent>,
@@ -96,15 +101,15 @@ pub fn transfer_planet_momentum(
                 (p1, p0)
             };
 
-            debug!("Collision of planets:");
-            debug!(" Major planet {:?}", major.2);
-            debug!("  position: {:?}", major.0.translation);
-            debug!("  velocity: {:?}", major.1.velocity);
-            debug!("  mass: {:?}", major.1.mass);
-            debug!(" Minor planet {:?}", minor.2);
-            debug!("  position: {:?}", minor.0.translation);
-            debug!("  velocity: {:?}", minor.1.velocity);
-            debug!("  mass: {:?}", minor.1.mass);
+            warn!("Collision of planets:");
+            warn!(" Major planet {:?}", major.2);
+            warn!("  position: {:?}", major.0.translation);
+            warn!("  velocity: {:?}", major.1.velocity);
+            warn!("  mass: {:?}", major.1.mass);
+            warn!(" Minor planet {:?}", minor.2);
+            warn!("  position: {:?}", minor.0.translation);
+            warn!("  velocity: {:?}", minor.1.velocity);
+            warn!("  mass: {:?}", minor.1.mass);
 
             let combined_momentum =
                 (major.1.velocity * major.1.mass) + (minor.1.velocity * minor.1.mass);
@@ -113,7 +118,7 @@ pub fn transfer_planet_momentum(
             // Convince yourself that the sum of these must equal 1.0;
             let major_factor = major.1.mass / combined_mass;
             let minor_factor = minor.1.mass / combined_mass;
-            debug!(
+            warn!(
                 "Directly setting mass of major planet {:?} to {combined_mass:?}",
                 major.2
             );
@@ -122,8 +127,8 @@ pub fn transfer_planet_momentum(
             let entity = major.2;
 
             let weighted_midpoint =
-                ((major_factor * major.0.translation) - (minor_factor * minor.0.translation)) / 2.0;
-            debug!(
+                ((major_factor * major.0.translation) + (minor_factor * minor.0.translation)) / 2.0;
+            warn!(
                 "The weighted midpoint between planets major={:?} and minor={:?} is {weighted_midpoint:?}",
                 major.2, minor.2
             );
@@ -137,9 +142,9 @@ pub fn transfer_planet_momentum(
                 delta_v,
                 delta_s,
             };
-            debug!("Sending event: {event:?}");
+            warn!("Sending event: {event:?}");
             delta_events.send(event);
-            debug!("Signaling despawn request for minor planet {:?}", minor.2);
+            warn!("Signaling despawn request for minor planet {:?}", minor.2);
             despawn_self_events.send(DespawnSelfEvent(minor.2));
         }
     }
@@ -252,7 +257,7 @@ pub fn signal_freefall_delta(
             .map(|((entity, translation, mass, velocity), force)| {
                 let delta_p = *velocity * dt;
                 let delta_v = (force * dt) / *mass;
-                let delta_s = 0.0;
+                let delta_s = 1.0;
                 delta_events.send(DeltaEvent {
                     entity: *entity,
                     delta_p,
@@ -273,7 +278,8 @@ pub fn handle_freefall(
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
-            transform.scale += event.delta_s;
+            //warn!(" XXXXX {:?}", event.delta_s);
+            transform.scale *= event.delta_s;
         }
     }
 }

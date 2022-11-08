@@ -406,7 +406,7 @@ pub fn handle_projectile_engagement(
     config: Res<SpacecraftConfig>,
 ) {
     for (mut pov, mut spacecraft) in spacecraft_query.iter_mut() {
-        let ray_origin = pov.translation - pov.local_y() * config.projectile_radius * 1.2;
+        let ray_origin = pov.translation; // - pov.local_y() * config.projectile_radius * 1.2;
         let ray_direction = -1.0 * pov.local_z();
         let intersection = rapier_context.cast_ray(
             ray_origin,
@@ -443,20 +443,21 @@ pub fn handle_projectile_engagement(
                         })
                         .insert(ProjectileTarget {
                             planet: planet_id,
+                            // go to here?
                             local_direction,
                         })
                         .insert(RigidBody::Dynamic)
-                        .insert(Collider::ball(config.projectile_radius))
+                        .insert(Collider::ball(0.001))
                         .insert(ActiveEvents::COLLISION_EVENTS)
                         .insert(Sensor);
-                    // Add some recoil excitement
-                    if config.recoil != 0.0 {
-                        let mut rng = rand::thread_rng();
-                        let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
-                        let bump_y = (rng.gen::<f32>() - 0.5) * config.recoil;
-                        let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
-                        pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
-                    }
+                    // // Add some recoil excitement
+                    // if config.recoil != 0.0 {
+                    //     let mut rng = rand::thread_rng();
+                    //     let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
+                    //     let bump_y = (rng.gen::<f32>() - 0.5) * config.recoil;
+                    //     let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
+                    //     pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
+                    // }
                 }
             }
         } else {
@@ -487,13 +488,13 @@ pub fn spawn_projectile_explosion_animation(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     projectile_query: Query<&ProjectileTarget>,
-    planet_query: Query<&Momentum>,
+    planet_query: Query<&Transform, With<Momentum>>,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     for event in projectile_events.iter() {
         warn!("[spawn_projectile_explosion_animation] Receiving projectile collision event: {event:?}");
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
-            if planet_query.get(event.planet).is_ok() {
+            if let Ok(planet_transform) = planet_query.get(event.planet) {
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -505,17 +506,18 @@ pub fn spawn_projectile_explosion_animation(
                             perceptual_roughness: 0.99,
                             ..default()
                         }),
-                        transform: Transform::from_translation(event.local_impact_site),
+                        transform: Transform::from_translation(
+                            event.local_impact_site / (planet_transform.scale.length() / SQRT_3),
+                        ),
                         ..Default::default()
                     })
                     .insert(ProjectileExplosion { rising: true })
                     .id();
-                commands
-                    .entity(projectile_target.planet)
-                    .add_child(explosion);
+                commands.entity(event.planet).add_child(explosion);
                 warn!(
-                    "Explosion animation entity {explosion:?} spawned and now a child of {:?}",
-                    projectile_target.planet
+                    "Explosion animation entity {explosion:?} spawned and now a child of planet {:?} with local coordiantes {:?}",
+                    projectile_target.planet,
+		    event.local_impact_site,
                 );
             } else {
                 warn!(
@@ -526,8 +528,8 @@ pub fn spawn_projectile_explosion_animation(
         } else {
             // FIXME: should be possible to guarantee this never happens.
             warn!(
-                "While spawning explosion animation: planet {:?} not found",
-                event.planet
+                "While spawning explosion animation: projectile {:?} not found",
+                event.projectile
             );
         }
     }
@@ -576,7 +578,7 @@ pub fn move_projectiles(
 
             let speed_coefficient = 0.32 * 10.0 * 50.0 * 0.75;
             let absolute_velocity =
-                direction * speed_coefficient * ((distance + 3.0) / (distance + 1.0));
+                direction * speed_coefficient * ((distance + 30.0) / (distance + 1.0));
             // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
             let mut translation = velocity * time.delta_seconds();
@@ -586,7 +588,7 @@ pub fn move_projectiles(
                 // a collision (and the projectile is "moved" in the next frame by `Vec3(NaN, NaN, NaN)`).
                 let final_translation = translation_to_target;
                 debug!(" Next projectile translation larger than distance to target. Resetting to to-target translation vector: {translation_to_target:?}");
-                translation = final_translation;
+                translation = final_translation * 1.001;
             }
             debug!(" Projectile traveling delta_p={translation:?}");
             projectile_transform.translation += translation;

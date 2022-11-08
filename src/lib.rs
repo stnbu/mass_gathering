@@ -31,16 +31,14 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(move_forward)
                     .with_system(steer)
                     .with_system(stars)
-                    .with_system(drift)
+                    //.with_system(drift)
                     .with_system(handle_projectile_engagement)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
                     .with_system(move_projectiles.before(handle_planet_collisions))
                     .with_system(transfer_projectile_momentum)
-                    .with_system(
-                        spawn_projectile_explosion_animation.after(transfer_projectile_momentum),
-                    )
+                    .with_system(spawn_projectile_explosion_animation.after(handle_despawn_self))
                     .with_system(
                         handle_projectile_despawn.after(spawn_projectile_explosion_animation),
                     ),
