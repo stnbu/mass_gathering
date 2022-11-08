@@ -497,11 +497,11 @@ pub fn spawn_projectile_explosion_animation(
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 3.0,
+                            radius: 0.2,
                             ..Default::default()
                         })),
                         material: materials.add(StandardMaterial {
-                            base_color: Color::YELLOW * 100.0,
+                            base_color: Color::YELLOW,
                             perceptual_roughness: 0.99,
                             ..default()
                         }),
@@ -515,31 +515,6 @@ pub fn spawn_projectile_explosion_animation(
                     .add_child(explosion);
                 warn!(
                     "Explosion animation entity {explosion:?} spawned and now a child of {:?}",
-                    projectile_target.planet
-                );
-
-                ///
-                let explosion = commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 3.0,
-                            ..Default::default()
-                        })),
-                        material: materials.add(StandardMaterial {
-                            base_color: Color::WHITE * 100.0,
-                            perceptual_roughness: 0.99,
-                            ..default()
-                        }),
-                        transform: Transform::from_translation(-event.local_impact_site),
-                        ..Default::default()
-                    })
-                    .insert(ProjectileExplosion { rising: true })
-                    .id();
-                commands
-                    .entity(projectile_target.planet)
-                    .add_child(explosion);
-                warn!(
-                    "[also] Explosion animation entity {explosion:?} spawned and now a child of {:?}",
                     projectile_target.planet
                 );
             } else {
@@ -602,7 +577,7 @@ pub fn move_projectiles(
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();
 
-            let speed_coefficient = 0.32 * 10.0 * 50.0;
+            let speed_coefficient = 0.32 * 10.0 * 50.0 * 0.75;
             let absolute_velocity = direction * speed_coefficient;
             // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
@@ -611,7 +586,7 @@ pub fn move_projectiles(
                 // NOTE: We stretch the translation_to_target by a tiny bit to ensure we get a collision.
                 // Testing reveals: If the final step is exactly traslation_to_target, there is never
                 // a collision (and the projectile is "moved" in the next frame by `Vec3(NaN, NaN, NaN)`).
-                let final_translation = translation_to_target * (1.0 + planet_radius * 0.001);
+                let final_translation = translation_to_target;
                 debug!(" Next projectile translation larger than distance to target. Resetting to to-target translation vector: {translation_to_target:?}");
                 translation = final_translation;
             }
