@@ -4,8 +4,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
-use std::f32::consts::TAU;
-
+use std::f32::consts::{PI, TAU};
 mod physics;
 use physics::*;
 
@@ -54,12 +53,6 @@ impl Plugin for SpacecraftPlugin {
 }
 
 pub struct Spacetime;
-
-/*
-+pub fn handle_despawn_self(
-+pub fn transfer_planet_momentum(
-
-*/
 
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
@@ -144,6 +137,14 @@ fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     let y = theta.sin() * phi.sin();
     let z = theta.cos();
     Vec3::new(x, y, z)
+}
+
+pub(crate) fn radius_to_mass(radius: f32) -> f32 {
+    (4.0 / 3.0) * PI * radius.powf(3.0)
+}
+
+pub(crate) fn mass_to_radius(mass: f32) -> f32 {
+    ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 
 #[derive(Component)]

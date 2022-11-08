@@ -1,8 +1,8 @@
-use crate::craft::ProjectileTarget;
-use crate::DespawnTimer;
+use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
+use crate::{mass_to_radius, radius_to_mass, DespawnTimer};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
-use std::{f32::consts::PI, time::Duration};
+use std::time::Duration;
 
 pub struct PhysicsConfig {
     pub trails: bool,
@@ -20,8 +20,6 @@ impl Default for PhysicsConfig {
     }
 }
 
-use crate::craft::ProjectileCollisionEvent;
-
 pub struct PlanetCollisionEvent(pub Entity, pub Entity);
 
 pub fn handle_planet_collisions(
@@ -34,7 +32,6 @@ pub fn handle_planet_collisions(
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            // debug!("Collision of collider entities {e0:?} and {e1:?}");
             if planet_query.get_many([*e0, *e1]).is_ok() {
                 planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
             }
@@ -109,14 +106,6 @@ pub fn transfer_planet_momentum(
             despawn_self_events.send(DespawnSelfEvent(minor.2));
         }
     }
-}
-
-fn radius_to_mass(radius: f32) -> f32 {
-    (4.0 / 3.0) * PI * radius.powf(3.0)
-}
-
-fn mass_to_radius(mass: f32) -> f32 {
-    ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 
 #[derive(Bundle)]

@@ -19,10 +19,9 @@ use rand::Rng;
 use std::collections::HashSet;
 use std::f32::consts::TAU;
 use std::f64::consts::PI;
-use std::time::Duration;
 
+use crate::mass_to_radius;
 use crate::physics::Momentum;
-use crate::DespawnTimer;
 
 pub const SQRT_3: f32 = 1.7320508_f32;
 
@@ -75,6 +74,7 @@ impl Default for SpacecraftConfig {
 #[derive(Component)]
 pub struct ProjectileTarget {
     pub planet: Entity,
+    pub local_direction: Vec3,
 }
 
 #[derive(Component, Default)]
@@ -427,12 +427,11 @@ pub fn handle_projectile_engagement(
             spacecraft.hot_planet = Some(planet_id);
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::Space) {
-                    debug!("Firing projectile!");
-                    let scale_factor = planet_transform.scale.length();
                     let global_impact_site = ray_origin + (ray_direction * distance);
-                    let local_impact_site = global_impact_site - planet_transform.translation;
+                    let local_direction =
+                        (global_impact_site - planet_transform.translation).normalize();
                     let radius = config.projectile_radius;
-                    let projectile = commands
+                    commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
                                 radius,
@@ -442,17 +441,15 @@ pub fn handle_projectile_engagement(
                             transform: Transform::from_translation(ray_origin),
                             ..Default::default()
                         })
-                        .insert(ProjectileTarget { planet: planet_id })
+                        .insert(ProjectileTarget {
+                            planet: planet_id,
+                            local_direction,
+                        })
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(radius))
                         .insert(ActiveEvents::COLLISION_EVENTS)
                         .insert(Sensor)
                         .id();
-                    debug!("Projectile entity: {projectile:?}");
-                    debug!("-	ray_origin={ray_origin:?}");
-                    debug!("-	ray_direction={ray_direction:?}");
-                    debug!("-	global_impact_site={global_impact_site:?}");
-                    debug!("-	local_impact_site={local_impact_site:?}");
                     // Add some recoil excitement
                     if config.recoil != 0.0 {
                         let mut rng = rand::thread_rng();
@@ -480,7 +477,6 @@ pub fn handle_projectile_despawn(
     mut commands: Commands,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
-    //return;
     for projectile_collision in projectile_events.iter() {
         commands.entity(projectile_collision.projectile).despawn();
     }
@@ -556,6 +552,8 @@ pub fn move_projectiles(
             target.planet
         );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
+            let target = planet_transform.translation
+                + (target.local_direction * mass_to_radius(planet_momentum.mass));
             let translation_to_target =
                 projectile_transform.translation - planet_transform.translation;
             let distance = translation_to_target.length();
