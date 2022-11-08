@@ -43,7 +43,7 @@ fn setup(
 
     // The sun, beautiful
     spawn_planet(
-        sun_radius,
+        sun_radius * 0.5,
         Vec3::ZERO,
         Vec3::ZERO,
         earth_color,
@@ -51,14 +51,14 @@ fn setup(
         &mut meshes,
         &mut materials,
     );
-    // The moon, even more beautiful
-    spawn_planet(
-        1.0,
-        Vec3::X * sun_radius * 3.0,
-        Vec3::Z * 1.588,
-        moon_color,
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-    );
+    // // The moon, even more beautiful
+    // spawn_planet(
+    //     1.0,
+    //     Vec3::X * sun_radius * 3.0,
+    //     Vec3::Z * 1.588,
+    //     moon_color,
+    //     &mut commands,
+    //     &mut meshes,
+    //     &mut materials,
+    // );
 }

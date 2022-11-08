@@ -497,8 +497,6 @@ pub fn spawn_projectile_explosion_animation(
     for event in projectile_events.iter() {
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok(planet_transform) = planet_query.get(event.planet) {
-                let scale_factor = planet_transform.scale.length();
-                let local_impact_site = event.local_impact_site / (scale_factor / SQRT_3);
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -510,7 +508,7 @@ pub fn spawn_projectile_explosion_animation(
                             perceptual_roughness: 0.99,
                             ..default()
                         }),
-                        transform: Transform::from_translation(local_impact_site),
+                        transform: Transform::from_translation(-event.local_impact_site),
                         ..Default::default()
                     })
                     .insert(ProjectileExplosion { rising: true })
@@ -525,27 +523,24 @@ pub fn spawn_projectile_explosion_animation(
 }
 
 pub fn transfer_projectile_momentum(
-    projectile_query: Query<&BallisticProjectileTarget>,
-    planet_query: Query<(&Transform, &Momentum), Without<BallisticProjectileTarget>>,
+    planet_query: Query<&Momentum, Without<BallisticProjectileTarget>>,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     config: Res<SpacecraftConfig>,
 ) {
     for event in projectile_events.iter() {
-        if let Ok(projectile_target) = projectile_query.get(event.projectile) {
-            if let Ok((planet_transform, planet_momentum)) = planet_query.get(event.planet) {
-                let delta_v = -event.local_impact_site.normalize() * config.impact_magnitude
-                    / planet_momentum.mass;
-                debug!(
-                    "Projectile {:?} impacting planet {:?}, delta_v={:?}",
-                    event.projectile, event.planet, delta_v,
-                );
-                delta_events.send(DeltaEvent {
-                    entity: event.planet,
-                    delta_p: Vec3::ZERO,
-                    delta_v,
-                });
-            }
+        if let Ok(planet_momentum) = planet_query.get(event.planet) {
+            let delta_v = event.local_impact_site.normalize() * config.impact_magnitude
+                / planet_momentum.mass;
+            debug!(
+                "Projectile {:?} impacting planet {:?}, delta_v={:?}",
+                event.projectile, event.planet, delta_v,
+            );
+            delta_events.send(DeltaEvent {
+                entity: event.planet,
+                delta_p: Vec3::ZERO,
+                delta_v,
+            });
         }
     }
 }
@@ -561,29 +556,30 @@ pub fn move_projectiles(
             target.planet
         );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
-            let direction =
-                (projectile_transform.translation - planet_transform.translation).normalize();
-            // FIXME: Missiles should ultimately "seek" the center. Because we don't do that,
-            // we have to ensure that the "step" of our projectile flight is big enough to
-            // guarantee a "collision" event, which is not always the case when you are
-            // incrementing toward a point _on the boundary_ of the collider. Probably still
-            // a bug here.
-            let speed_coefficient = 0.32 * 10.0 * 50.0 * 2.0;
+            let translation_to_target =
+                projectile_transform.translation - planet_transform.translation;
+            let distance = translation_to_target.length();
+            let direction = translation_to_target.normalize();
+
+            let speed_coefficient = 0.32 * 10.0 * 50.0;
             let absolute_velocity = direction * speed_coefficient;
             // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
-            let translation = velocity * time.delta_seconds();
-            projectile_transform.translation -= translation;
+            let mut translation = -velocity * time.delta_seconds();
+            if translation.length() > distance {
+                translation = translation_to_target;
+            }
+            projectile_transform.translation += translation;
             debug!(
                 "Projectile entity {projectile:?} traveled {:?}",
                 translation.length()
             );
         } else {
-            debug!(
-                "No projectile movement. Target planet {:?} not in collider query contents: {:?}",
-                target.planet,
-                planet_query.iter().map(|(_, _, e)| e).collect::<Vec<_>>()
+            warn!(
+                "Target planet {:?} despawned before projectile impact.",
+                target.planet
             );
+            // ...
         }
     }
 }
