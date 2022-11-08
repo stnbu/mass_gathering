@@ -555,8 +555,8 @@ pub fn move_projectiles(
             target.planet
         );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
-            let target = planet_transform.translation
-                + (target.local_direction * mass_to_radius(planet_momentum.mass));
+            let planet_radius = mass_to_radius(planet_momentum.mass);
+            let target = planet_transform.translation + (target.local_direction * planet_radius);
             let translation_to_target = target - projectile_transform.translation;
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();
@@ -567,11 +567,14 @@ pub fn move_projectiles(
             let velocity = absolute_velocity + planet_momentum.velocity;
             let mut translation = velocity * time.delta_seconds();
             if translation.length() > distance {
-                // Do we need to fudge to ensure collision? Does zero distance count as a collision?
-                warn!(" Next projectile translation larger than distance to target. Resetting to to-target translation vector: {translation_to_target:?}");
-                translation = translation_to_target * 1.01;
+                // NOTE: We stretch the translation_to_target by a tiny bit to ensure we get a collision.
+                // Testing reveals: If the final step is exactly traslation_to_target, there is never
+                // a collision (and the projectile is "moved" in the next frame by `Vec3(NaN, NaN, NaN)`).
+                let final_translation = translation_to_target * (1.0 + planet_radius * 0.001);
+                debug!(" Next projectile translation larger than distance to target. Resetting to to-target translation vector: {translation_to_target:?}");
+                translation = final_translation;
             }
-            warn!(" Projectile traveling delta_p={translation:?}");
+            debug!(" Projectile traveling delta_p={translation:?}");
             projectile_transform.translation += translation;
         } else {
             warn!(
