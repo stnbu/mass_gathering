@@ -465,6 +465,7 @@ pub fn handle_projectile_engagement(
     }
 }
 
+#[derive(Debug)]
 pub struct ProjectileCollisionEvent {
     pub planet: Entity,
     pub projectile: Entity,
@@ -490,16 +491,42 @@ pub fn spawn_projectile_explosion_animation(
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     for event in projectile_events.iter() {
+        warn!("[spawn_projectile_explosion_animation] Receiving projectile collision event: {event:?}");
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if planet_query.get(event.planet).is_ok() {
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.2,
+                            radius: 3.0,
                             ..Default::default()
                         })),
                         material: materials.add(StandardMaterial {
-                            base_color: Color::YELLOW,
+                            base_color: Color::YELLOW * 100.0,
+                            perceptual_roughness: 0.99,
+                            ..default()
+                        }),
+                        transform: Transform::from_translation(event.local_impact_site),
+                        ..Default::default()
+                    })
+                    .insert(ProjectileExplosion { rising: true })
+                    .id();
+                commands
+                    .entity(projectile_target.planet)
+                    .add_child(explosion);
+                warn!(
+                    "Explosion animation entity {explosion:?} spawned and now a child of {:?}",
+                    projectile_target.planet
+                );
+
+                ///
+                let explosion = commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 3.0,
+                            ..Default::default()
+                        })),
+                        material: materials.add(StandardMaterial {
+                            base_color: Color::WHITE * 100.0,
                             perceptual_roughness: 0.99,
                             ..default()
                         }),
@@ -508,14 +535,22 @@ pub fn spawn_projectile_explosion_animation(
                     })
                     .insert(ProjectileExplosion { rising: true })
                     .id();
-                debug!("Explosion animation entity: {explosion:?}");
                 commands
                     .entity(projectile_target.planet)
                     .add_child(explosion);
+                warn!(
+                    "[also] Explosion animation entity {explosion:?} spawned and now a child of {:?}",
+                    projectile_target.planet
+                );
+            } else {
+                warn!(
+                    "[spawn_projectile_explosion_animation] Did not find planet {:?}",
+                    event.planet
+                );
             }
         } else {
             // FIXME: should be possible to guarantee this never happens.
-            debug!(
+            warn!(
                 "While spawning explosion animation: planet {:?} not found",
                 event.planet
             );
@@ -559,7 +594,7 @@ pub fn move_projectiles(
         );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let planet_radius = mass_to_radius(planet_momentum.mass);
-            let arggg = planet_transform.scale.length() / SQRT_3 * 0.8;
+            let arggg = 1.0; // planet_transform.scale.length() / SQRT_3 * 0.8;
             warn!("arggg: {arggg:?}");
             let target =
                 planet_transform.translation + (target.local_direction * planet_radius * arggg);

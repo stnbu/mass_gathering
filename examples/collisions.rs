@@ -12,7 +12,7 @@ fn main() {
         .insert_resource(SpacecraftConfig {
             start_transform: Transform::from_xyz(0.0, 0.0, 50.0).looking_at(Vec3::ZERO, Vec3::Y),
             impact_magnitude: 5.0,
-            projectile_radius: 0.5,
+            projectile_radius: 0.8,
             ..Default::default()
         })
         .insert_resource(PhysicsConfig {
@@ -30,11 +30,13 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let redish = *Color::RED.set_a(0.9);
+    let blueish = *Color::BLUE.set_a(0.9);
     spawn_planet(
         10.0001,
         Vec3::X * 10.01,
         Vec3::ZERO,
-        Color::WHITE,
+        redish,
         &mut commands,
         &mut meshes,
         &mut materials,
@@ -44,7 +46,7 @@ fn setup(
         10.0,
         Vec3::X * -10.01,
         Vec3::ZERO,
-        Color::GRAY,
+        blueish,
         &mut commands,
         &mut meshes,
         &mut materials,

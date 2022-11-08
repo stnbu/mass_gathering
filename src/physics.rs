@@ -43,15 +43,20 @@ pub fn handle_planet_collisions(
                                 "Signaling collision of projectile {:?} with planet {:?}",
                                 projectile, planet
                             );
-                            let local_impact_site = (planet_transform.translation
-                                - projectile_transform.translation)
-                                .normalize()
-                                * mass_to_radius(planet_momentum.mass);
-                            projectile_collision_events.send(ProjectileCollisionEvent {
+                            // FIXME: sign change needed somewhere else!
+                            // unit vector at planet center pointing at projectile
+                            let direction = (projectile_transform.translation
+                                - planet_transform.translation)
+                                .normalize();
+                            let local_impact_site =
+                                direction * mass_to_radius(planet_momentum.mass);
+                            let event = ProjectileCollisionEvent {
                                 planet,
                                 projectile,
                                 local_impact_site,
-                            });
+                            };
+                            warn!("Sending projectile impact event: {event:?}");
+                            projectile_collision_events.send(event);
                         }
                     }
                 }
