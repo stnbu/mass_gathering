@@ -448,8 +448,7 @@ pub fn handle_projectile_engagement(
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(config.projectile_radius))
                         .insert(ActiveEvents::COLLISION_EVENTS)
-                        .insert(Sensor)
-                        .id();
+                        .insert(Sensor);
                     // Add some recoil excitement
                     if config.recoil != 0.0 {
                         let mut rng = rand::thread_rng();
@@ -487,12 +486,12 @@ pub fn spawn_projectile_explosion_animation(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     projectile_query: Query<&ProjectileTarget>,
-    planet_query: Query<&Transform, Without<ProjectileTarget>>,
+    planet_query: Query<&Momentum>,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     for event in projectile_events.iter() {
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
-            if let Ok(planet_transform) = planet_query.get(event.planet) {
+            if planet_query.get(event.planet).is_ok() {
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -514,6 +513,12 @@ pub fn spawn_projectile_explosion_animation(
                     .entity(projectile_target.planet)
                     .add_child(explosion);
             }
+        } else {
+            // FIXME: should be possible to guarantee this never happens.
+            debug!(
+                "While spawning explosion animation: planet {:?} not found",
+                event.planet
+            );
         }
     }
 }
