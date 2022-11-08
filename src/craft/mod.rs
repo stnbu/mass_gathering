@@ -588,7 +588,7 @@ pub fn move_projectiles(
                 // a collision (and the projectile is "moved" in the next frame by `Vec3(NaN, NaN, NaN)`).
                 let final_translation = translation_to_target;
                 debug!(" Next projectile translation larger than distance to target. Resetting to to-target translation vector: {translation_to_target:?}");
-                translation = final_translation * 1.001;
+                translation = final_translation * 1.1;
             }
             debug!(" Projectile traveling delta_p={translation:?}");
             projectile_transform.translation += translation;
