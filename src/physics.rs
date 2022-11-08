@@ -111,8 +111,17 @@ pub fn transfer_planet_momentum(
                 major.2
             );
             major.1.mass = combined_mass;
-            let delta_p =
-                (major_factor * major.0.translation) - (minor_factor * minor.0.translation);
+            let weighted_midpoint =
+                (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
+            debug!(
+                "The weighted midpoint between planets {:?} and {:?} is {weighted_midpoint:?}",
+                major.2, minor.2
+            );
+            let delta_p = weighted_midpoint - major.0.translation;
+            debug!(
+                "Therefore, major planet {:?} will bet translated {:?}",
+                major.2, delta_p,
+            );
             let event = DeltaEvent {
                 entity: major.2,
                 delta_p,

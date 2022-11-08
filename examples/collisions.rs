@@ -30,7 +30,7 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     spawn_planet(
-        10.0,
+        10.0001,
         Vec3::X * 10.01,
         Vec3::ZERO,
         Color::WHITE,
@@ -40,9 +40,9 @@ fn setup(
     );
 
     spawn_planet(
-        10.0001,
+        5.0,
         Vec3::X * -10.01,
-        Vec3::ZERO,
+        Vec3::X * 5.0,
         Color::GRAY,
         &mut commands,
         &mut meshes,
