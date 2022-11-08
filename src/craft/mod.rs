@@ -427,15 +427,14 @@ pub fn handle_projectile_engagement(
             spacecraft.hot_planet = Some(planet_id);
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::Space) {
-                    warn!("Firing");
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_direction =
                         (global_impact_site - planet_transform.translation).normalize();
-                    let radius = config.projectile_radius;
+                    debug!("Firing at planet {planet_id:?}, planet-local direction to target: {local_direction:?}");
                     commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius,
+                                radius: config.projectile_radius,
                                 ..Default::default()
                             })),
                             material: materials.add(Color::WHITE.into()),
@@ -447,7 +446,7 @@ pub fn handle_projectile_engagement(
                             local_direction,
                         })
                         .insert(RigidBody::Dynamic)
-                        .insert(Collider::ball(radius))
+                        .insert(Collider::ball(config.projectile_radius))
                         .insert(ActiveEvents::COLLISION_EVENTS)
                         .insert(Sensor)
                         .id();
@@ -459,8 +458,6 @@ pub fn handle_projectile_engagement(
                         let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
                         pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
                     }
-                    warn!(" local_direction: {local_direction:?}");
-                    warn!(" radius: {radius:?}");
                 }
             }
         } else {
