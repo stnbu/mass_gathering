@@ -543,7 +543,7 @@ pub fn transfer_projectile_momentum(
 ) {
     for event in projectile_events.iter() {
         if let Ok(planet_momentum) = planet_query.get(event.planet) {
-            let delta_v = event.local_impact_site.normalize() * config.impact_magnitude
+            let delta_v = -event.local_impact_site.normalize() * config.impact_magnitude
                 / planet_momentum.mass;
             debug!(
                 "Projectile {:?} impacting planet {:?}, delta_v={:?}",
@@ -553,7 +553,7 @@ pub fn transfer_projectile_momentum(
                 entity: event.planet,
                 delta_p: Vec3::ZERO,
                 delta_v,
-                delta_s: 0.0,
+                delta_s: 1.0,
             });
         }
     }

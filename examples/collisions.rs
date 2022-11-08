@@ -11,7 +11,7 @@ fn main() {
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
             start_transform: Transform::from_xyz(0.0, 0.0, 50.0).looking_at(Vec3::ZERO, Vec3::Y),
-            impact_magnitude: 5.0,
+            impact_magnitude: 100.0,
             projectile_radius: 0.05,
             ..Default::default()
         })
