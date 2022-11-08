@@ -75,7 +75,6 @@ impl Default for SpacecraftConfig {
 #[derive(Component)]
 pub struct BallisticProjectileTarget {
     pub planet: Entity,
-    pub local_impact_site: Vec3,
 }
 
 #[derive(Component, Default)]
@@ -432,49 +431,6 @@ pub fn handle_projectile_engagement(
                     let scale_factor = planet_transform.scale.length();
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_site = global_impact_site - planet_transform.translation;
-                    if config.show_debug_markers {
-                        let planet_local_marker = commands
-                            .spawn_bundle(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.15,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::BLUE.into()),
-                                transform: Transform::from_translation(
-                                    local_impact_site / (scale_factor / SQRT_3),
-                                ),
-                                ..Default::default()
-                            })
-                            .insert(Blink {
-                                hertz: 4.9,
-                                ..default()
-                            })
-                            .insert(DespawnTimer {
-                                ttl: Timer::new(Duration::from_secs(500), false),
-                            })
-                            .id();
-                        commands.entity(planet_id).add_child(planet_local_marker);
-                        //global marker (should diverge as planet moves)
-                        let global_marker = commands
-                            .spawn_bundle(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.15,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::RED.into()),
-                                transform: Transform::from_translation(global_impact_site),
-                                ..Default::default()
-                            })
-                            .insert(Blink {
-                                hertz: 5.1,
-                                ..default()
-                            })
-                            .insert(DespawnTimer {
-                                ttl: Timer::new(Duration::from_secs(500), false),
-                            })
-                            .id();
-                        debug!("Placing two debug markers. global={global_marker:?} and local={planet_local_marker:?}[parent={planet_id:?}]");
-                    }
                     let radius = config.projectile_radius;
                     let projectile = commands
                         .spawn_bundle(PbrBundle {
@@ -486,10 +442,7 @@ pub fn handle_projectile_engagement(
                             transform: Transform::from_translation(ray_origin),
                             ..Default::default()
                         })
-                        .insert(BallisticProjectileTarget {
-                            planet: planet_id,
-                            local_impact_site,
-                        })
+                        .insert(BallisticProjectileTarget { planet: planet_id })
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(radius))
                         .insert(ActiveEvents::COLLISION_EVENTS)
@@ -519,6 +472,7 @@ pub fn handle_projectile_engagement(
 pub struct ProjectileCollisionEvent {
     pub planet: Entity,
     pub projectile: Entity,
+    pub local_impact_site: Vec3,
 }
 
 // WARNING: order matters
@@ -544,8 +498,7 @@ pub fn spawn_projectile_explosion_animation(
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok(planet_transform) = planet_query.get(event.planet) {
                 let scale_factor = planet_transform.scale.length();
-                let local_impact_site =
-                    projectile_target.local_impact_site / (scale_factor / SQRT_3);
+                let local_impact_site = event.local_impact_site / (scale_factor / SQRT_3);
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -581,11 +534,8 @@ pub fn transfer_projectile_momentum(
     for event in projectile_events.iter() {
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok((planet_transform, planet_momentum)) = planet_query.get(event.planet) {
-                let scale_factor = planet_transform.scale.length();
-                let local_impact_site =
-                    projectile_target.local_impact_site / (scale_factor / SQRT_3);
-                let mass = planet_momentum.mass;
-                let delta_v = -local_impact_site.normalize() * config.impact_magnitude / mass;
+                let delta_v = -event.local_impact_site.normalize() * config.impact_magnitude
+                    / planet_momentum.mass;
                 debug!(
                     "Projectile {:?} impacting planet {:?}, delta_v={:?}",
                     event.projectile, event.planet, delta_v,
@@ -611,8 +561,8 @@ pub fn move_projectiles(
             target.planet
         );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
-            let goal_impact_site = planet_transform.translation + target.local_impact_site;
-            let direction = (projectile_transform.translation - goal_impact_site).normalize();
+            let direction =
+                (projectile_transform.translation - planet_transform.translation).normalize();
             // FIXME: Missiles should ultimately "seek" the center. Because we don't do that,
             // we have to ensure that the "step" of our projectile flight is big enough to
             // guarantee a "collision" event, which is not always the case when you are

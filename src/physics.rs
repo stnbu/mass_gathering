@@ -28,8 +28,8 @@ pub fn handle_planet_collisions(
     mut events: EventReader<CollisionEvent>,
     mut projectile_collision_events: EventWriter<ProjectileCollisionEvent>,
     mut planet_collision_events: EventWriter<PlanetCollisionEvent>,
-    planet_query: Query<&Momentum>,
-    projectile_query: Query<&BallisticProjectileTarget>,
+    planet_query: Query<(&Transform, &Momentum)>,
+    projectile_query: Query<&Transform, With<BallisticProjectileTarget>>,
 ) {
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
@@ -39,14 +39,23 @@ pub fn handle_planet_collisions(
                 planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
             }
             for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
-                if projectile_query.get(projectile).is_ok() {
-                    // NOTE: Projectiles don't collied with each other (currently)
-                    debug!(
-                        "Signaling collision of projectile {:?} with planet {:?}",
-                        projectile, planet
-                    );
-                    projectile_collision_events
-                        .send(ProjectileCollisionEvent { planet, projectile });
+                if let Ok(projectile_transform) = projectile_query.get(projectile) {
+                    if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
+                        // NOTE: Projectiles don't collied with each other (currently)
+                        debug!(
+                            "Signaling collision of projectile {:?} with planet {:?}",
+                            projectile, planet
+                        );
+                        let local_impact_site = (planet_transform.translation
+                            - projectile_transform.translation)
+                            .normalize()
+                            * mass_to_radius(planet_momentum.mass);
+                        projectile_collision_events.send(ProjectileCollisionEvent {
+                            planet,
+                            projectile,
+                            local_impact_site,
+                        });
+                    }
                 }
             }
         }
@@ -104,6 +113,10 @@ pub fn transfer_planet_momentum(
 
 fn radius_to_mass(radius: f32) -> f32 {
     (4.0 / 3.0) * PI * radius.powf(3.0)
+}
+
+fn mass_to_radius(mass: f32) -> f32 {
+    ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 
 #[derive(Bundle)]
