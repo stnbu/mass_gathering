@@ -73,7 +73,8 @@ pub fn handle_despawn_self(
 }
 
 pub fn transfer_planet_momentum(
-    mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
+    // FIXME: make Transform mutable for now to scale. But...
+    mut planet_query: Query<(&mut Transform, &mut Momentum, Entity)>,
     mut planet_events: EventReader<PlanetCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_self_events: EventWriter<DespawnSelfEvent>,
@@ -104,28 +105,32 @@ pub fn transfer_planet_momentum(
                 (major.1.velocity * major.1.mass) + (minor.1.velocity * minor.1.mass);
             let combined_mass = major.1.mass + minor.1.mass;
             let delta_v = (combined_momentum / combined_mass) - major.1.velocity;
+            // Convince yourself that the sum of these must equal 1.0;
             let major_factor = major.1.mass / combined_mass;
             let minor_factor = minor.1.mass / combined_mass;
             debug!(
                 "Directly setting mass of major planet {:?} to {combined_mass:?}",
                 major.2
             );
+            // Maybe increment mass via an event to?
             major.1.mass = combined_mass;
+            let entity = major.2;
+
             let weighted_midpoint =
-                (major_factor * major.0.translation) + (minor_factor * minor.0.translation);
+                ((major_factor * major.0.translation) - (minor_factor * minor.0.translation)) / 2.0;
             debug!(
-                "The weighted midpoint between planets {:?} and {:?} is {weighted_midpoint:?}",
+                "The weighted midpoint between planets major={:?} and minor={:?} is {weighted_midpoint:?}",
                 major.2, minor.2
             );
             let delta_p = weighted_midpoint - major.0.translation;
-            debug!(
-                "Therefore, major planet {:?} will bet translated {:?}",
-                major.2, delta_p,
-            );
+            // How much to scale in the linear (multiply major original
+            // radius by this much to achieve a proportionate mass (i.e. volume) increase.
+            let delta_s = major_factor.powf(-1.0 / 3.0);
             let event = DeltaEvent {
-                entity: major.2,
+                entity,
                 delta_p,
                 delta_v,
+                delta_s,
             };
             debug!("Sending event: {event:?}");
             delta_events.send(event);
@@ -207,6 +212,7 @@ pub struct DeltaEvent {
     pub entity: Entity,
     pub delta_p: Vec3,
     pub delta_v: Vec3,
+    pub delta_s: f32,
 }
 
 pub fn signal_freefall_delta(
@@ -241,10 +247,12 @@ pub fn signal_freefall_delta(
             .map(|((entity, translation, mass, velocity), force)| {
                 let delta_p = *velocity * dt;
                 let delta_v = (force * dt) / *mass;
+                let delta_s = 0.0;
                 delta_events.send(DeltaEvent {
                     entity: *entity,
                     delta_p,
                     delta_v,
+                    delta_s,
                 });
                 (*entity, *translation + delta_p, *mass, *velocity + delta_v)
             })
@@ -258,9 +266,9 @@ pub fn handle_freefall(
 ) {
     for event in delta_events.iter() {
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
-            // debug!(" Some delta for planet {:?}", event.entity);
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
+            transform.scale += event.delta_s;
         }
     }
 }
