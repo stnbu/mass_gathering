@@ -559,7 +559,10 @@ pub fn move_projectiles(
         );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let planet_radius = mass_to_radius(planet_momentum.mass);
-            let target = planet_transform.translation + (target.local_direction * planet_radius);
+            let arggg = planet_transform.scale.length() / SQRT_3 * 0.8;
+            warn!("arggg: {arggg:?}");
+            let target =
+                planet_transform.translation + (target.local_direction * planet_radius * arggg);
             let translation_to_target = target - projectile_transform.translation;
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();

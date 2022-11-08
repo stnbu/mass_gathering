@@ -169,7 +169,7 @@ pub fn my_planets(
 ) {
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
-    let pair_count = 10;
+    let pair_count = 15;
     for _ in 0..pair_count {
         let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
         let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
