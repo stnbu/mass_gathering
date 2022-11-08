@@ -73,7 +73,7 @@ impl Default for SpacecraftConfig {
 }
 
 #[derive(Component)]
-pub struct BallisticProjectileTarget {
+pub struct ProjectileTarget {
     pub planet: Entity,
 }
 
@@ -395,7 +395,7 @@ pub fn handle_projectile_engagement(
     planet_query: Query<
         (Entity, &Transform),
         (
-            Without<BallisticProjectileTarget>,
+            Without<ProjectileTarget>,
             With<Momentum>,
             With<Collider>,
             Without<Spacecraft>,
@@ -442,7 +442,7 @@ pub fn handle_projectile_engagement(
                             transform: Transform::from_translation(ray_origin),
                             ..Default::default()
                         })
-                        .insert(BallisticProjectileTarget { planet: planet_id })
+                        .insert(ProjectileTarget { planet: planet_id })
                         .insert(RigidBody::Dynamic)
                         .insert(Collider::ball(radius))
                         .insert(ActiveEvents::COLLISION_EVENTS)
@@ -490,8 +490,8 @@ pub fn spawn_projectile_explosion_animation(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    projectile_query: Query<&BallisticProjectileTarget>,
-    planet_query: Query<&Transform, Without<BallisticProjectileTarget>>,
+    projectile_query: Query<&ProjectileTarget>,
+    planet_query: Query<&Transform, Without<ProjectileTarget>>,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     for event in projectile_events.iter() {
@@ -523,7 +523,7 @@ pub fn spawn_projectile_explosion_animation(
 }
 
 pub fn transfer_projectile_momentum(
-    planet_query: Query<&Momentum, Without<BallisticProjectileTarget>>,
+    planet_query: Query<&Momentum, Without<ProjectileTarget>>,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     config: Res<SpacecraftConfig>,
@@ -546,8 +546,8 @@ pub fn transfer_projectile_momentum(
 }
 
 pub fn move_projectiles(
-    mut projectile_query: Query<(Entity, &mut Transform, &BallisticProjectileTarget)>,
-    planet_query: Query<(&Transform, &mut Momentum, Entity), Without<BallisticProjectileTarget>>,
+    mut projectile_query: Query<(Entity, &mut Transform, &ProjectileTarget)>,
+    planet_query: Query<(&Transform, &mut Momentum, Entity), Without<ProjectileTarget>>,
     time: Res<Time>,
 ) {
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {

@@ -1,4 +1,4 @@
-use crate::craft::BallisticProjectileTarget;
+use crate::craft::ProjectileTarget;
 use crate::DespawnTimer;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
@@ -29,7 +29,7 @@ pub fn handle_planet_collisions(
     mut projectile_collision_events: EventWriter<ProjectileCollisionEvent>,
     mut planet_collision_events: EventWriter<PlanetCollisionEvent>,
     planet_query: Query<(&Transform, &Momentum)>,
-    projectile_query: Query<&Transform, With<BallisticProjectileTarget>>,
+    projectile_query: Query<&Transform, With<ProjectileTarget>>,
 ) {
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
