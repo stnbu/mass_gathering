@@ -492,7 +492,7 @@ pub fn spawn_projectile_explosion_animation(
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     for event in projectile_events.iter() {
-        warn!("[spawn_projectile_explosion_animation] Receiving projectile collision event: {event:?}");
+        debug!("[spawn_projectile_explosion_animation] Receiving projectile collision event: {event:?}");
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok(planet_transform) = planet_query.get(event.planet) {
                 let explosion = commands
@@ -514,20 +514,20 @@ pub fn spawn_projectile_explosion_animation(
                     .insert(ProjectileExplosion { rising: true })
                     .id();
                 commands.entity(event.planet).add_child(explosion);
-                warn!(
+                debug!(
                     "Explosion animation entity {explosion:?} spawned and now a child of planet {:?} with local coordiantes {:?}",
                     projectile_target.planet,
 		    event.local_impact_site,
                 );
             } else {
-                warn!(
+                debug!(
                     "[spawn_projectile_explosion_animation] Did not find planet {:?}",
                     event.planet
                 );
             }
         } else {
             // FIXME: should be possible to guarantee this never happens.
-            warn!(
+            debug!(
                 "While spawning explosion animation: projectile {:?} not found",
                 event.projectile
             );
@@ -593,7 +593,7 @@ pub fn move_projectiles(
             debug!(" Projectile traveling delta_p={translation:?}");
             projectile_transform.translation += translation;
         } else {
-            warn!(
+            debug!(
                 "Target planet {:?} despawned before projectile impact.",
                 target.planet
             );

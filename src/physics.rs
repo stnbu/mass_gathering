@@ -40,27 +40,27 @@ pub fn handle_planet_collisions(
                     if let Ok(projectile_transform) = projectile_query.get(projectile) {
                         if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
                             let radius = mass_to_radius(planet_momentum.mass);
-                            warn!(" radius {radius:?}");
+                            debug!(" radius {radius:?}");
                             // unit vector at planet center pointing at projectile
-                            warn!(
+                            debug!(
                                 " projectile_transform.translation: {:?}",
                                 projectile_transform.translation
                             );
-                            warn!(
+                            debug!(
                                 " planet_transform.translation: {:?}",
                                 planet_transform.translation
                             );
                             let direction = (projectile_transform.translation
                                 - planet_transform.translation)
                                 .normalize();
-                            warn!(" direction: {direction:?}");
+                            debug!(" direction: {direction:?}");
                             let local_impact_site = direction * radius;
                             let event = ProjectileCollisionEvent {
                                 planet,
                                 projectile,
                                 local_impact_site,
                             };
-                            warn!("Sending projectile impact event: {event:?}");
+                            debug!("Sending projectile impact event: {event:?}");
                             projectile_collision_events.send(event);
                         }
                     }
@@ -101,15 +101,15 @@ pub fn transfer_planet_momentum(
                 (p1, p0)
             };
 
-            warn!("Collision of planets:");
-            warn!(" Major planet {:?}", major.2);
-            warn!("  position: {:?}", major.0.translation);
-            warn!("  velocity: {:?}", major.1.velocity);
-            warn!("  mass: {:?}", major.1.mass);
-            warn!(" Minor planet {:?}", minor.2);
-            warn!("  position: {:?}", minor.0.translation);
-            warn!("  velocity: {:?}", minor.1.velocity);
-            warn!("  mass: {:?}", minor.1.mass);
+            debug!("Collision of planets:");
+            debug!(" Major planet {:?}", major.2);
+            debug!("  position: {:?}", major.0.translation);
+            debug!("  velocity: {:?}", major.1.velocity);
+            debug!("  mass: {:?}", major.1.mass);
+            debug!(" Minor planet {:?}", minor.2);
+            debug!("  position: {:?}", minor.0.translation);
+            debug!("  velocity: {:?}", minor.1.velocity);
+            debug!("  mass: {:?}", minor.1.mass);
 
             let combined_momentum =
                 (major.1.velocity * major.1.mass) + (minor.1.velocity * minor.1.mass);
@@ -118,7 +118,7 @@ pub fn transfer_planet_momentum(
             // Convince yourself that the sum of these must equal 1.0;
             let major_factor = major.1.mass / combined_mass;
             let minor_factor = minor.1.mass / combined_mass;
-            warn!(
+            debug!(
                 "Directly setting mass of major planet {:?} to {combined_mass:?}",
                 major.2
             );
@@ -128,7 +128,7 @@ pub fn transfer_planet_momentum(
 
             let weighted_midpoint =
                 ((major_factor * major.0.translation) + (minor_factor * minor.0.translation)) / 2.0;
-            warn!(
+            debug!(
                 "The weighted midpoint between planets major={:?} and minor={:?} is {weighted_midpoint:?}",
                 major.2, minor.2
             );
@@ -142,9 +142,9 @@ pub fn transfer_planet_momentum(
                 delta_v,
                 delta_s,
             };
-            warn!("Sending event: {event:?}");
+            debug!("Sending event: {event:?}");
             delta_events.send(event);
-            warn!("Signaling despawn request for minor planet {:?}", minor.2);
+            debug!("Signaling despawn request for minor planet {:?}", minor.2);
             despawn_self_events.send(DespawnSelfEvent(minor.2));
         }
     }
@@ -278,7 +278,7 @@ pub fn handle_freefall(
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
-            //warn!(" XXXXX {:?}", event.delta_s);
+            //debug!(" XXXXX {:?}", event.delta_s);
             transform.scale *= event.delta_s;
         }
     }
