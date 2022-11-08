@@ -427,6 +427,7 @@ pub fn handle_projectile_engagement(
             spacecraft.hot_planet = Some(planet_id);
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::Space) {
+                    warn!("Firing");
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_direction =
                         (global_impact_site - planet_transform.translation).normalize();
@@ -458,6 +459,8 @@ pub fn handle_projectile_engagement(
                         let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
                         pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
                     }
+                    warn!(" local_direction: {local_direction:?}");
+                    warn!(" radius: {radius:?}");
                 }
             }
         } else {
@@ -554,8 +557,7 @@ pub fn move_projectiles(
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let target = planet_transform.translation
                 + (target.local_direction * mass_to_radius(planet_momentum.mass));
-            let translation_to_target =
-                projectile_transform.translation - planet_transform.translation;
+            let translation_to_target = target - projectile_transform.translation;
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();
 
@@ -563,15 +565,14 @@ pub fn move_projectiles(
             let absolute_velocity = direction * speed_coefficient;
             // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
-            let mut translation = -velocity * time.delta_seconds();
+            let mut translation = velocity * time.delta_seconds();
             if translation.length() > distance {
-                translation = translation_to_target;
+                // Do we need to fudge to ensure collision? Does zero distance count as a collision?
+                warn!(" Next projectile translation larger than distance to target. Resetting to to-target translation vector: {translation_to_target:?}");
+                translation = translation_to_target * 1.01;
             }
+            warn!(" Projectile traveling delta_p={translation:?}");
             projectile_transform.translation += translation;
-            debug!(
-                "Projectile entity {projectile:?} traveled {:?}",
-                translation.length()
-            );
         } else {
             warn!(
                 "Target planet {:?} despawned before projectile impact.",
