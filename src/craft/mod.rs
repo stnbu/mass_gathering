@@ -569,16 +569,14 @@ pub fn move_projectiles(
         );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let planet_radius = mass_to_radius(planet_momentum.mass);
-            let arggg = 1.0; // planet_transform.scale.length() / SQRT_3 * 0.8;
-            warn!("arggg: {arggg:?}");
-            let target =
-                planet_transform.translation + (target.local_direction * planet_radius * arggg);
+            let target = planet_transform.translation + (target.local_direction * planet_radius);
             let translation_to_target = target - projectile_transform.translation;
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();
 
             let speed_coefficient = 0.32 * 10.0 * 50.0 * 0.75;
-            let absolute_velocity = direction * speed_coefficient;
+            let absolute_velocity =
+                direction * speed_coefficient * ((distance + 3.0) / (distance + 1.0));
             // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
             let mut translation = velocity * time.delta_seconds();
