@@ -34,24 +34,25 @@ pub fn handle_planet_collisions(
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
             if planet_query.get_many([*e0, *e1]).is_ok() {
                 planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
-            }
-            for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
-                if let Ok(projectile_transform) = projectile_query.get(projectile) {
-                    if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
-                        // NOTE: Projectiles don't collied with each other (currently)
-                        debug!(
-                            "Signaling collision of projectile {:?} with planet {:?}",
-                            projectile, planet
-                        );
-                        let local_impact_site = (planet_transform.translation
-                            - projectile_transform.translation)
-                            .normalize()
-                            * mass_to_radius(planet_momentum.mass);
-                        projectile_collision_events.send(ProjectileCollisionEvent {
-                            planet,
-                            projectile,
-                            local_impact_site,
-                        });
+            } else {
+                for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
+                    if let Ok(projectile_transform) = projectile_query.get(projectile) {
+                        if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
+                            // NOTE: Projectiles don't collied with each other (currently)
+                            debug!(
+                                "Signaling collision of projectile {:?} with planet {:?}",
+                                projectile, planet
+                            );
+                            let local_impact_site = (planet_transform.translation
+                                - projectile_transform.translation)
+                                .normalize()
+                                * mass_to_radius(planet_momentum.mass);
+                            projectile_collision_events.send(ProjectileCollisionEvent {
+                                planet,
+                                projectile,
+                                local_impact_site,
+                            });
+                        }
                     }
                 }
             }
@@ -66,6 +67,7 @@ pub fn handle_despawn_self(
     mut despawn_self_events: EventReader<DespawnSelfEvent>,
 ) {
     for DespawnSelfEvent(entity) in despawn_self_events.iter() {
+        debug!("Despawning {entity:?}");
         commands.entity(*entity).despawn();
     }
 }
@@ -77,6 +79,9 @@ pub fn transfer_planet_momentum(
     mut despawn_self_events: EventWriter<DespawnSelfEvent>,
 ) {
     for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
+        // FIXME: We have write access to `Momentum` and yet we update
+        // `delta_v` via an event. Just update it here? Should `DeltaEvent`
+        // even have a `delta_v` field?
         if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
             let (mut major, minor) = if p0.1.mass > p1.1.mass {
                 (p0, p1)
@@ -85,24 +90,37 @@ pub fn transfer_planet_momentum(
                 (p1, p0)
             };
 
+            debug!("Collision of planets:");
+            debug!(" Major planet {:?}", major.2);
+            debug!("  position: {:?}", major.0.translation);
+            debug!("  velocity: {:?}", major.1.velocity);
+            debug!("  mass: {:?}", major.1.mass);
+            debug!(" Minor planet {:?}", minor.2);
+            debug!("  position: {:?}", minor.0.translation);
+            debug!("  velocity: {:?}", minor.1.velocity);
+            debug!("  mass: {:?}", minor.1.mass);
+
             let combined_momentum =
                 (major.1.velocity * major.1.mass) + (minor.1.velocity * minor.1.mass);
             let combined_mass = major.1.mass + minor.1.mass;
             let delta_v = (combined_momentum / combined_mass) - major.1.velocity;
             let major_factor = major.1.mass / combined_mass;
             let minor_factor = minor.1.mass / combined_mass;
-            // Weird: update mass here...
+            debug!(
+                "Directly setting mass of major planet {:?} to {combined_mass:?}",
+                major.2
+            );
             major.1.mass = combined_mass;
             let delta_p =
                 (major_factor * major.0.translation) - (minor_factor * minor.0.translation);
-            // ...and change translation via an event BUT, don't update velocity here
-            // (even though you could have) because "DeltaEvent" is handled elsewhere,
-            // including velocity.
-            delta_events.send(DeltaEvent {
+            let event = DeltaEvent {
                 entity: major.2,
                 delta_p,
                 delta_v,
-            });
+            };
+            debug!("Sending event: {event:?}");
+            delta_events.send(event);
+            debug!("Signaling despawn request for minor planet {:?}", minor.2);
             despawn_self_events.send(DespawnSelfEvent(minor.2));
         }
     }
@@ -175,6 +193,7 @@ impl Default for Momentum {
     }
 }
 
+#[derive(Debug)]
 pub struct DeltaEvent {
     pub entity: Entity,
     pub delta_p: Vec3,

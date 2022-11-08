@@ -1,3 +1,4 @@
+use bevy::log::LogSettings;
 use bevy::prelude::*;
 use mass_gathering::prelude::*;
 
@@ -13,6 +14,10 @@ Masses:
 */
 fn main() {
     App::new()
+        .insert_resource(LogSettings {
+            filter: "warn,mass_gathering=debug".into(),
+            level: bevy::log::Level::DEBUG,
+        })
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
@@ -43,7 +48,7 @@ fn setup(
 
     // The sun, beautiful
     spawn_planet(
-        sun_radius * 0.5,
+        sun_radius,
         Vec3::ZERO,
         Vec3::ZERO,
         earth_color,
@@ -51,14 +56,14 @@ fn setup(
         &mut meshes,
         &mut materials,
     );
-    // // The moon, even more beautiful
-    // spawn_planet(
-    //     1.0,
-    //     Vec3::X * sun_radius * 3.0,
-    //     Vec3::Z * 1.588,
-    //     moon_color,
-    //     &mut commands,
-    //     &mut meshes,
-    //     &mut materials,
-    // );
+    // The moon, even more beautiful
+    spawn_planet(
+        1.0,
+        Vec3::X * sun_radius * 3.0,
+        Vec3::Z * 1.588,
+        moon_color,
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+    );
 }

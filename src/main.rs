@@ -1,3 +1,4 @@
+use bevy::log::LogSettings;
 use bevy::prelude::{App, ClearColor, Color, Transform, Vec3};
 use mass_gathering::prelude::{my_planets, PhysicsConfig, SpacecraftConfig};
 use mass_gathering::FullGame;
@@ -5,6 +6,10 @@ use mass_gathering::FullGame;
 fn main() {
     let d = 60.0 / 3.0_f32.powf(0.5); // about right for my_planets
     App::new()
+        .insert_resource(LogSettings {
+            filter: "error,mass_gathering=warn".into(),
+            level: bevy::log::Level::ERROR,
+        })
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(PhysicsConfig {
             sims_per_frame: 10,
