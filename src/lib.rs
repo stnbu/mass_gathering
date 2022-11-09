@@ -55,7 +55,6 @@ pub struct Spacetime;
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
         app.init_resource::<PhysicsConfig>()
-            .add_event::<BreadcrumbEvent>()
             .add_event::<DeltaEvent>()
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnSelfEvent>()
@@ -64,8 +63,6 @@ impl Plugin for Spacetime {
                     .with_system(handle_despawn_self)
                     .with_system(signal_freefall_delta.before(handle_despawn_self))
                     .with_system(handle_freefall.before(handle_despawn_self))
-                    //.with_system(signal_breadcrumbs.before(handle_despawn_self))
-                    //.with_system(spawn_breadcrumbs.before(handle_despawn_self))
                     .with_system(handle_planet_collisions.before(handle_despawn_self))
                     .with_system(transfer_planet_momentum.before(handle_despawn_self)),
             );

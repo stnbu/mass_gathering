@@ -1,8 +1,7 @@
 use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
-use crate::{mass_to_radius, radius_to_mass, DespawnTimer};
+use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
-use std::time::Duration;
 
 pub struct PhysicsConfig {
     pub trails: bool,
@@ -268,62 +267,5 @@ pub fn handle_freefall(
             momentum.velocity += event.delta_v;
             transform.scale *= event.delta_s;
         }
-    }
-}
-
-use std::collections::HashMap;
-#[derive(Default)]
-pub struct PreviousLocations(pub HashMap<Entity, Vec3>);
-
-pub struct BreadcrumbEvent {
-    entity: Entity,
-    location: Vec3,
-}
-
-#[derive(Component)]
-pub struct Breadcrumb(pub Entity);
-
-pub fn signal_breadcrumbs(
-    planet_query: Query<(Entity, &Transform), With<Momentum>>,
-    mut previous_locations: Local<PreviousLocations>,
-    mut breadcrumb_events: EventWriter<BreadcrumbEvent>,
-) {
-    for (entity, transform) in planet_query.iter() {
-        if let Some(prev) = previous_locations.0.get(&entity) {
-            if (transform.translation - *prev).length() > 2.0 / 3.0 {
-                breadcrumb_events.send(BreadcrumbEvent {
-                    entity,
-                    location: transform.translation,
-                });
-                previous_locations.0.insert(entity, transform.translation);
-            }
-        } else {
-            previous_locations.0.insert(entity, transform.translation);
-        }
-    }
-}
-
-pub fn spawn_breadcrumbs(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut breadcrumb_events: EventReader<BreadcrumbEvent>,
-) {
-    for event in breadcrumb_events.iter() {
-        commands
-            .spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 0.1,
-                    ..Default::default()
-                })),
-                transform: Transform::from_translation(event.location),
-                visibility: Visibility { is_visible: false },
-                material: materials.add((Color::WHITE).into()),
-                ..Default::default()
-            })
-            .insert(DespawnTimer {
-                ttl: Timer::new(Duration::from_millis(3000), false),
-            })
-            .insert(Breadcrumb(event.entity));
     }
 }

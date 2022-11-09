@@ -331,10 +331,7 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
     }
 }
 
-pub fn set_ar_default_visibility(
-    mut ar_query: Query<(&mut Visibility, &SpacecraftAR), Without<Breadcrumb>>,
-    mut breadcrumb_query: Query<&mut Visibility, With<Breadcrumb>>,
-) {
+pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     debug!("Setting default visibility for AR components");
     for (mut visibility, mode) in ar_query.iter_mut() {
         debug!("    .");
@@ -343,20 +340,12 @@ pub fn set_ar_default_visibility(
             SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
         }
     }
-    for mut breadcrumb in breadcrumb_query.iter_mut() {
-        breadcrumb.is_visible = false;
-    }
 }
 
-use crate::physics::Breadcrumb;
 use crate::prelude::DeltaEvent;
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
-    mut ar_query: Query<
-        (Entity, &mut Visibility, &SpacecraftAR),
-        (Without<Spacecraft>, Without<Breadcrumb>),
-    >,
-    mut breadcrumb_query: Query<(&mut Visibility, &Breadcrumb)>,
+    mut ar_query: Query<(Entity, &mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
 ) {
     for (children, spacecraft) in spacecraft_query.iter() {
         if let Some(planet) = spacecraft.hot_planet {
@@ -376,11 +365,6 @@ pub fn handle_hot_planet(
                             visibility.is_visible = false;
                         }
                     }
-                }
-            }
-            for (mut visibility, breadcrumb) in breadcrumb_query.iter_mut() {
-                if planet == breadcrumb.0 {
-                    visibility.is_visible = true;
                 }
             }
         }
