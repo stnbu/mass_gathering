@@ -331,9 +331,7 @@ pub fn do_blink(mut blinker_query: Query<(&mut Visibility, &Blink)>, time: Res<T
 }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
-    debug!("Setting default visibility for AR components");
     for (mut visibility, mode) in ar_query.iter_mut() {
-        debug!("    .");
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
             SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
@@ -353,11 +351,9 @@ pub fn handle_hot_planet(
                 if let Ok((mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
                     match *ar_element {
                         SpacecraftAR::CrosshairsHot => {
-                            debug!("    Showing hot component");
                             visibility.is_visible = true;
                         }
                         SpacecraftAR::CrosshairsCold => {
-                            debug!("    Hiding cold component");
                             visibility.is_visible = false;
                         }
                     }
@@ -520,14 +516,11 @@ pub fn move_projectiles(
     time: Res<Time>,
 ) {
     for (projectile, mut projectile_transform, target) in projectile_query.iter_mut() {
-        debug!(
-            "Handling flight of projectile {projectile:?} with target {:?}",
-            target.planet
-        );
         if let Ok((planet_transform, planet_momentum, _)) = planet_query.get(target.planet) {
             let planet_radius = mass_to_radius(planet_momentum.mass);
-            let target = planet_transform.translation + (target.local_direction * planet_radius);
-            let translation_to_target = target - projectile_transform.translation;
+            let target_coordinates =
+                planet_transform.translation + (target.local_direction * planet_radius);
+            let translation_to_target = target_coordinates - projectile_transform.translation;
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();
 
@@ -543,11 +536,11 @@ pub fn move_projectiles(
                 // shouldn't it be a function of radius?
                 translation = translation_to_target * 1.1;
             }
-            debug!(" Projectile traveling delta_p={translation:?}");
+            debug!(" Projectile {projectile:?} traveling toward target on planet {:?} by delta_p={translation:?}", target.planet);
             projectile_transform.translation += translation;
         } else {
             debug!(
-                "Target planet {:?} despawned before projectile impact.",
+                "While moving projectile: planet {:?} not found",
                 target.planet
             );
         }
