@@ -21,7 +21,7 @@ impl PluginGroup for FullGame {
 }
 
 pub struct SpacecraftPlugin;
-//HotPlanetEvent
+
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()

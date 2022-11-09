@@ -64,9 +64,9 @@ pub fn handle_despawn_self(
     mut commands: Commands,
     mut despawn_self_events: EventReader<DespawnSelfEvent>,
 ) {
-    for DespawnSelfEvent(entity) in despawn_self_events.iter() {
-        debug!("Despawning {entity:?}");
-        commands.entity(*entity).despawn();
+    for &DespawnSelfEvent(entity) in despawn_self_events.iter() {
+        debug!("RECURSIVELY despawning {entity:?}");
+        commands.entity(entity).despawn_recursive();
     }
 }
 

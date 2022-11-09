@@ -344,14 +344,14 @@ pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &Spacecra
 
 use crate::prelude::DeltaEvent;
 pub fn handle_hot_planet(
-    spacecraft_query: Query<(&Children, &Spacecraft)>,
-    mut ar_query: Query<(Entity, &mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
-    mut hot_planet_events: EventReader<HotPlanetEvent>,
+    spacecraft_query: Query<&Children, With<Spacecraft>>,
+    mut ar_query: Query<(&mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
+    hot_planet_events: EventReader<HotPlanetEvent>,
 ) {
-    for (children, spacecraft) in spacecraft_query.iter() {
+    for children in spacecraft_query.iter() {
         if !hot_planet_events.is_empty() {
             for child_id in children.iter() {
-                if let Ok((id, mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
+                if let Ok((mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
                     match *ar_element {
                         SpacecraftAR::CrosshairsHot => {
                             debug!("    Showing hot component");
@@ -375,17 +375,7 @@ pub fn fire_on_hot_planet(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     optional_keys: Option<Res<Input<KeyCode>>>,
-    planet_query: Query<
-        (Entity, &Transform),
-        (
-            Without<ProjectileTarget>,
-            With<Momentum>,
-            With<Collider>,
-            Without<Spacecraft>,
-        ),
-    >,
-    rapier_context: Res<RapierContext>,
-    mut spacecraft_query: Query<(&mut Transform, &mut Spacecraft)>,
+    mut spacecraft_query: Query<&mut Transform, With<Spacecraft>>,
     config: Res<SpacecraftConfig>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
 ) {
@@ -396,8 +386,7 @@ pub fn fire_on_hot_planet(
     {
         if let Some(ref keys) = optional_keys {
             if keys.just_pressed(KeyCode::Space) {
-                let (mut spacecraft_transform, mut spacecraft) =
-                    spacecraft_query.get_single_mut().unwrap();
+                let mut spacecraft_transform = spacecraft_query.get_single_mut().unwrap();
                 debug!("Firing at planet {planet:?}, planet-local direction to target: {local_direction:?}");
                 commands
                     .spawn_bundle(PbrBundle {
@@ -434,31 +423,6 @@ pub fn fire_on_hot_planet(
             }
         }
     }
-    // Note that pov is only mutable for "recoil"
-    for (mut pov, mut spacecraft) in spacecraft_query.iter_mut() {
-        let ray_origin = pov.translation;
-        let ray_direction = -1.0 * pov.local_z();
-        let intersection = rapier_context.cast_ray(
-            ray_origin,
-            ray_direction,
-            150.0, // what's reasonable here...?
-            true,
-            QueryFilter::only_dynamic(),
-        );
-
-        if let Some((intersected_collider_id, distance)) = intersection {
-            let (planet_id, planet_transform) =
-                if let Ok(result) = planet_query.get(intersected_collider_id) {
-                    result
-                } else {
-                    debug!("No planet found with id {intersected_collider_id:?}.");
-                    continue;
-                };
-            //spacecraft.hot_planet = Some(planet_id);
-            // } else {
-            //     spacecraft.hot_planet = None;
-        }
-    }
 }
 
 #[derive(Debug)]
@@ -468,7 +432,7 @@ pub struct ProjectileCollisionEvent {
     pub local_impact_site: Vec3,
 }
 
-// WARNING: order matters
+// FIXME: need to handle in-flight projectile whose planet disappears.
 pub fn handle_projectile_despawn(
     mut commands: Commands,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
