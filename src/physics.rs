@@ -86,7 +86,6 @@ pub fn transfer_planet_momentum(
     mut planet_events: EventReader<PlanetCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_planet_events: EventWriter<DespawnPlanetEvent>,
-    projectile_query: Query<Entity, &ProjectileTarget>,
 ) {
     for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
         // FIXME: We have write access to `Momentum` and yet we update
