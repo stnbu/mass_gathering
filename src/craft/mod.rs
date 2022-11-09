@@ -372,7 +372,7 @@ pub fn handle_hot_planet(
     }
 }
 
-pub fn handle_projectile_engagement(
+pub fn _fire_on_hot_planet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -683,7 +683,10 @@ pub fn set_camera_viewports(
 }
 
 // HERE HERE
-pub struct HotPlanetEvent(pub Entity);
+pub struct HotPlanetEvent {
+    pub planet: Entity,
+    pub local_direction: Vec3,
+}
 //     mut hot_planet_events: EventWriter<HotPlanetEvent>,
 
 // pub fn signal_hot_planet(
@@ -693,23 +696,12 @@ pub struct HotPlanetEvent(pub Entity);
 // }
 
 // SURGERY HERE -- make "engage" into "handle hot planet"
-pub fn _signal_hot_planet(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    optional_keys: Option<Res<Input<KeyCode>>>,
-    planet_query: Query<
-        (Entity, &Transform),
-        (
-            Without<ProjectileTarget>,
-            With<Momentum>,
-            With<Collider>,
-            Without<Spacecraft>,
-        ),
-    >,
+pub fn signal_hot_planet(
+    planet_query: Query<&Transform, With<Momentum>>,
     rapier_context: Res<RapierContext>,
     spacecraft_query: Query<&Transform, With<Spacecraft>>,
     config: Res<SpacecraftConfig>,
+    mut hot_planet_events: EventWriter<HotPlanetEvent>,
 ) {
     for pov in spacecraft_query.iter() {
         let ray_origin = pov.translation;
@@ -722,9 +714,16 @@ pub fn _signal_hot_planet(
             QueryFilter::only_dynamic(),
         );
 
-        if let Some((collider_id, distance)) = intersection {
-            if let Ok((planet_id, planet_transform)) = planet_query.get(collider_id) {
-                println!("{planet_id:?}");
+        if let Some((planet, distance)) = intersection {
+            if let Ok(planet_transform) = planet_query.get(planet) {
+                let global_impact_site = ray_origin + (ray_direction * distance);
+                let local_direction =
+                    (global_impact_site - planet_transform.translation).normalize();
+                let event = HotPlanetEvent {
+                    planet,
+                    local_direction,
+                };
+                hot_planet_events.send(event);
             }
         }
     }
