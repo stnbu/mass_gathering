@@ -31,7 +31,7 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(move_forward)
                     .with_system(steer)
                     .with_system(stars)
-                    //.with_system(drift)
+                    .with_system(drift)
                     .with_system(handle_projectile_engagement)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
@@ -63,8 +63,8 @@ impl Plugin for Spacetime {
                     .with_system(handle_despawn_self)
                     .with_system(signal_freefall_delta.before(handle_despawn_self))
                     .with_system(handle_freefall.before(handle_despawn_self))
-                    .with_system(signal_breadcrumbs.before(handle_despawn_self))
-                    .with_system(spawn_breadcrumbs.before(handle_despawn_self))
+                    //.with_system(signal_breadcrumbs.before(handle_despawn_self))
+                    //.with_system(spawn_breadcrumbs.before(handle_despawn_self))
                     .with_system(handle_planet_collisions.before(handle_despawn_self))
                     .with_system(transfer_planet_momentum.before(handle_despawn_self)),
             );

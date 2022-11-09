@@ -2,7 +2,6 @@ use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
 use crate::{mass_to_radius, radius_to_mass, DespawnTimer};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
-use std::f32::consts::SQRT_2;
 use std::time::Duration;
 
 pub struct PhysicsConfig {
@@ -83,7 +82,6 @@ pub fn handle_despawn_self(
 }
 
 pub fn transfer_planet_momentum(
-    // FIXME: make Transform mutable for now to scale. But...
     mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
     mut planet_events: EventReader<PlanetCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
