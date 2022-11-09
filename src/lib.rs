@@ -40,8 +40,8 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))
                     .with_system(move_projectiles.before(handle_planet_collisions))
                     .with_system(transfer_projectile_momentum)
-                    // FIXME: even though `handle_despawn_self` added by another plugin?
-                    .with_system(spawn_projectile_explosion_animation.after(handle_despawn_self))
+                    // FIXME: even though `handle_despawn_planet` added by another plugin?
+                    .with_system(spawn_projectile_explosion_animation.after(handle_despawn_planet))
                     .with_system(
                         handle_projectile_despawn.after(spawn_projectile_explosion_animation),
                     ),
@@ -62,11 +62,11 @@ impl Plugin for Spacetime {
             .add_event::<DespawnPlanetEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
-                    .with_system(handle_despawn_self)
-                    .with_system(signal_freefall_delta.before(handle_despawn_self))
-                    .with_system(handle_freefall.before(handle_despawn_self))
-                    .with_system(handle_planet_collisions.before(handle_despawn_self))
-                    .with_system(transfer_planet_momentum.before(handle_despawn_self)),
+                    .with_system(handle_despawn_planet)
+                    .with_system(signal_freefall_delta.before(handle_despawn_planet))
+                    .with_system(handle_freefall.before(handle_despawn_planet))
+                    .with_system(handle_planet_collisions.before(handle_despawn_planet))
+                    .with_system(transfer_planet_momentum.before(handle_despawn_planet)),
             );
     }
 }

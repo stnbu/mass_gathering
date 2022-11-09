@@ -63,12 +63,12 @@ pub fn handle_planet_collisions(
 
 pub struct DespawnPlanetEvent(pub Entity);
 
-pub fn handle_despawn_self(
+pub fn handle_despawn_planet(
     mut commands: Commands,
-    mut despawn_self_events: EventReader<DespawnPlanetEvent>,
+    mut despawn_planet_events: EventReader<DespawnPlanetEvent>,
     projectile_query: Query<(Entity, &ProjectileTarget)>,
 ) {
-    for &DespawnPlanetEvent(entity) in despawn_self_events.iter() {
+    for &DespawnPlanetEvent(entity) in despawn_planet_events.iter() {
         debug!("RECURSIVELY despawning planet {entity:?} and all of its in-flight projectiles");
         for (projectile, &ProjectileTarget { planet, .. }) in projectile_query.iter() {
             if entity == planet {
@@ -85,7 +85,7 @@ pub fn transfer_planet_momentum(
     mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
     mut planet_events: EventReader<PlanetCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
-    mut despawn_self_events: EventWriter<DespawnPlanetEvent>,
+    mut despawn_planet_events: EventWriter<DespawnPlanetEvent>,
     projectile_query: Query<Entity, &ProjectileTarget>,
 ) {
     for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
@@ -144,7 +144,7 @@ pub fn transfer_planet_momentum(
             debug!("Sending event: {event:?}");
             delta_events.send(event);
             debug!("Signaling despawn request for minor planet {:?}", minor.2);
-            despawn_self_events.send(DespawnPlanetEvent(minor.2));
+            despawn_planet_events.send(DespawnPlanetEvent(minor.2));
         }
     }
 }
