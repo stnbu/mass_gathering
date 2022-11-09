@@ -21,18 +21,20 @@ impl PluginGroup for FullGame {
 }
 
 pub struct SpacecraftPlugin;
-
+//HotPlanetEvent
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
             .add_event::<ProjectileCollisionEvent>()
+            .add_event::<HotPlanetEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
                     .with_system(steer)
                     .with_system(stars)
                     .with_system(drift)
-                    .with_system(handle_projectile_engagement)
+                    .with_system(signal_hot_planet)
+                    .with_system(fire_on_hot_planet)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
                     .with_system(set_ar_default_visibility.before(handle_hot_planet))

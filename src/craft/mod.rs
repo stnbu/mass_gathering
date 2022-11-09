@@ -370,7 +370,7 @@ pub fn handle_hot_planet(
 
 //     mut hot_planet_events: EventWriter<HotPlanetEvent>,
 
-pub fn _fire_on_hot_planet(
+pub fn fire_on_hot_planet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
