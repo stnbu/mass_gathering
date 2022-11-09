@@ -522,12 +522,11 @@ pub fn spawn_projectile_explosion_animation(
                 );
             } else {
                 debug!(
-                    "[spawn_projectile_explosion_animation] Did not find planet {:?}",
+                    "While spawning explosion animation: planet {:?} not found",
                     event.planet
                 );
             }
         } else {
-            // FIXME: should be possible to guarantee this never happens.
             debug!(
                 "While spawning explosion animation: projectile {:?} not found",
                 event.projectile
