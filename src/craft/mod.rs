@@ -495,6 +495,9 @@ pub fn spawn_projectile_explosion_animation(
         debug!("[spawn_projectile_explosion_animation] Receiving projectile collision event: {event:?}");
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok(planet_transform) = planet_query.get(event.planet) {
+                // FIXME: WHY does local_impact_site need any scaling??
+                let local_impact_site =
+                    event.local_impact_site / (planet_transform.scale.length() / SQRT_3);
                 let explosion = commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -506,9 +509,7 @@ pub fn spawn_projectile_explosion_animation(
                             perceptual_roughness: 0.99,
                             ..default()
                         }),
-                        transform: Transform::from_translation(
-                            event.local_impact_site / (planet_transform.scale.length() / SQRT_3),
-                        ),
+                        transform: Transform::from_translation(local_impact_site),
                         ..Default::default()
                     })
                     .insert(ProjectileExplosion { rising: true })
@@ -517,7 +518,7 @@ pub fn spawn_projectile_explosion_animation(
                 debug!(
                     "Explosion animation entity {explosion:?} spawned and now a child of planet {:?} with local coordiantes {:?}",
                     projectile_target.planet,
-		    event.local_impact_site,
+		    local_impact_site,
                 );
             } else {
                 debug!(
