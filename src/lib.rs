@@ -59,7 +59,7 @@ impl Plugin for Spacetime {
         app.init_resource::<PhysicsConfig>()
             .add_event::<DeltaEvent>()
             .add_event::<PlanetCollisionEvent>()
-            .add_event::<DespawnSelfEvent>()
+            .add_event::<DespawnPlanetEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(handle_despawn_self)

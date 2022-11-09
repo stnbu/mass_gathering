@@ -61,14 +61,20 @@ pub fn handle_planet_collisions(
     }
 }
 
-pub struct DespawnSelfEvent(pub Entity);
+pub struct DespawnPlanetEvent(pub Entity);
 
 pub fn handle_despawn_self(
     mut commands: Commands,
-    mut despawn_self_events: EventReader<DespawnSelfEvent>,
+    mut despawn_self_events: EventReader<DespawnPlanetEvent>,
+    projectile_query: Query<(Entity, &ProjectileTarget)>,
 ) {
-    for &DespawnSelfEvent(entity) in despawn_self_events.iter() {
-        debug!("RECURSIVELY despawning {entity:?}");
+    for &DespawnPlanetEvent(entity) in despawn_self_events.iter() {
+        debug!("RECURSIVELY despawning planet {entity:?} and all of its in-flight projectiles");
+        for (projectile, &ProjectileTarget { planet, .. }) in projectile_query.iter() {
+            if entity == planet {
+                commands.entity(projectile).despawn_recursive();
+            }
+        }
         commands.entity(entity).despawn_recursive();
     }
 }
@@ -79,7 +85,8 @@ pub fn transfer_planet_momentum(
     mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
     mut planet_events: EventReader<PlanetCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
-    mut despawn_self_events: EventWriter<DespawnSelfEvent>,
+    mut despawn_self_events: EventWriter<DespawnPlanetEvent>,
+    projectile_query: Query<Entity, &ProjectileTarget>,
 ) {
     for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
         // FIXME: We have write access to `Momentum` and yet we update
@@ -137,7 +144,7 @@ pub fn transfer_planet_momentum(
             debug!("Sending event: {event:?}");
             delta_events.send(event);
             debug!("Signaling despawn request for minor planet {:?}", minor.2);
-            despawn_self_events.send(DespawnSelfEvent(minor.2));
+            despawn_self_events.send(DespawnPlanetEvent(minor.2));
         }
     }
 }
