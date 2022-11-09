@@ -70,6 +70,8 @@ pub fn handle_despawn_self(
     }
 }
 
+// FIXME: 1) this should be 'merge_planets' or something, 2) do we need to
+//        "transfer" children? (explosion animation...)
 pub fn transfer_planet_momentum(
     mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
     mut planet_events: EventReader<PlanetCollisionEvent>,
