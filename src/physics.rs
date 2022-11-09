@@ -19,6 +19,7 @@ impl Default for PhysicsConfig {
     }
 }
 
+#[derive(Debug)]
 pub struct PlanetCollisionEvent(pub Entity, pub Entity);
 
 pub fn handle_planet_collisions(
@@ -32,7 +33,9 @@ pub fn handle_planet_collisions(
         // FIXME: Filter events (for "Sensor")
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
             if planet_query.get_many([*e0, *e1]).is_ok() {
-                planet_collision_events.send(PlanetCollisionEvent(*e0, *e1));
+                let event = PlanetCollisionEvent(*e0, *e1);
+                debug!("Sending planet collision event: {event:?}");
+                planet_collision_events.send(event);
             } else {
                 for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
                     if let Ok(projectile_transform) = projectile_query.get(projectile) {
