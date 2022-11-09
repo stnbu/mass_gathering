@@ -35,7 +35,7 @@ pub enum SpacecraftAR {
 pub struct Spacecraft {
     gain: Vec3,
     pub speed: f32,
-    pub hot_planet: Option<Entity>,
+    //pub hot_planet: Option<Entity>,
 }
 
 #[derive(Component)]
@@ -348,6 +348,7 @@ pub fn handle_hot_planet(
     mut ar_query: Query<(Entity, &mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
 ) {
     for (children, spacecraft) in spacecraft_query.iter() {
+        // // // HERE
         if let Some(planet) = spacecraft.hot_planet {
             debug!("Planet hot: {planet:?}");
             for child_id in children.iter() {
@@ -409,7 +410,7 @@ pub fn handle_projectile_engagement(
                     debug!("No planet found with id {intersected_collider_id:?}.");
                     continue;
                 };
-            spacecraft.hot_planet = Some(planet_id);
+            //spacecraft.hot_planet = Some(planet_id);
             if let Some(ref keys) = optional_keys {
                 if keys.just_pressed(KeyCode::Space) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
@@ -444,8 +445,8 @@ pub fn handle_projectile_engagement(
                     }
                 }
             }
-        } else {
-            spacecraft.hot_planet = None;
+            // } else {
+            //     spacecraft.hot_planet = None;
         }
     }
 }
@@ -677,6 +678,54 @@ pub fn set_camera_viewports(
                 physical_size: UVec2::new(window.physical_width() / 2, window.physical_height()),
                 ..default()
             });
+        }
+    }
+}
+
+// HERE HERE
+pub struct HotPlanetEvent(pub Entity);
+//     mut hot_planet_events: EventWriter<HotPlanetEvent>,
+
+// pub fn signal_hot_planet(
+//     spacecraft_query: Query<(&Children, &Spacecraft)>,
+//     mut hot_planet_events: EventWriter<HotPlanetEvent>,
+// ) {
+// }
+
+// SURGERY HERE -- make "engage" into "handle hot planet"
+pub fn _signal_hot_planet(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    optional_keys: Option<Res<Input<KeyCode>>>,
+    planet_query: Query<
+        (Entity, &Transform),
+        (
+            Without<ProjectileTarget>,
+            With<Momentum>,
+            With<Collider>,
+            Without<Spacecraft>,
+        ),
+    >,
+    rapier_context: Res<RapierContext>,
+    spacecraft_query: Query<&Transform, With<Spacecraft>>,
+    config: Res<SpacecraftConfig>,
+) {
+    for pov in spacecraft_query.iter() {
+        let ray_origin = pov.translation;
+        let ray_direction = -1.0 * pov.local_z();
+        let intersection = rapier_context.cast_ray(
+            ray_origin,
+            ray_direction,
+            150.0, // what's reasonable here...?
+            true,
+            QueryFilter::only_dynamic(),
+        );
+
+        if let Some((collider_id, distance)) = intersection {
+            if let Ok((planet_id, planet_transform)) = planet_query.get(collider_id) {
+                println!("{planet_id:?}");
+            }
         }
     }
 }

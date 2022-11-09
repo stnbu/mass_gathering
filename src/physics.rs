@@ -269,3 +269,16 @@ pub fn handle_freefall(
         }
     }
 }
+
+///
+
+pub fn _log_vector_ball_stats(planet_query: Query<(&Momentum)>) {
+    let radii_ahead = 4.0;
+    let vb_diameter = 0.5;
+    for momentum in planet_query.iter() {
+        let planet_radius = mass_to_radius(momentum.mass);
+        let planet_direction = momentum.velocity.normalize();
+        let vb_origin = planet_direction * (planet_radius + (radii_ahead * vb_diameter));
+        println!("{vb_origin:?}");
+    }
+}
