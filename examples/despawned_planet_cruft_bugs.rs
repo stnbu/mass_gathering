@@ -51,6 +51,9 @@ fn setup(
       * Despite the only place planets get despawned coming _after_ `move_projectile` we still get "orphaned" projectiles e.g.
           > While moving projectile: planet 10v0 not found
       * No sign of crash so far. No crashing. That means I cannot get it to crash now with this example.
+
+    As of 51d9b103781b916afea2e2ce09fcd212b70aef96
+      * Crash is back. See `examples/despawned_planet_cruft_bugs.md`
     */
 
     spawn_planet(
