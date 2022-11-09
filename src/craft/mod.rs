@@ -405,8 +405,9 @@ pub fn handle_projectile_engagement(
     mut spacecraft_query: Query<(&mut Transform, &mut Spacecraft)>,
     config: Res<SpacecraftConfig>,
 ) {
+    // Note that pov is only mutable for "recoil"
     for (mut pov, mut spacecraft) in spacecraft_query.iter_mut() {
-        let ray_origin = pov.translation; // - pov.local_y() * config.projectile_radius * 1.2;
+        let ray_origin = pov.translation;
         let ray_direction = -1.0 * pov.local_z();
         let intersection = rapier_context.cast_ray(
             ray_origin,
@@ -443,21 +444,20 @@ pub fn handle_projectile_engagement(
                         })
                         .insert(ProjectileTarget {
                             planet: planet_id,
-                            // go to here?
                             local_direction,
                         })
                         .insert(RigidBody::Dynamic)
-                        .insert(Collider::ball(0.001))
+                        .insert(Collider::ball(0.001)) // FIXME: does size matter?
                         .insert(ActiveEvents::COLLISION_EVENTS)
                         .insert(Sensor);
-                    // // Add some recoil excitement
-                    // if config.recoil != 0.0 {
-                    //     let mut rng = rand::thread_rng();
-                    //     let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
-                    //     let bump_y = (rng.gen::<f32>() - 0.5) * config.recoil;
-                    //     let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
-                    //     pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
-                    // }
+                    // Add some recoil excitement
+                    if config.recoil != 0.0 {
+                        let mut rng = rand::thread_rng();
+                        let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
+                        let bump_y = (rng.gen::<f32>() - 0.5) * config.recoil;
+                        let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
+                        pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
+                    }
                 }
             }
         } else {
@@ -583,12 +583,9 @@ pub fn move_projectiles(
             let velocity = absolute_velocity + planet_momentum.velocity;
             let mut translation = velocity * time.delta_seconds();
             if translation.length() > distance {
-                // NOTE: We stretch the translation_to_target by a tiny bit to ensure we get a collision.
-                // Testing reveals: If the final step is exactly traslation_to_target, there is never
-                // a collision (and the projectile is "moved" in the next frame by `Vec3(NaN, NaN, NaN)`).
-                let final_translation = translation_to_target;
-                debug!(" Next projectile translation larger than distance to target. Resetting to to-target translation vector: {translation_to_target:?}");
-                translation = final_translation * 1.1;
+                // FIXME: this "works" but it needs invesgation. Do we need it?
+                // shouldn't it be a function of radius?
+                translation = translation_to_target * 1.1;
             }
             debug!(" Projectile traveling delta_p={translation:?}");
             projectile_transform.translation += translation;
