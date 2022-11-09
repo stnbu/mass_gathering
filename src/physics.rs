@@ -1,4 +1,5 @@
 use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
+use crate::prelude::HotPlanetEvent;
 use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
@@ -281,13 +282,18 @@ pub fn handle_freefall(
     }
 }
 
-pub fn _log_vector_ball_stats(planet_query: Query<&Momentum>) {
+pub fn _log_vector_ball_stats(
+    planet_query: Query<&Momentum>,
+    mut hot_planet_events: EventReader<HotPlanetEvent>,
+) {
     let radii_ahead = 4.0;
     let vb_diameter = 0.5;
-    for momentum in planet_query.iter() {
-        let planet_radius = mass_to_radius(momentum.mass);
-        let planet_direction = momentum.velocity.normalize();
-        let vb_origin = planet_direction * (planet_radius + (radii_ahead * vb_diameter));
-        println!("{vb_origin:?}");
+    for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
+        if let Ok(momentum) = planet_query.get(planet) {
+            let planet_radius = mass_to_radius(momentum.mass);
+            let planet_direction = momentum.velocity.normalize();
+            let vb_origin = planet_direction * (planet_radius + (radii_ahead * vb_diameter));
+            println!("{vb_origin:?}");
+        }
     }
 }

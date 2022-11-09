@@ -34,6 +34,7 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(stars)
                     .with_system(drift)
                     .with_system(signal_hot_planet)
+                    .with_system(_log_vector_ball_stats)
                     .with_system(fire_on_hot_planet)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
