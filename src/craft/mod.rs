@@ -346,16 +346,12 @@ use crate::prelude::DeltaEvent;
 pub fn handle_hot_planet(
     spacecraft_query: Query<(&Children, &Spacecraft)>,
     mut ar_query: Query<(Entity, &mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
+    mut hot_planet_events: EventReader<HotPlanetEvent>,
 ) {
     for (children, spacecraft) in spacecraft_query.iter() {
-        // // // HERE
-        if let Some(planet) = spacecraft.hot_planet {
-            debug!("Planet hot: {planet:?}");
+        if !hot_planet_events.is_empty() {
             for child_id in children.iter() {
                 if let Ok((id, mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
-                    debug!(
-                        "  Setting visibility for crosshairs child component {id:?} for hot planet {planet:?}"
-                    );
                     match *ar_element {
                         SpacecraftAR::CrosshairsHot => {
                             debug!("    Showing hot component");
