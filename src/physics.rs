@@ -270,8 +270,6 @@ pub fn handle_freefall(
     }
 }
 
-///
-
 pub fn _log_vector_ball_stats(planet_query: Query<&Momentum>) {
     let radii_ahead = 4.0;
     let vb_diameter = 0.5;

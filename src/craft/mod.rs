@@ -35,7 +35,6 @@ pub enum SpacecraftAR {
 pub struct Spacecraft {
     gain: Vec3,
     pub speed: f32,
-    //pub hot_planet: Option<Entity>,
 }
 
 #[derive(Component)]
@@ -368,8 +367,6 @@ pub fn handle_hot_planet(
     }
 }
 
-//     mut hot_planet_events: EventWriter<HotPlanetEvent>,
-
 pub fn fire_on_hot_planet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -553,7 +550,6 @@ pub fn move_projectiles(
                 "Target planet {:?} despawned before projectile impact.",
                 target.planet
             );
-            // ...
         }
     }
 }
@@ -656,20 +652,11 @@ pub fn set_camera_viewports(
     }
 }
 
-// HERE HERE
 pub struct HotPlanetEvent {
     pub planet: Entity,
     pub local_direction: Vec3,
 }
-//     mut hot_planet_events: EventWriter<HotPlanetEvent>,
 
-// pub fn signal_hot_planet(
-//     spacecraft_query: Query<(&Children, &Spacecraft)>,
-//     mut hot_planet_events: EventWriter<HotPlanetEvent>,
-// ) {
-// }
-
-// SURGERY HERE -- make "engage" into "handle hot planet"
 pub fn signal_hot_planet(
     planet_query: Query<&Transform, With<Momentum>>,
     spacecraft_query: Query<&Transform, With<Spacecraft>>,
