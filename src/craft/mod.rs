@@ -372,6 +372,8 @@ pub fn handle_hot_planet(
     }
 }
 
+//     mut hot_planet_events: EventWriter<HotPlanetEvent>,
+
 pub fn _fire_on_hot_planet(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -389,7 +391,53 @@ pub fn _fire_on_hot_planet(
     rapier_context: Res<RapierContext>,
     mut spacecraft_query: Query<(&mut Transform, &mut Spacecraft)>,
     config: Res<SpacecraftConfig>,
+    mut hot_planet_events: EventReader<HotPlanetEvent>,
 ) {
+    for HotPlanetEvent {
+        planet,
+        local_direction,
+    } in hot_planet_events.iter()
+    {
+        if let Some(ref keys) = optional_keys {
+            if keys.just_pressed(KeyCode::Space) {
+                let (mut spacecraft_transform, mut spacecraft) =
+                    spacecraft_query.get_single_mut().unwrap();
+                debug!("Firing at planet {planet:?}, planet-local direction to target: {local_direction:?}");
+                commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: config.projectile_radius,
+                            ..Default::default()
+                        })),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_translation(spacecraft_transform.translation),
+                        ..Default::default()
+                    })
+                    .insert(ProjectileTarget {
+                        planet: *planet,
+                        local_direction: *local_direction,
+                    })
+                    .insert(RigidBody::Dynamic)
+                    .insert(Collider::ball(0.001)) // FIXME: does size matter?
+                    .insert(ActiveEvents::COLLISION_EVENTS)
+                    .insert(Sensor);
+
+                // Add some recoil excitement
+                if config.recoil != 0.0 {
+                    let mut rng = rand::thread_rng();
+                    let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
+                    let bump_y = (rng.gen::<f32>() - 0.5) * config.recoil;
+                    let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
+                    spacecraft_transform.rotate(Quat::from_euler(
+                        EulerRot::XYZ,
+                        bump_x,
+                        bump_y,
+                        bump_z,
+                    ));
+                }
+            }
+        }
+    }
     // Note that pov is only mutable for "recoil"
     for (mut pov, mut spacecraft) in spacecraft_query.iter_mut() {
         let ray_origin = pov.translation;
@@ -411,40 +459,6 @@ pub fn _fire_on_hot_planet(
                     continue;
                 };
             //spacecraft.hot_planet = Some(planet_id);
-            if let Some(ref keys) = optional_keys {
-                if keys.just_pressed(KeyCode::Space) {
-                    let global_impact_site = ray_origin + (ray_direction * distance);
-                    let local_direction =
-                        (global_impact_site - planet_transform.translation).normalize();
-                    debug!("Firing at planet {planet_id:?}, planet-local direction to target: {local_direction:?}");
-                    commands
-                        .spawn_bundle(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: config.projectile_radius,
-                                ..Default::default()
-                            })),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_translation(ray_origin),
-                            ..Default::default()
-                        })
-                        .insert(ProjectileTarget {
-                            planet: planet_id,
-                            local_direction,
-                        })
-                        .insert(RigidBody::Dynamic)
-                        .insert(Collider::ball(0.001)) // FIXME: does size matter?
-                        .insert(ActiveEvents::COLLISION_EVENTS)
-                        .insert(Sensor);
-                    // Add some recoil excitement
-                    if config.recoil != 0.0 {
-                        let mut rng = rand::thread_rng();
-                        let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
-                        let bump_y = (rng.gen::<f32>() - 0.5) * config.recoil;
-                        let bump_z = (rng.gen::<f32>() - 0.5) * config.recoil;
-                        pov.rotate(Quat::from_euler(EulerRot::XYZ, bump_x, bump_y, bump_z));
-                    }
-                }
-            }
             // } else {
             //     spacecraft.hot_planet = None;
         }
@@ -698,9 +712,8 @@ pub struct HotPlanetEvent {
 // SURGERY HERE -- make "engage" into "handle hot planet"
 pub fn signal_hot_planet(
     planet_query: Query<&Transform, With<Momentum>>,
-    rapier_context: Res<RapierContext>,
     spacecraft_query: Query<&Transform, With<Spacecraft>>,
-    config: Res<SpacecraftConfig>,
+    rapier_context: Res<RapierContext>,
     mut hot_planet_events: EventWriter<HotPlanetEvent>,
 ) {
     for pov in spacecraft_query.iter() {
