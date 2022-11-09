@@ -39,20 +39,10 @@ pub fn handle_planet_collisions(
                     if let Ok(projectile_transform) = projectile_query.get(projectile) {
                         if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
                             let radius = mass_to_radius(planet_momentum.mass);
-                            debug!(" radius {radius:?}");
                             // unit vector at planet center pointing at projectile
-                            debug!(
-                                " projectile_transform.translation: {:?}",
-                                projectile_transform.translation
-                            );
-                            debug!(
-                                " planet_transform.translation: {:?}",
-                                planet_transform.translation
-                            );
                             let direction = (projectile_transform.translation
                                 - planet_transform.translation)
                                 .normalize();
-                            debug!(" direction: {direction:?}");
                             let local_impact_site = direction * radius;
                             let event = ProjectileCollisionEvent {
                                 planet,
@@ -276,7 +266,6 @@ pub fn handle_freefall(
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
-            //debug!(" XXXXX {:?}", event.delta_s);
             transform.scale *= event.delta_s;
         }
     }

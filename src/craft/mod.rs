@@ -492,7 +492,6 @@ pub fn spawn_projectile_explosion_animation(
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
     for event in projectile_events.iter() {
-        debug!("[spawn_projectile_explosion_animation] Receiving projectile collision event: {event:?}");
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok(planet_transform) = planet_query.get(event.planet) {
                 // FIXME: WHY does local_impact_site need any scaling??
@@ -576,7 +575,8 @@ pub fn move_projectiles(
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();
 
-            let speed_coefficient = 0.32 * 10.0 * 50.0 * 0.75;
+            let speed_coefficient = 120.0;
+            // FIXME: Tweak, experiment with inverse distance acceleration.
             let absolute_velocity =
                 direction * speed_coefficient * ((distance + 30.0) / (distance + 1.0));
             // constant velocity relative planet
