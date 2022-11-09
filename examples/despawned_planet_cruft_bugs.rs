@@ -22,7 +22,6 @@ fn main() {
         })
         .add_plugins(FullGame)
         .add_startup_system(setup)
-        .add_system(replace_ol_blue)
         .run();
 }
 
@@ -54,6 +53,9 @@ fn setup(
 
     As of 51d9b103781b916afea2e2ce09fcd212b70aef96
       * Crash is back. See `examples/despawned_planet_cruft_bugs.md`
+
+    As of 6055cb57dd8f659142e03bc7b4a0365428936f25
+      * Crash happens even without the respawning stuff to dirty the water.
     */
 
     spawn_planet(
@@ -74,23 +76,4 @@ fn setup(
         &mut meshes,
         &mut materials,
     );
-}
-
-fn replace_ol_blue(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    despawn_planet_events: EventReader<DespawnPlanetEvent>,
-) {
-    if !despawn_planet_events.is_empty() {
-        spawn_planet(
-            9.0,
-            Vec3::Z * 30.0,
-            Vec3::Z * -2.0,
-            Color::BLUE,
-            &mut commands,
-            &mut meshes,
-            &mut materials,
-        );
-    }
 }
