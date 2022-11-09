@@ -372,7 +372,7 @@ pub fn fire_on_hot_planet(
     config: Res<SpacecraftConfig>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
 ) {
-    for HotPlanetEvent {
+    for &HotPlanetEvent {
         planet,
         local_direction,
     } in hot_planet_events.iter()
@@ -392,8 +392,8 @@ pub fn fire_on_hot_planet(
                         ..Default::default()
                     })
                     .insert(ProjectileTarget {
-                        planet: *planet,
-                        local_direction: *local_direction,
+                        planet,
+                        local_direction,
                     })
                     .insert(RigidBody::Dynamic)
                     .insert(Collider::ball(0.001)) // FIXME: does size matter?
