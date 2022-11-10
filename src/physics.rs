@@ -287,76 +287,103 @@ pub struct VectorBallUpdate {
     planet: Entity,
     origin: Vec3,
     element: VectorBallElement,
+    vector: Option<Vec3>,
 }
 
-#[derive(Hash, Eq, PartialEq)]
+pub struct VectorBallCreate {
+    planet: Entity,
+    origin: Vec3,
+    element: VectorBallElement,
+    vector: Option<Vec3>,
+}
+
+// #[derive(Hash, Eq, PartialEq)]
+#[derive(Component, Copy, Clone)]
 pub enum VectorBallElement {
     Ball,
-    VelocityVector,
 }
 
 #[derive(Component)]
-pub struct VectorBallComponent {
-    planet: Entity,
-    element: VectorBallElement,
-}
+pub struct VectorBall(pub Entity);
 
 pub fn set_default_vector_ball_visibility(
-    mut vector_ball_query: Query<&mut Visibility, With<VectorBallComponent>>,
+    mut vector_ball_query: Query<&mut Visibility, With<VectorBall>>,
 ) {
     vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = false);
 }
 
-pub fn draw_vector_ball(
+pub fn create_vector_ball(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut vector_ball_updates: EventReader<VectorBallUpdate>,
-    mut vector_ball_query: Query<(&mut Transform, &mut Visibility, &VectorBallComponent)>,
+    mut vector_ball_create: EventReader<VectorBallCreate>,
 ) {
-    use std::collections::HashSet;
+    for VectorBallCreate {
+        planet,
+        origin,
+        element,
+        vector,
+    } in vector_ball_create.iter()
+    {
+        match element {
+            VectorBallElement::Ball => {
+                warn!("create");
+                commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.5,
+                            ..default()
+                        })),
+                        material: materials.add(Color::FUCHSIA.into()),
+                        transform: Transform::from_translation(*origin),
+                        ..default()
+                    })
+                    .insert(VectorBall(*planet))
+                    .insert(VectorBallElement::Ball);
+            }
+        }
+    }
+}
+
+pub fn update_vector_ball(
+    mut vector_ball_updates: EventReader<VectorBallUpdate>,
+    mut vector_ball_query: Query<(
+        &mut Transform,
+        &mut Visibility,
+        &VectorBall,
+        &VectorBallElement,
+    )>,
+    mut vector_ball_create: EventWriter<VectorBallCreate>,
+) {
     for VectorBallUpdate {
         planet,
         origin,
         element,
+        vector,
     } in vector_ball_updates.iter()
     {
-        let mut missing = HashSet::from([VectorBallElement::Ball]);
-        for (mut transform, mut visibility, component) in vector_ball_query.iter_mut() {
-            if component.planet != *planet {
+        let mut found = false;
+        for (mut transform, mut visibility, VectorBall(parent_planet), element) in
+            vector_ball_query.iter_mut()
+        {
+            if *parent_planet != *planet {
                 continue;
             }
-            match component.element {
-                VectorBallElement::Ball => {
-                    warn!("hit");
-                    transform.translation = *origin;
-                    visibility.is_visible = true;
-                    missing.remove(&VectorBallElement::Ball);
-                }
-                _ => (),
-            }
-        }
-        for element in missing {
             match element {
                 VectorBallElement::Ball => {
-                    warn!("miss");
-                    commands
-                        .spawn_bundle(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.5,
-                                ..default()
-                            })),
-                            material: materials.add(Color::FUCHSIA.into()),
-                            transform: Transform::from_translation(*origin),
-                            ..default()
-                        })
-                        .insert(VectorBallComponent {
-                            planet: *planet,
-                            element: VectorBallElement::Ball,
-                        });
+                    found = true;
+                    transform.translation = *origin;
+                    visibility.is_visible = true;
                 }
-                _ => (),
             }
+        }
+        if !found {
+            vector_ball_create.send(VectorBallCreate {
+                planet: *planet,
+                origin: *origin,
+                element: *element,
+                vector: *vector,
+            });
         }
     }
 }
@@ -378,6 +405,7 @@ pub fn relay_vector_ball_updates(
                 planet,
                 origin,
                 element: VectorBallElement::Ball,
+                vector: None,
             });
         }
     }
