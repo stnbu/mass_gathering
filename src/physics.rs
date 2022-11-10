@@ -408,6 +408,7 @@ pub fn relay_vector_ball_updates(
 ) {
     let radii_ahead = 4.0;
     let vb_radius = 0.5;
+    let vb_scaling = 1.0 / 120.0;
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((transform, momentum)) = planet_query.get(planet) {
             let planet_radius = mass_to_radius(momentum.mass);
@@ -426,7 +427,7 @@ pub fn relay_vector_ball_updates(
                 planet,
                 origin,
                 element: VectorBallElement::Momentum,
-                vector: Some(momentum_),
+                vector: Some(momentum_ * vb_scaling),
             });
         }
     }
