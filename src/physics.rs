@@ -408,7 +408,8 @@ pub fn update_vector_ball(
                     found = true;
                     transform.scale = Vec3::new(1.0, length, 1.0);
                     transform.translation = *origin
-                        + ((vector / 2.0) + vector.normalize() * VB_ORIGIN_BALL_RADIUS / SQRT_3);
+                        + ((vector / 2.0)
+                            + vector.normalize() * VB_ORIGIN_BALL_RADIUS / SQRT_3 * 1.1);
                     transform.rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
                     visibility.is_visible = true;
                 }
