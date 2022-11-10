@@ -336,9 +336,10 @@ pub fn create_vector_ball(
             VectorBallElement::Momentum => {
                 commands
                     .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        mesh: meshes.add(Mesh::from(shape::Capsule {
                             radius: 0.08,
-                            ..default()
+                            depth: 1.0,
+                            ..Default::default()
                         })),
                         material: materials.add(Color::MAROON.into()), // maroon is for momentum
                         visibility: Visibility { is_visible: false },
@@ -350,10 +351,9 @@ pub fn create_vector_ball(
             VectorBallElement::Force => {
                 commands
                     .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Capsule {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
                             radius: 0.08,
-                            depth: 1.0,
-                            ..Default::default()
+                            ..default()
                         })),
                         material: materials.add(Color::FUCHSIA.into()), // fuchsia is for force
                         visibility: Visibility { is_visible: false },
@@ -396,20 +396,21 @@ pub fn update_vector_ball(
                     transform.translation = *origin;
                     visibility.is_visible = true;
                 }
-                VectorBallElement::Momentum => {
+                VectorBallElement::Force => {
                     let vector = vector.unwrap();
                     found = true;
                     transform.translation = *origin + vector;
                     visibility.is_visible = true;
                 }
-                VectorBallElement::Force => {
+                VectorBallElement::Momentum => {
                     let vector = vector.unwrap();
                     let length = vector.length();
                     found = true;
-                    transform.scale = Vec3::Y * length;
-                    transform.translation = *origin + vector + Vec3::Y * length / 2.0;
-                    transform.rotation = Quat::from_rotation_arc(Vec3::Y, Vec3::Z)
-                        + Quat::from_rotation_arc(Vec3::Z, vector.normalize());
+                    //transform.scale = Vec3::Y * length;
+                    //transform.translation = *origin + vector + Vec3::Y * length / 2.0;
+                    transform.translation = *origin + vector;
+                    // transform.rotation = Quat::from_rotation_arc(Vec3::Y, Vec3::Z)
+                    //     + Quat::from_rotation_arc(Vec3::Z, vector.normalize());
                     visibility.is_visible = true;
                 }
             }
