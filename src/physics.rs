@@ -1,5 +1,5 @@
 use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
-use crate::prelude::HotPlanetEvent;
+use crate::prelude::{HotPlanetEvent, SQRT_3};
 use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
@@ -394,7 +394,7 @@ pub fn update_vector_ball(
                 VectorBallElement::Ball => {
                     found = true;
                     transform.translation = *origin;
-                    visibility.is_visible = false;
+                    visibility.is_visible = true;
                 }
                 VectorBallElement::Force => {
                     let vector = vector.unwrap();
@@ -407,7 +407,8 @@ pub fn update_vector_ball(
                     let length = vector.length();
                     found = true;
                     transform.scale = Vec3::new(1.0, length, 1.0);
-                    transform.translation = *origin + vector + Vec3::Y * length / 2.0;
+                    transform.translation = *origin
+                        + ((vector / 2.0) + vector.normalize() * VB_ORIGIN_BALL_RADIUS / SQRT_3);
                     transform.rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
                     visibility.is_visible = true;
                 }
@@ -422,19 +423,21 @@ pub fn update_vector_ball(
     }
 }
 
+const VB_RADII_AHEAD: f32 = 4.0;
+const VB_ORIGIN_BALL_RADIUS: f32 = 0.5;
+const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
+
 pub fn relay_vector_ball_updates(
     planet_query: Query<(&Transform, &Momentum)>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
     mut vector_ball_updates: EventWriter<VectorBallUpdate>,
 ) {
-    let radii_ahead = 4.0;
-    let vb_radius = 0.5;
-    let vb_scaling = 1.0 / 30.0;
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((transform, momentum)) = planet_query.get(planet) {
             let planet_radius = mass_to_radius(momentum.mass);
             let planet_direction = momentum.velocity.normalize();
-            let origin_local = planet_direction * (planet_radius + (radii_ahead * vb_radius));
+            let origin_local =
+                planet_direction * (planet_radius + (VB_RADII_AHEAD * VB_ORIGIN_BALL_RADIUS));
             let origin = transform.translation + origin_local;
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
@@ -442,14 +445,14 @@ pub fn relay_vector_ball_updates(
                 element: VectorBallElement::Ball,
                 vector: None,
             });
-            let scaled_momentum = momentum.velocity * momentum.mass * vb_scaling;
+            let scaled_momentum = momentum.velocity * momentum.mass * VB_SCALING_FACTOR;
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
                 origin,
                 element: VectorBallElement::Momentum,
                 vector: Some(scaled_momentum),
             });
-            let scaled_force = momentum.force_ro * vb_scaling;
+            let scaled_force = momentum.force_ro * VB_SCALING_FACTOR;
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
                 origin,
