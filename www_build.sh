@@ -20,6 +20,7 @@ wasm-bindgen --out-dir ./target/www/pkg --target web --reference-types --no-type
 
 rm -rf "$TEMPDIR"
 
-cp -af index.html ./target/www/
+BIN_NAME=`echo target/www/pkg/*.js | sed 's@.*/@@;s@\.js@@'`
+sed 's/_BIN_NAME_/'"$BIN_NAME"'/g' index.html.template > ./target/www/index.html
 
 echo 'Build assets output to `./target/www` directory.'

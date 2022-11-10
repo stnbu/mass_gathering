@@ -5,9 +5,9 @@
   </head>
   <body>
     <script type="module">
-      import init from './pkg/index.js';
+      import init from './pkg/_BIN_NAME_.js';
       window.addEventListener('load', async () => { await
-      init('./pkg/index_bg.wasm'); });
+      init('./pkg/_BIN_NAME__bg.wasm'); });
     </script>
   </body>
 </html>
