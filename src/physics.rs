@@ -297,10 +297,10 @@ pub struct VectorBallCreate {
     vector: Option<Vec3>,
 }
 
-// #[derive(Hash, Eq, PartialEq)]
-#[derive(Component, Copy, Clone)]
+#[derive(Component, Copy, Clone, Debug, Eq, PartialEq)]
 pub enum VectorBallElement {
     Ball,
+    Velocity,
 }
 
 #[derive(Component)]
@@ -327,7 +327,6 @@ pub fn create_vector_ball(
     {
         match element {
             VectorBallElement::Ball => {
-                warn!("create");
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -335,11 +334,34 @@ pub fn create_vector_ball(
                             ..default()
                         })),
                         material: materials.add(Color::FUCHSIA.into()),
-                        transform: Transform::from_translation(*origin),
+                        visibility: Visibility { is_visible: false },
                         ..default()
                     })
                     .insert(VectorBall(*planet))
                     .insert(VectorBallElement::Ball);
+            }
+            VectorBallElement::Velocity => {
+                commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.5,
+                            ..default()
+                        })),
+                        material: materials.add(Color::PINK.into()),
+                        visibility: Visibility { is_visible: false },
+                        ..default()
+                    })
+                    .insert(VectorBall(*planet))
+                    .insert(VectorBallElement::Velocity);
+                // commands
+                //     .spawn_bundle(PbrBundle {
+                //         mesh: meshes.add(Mesh::from(shape::Box::new(0.25, 0.25, 1.0))),
+                //         material: materials.add(Color::FUCHSIA.into()),
+                //         visibility: Visibility { is_visible: false },
+                //         ..default()
+                //     })
+                //     .insert(VectorBall(*planet))
+                //     .insert(VectorBallElement::Velocity);
             }
         }
     }
@@ -363,17 +385,34 @@ pub fn update_vector_ball(
     } in vector_ball_updates.iter()
     {
         let mut found = false;
-        for (mut transform, mut visibility, VectorBall(parent_planet), element) in
+        for (mut transform, mut visibility, VectorBall(parent_planet), element_) in
             vector_ball_query.iter_mut()
         {
-            if *parent_planet != *planet {
+            if *parent_planet != *planet || *element != *element_ {
                 continue;
             }
-            match element {
+            warn!("element_: {element_:?}");
+            warn!("vector: {vector:?}");
+            match element_ {
                 VectorBallElement::Ball => {
                     found = true;
                     transform.translation = *origin;
                     visibility.is_visible = true;
+                }
+                VectorBallElement::Velocity => {
+                    found = true;
+                    transform.translation = *origin + Vec3::Z * 1.0;
+                    visibility.is_visible = true;
+                    // if let Some(vector) = vector {
+                    //     found = true;
+                    //     let length = vector.length();
+                    //     transform.rotation = Quat::from_rotation_arc(Vec3::Z, vector.normalize());
+                    //     transform.translation = *origin + Vec3::Z * length / 2.0;
+                    //     transform.scale = Vec3::new(1.0, 1.0, length);
+                    //     visibility.is_visible = true;
+                    // } else {
+                    //     panic!("xxx");
+                    // }
                 }
             }
         }
@@ -406,6 +445,12 @@ pub fn relay_vector_ball_updates(
                 origin,
                 element: VectorBallElement::Ball,
                 vector: None,
+            });
+            vector_ball_updates.send(VectorBallUpdate {
+                planet,
+                origin,
+                element: VectorBallElement::Velocity,
+                vector: Some(momentum.velocity),
             });
         }
     }
