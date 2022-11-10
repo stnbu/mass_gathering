@@ -300,6 +300,7 @@ pub struct VectorBallCreate {
 pub enum VectorBallElement {
     Ball,
     Momentum,
+    Force,
 }
 
 #[derive(Component)]
@@ -347,6 +348,20 @@ pub fn create_vector_ball(
                     .insert(VectorBall(*planet))
                     .insert(VectorBallElement::Momentum);
             }
+            VectorBallElement::Force => {
+                commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.12, // FIXME: debug mode; also need to use a "constant" here.
+                            ..default()
+                        })),
+                        material: materials.add(Color::GOLD.into()),
+                        visibility: Visibility { is_visible: false },
+                        ..default()
+                    })
+                    .insert(VectorBall(*planet))
+                    .insert(VectorBallElement::Force);
+            }
         }
     }
 }
@@ -381,14 +396,11 @@ pub fn update_vector_ball(
                     transform.translation = *origin;
                     visibility.is_visible = true;
                 }
-                VectorBallElement::Momentum => {
-                    if let Some(vector) = vector {
-                        found = true;
-                        transform.translation = *origin + *vector;
-                        visibility.is_visible = true;
-                    } else {
-                        panic!("Programmer Error!");
-                    }
+                VectorBallElement::Momentum | VectorBallElement::Force => {
+                    let vector = vector.unwrap();
+                    found = true;
+                    transform.translation = *origin + vector;
+                    visibility.is_visible = true;
                 }
             }
         }
@@ -421,13 +433,21 @@ pub fn relay_vector_ball_updates(
                 element: VectorBallElement::Ball,
                 vector: None,
             });
-            let momentum_ = momentum.velocity * momentum.mass;
-            warn!("momentum: {:?}", momentum_.length());
+            let scaled_momentum = momentum.velocity * momentum.mass * vb_scaling;
+            warn!("scaled_momentum: {:?}", scaled_momentum.length());
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
                 origin,
                 element: VectorBallElement::Momentum,
-                vector: Some(momentum_ * vb_scaling),
+                vector: Some(scaled_momentum),
+            });
+            let scaled_force = momentum.force_ro * vb_scaling;
+            warn!("scaled_force: {:?}", scaled_force.length());
+            vector_ball_updates.send(VectorBallUpdate {
+                planet,
+                origin,
+                element: VectorBallElement::Force,
+                vector: Some(scaled_force),
             });
         }
     }
