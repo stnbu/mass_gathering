@@ -53,6 +53,7 @@ pub struct SpacecraftConfig {
     pub recoil: f32,
     pub start_transform: Transform,
     pub impact_magnitude: f32,
+    pub start_speed: f32,
 }
 
 impl Default for SpacecraftConfig {
@@ -66,6 +67,7 @@ impl Default for SpacecraftConfig {
             recoil: 0.025,
             start_transform: Default::default(),
             impact_magnitude: 25.0,
+            start_speed: 0.0,
         }
     }
 }
@@ -213,7 +215,10 @@ pub fn spacecraft_setup(
     commands
         .spawn_bundle(TransformBundle::from_transform(config.start_transform))
         .insert_bundle(VisibilityBundle::default())
-        .insert(Spacecraft::default())
+        .insert(Spacecraft {
+            speed: config.start_speed,
+            ..Default::default()
+        })
         .with_children(|parent| {
             if config.stereo_enabled {
                 let offset = config.stereo_iod / 2.0;
