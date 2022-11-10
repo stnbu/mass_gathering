@@ -5,10 +5,10 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
-            start_transform: Transform::from_xyz(0.0, 0.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
+            start_transform: Transform::from_xyz(0.0, 0.0, -10.0).looking_at(Vec3::ZERO, Vec3::Y),
             impact_magnitude: 100.0,
             projectile_radius: 0.05,
-            start_speed: -0.5 * 10.0 * 0.9,
+            start_speed: 0.5 * 10.0 * 0.9,
             ..Default::default()
         })
         .insert_resource(PhysicsConfig {
@@ -27,12 +27,23 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let one = Color::BEIGE;
-    //let the_other = Color::WHITE;
+    let the_other = Color::WHITE;
+
+    spawn_planet(
+        2.0,
+        Vec3::X * 10.0,
+        Vec3::Z * 0.5,
+        one,
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+    );
+
     spawn_planet(
         2.0,
         Vec3::ZERO,
         Vec3::Z * 0.5,
-        one,
+        the_other,
         &mut commands,
         &mut meshes,
         &mut materials,
