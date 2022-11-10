@@ -251,9 +251,10 @@ pub fn signal_freefall_delta(
         masses = masses
             .iter()
             .zip(accelerations)
-            .map(|((entity, translation, mass, velocity), force)| {
+            .map(|((entity, translation, mass, velocity), acceleration)| {
+                let force = acceleration * dt;
                 let delta_p = *velocity * dt;
-                let delta_v = (force * dt) / *mass;
+                let delta_v = force / *mass;
                 let delta_s = 1.0;
                 delta_events.send(DeltaEvent {
                     entity: *entity,
@@ -276,9 +277,7 @@ pub fn handle_freefall(
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
-            if event.force_ro.length() > 0.0 {
-                momentum.force_ro = event.force_ro;
-            }
+            momentum.force_ro += event.force_ro;
             transform.scale *= event.delta_s;
         }
     }
@@ -327,7 +326,7 @@ pub fn create_vector_ball(
                             radius: 0.2,
                             ..default()
                         })),
-                        material: materials.add(Color::SEA_GREEN.into()),
+                        material: materials.add(Color::ORANGE.into()), // orange is for origin
                         visibility: Visibility { is_visible: false },
                         ..default()
                     })
@@ -341,7 +340,7 @@ pub fn create_vector_ball(
                             radius: 0.08,
                             ..default()
                         })),
-                        material: materials.add(Color::WHITE.into()),
+                        material: materials.add(Color::MAROON.into()), // maroon is for momentum
                         visibility: Visibility { is_visible: false },
                         ..default()
                     })
@@ -352,10 +351,10 @@ pub fn create_vector_ball(
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.12, // FIXME: debug mode; also need to use a "constant" here.
+                            radius: 0.08,
                             ..default()
                         })),
-                        material: materials.add(Color::GOLD.into()),
+                        material: materials.add(Color::FUCHSIA.into()), // fuchsia is for force
                         visibility: Visibility { is_visible: false },
                         ..default()
                     })
@@ -434,7 +433,6 @@ pub fn relay_vector_ball_updates(
                 vector: None,
             });
             let scaled_momentum = momentum.velocity * momentum.mass * vb_scaling;
-            warn!("scaled_momentum: {:?}", scaled_momentum.length());
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
                 origin,
@@ -442,7 +440,6 @@ pub fn relay_vector_ball_updates(
                 vector: Some(scaled_momentum),
             });
             let scaled_force = momentum.force_ro * vb_scaling;
-            warn!("scaled_force: {:?}", scaled_force.length());
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
                 origin,
