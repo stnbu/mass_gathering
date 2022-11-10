@@ -408,9 +408,7 @@ pub fn update_vector_ball(
                     found = true;
                     transform.scale = Vec3::new(1.0, length, 1.0);
                     transform.translation = *origin + vector + Vec3::Y * length / 2.0;
-                    //transform.translation = *origin + vector;
-                    // transform.rotation = Quat::from_rotation_arc(Vec3::Y, Vec3::Z)
-                    //     + Quat::from_rotation_arc(Vec3::Z, vector.normalize());
+                    transform.rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
                     visibility.is_visible = true;
                 }
             }
