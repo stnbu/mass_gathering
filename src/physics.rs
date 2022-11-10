@@ -437,8 +437,7 @@ pub fn relay_vector_ball_updates(
         if let Ok((transform, momentum)) = planet_query.get(planet) {
             let planet_radius = mass_to_radius(momentum.mass);
             let planet_direction = momentum.velocity.normalize();
-            let origin_local =
-                planet_direction * (planet_radius + (VB_RADII_AHEAD * VB_ORIGIN_BALL_RADIUS));
+            let origin_local = Vec3::Y * (planet_radius + (VB_RADII_AHEAD * VB_ORIGIN_BALL_RADIUS));
             let origin = transform.translation + origin_local;
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
