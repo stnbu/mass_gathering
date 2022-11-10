@@ -276,6 +276,9 @@ pub fn handle_freefall(
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
+            if event.force_ro.length() > 0.0 {
+                momentum.force_ro = event.force_ro;
+            }
             transform.scale *= event.delta_s;
         }
     }
@@ -296,7 +299,7 @@ pub struct VectorBallCreate {
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq)]
 pub enum VectorBallElement {
     Ball,
-    Velocity,
+    Momentum,
 }
 
 #[derive(Component)]
@@ -330,7 +333,7 @@ pub fn create_vector_ball(
                     .insert(VectorBall(*planet))
                     .insert(VectorBallElement::Ball);
             }
-            VectorBallElement::Velocity => {
+            VectorBallElement::Momentum => {
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -342,7 +345,7 @@ pub fn create_vector_ball(
                         ..default()
                     })
                     .insert(VectorBall(*planet))
-                    .insert(VectorBallElement::Velocity);
+                    .insert(VectorBallElement::Momentum);
             }
         }
     }
@@ -378,7 +381,7 @@ pub fn update_vector_ball(
                     transform.translation = *origin;
                     visibility.is_visible = true;
                 }
-                VectorBallElement::Velocity => {
+                VectorBallElement::Momentum => {
                     if let Some(vector) = vector {
                         found = true;
                         transform.translation = *origin + *vector;
@@ -417,11 +420,13 @@ pub fn relay_vector_ball_updates(
                 element: VectorBallElement::Ball,
                 vector: None,
             });
+            let momentum_ = momentum.velocity * momentum.mass;
+            warn!("momentum: {:?}", momentum_.length());
             vector_ball_updates.send(VectorBallUpdate {
                 planet,
                 origin,
-                element: VectorBallElement::Velocity,
-                vector: Some(momentum.velocity),
+                element: VectorBallElement::Momentum,
+                vector: Some(momentum_),
             });
         }
     }
