@@ -406,11 +406,9 @@ pub fn update_vector_ball(
                     let vector = vector.unwrap();
                     let length = vector.length();
                     found = true;
-                    warn!("length: {length:?}");
                     transform.scale = Vec3::new(1.0, length, 1.0);
-                    //transform.scale = Vec3::Y * length;
-                    //transform.translation = *origin + vector + Vec3::Y * length / 2.0;
-                    transform.translation = *origin + vector;
+                    transform.translation = *origin + vector + Vec3::Y * length / 2.0;
+                    //transform.translation = *origin + vector;
                     // transform.rotation = Quat::from_rotation_arc(Vec3::Y, Vec3::Z)
                     //     + Quat::from_rotation_arc(Vec3::Z, vector.normalize());
                     visibility.is_visible = true;
