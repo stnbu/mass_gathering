@@ -400,7 +400,7 @@ pub fn update_vector_ball(
                     let vector = vector.unwrap();
                     found = true;
                     transform.translation = *origin + vector;
-                    visibility.is_visible = false;
+                    visibility.is_visible = true;
                 }
                 VectorBallElement::Momentum => {
                     let vector = vector.unwrap();
