@@ -12,8 +12,13 @@
 rm -rf ./target/www
 mkdir -p ./target/www
 
-cargo build --release --target wasm32-unknown-unknown --bin "index" "$@"
-wasm-bindgen --out-dir ./target/www/pkg --target web --reference-types --no-typescript --omit-default-module-path target/wasm32-unknown-unknown/release/index.wasm
+TEMPDIR=`mktemp -d`
+
+cargo build --release --target wasm32-unknown-unknown "$@" -Z unstable-options --out-dir "$TEMPDIR"
+
+wasm-bindgen --out-dir ./target/www/pkg --target web --reference-types --no-typescript --omit-default-module-path "$TEMPDIR"/*.wasm
+
+rm -rf "$TEMPDIR"
 
 cp -af index.html ./target/www/
 
