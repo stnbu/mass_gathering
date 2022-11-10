@@ -289,6 +289,7 @@ pub struct VectorBallUpdate {
     element: VectorBallElement,
 }
 
+#[derive(Hash, Eq, PartialEq)]
 pub enum VectorBallElement {
     Ball,
     VelocityVector,
@@ -313,25 +314,32 @@ pub fn draw_vector_ball(
     mut vector_ball_updates: EventReader<VectorBallUpdate>,
     mut vector_ball_query: Query<(&mut Transform, &mut Visibility, &VectorBallComponent)>,
 ) {
+    use std::collections::HashSet;
     for VectorBallUpdate {
         planet,
         origin,
         element,
     } in vector_ball_updates.iter()
     {
-        if let Ok((mut transform, mut visibility, VectorBallComponent { element: blah, .. })) =
-            vector_ball_query.get_mut(*planet)
-        {
-            match blah {
+        let mut missing = HashSet::from([VectorBallElement::Ball]);
+        for (mut transform, mut visibility, component) in vector_ball_query.iter_mut() {
+            if component.planet != *planet {
+                continue;
+            }
+            match component.element {
                 VectorBallElement::Ball => {
+                    warn!("hit");
                     transform.translation = *origin;
                     visibility.is_visible = true;
+                    missing.remove(&VectorBallElement::Ball);
                 }
                 _ => (),
             }
-        } else {
-            match *element {
+        }
+        for element in missing {
+            match element {
                 VectorBallElement::Ball => {
+                    warn!("miss");
                     commands
                         .spawn_bundle(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
