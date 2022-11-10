@@ -17,4 +17,4 @@ wasm-bindgen --out-dir ./target/www/pkg --target web --reference-types --no-type
 
 cp -af index.html ./target/www/
 
-echo "Build assets output to `./target/www` directory."
+echo 'Build assets output to `./target/www` directory.'
