@@ -140,6 +140,7 @@ pub fn transfer_planet_momentum(
                 delta_p,
                 delta_v,
                 delta_s,
+                force_ro: Vec3::ZERO,
             };
             debug!("Sending event: {event:?}");
             delta_events.send(event);
@@ -193,7 +194,11 @@ pub fn spawn_planet<'a>(
             transform: Transform::from_translation(position),
             ..default()
         },
-        momentum: Momentum { velocity, mass },
+        momentum: Momentum {
+            velocity,
+            mass,
+            ..Default::default()
+        },
         collider: Collider::ball(radius),
         ..Default::default()
     };
@@ -201,19 +206,11 @@ pub fn spawn_planet<'a>(
     debug!("Spawned planet={planet_id:?}");
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, Default)]
 pub struct Momentum {
     pub velocity: Vec3,
     pub mass: f32,
-}
-
-impl Default for Momentum {
-    fn default() -> Self {
-        Momentum {
-            velocity: Vec3::ZERO,
-            mass: 0.0,
-        }
-    }
+    pub force_ro: Vec3,
 }
 
 #[derive(Debug)]
@@ -222,6 +219,7 @@ pub struct DeltaEvent {
     pub delta_p: Vec3,
     pub delta_v: Vec3,
     pub delta_s: f32,
+    pub force_ro: Vec3,
 }
 
 pub fn signal_freefall_delta(
@@ -262,6 +260,7 @@ pub fn signal_freefall_delta(
                     delta_p,
                     delta_v,
                     delta_s,
+                    force_ro: force,
                 });
                 (*entity, *translation + delta_p, *mass, *velocity + delta_v)
             })

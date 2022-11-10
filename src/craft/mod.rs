@@ -505,6 +505,7 @@ pub fn transfer_projectile_momentum(
                 delta_p: Vec3::ZERO,
                 delta_v,
                 delta_s: 1.0,
+                force_ro: Vec3::ZERO,
             });
         }
     }
