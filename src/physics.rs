@@ -394,18 +394,20 @@ pub fn update_vector_ball(
                 VectorBallElement::Ball => {
                     found = true;
                     transform.translation = *origin;
-                    visibility.is_visible = true;
+                    visibility.is_visible = false;
                 }
                 VectorBallElement::Force => {
                     let vector = vector.unwrap();
                     found = true;
                     transform.translation = *origin + vector;
-                    visibility.is_visible = true;
+                    visibility.is_visible = false;
                 }
                 VectorBallElement::Momentum => {
                     let vector = vector.unwrap();
                     let length = vector.length();
                     found = true;
+                    warn!("length: {length:?}");
+                    transform.scale = Vec3::new(1.0, length, 1.0);
                     //transform.scale = Vec3::Y * length;
                     //transform.translation = *origin + vector + Vec3::Y * length / 2.0;
                     transform.translation = *origin + vector;
