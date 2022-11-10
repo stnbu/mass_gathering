@@ -2,7 +2,6 @@ use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
 use crate::prelude::HotPlanetEvent;
 use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
-use bevy::render::view::visibility;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
 pub struct PhysicsConfig {
@@ -322,10 +321,10 @@ pub fn create_vector_ball(
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.5,
+                            radius: 0.2,
                             ..default()
                         })),
-                        material: materials.add(Color::ANTIQUE_WHITE.into()),
+                        material: materials.add(Color::SEA_GREEN.into()),
                         visibility: Visibility { is_visible: false },
                         ..default()
                     })
@@ -336,7 +335,7 @@ pub fn create_vector_ball(
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.15,
+                            radius: 0.08,
                             ..default()
                         })),
                         material: materials.add(Color::WHITE.into()),
