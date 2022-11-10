@@ -2,6 +2,7 @@ use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
 use crate::prelude::HotPlanetEvent;
 use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
+use bevy::render::view::visibility;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
 pub struct PhysicsConfig {
@@ -282,18 +283,94 @@ pub fn handle_freefall(
     }
 }
 
-pub fn _log_vector_ball_stats(
-    planet_query: Query<&Momentum>,
+pub struct VectorBallUpdate {
+    planet: Entity,
+    origin: Vec3,
+    element: VectorBallElement,
+}
+
+pub enum VectorBallElement {
+    Ball,
+    VelocityVector,
+}
+
+#[derive(Component)]
+pub struct VectorBallComponent {
+    planet: Entity,
+    element: VectorBallElement,
+}
+
+pub fn set_default_vector_ball_visibility(
+    mut vector_ball_query: Query<&mut Visibility, With<VectorBallComponent>>,
+) {
+    vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = false);
+}
+
+pub fn draw_vector_ball(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut vector_ball_updates: EventReader<VectorBallUpdate>,
+    mut vector_ball_query: Query<(&mut Transform, &mut Visibility, &VectorBallComponent)>,
+) {
+    for VectorBallUpdate {
+        planet,
+        origin,
+        element,
+    } in vector_ball_updates.iter()
+    {
+        if let Ok((mut transform, mut visibility, VectorBallComponent { element: blah, .. })) =
+            vector_ball_query.get_mut(*planet)
+        {
+            match blah {
+                VectorBallElement::Ball => {
+                    transform.translation = *origin;
+                    visibility.is_visible = true;
+                }
+                _ => (),
+            }
+        } else {
+            match *element {
+                VectorBallElement::Ball => {
+                    commands
+                        .spawn_bundle(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 0.5,
+                                ..default()
+                            })),
+                            material: materials.add(Color::FUCHSIA.into()),
+                            transform: Transform::from_translation(*origin),
+                            ..default()
+                        })
+                        .insert(VectorBallComponent {
+                            planet: *planet,
+                            element: VectorBallElement::Ball,
+                        });
+                }
+                _ => (),
+            }
+        }
+    }
+}
+
+pub fn relay_vector_ball_updates(
+    planet_query: Query<(&Transform, &Momentum)>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
+    mut vector_ball_updates: EventWriter<VectorBallUpdate>,
 ) {
     let radii_ahead = 4.0;
-    let vb_diameter = 0.5;
+    let vb_radius = 0.5;
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
-        if let Ok(momentum) = planet_query.get(planet) {
+        if let Ok((transform, momentum)) = planet_query.get(planet) {
             let planet_radius = mass_to_radius(momentum.mass);
             let planet_direction = momentum.velocity.normalize();
-            let vb_origin = planet_direction * (planet_radius + (radii_ahead * vb_diameter));
-            println!("{vb_origin:?}");
+            let origin_local = planet_direction * (planet_radius + (radii_ahead * vb_radius));
+            let origin = transform.translation + origin_local;
+            vector_ball_updates.send(VectorBallUpdate {
+                planet,
+                origin,
+                element: VectorBallElement::Ball,
+            });
         }
     }
 }
