@@ -33,11 +33,13 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(steer)
                     .with_system(stars)
                     .with_system(drift)
-                    .with_system(set_default_vector_ball_visibility)
+                    .with_system(signal_hot_planet)
+                    .with_system(relay_vector_ball_updates.after(signal_hot_planet))
+                    .with_system(
+                        set_default_vector_ball_visibility.after(relay_vector_ball_updates),
+                    )
                     .with_system(update_vector_ball.after(set_default_vector_ball_visibility))
                     .with_system(create_vector_ball.after(update_vector_ball))
-                    .with_system(signal_hot_planet) // b4 default vis?
-                    .with_system(relay_vector_ball_updates)
                     .with_system(fire_on_hot_planet)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
