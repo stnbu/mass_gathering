@@ -424,7 +424,7 @@ pub fn update_vector_ball(
     }
 }
 
-const VB_RADII_AHEAD: f32 = 4.0;
+const VB_RADII_AHEAD: f32 = 1.0;
 const VB_ORIGIN_BALL_RADIUS: f32 = 0.5;
 const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
 
