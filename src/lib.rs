@@ -11,6 +11,7 @@ mod craft;
 use craft::*;
 
 mod cone;
+use cone::Cone;
 
 pub mod prelude;
 

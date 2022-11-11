@@ -302,6 +302,8 @@ pub enum VectorBallElement {
     Force,
 }
 
+use crate::Cone;
+
 #[derive(Component)]
 pub struct VectorBall(pub Entity);
 
@@ -336,11 +338,7 @@ pub fn create_vector_ball(
             VectorBallElement::Momentum => {
                 commands
                     .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Capsule {
-                            radius: 1.0 / 10.0,
-                            depth: 0.8,
-                            ..Default::default()
-                        })),
+                        mesh: meshes.add(Mesh::from(Cone::default())),
                         material: materials.add(Color::MAROON.into()), // maroon is for momentum
                         visibility: Visibility { is_visible: false },
                         ..default()
