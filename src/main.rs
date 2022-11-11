@@ -1,11 +1,12 @@
 use bevy::log::LogSettings;
-use bevy::prelude::{App, ClearColor, Color, Transform, Vec3};
+use bevy::prelude::{App, ClearColor, Color, DefaultPlugins, Transform, Vec3};
 use mass_gathering::prelude::{my_planets, PhysicsConfig, SpacecraftConfig};
 use mass_gathering::FullGame;
 
 fn main() {
     let d = 60.0 / 3.0_f32.powf(0.5); // about right for my_planets
     App::new()
+        .add_plugins(DefaultPlugins)
         .insert_resource(LogSettings {
             filter: "error,mass_gathering=warn".into(),
             level: bevy::log::Level::ERROR,

@@ -3,6 +3,7 @@ use mass_gathering::prelude::*;
 
 fn main() {
     App::new()
+        .add_plugins(DefaultPlugins)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
             start_transform: Transform::from_xyz(0.0, 0.0, -10.0).looking_at(Vec3::ZERO, Vec3::Y),

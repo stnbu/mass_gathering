@@ -89,8 +89,7 @@ impl Plugin for Core {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
 
-        app.add_plugins(DefaultPlugins)
-            .add_plugin(EguiPlugin)
+        app.add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
             .add_system(bevy::window::close_on_esc)
             .add_startup_system(core_setup)

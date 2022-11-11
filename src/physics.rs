@@ -1,5 +1,5 @@
 use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
-use crate::prelude::{HotPlanetEvent, SQRT_3};
+use crate::prelude::HotPlanetEvent;
 use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
