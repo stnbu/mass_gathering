@@ -10,6 +10,8 @@ use physics::*;
 mod craft;
 use craft::*;
 
+mod cone;
+
 pub mod prelude;
 
 pub struct FullGame;

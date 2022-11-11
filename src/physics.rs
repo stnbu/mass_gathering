@@ -337,8 +337,8 @@ pub fn create_vector_ball(
                 commands
                     .spawn_bundle(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Capsule {
-                            radius: 0.08,
-                            depth: 1.0,
+                            radius: 1.0 / 10.0,
+                            depth: 0.8,
                             ..Default::default()
                         })),
                         material: materials.add(Color::MAROON.into()), // maroon is for momentum
@@ -407,9 +407,9 @@ pub fn update_vector_ball(
                     let length = vector.length();
                     found = true;
                     transform.scale = Vec3::new(1.0, length, 1.0);
-                    transform.translation = *origin
-                        + ((vector / 2.0)
-                            + vector.normalize() * VB_ORIGIN_BALL_RADIUS / SQRT_3 * 1.1);
+                    transform.translation = *origin;
+                    transform.translation += vector / 2.0;
+                    // + vector.normalize() * VB_ORIGIN_BALL_RADIUS * 1.1;
                     transform.rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
                     visibility.is_visible = true;
                 }
