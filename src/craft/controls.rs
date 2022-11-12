@@ -1,5 +1,5 @@
 use bevy::input::mouse::{MouseButtonInput, MouseMotion, MouseWheel};
-use bevy::prelude::{EventReader, Input, KeyCode, Quat, Query, Res, Time, Transform, Vec2};
+use bevy::prelude::{EventReader, Input, KeyCode, Quat, Query, Res, Time, Transform, Vec2, Vec3};
 use std::f32::consts::TAU;
 
 use super::Spacecraft;
@@ -21,6 +21,7 @@ pub fn keyboard_control(
     let mut z = 0.0;
     let mut x = 0.0;
     let mut y = 0.0;
+    let mut rotation = Vec3::ZERO;
 
     let (mut transform, mut spacecraft) = spacecraft_query.get_single_mut().unwrap();
 
@@ -58,10 +59,10 @@ pub fn keyboard_control(
                 x -= nudge;
             }
             KeyCode::Z => {
-                z += nudge;
+                rotation.z += nudge;
             }
             KeyCode::X => {
-                z -= nudge;
+                rotation.z -= nudge;
             }
             _ => (),
         }
@@ -84,6 +85,6 @@ pub fn keyboard_control(
     let local_y = transform.local_y();
     let local_z = transform.local_z();
     transform.rotate(Quat::from_axis_angle(local_x, x * keys_scaling));
-    transform.rotate(Quat::from_axis_angle(local_z, z * keys_scaling));
+    transform.rotate(Quat::from_axis_angle(local_z, rotation.z * keys_scaling));
     transform.rotate(Quat::from_axis_angle(local_y, y * keys_scaling));
 }
