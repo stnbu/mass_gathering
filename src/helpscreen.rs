@@ -88,7 +88,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                             styled_text_label(18.0, ui, "W / S");
                         });
                         row.col(|ui| {
-                            styled_text_label(18.0, ui, "Mouse up+down");
+                            styled_text_label(18.0, ui, "Up / Down");
                         });
                         row.col(|ui| {
                             styled_text_label(18.0, ui, "Pitch up / Pitch down");
@@ -99,7 +99,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                             styled_text_label(18.0, ui, "A / D");
                         });
                         row.col(|ui| {
-                            styled_text_label(18.0, ui, "Mouse left+right");
+                            styled_text_label(18.0, ui, "Left / Right");
                         });
                         row.col(|ui| {
                             styled_text_label(18.0, ui, "Yaw left / Yaw right");
@@ -120,7 +120,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                             styled_text_label(18.0, ui, "PgUp / PgDn");
                         });
                         row.col(|ui| {
-                            styled_text_label(18.0, ui, "Mouse wheel forward+backward");
+                            styled_text_label(18.0, ui, "Scroll wheel");
                         });
                         row.col(|ui| {
                             styled_text_label(18.0, ui, "Speed plus / Speed minus");
