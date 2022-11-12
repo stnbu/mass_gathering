@@ -51,37 +51,44 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            ui.label(
-                RichText::new("Hello From Space")
-                    .color(Color32::GREEN)
-                    .font(FontId {
-                        size: 18.0,
-                        family: Monospace,
-                    }),
-            );
+            fooo(ui);
         });
 }
 
-/*
-        egui::TopBottomPanel::top("top_panel")
-            .resizable(true)
-            .min_height(32.0);
-
-        egui::SidePanel::left("left_panel")
-            .resizable(true)
-            .default_width(150.0);
-
-        egui::SidePanel::right("right_panel")
-            .resizable(true)
-            .default_width(150.0);
-
-        egui::TopBottomPanel::bottom("bottom_panel")
-            .resizable(false)
-            .min_height(0.0);
-
-        egui::CentralPanel::default().show_inside(ui, |ui| {
-            ui.vertical_centered(|ui| {
-                ui.heading("Central Panel");
+use egui_extras::{Size, TableBuilder};
+fn fooo(ui: &mut egui::Ui) {
+    TableBuilder::new(ui)
+        .striped(false)
+        .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+        .column(Size::initial(60.0).at_least(40.0))
+        .column(Size::initial(60.0).at_least(40.0))
+        .column(Size::remainder().at_least(60.0))
+        .resizable(true)
+        .header(20.0, |mut header| {
+            header.col(|ui| {
+                ui.heading("Key");
             });
+            header.col(|ui| {
+                ui.heading("");
+            });
+            header.col(|ui| {
+                ui.heading("Function");
+            });
+        })
+        .body(|mut body| {
+            for _ in 0..7 {
+                let row_height = 18.0;
+                body.row(row_height, |mut row| {
+                    row.col(|ui| {
+                        ui.label("Space");
+                    });
+                    row.col(|ui| {
+                        ui.label(" - ");
+                    });
+                    row.col(|ui| {
+                        ui.label("Fire Projectile");
+                    });
+                });
+            }
         });
-*/
+}
