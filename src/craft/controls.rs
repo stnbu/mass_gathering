@@ -65,7 +65,6 @@ pub fn keyboard_control(
         }
     }
 
-    // // // MOUSE
     for event in mouse_motion_events.iter() {
         rotation.x -= event.delta.y * 0.0001;
         rotation.y -= event.delta.x * 0.0001;
@@ -74,7 +73,6 @@ pub fn keyboard_control(
     for event in mouse_wheel_events.iter() {
         spacecraft.speed = event.y;
     }
-    // // // END MAUS
 
     rotation *= keys_scaling;
     let local_x = transform.local_x();

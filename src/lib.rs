@@ -93,6 +93,7 @@ impl Plugin for Core {
             .add_state(AppState::Startup)
             .add_system(bevy::window::close_on_esc)
             .add_startup_system(core_setup)
+            .add_startup_system(hide_cursor)
             .add_system(handle_game_state)
             .add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
@@ -231,6 +232,20 @@ fn stars(
         star.translation += spacecraft.translation - previous.0;
     }
     previous.0 = spacecraft.translation;
+}
+
+/*
+   let window = windows.get_primary_mut().unwrap();
+
+   if btn.just_pressed(MouseButton::Left) {
+       window.set_cursor_lock_mode(true);
+*/
+
+fn hide_cursor(mut windows: ResMut<Windows>) {
+    windows
+        .get_primary_mut()
+        .unwrap()
+        .set_cursor_visibility(false);
 }
 
 #[cfg(target_arch = "wasm32")]
