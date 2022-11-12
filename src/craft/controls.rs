@@ -1,7 +1,11 @@
-use bevy::input::mouse::{MouseButtonInput, MouseMotion, MouseWheel};
-use bevy::prelude::{EventReader, Input, KeyCode, Quat, Query, Res, Time, Transform, Vec2, Vec3};
+use bevy::input::mouse::{MouseButton, MouseButtonInput, MouseMotion, MouseWheel};
+use bevy::input::ButtonState;
+use bevy::prelude::{
+    EventReader, EventWriter, Input, KeyCode, Quat, Query, Res, Time, Transform, Vec3,
+};
 use std::f32::consts::TAU;
 
+use super::FireProjectileEvent;
 use super::Spacecraft;
 
 pub fn control(
@@ -10,6 +14,7 @@ pub fn control(
     mut mouse_motion_events: EventReader<MouseMotion>,
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     mut mouse_wheel_events: EventReader<MouseWheel>,
+    mut fire_projectile_events: EventWriter<FireProjectileEvent>,
     time: Res<Time>,
 ) {
     // FIXME: this does not regard time delta, which it should.
@@ -62,6 +67,9 @@ pub fn control(
             KeyCode::X => {
                 rotation.z -= nudge;
             }
+            KeyCode::Space => {
+                fire_projectile_events.send(FireProjectileEvent);
+            }
             _ => (),
         }
     }
@@ -70,7 +78,11 @@ pub fn control(
         rotation.x -= event.delta.y * mouse_scaling;
         rotation.y -= event.delta.x * mouse_scaling;
     }
-    for event in mouse_button_input_events.iter() {}
+    for MouseButtonInput { button, state } in mouse_button_input_events.iter() {
+        if *button == MouseButton::Left && *state == ButtonState::Pressed {
+            fire_projectile_events.send(FireProjectileEvent);
+        }
+    }
     for event in mouse_wheel_events.iter() {
         spacecraft.speed = event.y;
     }

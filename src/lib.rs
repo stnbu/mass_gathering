@@ -30,6 +30,7 @@ impl Plugin for SpacecraftPlugin {
         app.init_resource::<SpacecraftConfig>()
             .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
+            .add_event::<FireProjectileEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
@@ -234,18 +235,11 @@ fn stars(
     previous.0 = spacecraft.translation;
 }
 
-/*
-   let window = windows.get_primary_mut().unwrap();
-
-   if btn.just_pressed(MouseButton::Left) {
-       window.set_cursor_lock_mode(true);
-*/
-
 fn hide_cursor(mut windows: ResMut<Windows>) {
-    windows
-        .get_primary_mut()
-        .unwrap()
-        .set_cursor_visibility(false);
+    let window = windows.get_primary_mut().unwrap();
+    window.set_cursor_visibility(false);
+    // FIXME. Still, if we click outside our (non-maximized) window, we lose focus.
+    window.set_cursor_lock_mode(true);
 }
 
 #[cfg(target_arch = "wasm32")]
