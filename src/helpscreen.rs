@@ -54,9 +54,9 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
             TableBuilder::new(ui)
                 .striped(false)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                .column(Size::initial(120.0).at_least(100.0))
-                .column(Size::initial(270.0).at_least(230.0))
-                .column(Size::remainder().at_least(60.0))
+                .column(Size::initial(120.0))
+                .column(Size::initial(270.0))
+                .column(Size::remainder())
                 .resizable(false)
                 .header(50.0, |mut header| {
                     header.col(|ui| {
