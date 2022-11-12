@@ -107,7 +107,6 @@ impl Plugin for Core {
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
 enum AppState {
     Playing,
-    Paused,
     Help,
 }
 
@@ -121,12 +120,8 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
     let next_state =
         keys.get_just_pressed()
             .fold(None, |_state, key| match (*app_state.current(), *key) {
-                (Playing, P) => Some(Paused),
-                (Paused, P) => Some(Playing),
-                (Help, M) => Some(Playing),
-                (_, M) => Some(Help),
-                (Help | Paused, _) => Some(Playing),
-                _ => None,
+                (Playing, P | H | M) => Some(Help),
+                (_, _) => Some(Playing),
             });
     if let Some(state) = next_state {
         let _ = app_state.overwrite_set(state);
