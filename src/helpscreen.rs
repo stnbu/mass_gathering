@@ -56,7 +56,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                 .striped(false)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Size::initial(60.0).at_least(40.0))
-                .column(Size::initial(60.0).at_least(40.0))
+                .column(Size::initial(300.0).at_least(200.0))
                 .column(Size::remainder().at_least(60.0))
                 .resizable(false)
                 .header(30.0, |mut header| {
@@ -64,27 +64,52 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                         ui.heading("Key");
                     });
                     header.col(|ui| {
-                        ui.heading("");
-                    });
-                    header.col(|ui| {
                         ui.heading("Function");
                     });
                 })
                 .body(|mut body| {
-                    for _ in 0..7 {
-                        let row_height = 18.0;
-                        body.row(row_height, |mut row| {
-                            row.col(|ui| {
-                                ui.label("Space");
-                            });
-                            row.col(|ui| {
-                                ui.label(" - ");
-                            });
-                            row.col(|ui| {
-                                ui.label("Fire Projectile");
-                            });
+                    let row_height = 18.0;
+                    body.row(row_height, |mut row| {
+                        row.col(|ui| {
+                            ui.label("Space");
                         });
-                    }
+                        row.col(|ui| {
+                            ui.label("Fire Projectile");
+                        });
+                    });
+                    body.row(row_height, |mut row| {
+                        row.col(|ui| {
+                            ui.label("W / S");
+                        });
+                        row.col(|ui| {
+                            ui.label("Pitch up / Pitch down");
+                        });
+                    });
+                    body.row(row_height, |mut row| {
+                        row.col(|ui| {
+                            ui.label("A / D");
+                        });
+                        row.col(|ui| {
+                            ui.label("Yaw left / Yaw right");
+                        });
+                    });
+                    body.row(row_height, |mut row| {
+                        row.col(|ui| {
+                            ui.label("Z / X");
+                        });
+                        row.col(|ui| {
+                            ui.label("Roll left / Roll right");
+                        });
+                    });
+
+                    body.row(row_height, |mut row| {
+                        row.col(|ui| {
+                            ui.label("H or P");
+                        });
+                        row.col(|ui| {
+                            ui.label("[P]ause and show this [H]elp screen");
+                        });
+                    });
                 });
         });
 }
