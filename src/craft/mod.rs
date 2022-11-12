@@ -6,9 +6,7 @@ use bevy::{
     window::{WindowId, WindowResized},
 };
 use bevy_egui::{
-    egui::{
-        style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, TopBottomPanel,
-    },
+    egui::{style::Margin, CentralPanel, Color32, FontFamily::Monospace, FontId, Frame, RichText},
     EguiContext,
 };
 use bevy_rapier3d::prelude::{
@@ -496,10 +494,9 @@ Your Location
         spacecraft.speed, transform.translation.x, transform.translation.y, transform.translation.z
     );
 
-    TopBottomPanel::top("hud")
+    CentralPanel::default()
         .frame(Frame {
-            outer_margin: Margin::symmetric(10.0, 20.0),
-            fill: Color32::TRANSPARENT,
+            fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
