@@ -9,7 +9,6 @@ use bevy_egui::{
 use egui_extras::{Size, TableBuilder};
 
 pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
-    // .show_inside(ui, |_| ())
     TopBottomPanel::top("top_panel")
         .resizable(false)
         .min_height(200.0)
@@ -30,7 +29,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
 
     SidePanel::right("right_panel")
         .resizable(false)
-        .min_width(300.0)
+        .min_width(100.0)
         .frame(Frame {
             fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
             ..Default::default()
@@ -55,11 +54,11 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
             TableBuilder::new(ui)
                 .striped(false)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                .column(Size::initial(80.0).at_least(60.0))
-                .column(Size::initial(160.0).at_least(130.0))
+                .column(Size::initial(120.0).at_least(100.0))
+                .column(Size::initial(270.0).at_least(230.0))
                 .column(Size::remainder().at_least(60.0))
                 .resizable(false)
-                .header(30.0, |mut header| {
+                .header(50.0, |mut header| {
                     header.col(|ui| {
                         styled_text_label(22.0, ui, "Key");
                     });
@@ -67,11 +66,11 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                         styled_text_label(22.0, ui, "Mouse");
                     });
                     header.col(|ui| {
-                        styled_text_label(22.0, ui, "Function");
+                        styled_text_label(20.0, ui, "Function");
                     });
                 })
                 .body(|mut body| {
-                    let row_height = 18.0;
+                    let row_height = 22.0;
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
                             styled_text_label(18.0, ui, "Space");
@@ -109,9 +108,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                         row.col(|ui| {
                             styled_text_label(18.0, ui, "Z / X");
                         });
-                        row.col(|ui| {
-                            styled_text_label(18.0, ui, "");
-                        });
+                        row.col(|_| {});
                         row.col(|ui| {
                             styled_text_label(18.0, ui, "Roll left / Roll right");
                         });
@@ -119,11 +116,21 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
 
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
-                            styled_text_label(18.0, ui, "H or P");
+                            styled_text_label(18.0, ui, "PgUp / PgDn");
                         });
                         row.col(|ui| {
-                            styled_text_label(18.0, ui, "Left click");
+                            styled_text_label(18.0, ui, "Mouse wheel forward+backward");
                         });
+                        row.col(|ui| {
+                            styled_text_label(18.0, ui, "Speed plus / Speed minus");
+                        });
+                    });
+
+                    body.row(row_height, |mut row| {
+                        row.col(|ui| {
+                            styled_text_label(18.0, ui, "H or P");
+                        });
+                        row.col(|_| {});
                         row.col(|ui| {
                             styled_text_label(18.0, ui, "[P]ause and show this [H]elp screen");
                         });
