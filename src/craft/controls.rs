@@ -4,18 +4,19 @@ use std::f32::consts::TAU;
 
 use super::Spacecraft;
 
-pub fn keyboard_control(
+pub fn control(
     keys: Res<Input<KeyCode>>,
     mut spacecraft_query: Query<(&mut Transform, &mut Spacecraft)>,
-
     mut mouse_motion_events: EventReader<MouseMotion>,
     mut mouse_button_input_events: EventReader<MouseButtonInput>,
     mut mouse_wheel_events: EventReader<MouseWheel>,
+    time: Res<Time>,
 ) {
     // FIXME: this does not regard time delta, which it should.
     let nudge = TAU / 10000.0;
 
     let keys_scaling = 10.0;
+    let mouse_scaling = 0.0001;
 
     // rotation about local axes
     let mut rotation = Vec3::ZERO;
@@ -66,15 +67,17 @@ pub fn keyboard_control(
     }
 
     for event in mouse_motion_events.iter() {
-        rotation.x -= event.delta.y * 0.0001;
-        rotation.y -= event.delta.x * 0.0001;
+        rotation.x -= event.delta.y * mouse_scaling;
+        rotation.y -= event.delta.x * mouse_scaling;
     }
     for event in mouse_button_input_events.iter() {}
     for event in mouse_wheel_events.iter() {
         spacecraft.speed = event.y;
     }
 
-    rotation *= keys_scaling;
+    let frame_time = time.delta_seconds() * 60.0;
+    rotation *= keys_scaling * frame_time;
+    // help. there _is_ a more succinct way to say...
     let local_x = transform.local_x();
     let local_y = transform.local_y();
     let local_z = transform.local_z();
