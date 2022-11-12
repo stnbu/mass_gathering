@@ -74,60 +74,67 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                     let row_height = 18.0;
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
-                            ui.label("Space");
+                            styled_text_label(18.0, ui, "Space");
                         });
                         row.col(|ui| {
-                            ui.label("Left click");
+                            styled_text_label(18.0, ui, "Left click");
                         });
                         row.col(|ui| {
-                            ui.label("Fire Projectile");
-                        });
-                    });
-                    body.row(row_height, |mut row| {
-                        row.col(|ui| {
-                            ui.label("W / S");
-                        });
-                        row.col(|ui| {
-                            ui.label("Mouse up+down");
-                        });
-                        row.col(|ui| {
-                            ui.label("Pitch up / Pitch down");
+                            styled_text_label(18.0, ui, "Fire Projectile");
                         });
                     });
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
-                            ui.label("A / D");
+                            styled_text_label(18.0, ui, "W / S");
                         });
                         row.col(|ui| {
-                            ui.label("Mouse left+right");
+                            styled_text_label(18.0, ui, "Mouse up+down");
                         });
                         row.col(|ui| {
-                            ui.label("Yaw left / Yaw right");
+                            styled_text_label(18.0, ui, "Pitch up / Pitch down");
                         });
                     });
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
-                            ui.label("Z / X");
+                            styled_text_label(18.0, ui, "A / D");
                         });
                         row.col(|ui| {
-                            ui.label("");
+                            styled_text_label(18.0, ui, "Mouse left+right");
                         });
                         row.col(|ui| {
-                            ui.label("Roll left / Roll right");
+                            styled_text_label(18.0, ui, "Yaw left / Yaw right");
+                        });
+                    });
+                    body.row(row_height, |mut row| {
+                        row.col(|ui| {
+                            styled_text_label(18.0, ui, "Z / X");
+                        });
+                        row.col(|ui| {
+                            styled_text_label(18.0, ui, "");
+                        });
+                        row.col(|ui| {
+                            styled_text_label(18.0, ui, "Roll left / Roll right");
                         });
                     });
 
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
-                            ui.label("H or P");
+                            styled_text_label(18.0, ui, "H or P");
                         });
                         row.col(|ui| {
-                            ui.label("Left click");
+                            styled_text_label(18.0, ui, "Left click");
                         });
                         row.col(|ui| {
-                            ui.label("[P]ause and show this [H]elp screen");
+                            styled_text_label(18.0, ui, "[P]ause and show this [H]elp screen");
                         });
                     });
                 });
         });
+}
+
+fn styled_text_label(height: f32, ui: &mut egui::Ui, text: &str) {
+    ui.label(RichText::new(text).color(Color32::GREEN).font(FontId {
+        size: height,
+        family: Monospace,
+    }));
 }
