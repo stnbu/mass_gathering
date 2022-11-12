@@ -66,16 +66,14 @@ pub fn keyboard_control(
     }
 
     // // // MOUSE
-    let mut mouse_delta = Vec2::ZERO;
     for event in mouse_motion_events.iter() {
-        mouse_delta += event.delta;
-    }
-    if mouse_delta.length() > 0.0 {
-        //mouse_delta.y * 0.25 * dt;
-        //mouse_delta.x * 0.5 * dt
+        rotation.x -= event.delta.y * 0.0001;
+        rotation.y -= event.delta.x * 0.0001;
     }
     for event in mouse_button_input_events.iter() {}
-    for event in mouse_wheel_events.iter() {}
+    for event in mouse_wheel_events.iter() {
+        spacecraft.speed = event.y;
+    }
     // // // END MAUS
 
     rotation *= keys_scaling;
