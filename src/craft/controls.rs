@@ -17,10 +17,7 @@ pub fn keyboard_control(
 
     let keys_scaling = 10.0;
 
-    // newsflash: pitch is `x`, roll is `z` and yaw is `y` (rotation about local axes)
-    let mut z = 0.0;
-    let mut x = 0.0;
-    let mut y = 0.0;
+    // rotation about local axes
     let mut rotation = Vec3::ZERO;
 
     let (mut transform, mut spacecraft) = spacecraft_query.get_single_mut().unwrap();
@@ -47,16 +44,16 @@ pub fn keyboard_control(
     for key in keys.get_pressed() {
         match key {
             KeyCode::A => {
-                y += nudge;
+                rotation.y += nudge;
             }
             KeyCode::D => {
-                y -= nudge;
+                rotation.y -= nudge;
             }
             KeyCode::W => {
-                x += nudge;
+                rotation.x += nudge;
             }
             KeyCode::S => {
-                x -= nudge;
+                rotation.x -= nudge;
             }
             KeyCode::Z => {
                 rotation.z += nudge;
@@ -81,10 +78,11 @@ pub fn keyboard_control(
     for event in mouse_wheel_events.iter() {}
     // // // END MAUS
 
+    rotation *= keys_scaling;
     let local_x = transform.local_x();
     let local_y = transform.local_y();
     let local_z = transform.local_z();
-    transform.rotate(Quat::from_axis_angle(local_x, x * keys_scaling));
-    transform.rotate(Quat::from_axis_angle(local_z, rotation.z * keys_scaling));
-    transform.rotate(Quat::from_axis_angle(local_y, y * keys_scaling));
+    transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
+    transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
+    transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
 }
