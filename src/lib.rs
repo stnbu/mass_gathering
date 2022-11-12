@@ -33,7 +33,7 @@ impl Plugin for SpacecraftPlugin {
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(move_forward)
-                    .with_system(steer)
+                    .with_system(keyboard_control)
                     .with_system(stars)
                     .with_system(drift)
                     .with_system(signal_hot_planet)
