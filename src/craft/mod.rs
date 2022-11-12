@@ -34,7 +34,6 @@ pub enum SpacecraftAR {
 
 #[derive(Debug, Default, Component)]
 pub struct Spacecraft {
-    gain: Vec3,
     pub speed: f32,
 }
 

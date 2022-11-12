@@ -13,12 +13,10 @@ pub fn keyboard_control(
     mut mouse_wheel_events: EventReader<MouseWheel>,
 ) {
     // FIXME: this does not regard time delta, which it should.
-    let gain = 0.2;
     let nudge = TAU / 10000.0;
     let mut roll = 0.0;
     let mut pitch = 0.0;
     let mut yaw = 0.0;
-    let mut had_input = false;
 
     let (mut transform, mut spacecraft) = spacecraft_query.get_single_mut().unwrap();
 
@@ -42,35 +40,26 @@ pub fn keyboard_control(
 
     // `presssed` (contrast `just_pressed`) considers keys being _held_ down, which is good for rotation controls.
     for key in keys.get_pressed() {
-        had_input = true;
         match key {
             KeyCode::A => {
-                yaw += nudge * (spacecraft.gain.z + 1.0);
-                spacecraft.gain.z += gain;
+                yaw += nudge;
             }
             KeyCode::D => {
-                yaw -= nudge * (spacecraft.gain.z + 1.0);
-                spacecraft.gain.z += gain;
+                yaw -= nudge;
             }
             KeyCode::W => {
-                pitch += nudge * (spacecraft.gain.x + 1.0);
-                spacecraft.gain.x += gain;
+                pitch += nudge;
             }
             KeyCode::S => {
-                pitch -= nudge * (spacecraft.gain.x + 1.0);
-                spacecraft.gain.x += gain;
+                pitch -= nudge;
             }
             KeyCode::Z => {
-                roll += nudge * (spacecraft.gain.y + 1.0);
-                spacecraft.gain.y += gain;
+                roll += nudge;
             }
             KeyCode::X => {
-                roll -= nudge * (spacecraft.gain.y + 1.0);
-                spacecraft.gain.y += gain;
+                roll -= nudge;
             }
-            _ => {
-                had_input = false;
-            }
+            _ => (),
         }
     }
 
@@ -87,33 +76,10 @@ pub fn keyboard_control(
     for event in mouse_wheel_events.iter() {}
     // // // END MAUS
 
-    if !had_input {
-        if spacecraft.gain.x > 0.0 {
-            spacecraft.gain.x -= gain;
-            if spacecraft.gain.x < 0.0 {
-                spacecraft.gain.x = 0.0;
-            }
-        }
-        if spacecraft.gain.y > 0.0 {
-            spacecraft.gain.y -= gain;
-            if spacecraft.gain.y < 0.0 {
-                spacecraft.gain.y = 0.0;
-            }
-        }
-        if spacecraft.gain.z > 0.0 {
-            spacecraft.gain.z -= gain;
-            if spacecraft.gain.z < 0.0 {
-                spacecraft.gain.z = 0.0;
-            }
-        }
-    }
-
-    if roll != 0.0 || pitch != 0.0 || yaw != 0.0 {
-        let local_x = transform.local_x();
-        let local_y = transform.local_y();
-        let local_z = transform.local_z();
-        transform.rotate(Quat::from_axis_angle(local_x, pitch));
-        transform.rotate(Quat::from_axis_angle(local_z, roll));
-        transform.rotate(Quat::from_axis_angle(local_y, yaw));
-    }
+    let local_x = transform.local_x();
+    let local_y = transform.local_y();
+    let local_z = transform.local_z();
+    transform.rotate(Quat::from_axis_angle(local_x, pitch));
+    transform.rotate(Quat::from_axis_angle(local_z, roll));
+    transform.rotate(Quat::from_axis_angle(local_y, yaw));
 }
