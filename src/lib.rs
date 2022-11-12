@@ -94,41 +94,18 @@ impl Plugin for Core {
         app.add_system(handle_browser_resize);
 
         app.add_plugin(EguiPlugin)
-            .init_resource::<SplashScreenVisible>()
             .add_state(AppState::Menu)
             .add_system(bevy::window::close_on_esc)
             .add_startup_system(disable_rapier_gravity)
             .add_startup_system(hide_cursor)
             .add_system(handle_game_state)
             .add_system(timer_despawn)
-            .add_system(splash_screen_visibility)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-    }
-}
-
-pub struct SplashScreenVisible(pub bool);
-
-impl Default for SplashScreenVisible {
-    fn default() -> Self {
-        Self(true)
-    }
-}
-
-#[derive(Component)]
-pub struct SplashScreen;
-
-fn splash_screen_visibility(
-    mut query: Query<&mut Visibility, With<SplashScreen>>,
-    visible: Res<SplashScreenVisible>,
-) {
-    for mut visibility in &mut query {
-        visibility.is_visible = visible.0;
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
 enum AppState {
-    Startup,
     Playing,
     Paused,
     Menu,
@@ -148,7 +125,7 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
                 (Paused, P) => Some(Playing),
                 (Menu, M) => Some(Playing),
                 (_, M) => Some(Menu),
-                (Startup | Menu | Paused, _) => Some(Playing),
+                (Menu | Paused, _) => Some(Playing),
                 _ => None,
             });
     if let Some(state) = next_state {
