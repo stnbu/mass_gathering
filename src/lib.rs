@@ -92,7 +92,7 @@ impl Plugin for Core {
         app.add_plugin(EguiPlugin)
             .add_state(AppState::Startup)
             .add_system(bevy::window::close_on_esc)
-            .add_startup_system(core_setup)
+            .add_startup_system(disable_rapier_gravity)
             .add_startup_system(hide_cursor)
             .add_system(handle_game_state)
             .add_system(timer_despawn)
@@ -108,7 +108,7 @@ enum AppState {
     Menu,
 }
 
-fn core_setup(mut rapier_config: ResMut<RapierConfiguration>) {
+fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
     rapier_config.gravity = Vec3::ZERO;
 }
 
