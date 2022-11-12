@@ -6,6 +6,7 @@ use bevy_egui::{
     },
     EguiContext,
 };
+use egui_extras::{Size, TableBuilder};
 
 pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
     // .show_inside(ui, |_| ())
@@ -51,44 +52,39 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            fooo(ui);
-        });
-}
-
-use egui_extras::{Size, TableBuilder};
-fn fooo(ui: &mut egui::Ui) {
-    TableBuilder::new(ui)
-        .striped(false)
-        .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-        .column(Size::initial(60.0).at_least(40.0))
-        .column(Size::initial(60.0).at_least(40.0))
-        .column(Size::remainder().at_least(60.0))
-        .resizable(true)
-        .header(20.0, |mut header| {
-            header.col(|ui| {
-                ui.heading("Key");
-            });
-            header.col(|ui| {
-                ui.heading("");
-            });
-            header.col(|ui| {
-                ui.heading("Function");
-            });
-        })
-        .body(|mut body| {
-            for _ in 0..7 {
-                let row_height = 18.0;
-                body.row(row_height, |mut row| {
-                    row.col(|ui| {
-                        ui.label("Space");
+            TableBuilder::new(ui)
+                .striped(false)
+                .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
+                .column(Size::initial(60.0).at_least(40.0))
+                .column(Size::initial(60.0).at_least(40.0))
+                .column(Size::remainder().at_least(60.0))
+                .resizable(false)
+                .header(30.0, |mut header| {
+                    header.col(|ui| {
+                        ui.heading("Key");
                     });
-                    row.col(|ui| {
-                        ui.label(" - ");
+                    header.col(|ui| {
+                        ui.heading("");
                     });
-                    row.col(|ui| {
-                        ui.label("Fire Projectile");
+                    header.col(|ui| {
+                        ui.heading("Function");
                     });
+                })
+                .body(|mut body| {
+                    for _ in 0..7 {
+                        let row_height = 18.0;
+                        body.row(row_height, |mut row| {
+                            row.col(|ui| {
+                                ui.label("Space");
+                            });
+                            row.col(|ui| {
+                                ui.label(" - ");
+                            });
+                            row.col(|ui| {
+                                ui.label("Fire Projectile");
+                            });
+                        });
+                    }
                 });
-            }
         });
 }
