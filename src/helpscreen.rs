@@ -9,11 +9,12 @@ use bevy_egui::{
 use egui_extras::{Size, TableBuilder};
 
 pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
+    let fill_color = Color32::from_rgba_premultiplied(0, 0, 0, 240);
     TopBottomPanel::top("top_panel")
         .resizable(false)
         .min_height(200.0)
         .frame(Frame {
-            fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
+            fill: fill_color,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |_| ());
@@ -22,7 +23,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
         .resizable(false)
         .min_width(300.0)
         .frame(Frame {
-            fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
+            fill: fill_color,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |_| ());
@@ -31,7 +32,7 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
         .resizable(false)
         .min_width(100.0)
         .frame(Frame {
-            fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
+            fill: fill_color,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |_| ());
@@ -40,14 +41,14 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
         .resizable(false)
         .min_height(0.0)
         .frame(Frame {
-            fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
+            fill: fill_color,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |_| ());
 
     CentralPanel::default()
         .frame(Frame {
-            fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
+            fill: fill_color,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
