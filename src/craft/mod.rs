@@ -5,10 +5,7 @@ use bevy::{
     render::camera::Viewport,
     window::{WindowId, WindowResized},
 };
-use bevy_egui::{
-    egui::{style::Margin, CentralPanel, Color32, FontFamily::Monospace, FontId, Frame, RichText},
-    EguiContext,
-};
+
 use bevy_rapier3d::prelude::{
     ActiveEvents, Collider, QueryFilter, RapierContext, RigidBody, Sensor,
 };
@@ -464,47 +461,6 @@ pub fn animate_projectile_explosion(
             }
         }
     }
-}
-
-pub fn hud(
-    mut ctx: ResMut<EguiContext>,
-    query: Query<(&Spacecraft, &Transform)>,
-    config: Res<SpacecraftConfig>,
-) {
-    // FIXME vvv
-    if config.stereo_enabled {
-        return;
-    }
-    let (spacecraft, transform) = query.get_single().unwrap();
-    let hud_text = format!(
-        "\
-W & S      - Pitch
-A & D      - Yaw
-Z & X      - Roll
-PgUp/PgDn  - Speed
-Space      - Fire
-P          - Pause
-------------------
-Your Speed - {}
-Your Location
-  x        - {}
-  y        - {}
-  z        - {}
-",
-        spacecraft.speed, transform.translation.x, transform.translation.y, transform.translation.z
-    );
-
-    CentralPanel::default()
-        .frame(Frame {
-            fill: Color32::from_rgba_premultiplied(0, 0, 0, 32 * 7),
-            ..Default::default()
-        })
-        .show(ctx.ctx_mut(), |ui| {
-            ui.label(RichText::new(hud_text).color(Color32::GREEN).font(FontId {
-                size: 18.0,
-                family: Monospace,
-            }));
-        });
 }
 
 pub fn set_camera_viewports(

@@ -13,6 +13,9 @@ use craft::*;
 mod cone;
 use cone::Cone;
 
+mod helpscreen;
+use helpscreen::*;
+
 pub mod prelude;
 
 pub struct FullGame;
@@ -56,9 +59,9 @@ impl Plugin for SpacecraftPlugin {
                         handle_projectile_despawn.after(spawn_projectile_explosion_animation),
                     ),
             )
-            .add_system(hud)
             .add_startup_system(spacecraft_setup)
-            .add_system(set_camera_viewports);
+            .add_system(set_camera_viewports)
+            .add_system_set(SystemSet::on_update(AppState::Menu).with_system(helpscreen));
     }
 }
 
@@ -92,7 +95,7 @@ impl Plugin for Core {
 
         app.add_plugin(EguiPlugin)
             .init_resource::<SplashScreenVisible>()
-            .add_state(AppState::Startup)
+            .add_state(AppState::Menu)
             .add_system(bevy::window::close_on_esc)
             .add_startup_system(disable_rapier_gravity)
             .add_startup_system(hide_cursor)
@@ -145,7 +148,7 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
                 (Paused, P) => Some(Playing),
                 (Menu, M) => Some(Playing),
                 (_, M) => Some(Menu),
-                (Startup, _) => Some(Playing),
+                (Startup | Menu | Paused, _) => Some(Playing),
                 _ => None,
             });
     if let Some(state) = next_state {
