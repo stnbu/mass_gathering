@@ -56,12 +56,15 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                 .striped(false)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
                 .column(Size::initial(60.0).at_least(40.0))
-                .column(Size::initial(300.0).at_least(200.0))
+                .column(Size::initial(100.0).at_least(70.0))
                 .column(Size::remainder().at_least(60.0))
                 .resizable(false)
                 .header(30.0, |mut header| {
                     header.col(|ui| {
                         ui.heading("Key");
+                    });
+                    header.col(|ui| {
+                        ui.heading("Mouse");
                     });
                     header.col(|ui| {
                         ui.heading("Function");
@@ -74,12 +77,18 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                             ui.label("Space");
                         });
                         row.col(|ui| {
+                            ui.label("Left click");
+                        });
+                        row.col(|ui| {
                             ui.label("Fire Projectile");
                         });
                     });
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
                             ui.label("W / S");
+                        });
+                        row.col(|ui| {
+                            ui.label("Mouse up+down");
                         });
                         row.col(|ui| {
                             ui.label("Pitch up / Pitch down");
@@ -90,12 +99,18 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                             ui.label("A / D");
                         });
                         row.col(|ui| {
+                            ui.label("Mouse left+right");
+                        });
+                        row.col(|ui| {
                             ui.label("Yaw left / Yaw right");
                         });
                     });
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
                             ui.label("Z / X");
+                        });
+                        row.col(|ui| {
+                            ui.label("");
                         });
                         row.col(|ui| {
                             ui.label("Roll left / Roll right");
@@ -105,6 +120,9 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
                     body.row(row_height, |mut row| {
                         row.col(|ui| {
                             ui.label("H or P");
+                        });
+                        row.col(|ui| {
+                            ui.label("Left click");
                         });
                         row.col(|ui| {
                             ui.label("[P]ause and show this [H]elp screen");
