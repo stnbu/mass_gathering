@@ -55,19 +55,19 @@ pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
             TableBuilder::new(ui)
                 .striped(false)
                 .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-                .column(Size::initial(60.0).at_least(40.0))
-                .column(Size::initial(100.0).at_least(70.0))
+                .column(Size::initial(80.0).at_least(60.0))
+                .column(Size::initial(160.0).at_least(130.0))
                 .column(Size::remainder().at_least(60.0))
                 .resizable(false)
                 .header(30.0, |mut header| {
                     header.col(|ui| {
-                        ui.heading("Key");
+                        styled_text_label(22.0, ui, "Key");
                     });
                     header.col(|ui| {
-                        ui.heading("Mouse");
+                        styled_text_label(22.0, ui, "Mouse");
                     });
                     header.col(|ui| {
-                        ui.heading("Function");
+                        styled_text_label(22.0, ui, "Function");
                     });
                 })
                 .body(|mut body| {
