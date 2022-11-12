@@ -61,7 +61,7 @@ impl Plugin for SpacecraftPlugin {
             )
             .add_startup_system(spacecraft_setup)
             .add_system(set_camera_viewports)
-            .add_system_set(SystemSet::on_update(AppState::Menu).with_system(helpscreen));
+            .add_system_set(SystemSet::on_update(AppState::Help).with_system(helpscreen));
     }
 }
 
@@ -94,7 +94,7 @@ impl Plugin for Core {
         app.add_system(handle_browser_resize);
 
         app.add_plugin(EguiPlugin)
-            .add_state(AppState::Menu)
+            .add_state(AppState::Help)
             .add_system(bevy::window::close_on_esc)
             .add_startup_system(disable_rapier_gravity)
             .add_startup_system(hide_cursor)
@@ -108,7 +108,7 @@ impl Plugin for Core {
 enum AppState {
     Playing,
     Paused,
-    Menu,
+    Help,
 }
 
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
@@ -123,9 +123,9 @@ fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<Key
             .fold(None, |_state, key| match (*app_state.current(), *key) {
                 (Playing, P) => Some(Paused),
                 (Paused, P) => Some(Playing),
-                (Menu, M) => Some(Playing),
-                (_, M) => Some(Menu),
-                (Menu | Paused, _) => Some(Playing),
+                (Help, M) => Some(Playing),
+                (_, M) => Some(Help),
+                (Help | Paused, _) => Some(Playing),
                 _ => None,
             });
     if let Some(state) = next_state {
