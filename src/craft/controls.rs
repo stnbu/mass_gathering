@@ -14,9 +14,13 @@ pub fn keyboard_control(
 ) {
     // FIXME: this does not regard time delta, which it should.
     let nudge = TAU / 10000.0;
-    let mut roll = 0.0;
-    let mut pitch = 0.0;
-    let mut yaw = 0.0;
+
+    let keys_scaling = 10.0;
+
+    // newsflash: pitch is `x`, roll is `z` and yaw is `y` (rotation about local axes)
+    let mut z = 0.0;
+    let mut x = 0.0;
+    let mut y = 0.0;
 
     let (mut transform, mut spacecraft) = spacecraft_query.get_single_mut().unwrap();
 
@@ -42,22 +46,22 @@ pub fn keyboard_control(
     for key in keys.get_pressed() {
         match key {
             KeyCode::A => {
-                yaw += nudge;
+                y += nudge;
             }
             KeyCode::D => {
-                yaw -= nudge;
+                y -= nudge;
             }
             KeyCode::W => {
-                pitch += nudge;
+                x += nudge;
             }
             KeyCode::S => {
-                pitch -= nudge;
+                x -= nudge;
             }
             KeyCode::Z => {
-                roll += nudge;
+                z += nudge;
             }
             KeyCode::X => {
-                roll -= nudge;
+                z -= nudge;
             }
             _ => (),
         }
@@ -79,7 +83,7 @@ pub fn keyboard_control(
     let local_x = transform.local_x();
     let local_y = transform.local_y();
     let local_z = transform.local_z();
-    transform.rotate(Quat::from_axis_angle(local_x, pitch));
-    transform.rotate(Quat::from_axis_angle(local_z, roll));
-    transform.rotate(Quat::from_axis_angle(local_y, yaw));
+    transform.rotate(Quat::from_axis_angle(local_x, x * keys_scaling));
+    transform.rotate(Quat::from_axis_angle(local_z, z * keys_scaling));
+    transform.rotate(Quat::from_axis_angle(local_y, y * keys_scaling));
 }
