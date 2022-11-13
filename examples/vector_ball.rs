@@ -36,6 +36,7 @@ fn setup(
         ..Default::default()
     });
 
+    let S = L - I - B - C;
     commands
         .spawn_bundle(SpatialBundle::default())
         .with_children(|child| {
@@ -48,12 +49,10 @@ fn setup(
                     })
                     .into(),
                 ),
-                transform: Transform::from_rotation(Quat::from_rotation_x(PI))
-                    .with_translation(Vec3::Y * R),
+                transform: Transform::from_xyz(0.0, L - 2.0 * R, 0.0),
                 material: materials.add(Color::GREEN.into()),
                 ..Default::default()
             });
-            let S = L - I - B - C;
             child.spawn_bundle(PbrBundle {
                 mesh: meshes.add(
                     (Cylinder {
@@ -64,7 +63,7 @@ fn setup(
                     })
                     .into(),
                 ),
-                transform: Transform::from_xyz(0.0, S * 0.5 + R * 2.0, 0.0),
+                transform: Transform::from_xyz(0.0, S * 0.5 + I + B, 0.0),
                 material: materials.add(Color::GREEN.into()),
                 ..Default::default()
             });
