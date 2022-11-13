@@ -104,8 +104,6 @@ impl Plugin for Core {
 
         // An attempt at minimizing DefaultPlugins for our purposes
         app.add_plugin(bevy::transform::TransformPlugin)
-            .add_plugin(bevy::hierarchy::HierarchyPlugin)
-            .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
             .add_plugin(bevy::input::InputPlugin)
             .add_plugin(bevy::window::WindowPlugin)
             .add_plugin(bevy::asset::AssetPlugin)
