@@ -1,7 +1,7 @@
+use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
 use bevy::log::LogSettings;
 use bevy::prelude::*;
-use bevy::{app::PluginGroupBuilder, log::LogPlugin};
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
@@ -102,12 +102,6 @@ impl Plugin for Core {
         .add_plugin(bevy::log::LogPlugin);
         debug!("DEBUG LEVEL LOGGING ! !");
 
-        // #[cfg(not(debug_assertions))]
-        // app.insert_resource(LogSettings {
-        //     filter: "error".into(),
-        //     level: bevy::log::Level::ERROR,
-        // });
-
         // An attempt at minimizing DefaultPlugins for our purposes
         app.add_plugin(bevy::transform::TransformPlugin)
             .add_plugin(bevy::hierarchy::HierarchyPlugin)
@@ -122,14 +116,10 @@ impl Plugin for Core {
             .add_plugin(bevy::pbr::PbrPlugin)
             .add_plugin(bevy::gilrs::GilrsPlugin);
 
-        // FIXME: It looks like LogSettings has no affect. Is this because
-        //        our "consumers" are loading DefaultPlugins beforehand?
-
-        // FIXME: this does no harm, but it doesn't affect the number
-        //        of *triangles* as that is a per-mesh thing.
         #[cfg(not(debug_assertions))]
         {
-            error!("[Release Mode] You are NOT seeing this log message!");
+            error!("We have no logging, and yet you SEE this message...?");
+            // FIXME: num-triangles on a mesh is a different thing
             app.insert_resource(Msaa { samples: 4 });
         }
 
