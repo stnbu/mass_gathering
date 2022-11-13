@@ -126,9 +126,11 @@ impl Plugin for Core {
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
 
+        #[cfg(not(target_arch = "wasm32"))]
+        app.add_system(bevy::window::close_on_esc);
+
         app.add_plugin(EguiPlugin)
             .add_state(AppState::Help)
-            .add_system(bevy::window::close_on_esc)
             .add_startup_system(disable_rapier_gravity)
             .add_system(handle_game_state)
             .add_system(timer_despawn)
