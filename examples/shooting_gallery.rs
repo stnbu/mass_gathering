@@ -9,7 +9,11 @@ fn main() {
             stereo_enabled: false,
             stereo_iod: 2.0,
             start_transform: Transform::from_xyz(0.0, 0.0, 50.0).looking_at(Vec3::ZERO, Vec3::Y),
-            impact_magnitude: 5.0,
+            // FIXME: all this got miscalibrated after much refactoring. Not sure what this value sould be.
+            //        mostly the problem is fire-control. you shoot of so many. maybe other causes..?
+            //        ALSO need to scale vectorball vector by mass. In any case, they are pancakey here.
+            //        @ba62fea97853d464bd869d9415bc04b78ecbf723
+            impact_magnitude: 0.8,
             ..Default::default()
         })
         .insert_resource(PhysicsConfig {
