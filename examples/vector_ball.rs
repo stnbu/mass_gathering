@@ -24,20 +24,10 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
-    commands
+
+    let momentum_vector = commands
         .spawn_bundle(SpatialBundle::default())
         .with_children(|child| {
-            child.spawn_bundle(PbrBundle {
-                mesh: meshes.add(
-                    (shape::Icosphere {
-                        radius: BALL_RADIUS,
-                        ..Default::default()
-                    })
-                    .into(),
-                ),
-                material: materials.add(Color::GREEN.into()),
-                ..Default::default()
-            });
             child.spawn_bundle(PbrBundle {
                 mesh: meshes.add(
                     (Cone {
@@ -69,5 +59,19 @@ fn setup(
                 material: materials.add(Color::GREEN.into()),
                 ..Default::default()
             });
-        });
+        })
+        .id();
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(
+                (shape::Icosphere {
+                    radius: BALL_RADIUS,
+                    ..Default::default()
+                })
+                .into(),
+            ),
+            material: materials.add(Color::GREEN.into()),
+            ..Default::default()
+        })
+        .add_child(momentum_vector);
 }
