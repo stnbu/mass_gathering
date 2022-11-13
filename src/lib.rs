@@ -1,7 +1,7 @@
-use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
 use bevy::log::LogSettings;
 use bevy::prelude::*;
+use bevy::{app::PluginGroupBuilder, log::LogPlugin};
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
@@ -98,13 +98,15 @@ impl Plugin for Core {
         app.insert_resource(LogSettings {
             filter: "warn,mass_gathering=debug".into(),
             level: bevy::log::Level::DEBUG,
-        });
+        })
+        .add_plugin(bevy::log::LogPlugin);
+        debug!("DEBUG LEVEL LOGGING ! !");
 
-        #[cfg(not(debug_assertions))]
-        app.insert_resource(LogSettings {
-            filter: "error".into(),
-            level: bevy::log::Level::ERROR,
-        });
+        // #[cfg(not(debug_assertions))]
+        // app.insert_resource(LogSettings {
+        //     filter: "error".into(),
+        //     level: bevy::log::Level::ERROR,
+        // });
 
         // An attempt at minimizing DefaultPlugins for our purposes
         app.add_plugin(bevy::transform::TransformPlugin)
@@ -126,7 +128,10 @@ impl Plugin for Core {
         // FIXME: this does no harm, but it doesn't affect the number
         //        of *triangles* as that is a per-mesh thing.
         #[cfg(not(debug_assertions))]
-        app.insert_resource(Msaa { samples: 4 });
+        {
+            error!("[Release Mode] You are NOT seeing this log message!");
+            app.insert_resource(Msaa { samples: 4 });
+        }
 
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
