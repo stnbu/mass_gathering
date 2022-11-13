@@ -11,8 +11,8 @@ use physics::*;
 
 mod craft;
 mod helpscreen;
+mod mg_shapes;
 pub mod prelude;
-mod shapes;
 
 use prelude::*;
 
