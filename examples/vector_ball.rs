@@ -16,6 +16,7 @@ const L: f32 = 14.0;
 const R: f32 = 1.0;
 const B: f32 = 2.0;
 const I: f32 = 3.5;
+const C: f32 = 2.0;
 
 use std::f32::consts::PI;
 fn setup(
@@ -49,6 +50,21 @@ fn setup(
                 ),
                 transform: Transform::from_rotation(Quat::from_rotation_x(PI))
                     .with_translation(Vec3::Y * R),
+                material: materials.add(Color::GREEN.into()),
+                ..Default::default()
+            });
+            let S = L - I - B - C;
+            child.spawn_bundle(PbrBundle {
+                mesh: meshes.add(
+                    (Cylinder {
+                        height: S,
+                        radius_bottom: R,
+                        radius_top: R,
+                        ..Default::default()
+                    })
+                    .into(),
+                ),
+                transform: Transform::from_xyz(0.0, S * 0.5 + R * 2.0, 0.0),
                 material: materials.add(Color::GREEN.into()),
                 ..Default::default()
             });
