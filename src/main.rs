@@ -47,20 +47,6 @@ use bevy::pbr::PbrPlugin;
 fn main() {
     let d = 60.0 / 3.0_f32.powf(0.5); // about right for my_planets
     App::new()
-        .add_plugins(MinimalPlugins)
-        .add_plugin(bevy::log::LogPlugin)
-        .add_plugin(bevy::transform::TransformPlugin)
-        .add_plugin(bevy::hierarchy::HierarchyPlugin)
-        .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
-        .add_plugin(bevy::input::InputPlugin)
-        .add_plugin(bevy::window::WindowPlugin)
-        .add_plugin(bevy::asset::AssetPlugin)
-        .add_plugin(bevy::scene::ScenePlugin)
-        .add_plugin(bevy::winit::WinitPlugin)
-        .add_plugin(bevy::render::RenderPlugin)
-        .add_plugin(bevy::core_pipeline::CorePipelinePlugin)
-        .add_plugin(bevy::pbr::PbrPlugin)
-        .add_plugin(bevy::gilrs::GilrsPlugin)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(PhysicsConfig {
             sims_per_frame: 1,

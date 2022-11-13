@@ -92,6 +92,34 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
+        app.add_plugins(MinimalPlugins);
+
+        #[cfg(debug_assertions)]
+        app.insert_resource(LogSettings {
+            filter: "warn,mass_gathering=debug".into(),
+            level: bevy::log::Level::DEBUG,
+        });
+
+        #[cfg(not(debug_assertions))]
+        app.insert_resource(LogSettings {
+            filter: "error".into(),
+            level: bevy::log::Level::ERROR,
+        });
+
+        // An attempt at minimizing DefaultPlugins for our purposes
+        app.add_plugin(bevy::transform::TransformPlugin)
+            .add_plugin(bevy::hierarchy::HierarchyPlugin)
+            .add_plugin(bevy::diagnostic::DiagnosticsPlugin)
+            .add_plugin(bevy::input::InputPlugin)
+            .add_plugin(bevy::window::WindowPlugin)
+            .add_plugin(bevy::asset::AssetPlugin)
+            .add_plugin(bevy::scene::ScenePlugin)
+            .add_plugin(bevy::winit::WinitPlugin)
+            .add_plugin(bevy::render::RenderPlugin)
+            .add_plugin(bevy::core_pipeline::CorePipelinePlugin)
+            .add_plugin(bevy::pbr::PbrPlugin)
+            .add_plugin(bevy::gilrs::GilrsPlugin);
+
         // FIXME: It looks like LogSettings has no affect. Is this because
         //        our "consumers" are loading DefaultPlugins beforehand?
 
@@ -110,18 +138,6 @@ impl Plugin for Core {
             .add_system(handle_game_state)
             .add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-
-        #[cfg(debug_assertions)]
-        app.insert_resource(LogSettings {
-            filter: "warn,mass_gathering=debug".into(),
-            level: bevy::log::Level::DEBUG,
-        });
-
-        #[cfg(not(debug_assertions))]
-        app.insert_resource(LogSettings {
-            filter: "error".into(),
-            level: bevy::log::Level::ERROR,
-        });
     }
 }
 
