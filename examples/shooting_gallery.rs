@@ -1,14 +1,9 @@
-use bevy::log::LogSettings;
 use bevy::prelude::*;
 use mass_gathering::prelude::*;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .insert_resource(LogSettings {
-            filter: "warn,mass_gathering=debug".into(),
-            level: bevy::log::Level::DEBUG,
-        })
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,

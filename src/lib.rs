@@ -1,5 +1,6 @@
 use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
+use bevy::log::LogSettings;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -91,6 +92,14 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
+        // FIXME: It looks like LogSettings has no affect. Is this because
+        //        our "consumers" are loading DefaultPlugins beforehand?
+
+        // FIXME: this does no harm, but it doesn't affect the number
+        //        of *triangles* as that is a per-mesh thing.
+        #[cfg(not(debug_assertions))]
+        app.insert_resource(Msaa { samples: 4 });
+
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
 
@@ -101,6 +110,18 @@ impl Plugin for Core {
             .add_system(handle_game_state)
             .add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+
+        #[cfg(debug_assertions)]
+        app.insert_resource(LogSettings {
+            filter: "warn,mass_gathering=debug".into(),
+            level: bevy::log::Level::DEBUG,
+        });
+
+        #[cfg(not(debug_assertions))]
+        app.insert_resource(LogSettings {
+            filter: "error".into(),
+            level: bevy::log::Level::ERROR,
+        });
     }
 }
 
