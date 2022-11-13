@@ -42,6 +42,17 @@ fn setup(
         .with_children(|child| {
             child.spawn_bundle(PbrBundle {
                 mesh: meshes.add(
+                    (shape::Icosphere {
+                        radius: I,
+                        ..Default::default()
+                    })
+                    .into(),
+                ),
+                material: materials.add(Color::GREEN.into()),
+                ..Default::default()
+            });
+            child.spawn_bundle(PbrBundle {
+                mesh: meshes.add(
                     (Cone {
                         radius: 2.0 * R,
                         height: 2.0 * R,
