@@ -130,7 +130,12 @@ fn handle_game_state(
     } else {
         keys.get_just_pressed()
             .fold(None, |_state, key| match (*app_state.current(), *key) {
-                (Playing, P | H | M) => Some(Help),
+                (Playing, P | H | M) => {
+                    let window = windows.get_primary_mut().unwrap();
+                    window.set_cursor_visibility(true);
+                    window.set_cursor_lock_mode(false);
+                    Some(Help)
+                }
                 (_, _) => Some(Playing),
             })
     };
