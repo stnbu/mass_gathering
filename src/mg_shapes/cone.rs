@@ -1,7 +1,8 @@
-/// Borrowed, nay stolen from https://github.com/redpandamonium/bevy_more_shapes/blob/f0a3111fca2d1f29328283f33edc679a3f42d48c/src/cone.rs
 use bevy::math::Vec3;
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
+
+// From https://github.com/ForesightMiningSoftwareCorporation/bevy_transform_gizmo/
 
 #[derive(Debug, Clone, Copy)]
 pub struct Cone {
@@ -22,13 +23,11 @@ impl Default for Cone {
 
 impl From<Cone> for Mesh {
     fn from(cone: Cone) -> Self {
+
         // Validate input parameters
         assert!(cone.height > 0.0, "Must have positive height");
         assert!(cone.radius > 0.0, "Must have positive radius");
-        assert!(
-            cone.subdivisions > 2,
-            "Must have at least 3 subdivisions to close the surface"
-        );
+        assert!(cone.subdivisions > 2, "Must have at least 3 subdivisions to close the surface");
 
         // code adapted from http://apparat-engine.blogspot.com/2013/04/procedural-meshes-torus.html
         // (source code at https://github.com/SEilers/Apparat)

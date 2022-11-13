@@ -1,10 +1,10 @@
 // This is based on a blog post found here: http://apparat-engine.blogspot.com/2013/04/procdural-meshes-cylinder.html.
 
-use crate::util::FlatTrapezeIndices;
 use bevy::math::Vec3;
 use bevy::render::mesh::{Indices, Mesh};
 use bevy::render::render_resource::PrimitiveTopology;
 use std::slice::Iter;
+use crate::util::FlatTrapezeIndices;
 
 pub struct Cylinder {
     pub height: f32,
@@ -94,6 +94,7 @@ fn add_indices_body(indices: &mut Vec<u32>, cylinder: &Cylinder) {
     let base_index_bottom_ring = cylinder.subdivisions * 3;
 
     for i in 0..cylinder.subdivisions - 1 {
+
         let face = FlatTrapezeIndices {
             lower_left: i + base_index_bottom_ring,
             upper_left: i + base_index_top_ring,
@@ -122,14 +123,12 @@ fn sphere_coordinates(sphere_coord: Vec3) -> [f32; 2] {
 
 impl From<Cylinder> for Mesh {
     fn from(cylinder: Cylinder) -> Self {
+
         // Input parameter validation
         assert!(cylinder.height > 0.0, "Must have positive height");
         assert!(cylinder.radius_bottom >= 0.0, "Must have positive radius.");
         assert!(cylinder.radius_top >= 0.0, "Must have positive radius.");
-        assert!(
-            cylinder.subdivisions > 2,
-            "Must have at least 3 subdivisions to close the surface."
-        );
+        assert!(cylinder.subdivisions > 2, "Must have at least 3 subdivisions to close the surface.");
 
         // Vertex order in the buffer:
         // 1: n_subdivisions top face
