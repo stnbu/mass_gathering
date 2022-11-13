@@ -34,10 +34,53 @@ fn setup(
     mut wireframe_config: ResMut<WireframeConfig>,
 ) {
     wireframe_config.global = false;
+
+    // this repo stuff
     commands
         .spawn_bundle(PbrBundle {
             mesh: meshes.add(Cone::default().into()),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
             material: materials.add(Color::GREEN.into()),
+            ..Default::default()
+        })
+        .insert(Wireframe);
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(Cylinder::default().into()),
+            transform: Transform::from_xyz(0.0, 6.0, 0.0),
+            material: materials.add(Color::YELLOW.into()),
+            ..Default::default()
+        })
+        .insert(Wireframe);
+
+    // bevy stuff
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(shape::Box::new(0.8, 1.7, 3.3).into()),
+            transform: Transform::from_xyz(6.0, 0.0, 0.0),
+            material: materials.add(Color::BLUE.into()),
+            ..Default::default()
+        })
+        .insert(Wireframe);
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(
+                (shape::Icosphere {
+                    radius: 2.0,
+                    ..Default::default()
+                })
+                .into(),
+            ),
+            transform: Transform::from_xyz(-6.0, 0.0, 0.0),
+            material: materials.add(Color::RED.into()),
+            ..Default::default()
+        })
+        .insert(Wireframe);
+    commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(shape::Box::new(0.8, 1.7, 3.3).into()),
+            transform: Transform::from_xyz(6.0, 0.0, 0.0),
+            material: materials.add(Color::BLUE.into()),
             ..Default::default()
         })
         .insert(Wireframe);
