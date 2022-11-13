@@ -1,4 +1,5 @@
 use bevy::app::PluginGroupBuilder;
+use bevy::input::mouse::MouseButtonInput;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -97,7 +98,7 @@ impl Plugin for Core {
             .add_state(AppState::Help)
             .add_system(bevy::window::close_on_esc)
             .add_startup_system(disable_rapier_gravity)
-            .add_startup_system(hide_cursor)
+            //.add_startup_system(hide_cursor)
             .add_system(handle_game_state)
             .add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
@@ -114,15 +115,34 @@ fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
     rapier_config.gravity = Vec3::ZERO;
 }
 
-fn handle_game_state(mut app_state: ResMut<State<AppState>>, keys: Res<Input<KeyCode>>) {
+/*
+fn hide_cursor(mut windows: ResMut<Windows>) {
+    let window = windows.get_primary_mut().unwrap();
+    window.set_cursor_visibility(false);
+    window.set_cursor_lock_mode(true);
+}
+ */
+
+fn handle_game_state(
+    mut app_state: ResMut<State<AppState>>,
+    keys: Res<Input<KeyCode>>,
+    mouse_button_input_events: EventReader<MouseButtonInput>,
+    mut windows: ResMut<Windows>,
+) {
     use AppState::*;
     use KeyCode::*;
-    let next_state =
+    let next_state = if *app_state.current() == Help && !mouse_button_input_events.is_empty() {
+        let window = windows.get_primary_mut().unwrap();
+        window.set_cursor_visibility(false);
+        window.set_cursor_lock_mode(true);
+        Some(Playing)
+    } else {
         keys.get_just_pressed()
             .fold(None, |_state, key| match (*app_state.current(), *key) {
                 (Playing, P | H | M) => Some(Help),
                 (_, _) => Some(Playing),
-            });
+            })
+    };
     if let Some(state) = next_state {
         let _ = app_state.overwrite_set(state);
     }
