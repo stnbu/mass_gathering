@@ -114,7 +114,8 @@ impl Plugin for Core {
             .add_plugin(bevy::render::RenderPlugin)
             .add_plugin(bevy::core_pipeline::CorePipelinePlugin)
             .add_plugin(bevy::pbr::PbrPlugin)
-            .add_plugin(bevy::gilrs::GilrsPlugin);
+	    // ...
+	    ;
 
         #[cfg(not(debug_assertions))]
         {
