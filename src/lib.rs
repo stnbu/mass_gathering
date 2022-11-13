@@ -44,7 +44,6 @@ impl Plugin for SpacecraftPlugin {
                         set_default_vector_ball_visibility.after(relay_vector_ball_updates),
                     )
                     .with_system(update_vector_ball.after(set_default_vector_ball_visibility))
-                    .with_system(create_vector_ball.after(update_vector_ball))
                     .with_system(fire_on_hot_planet)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
@@ -58,6 +57,7 @@ impl Plugin for SpacecraftPlugin {
                     ),
             )
             .add_startup_system(spacecraft_setup)
+            .add_startup_system(create_vector_ball_singletons)
             .add_system(set_camera_viewports)
             .add_system_set(SystemSet::on_update(AppState::Help).with_system(helpscreen));
     }

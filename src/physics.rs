@@ -302,7 +302,7 @@ pub enum VectorBallElement {
     Force,
 }
 
-use crate::Cone;
+use crate::prelude::{Cone, Cylinder};
 
 #[derive(Component)]
 pub struct VectorBall(pub Entity);
@@ -313,7 +313,7 @@ pub fn set_default_vector_ball_visibility(
     vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = false);
 }
 
-pub fn create_vector_ball(
+pub fn _create_vector_ball(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -372,7 +372,6 @@ pub fn update_vector_ball(
         &VectorBall,
         &VectorBallElement,
     )>,
-    mut vector_ball_create: EventWriter<VectorBallCreate>,
 ) {
     for VectorBallUpdate {
         planet,
@@ -381,7 +380,6 @@ pub fn update_vector_ball(
         vector,
     } in vector_ball_updates.iter()
     {
-        let mut found = false;
         for (mut transform, mut visibility, VectorBall(parent_planet), element_) in
             vector_ball_query.iter_mut()
         {
@@ -390,34 +388,18 @@ pub fn update_vector_ball(
             }
             match element_ {
                 VectorBallElement::Ball => {
-                    found = true;
                     transform.translation = *origin;
                     visibility.is_visible = true;
                 }
                 VectorBallElement::Force => {
-                    let vector = vector.unwrap();
-                    found = true;
-                    transform.translation = *origin + vector;
+                    transform.translation = *origin;
                     visibility.is_visible = true;
                 }
                 VectorBallElement::Momentum => {
-                    let vector = vector.unwrap();
-                    let length = vector.length();
-                    found = true;
-                    transform.scale = Vec3::new(1.0, length, 1.0);
                     transform.translation = *origin;
-                    transform.translation += vector / 2.0;
-                    // + vector.normalize() * VB_ORIGIN_BALL_RADIUS * 1.1;
-                    transform.rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
                     visibility.is_visible = true;
                 }
             }
-        }
-        if !found {
-            vector_ball_create.send(VectorBallCreate {
-                planet: *planet,
-                element: *element,
-            });
         }
     }
 }
@@ -458,4 +440,79 @@ pub fn relay_vector_ball_updates(
             });
         }
     }
+}
+
+const BALL_RADIUS: f32 = 3.5;
+const FLOAT_HEIGHT: f32 = 2.0;
+const VECTOR_LENGTH: f32 = 14.0;
+const VECTOR_SCALE: f32 = 1.0;
+
+pub fn create_vector_ball_singletons(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
+    [VectorBallElement::Momentum, VectorBallElement::Force]
+        .iter()
+        .for_each(|element_kind| {
+            commands
+                .spawn_bundle(SpatialBundle::default())
+                .with_children(|child| {
+                    child
+                        .spawn_bundle(PbrBundle {
+                            visibility: Visibility { is_visible: false },
+                            mesh: meshes.add(
+                                (Cone {
+                                    radius: 2.0 * VECTOR_SCALE,
+                                    height: 2.0 * VECTOR_SCALE,
+                                    ..Default::default()
+                                })
+                                .into(),
+                            ),
+                            transform: Transform::from_xyz(
+                                0.0,
+                                VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
+                                0.0,
+                            ),
+                            material: materials.add(Color::GREEN.into()),
+                            ..Default::default()
+                        })
+                        .insert(*element_kind);
+                    child.spawn_bundle(PbrBundle {
+                        visibility: Visibility { is_visible: false },
+                        mesh: meshes.add(
+                            (Cylinder {
+                                height: vector_cylinder_length,
+                                radius_bottom: VECTOR_SCALE,
+                                radius_top: VECTOR_SCALE,
+                                ..Default::default()
+                            })
+                            .into(),
+                        ),
+                        transform: Transform::from_xyz(
+                            0.0,
+                            vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
+                            0.0,
+                        ),
+                        material: materials.add(Color::GREEN.into()),
+                        ..Default::default()
+                    });
+                })
+                .insert(*element_kind);
+        });
+    commands
+        .spawn_bundle(PbrBundle {
+            visibility: Visibility { is_visible: false },
+            mesh: meshes.add(
+                (shape::Icosphere {
+                    radius: BALL_RADIUS,
+                    ..Default::default()
+                })
+                .into(),
+            ),
+            material: materials.add(Color::GREEN.into()),
+            ..Default::default()
+        })
+        .insert(VectorBallElement::Ball);
 }
