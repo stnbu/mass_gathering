@@ -10,15 +10,11 @@ mod physics;
 use physics::*;
 
 mod craft;
-use craft::*;
-
-mod cone;
-use cone::Cone;
-
 mod helpscreen;
-use helpscreen::*;
-
 pub mod prelude;
+mod shapes;
+
+use prelude::*;
 
 pub struct FullGame;
 
