@@ -5,11 +5,12 @@ use mass_gathering::prelude::*;
 
 fn main() {
     App::new()
+        .add_plugins(FullGame)
         .insert_resource(WgpuSettings {
             features: WgpuFeatures::POLYGON_MODE_LINE,
             ..default()
         })
-        .add_plugins(DefaultPlugins)
+        //.add_plugins(DefaultPlugins)
         .add_plugin(WireframePlugin)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
@@ -23,7 +24,6 @@ fn main() {
             trails: true,
             trail_ttl: 20_000,
         })
-        .add_plugins(FullGame)
         .add_startup_system(setup)
         .run();
 }
