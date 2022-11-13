@@ -10,7 +10,6 @@ fn main() {
             features: WgpuFeatures::POLYGON_MODE_LINE,
             ..default()
         })
-        //.add_plugins(DefaultPlugins)
         .add_plugin(WireframePlugin)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
