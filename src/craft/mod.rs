@@ -108,13 +108,21 @@ pub fn drift(mut query: Query<&mut Transform, With<Spacecraft>>) {
     }
 }
 
+const BALL_RADIUS: f32 = 3.5;
+const FLOAT_HEIGHT: f32 = 2.0;
+const VECTOR_LENGTH: f32 = 14.0;
+const VECTOR_SCALE: f32 = 1.0;
+
+use crate::mg_shapes::*;
+use crate::physics::VectorBallElement;
+
 pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     config: Res<SpacecraftConfig>,
 ) {
-    commands
+    let spacecraft = commands
         .spawn_bundle(TransformBundle::from_transform(config.start_transform))
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft {
@@ -219,7 +227,73 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-        });
+        })
+        .id();
+
+    let vector_ball = commands
+        .spawn_bundle(PbrBundle {
+            mesh: meshes.add(
+                (shape::Icosphere {
+                    radius: BALL_RADIUS,
+                    ..Default::default()
+                })
+                .into(),
+            ),
+            transform: Transform::from_xyz(0.0, 0.0, -7.0).with_scale(Vec3::splat(0.1)),
+            material: materials.add(Color::GREEN.into()),
+            ..Default::default()
+        })
+        .insert(VectorBallElement::Ball)
+        .with_children(|child| {
+            let vector_cylinder_length =
+                VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
+            [VectorBallElement::Momentum, VectorBallElement::Force]
+                .iter()
+                .for_each(|element_kind| {
+                    child
+                        .spawn_bundle(PbrBundle {
+                            mesh: meshes.add(
+                                (Cone {
+                                    radius: 2.0 * VECTOR_SCALE,
+                                    height: 2.0 * VECTOR_SCALE,
+                                    ..Default::default()
+                                })
+                                .into(),
+                            ),
+                            transform: Transform::from_xyz(
+                                0.0,
+                                VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
+                                0.0,
+                            ),
+                            material: materials.add(Color::GREEN.into()),
+                            ..Default::default()
+                        })
+                        .insert(*element_kind);
+                    child
+                        .spawn_bundle(PbrBundle {
+                            mesh: meshes.add(
+                                (Cylinder {
+                                    height: vector_cylinder_length,
+                                    radius_bottom: VECTOR_SCALE,
+                                    radius_top: VECTOR_SCALE,
+                                    ..Default::default()
+                                })
+                                .into(),
+                            ),
+                            transform: Transform::from_xyz(
+                                0.0,
+                                vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
+                                0.0,
+                            ),
+                            material: materials.add(Color::GREEN.into()),
+                            ..Default::default()
+                        })
+                        .insert(*element_kind);
+                })
+        })
+        .id();
+
+    commands.entity(spacecraft).add_child(vector_ball);
 }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {

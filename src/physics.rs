@@ -301,67 +301,13 @@ pub enum VectorBallElement {
     Momentum,
     Force,
 }
-
-use crate::prelude::{Cone, Cylinder};
-
 #[derive(Component)]
 pub struct VectorBall(pub Entity);
 
 pub fn set_default_vector_ball_visibility(
-    mut vector_ball_query: Query<&mut Visibility, With<VectorBall>>,
+    mut vector_ball_query: Query<&mut Visibility, With<VectorBallElement>>,
 ) {
-    vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = false);
-}
-
-pub fn _create_vector_ball(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut vector_ball_create: EventReader<VectorBallCreate>,
-) {
-    for VectorBallCreate { planet, element } in vector_ball_create.iter() {
-        match element {
-            VectorBallElement::Ball => {
-                commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.2,
-                            ..default()
-                        })),
-                        material: materials.add(Color::ORANGE.into()), // orange is for origin
-                        visibility: Visibility { is_visible: false },
-                        ..default()
-                    })
-                    .insert(VectorBall(*planet))
-                    .insert(VectorBallElement::Ball);
-            }
-            VectorBallElement::Momentum => {
-                commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(Cone::default())),
-                        material: materials.add(Color::MAROON.into()), // maroon is for momentum
-                        visibility: Visibility { is_visible: false },
-                        ..default()
-                    })
-                    .insert(VectorBall(*planet))
-                    .insert(VectorBallElement::Momentum);
-            }
-            VectorBallElement::Force => {
-                commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.08,
-                            ..default()
-                        })),
-                        material: materials.add(Color::FUCHSIA.into()), // fuchsia is for force
-                        visibility: Visibility { is_visible: false },
-                        ..default()
-                    })
-                    .insert(VectorBall(*planet))
-                    .insert(VectorBallElement::Force);
-            }
-        }
-    }
+    vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = true);
 }
 
 pub fn update_vector_ball(
@@ -383,8 +329,6 @@ pub fn update_vector_ball(
         for (mut transform, mut visibility, VectorBall(parent_planet), element_) in
             vector_ball_query.iter_mut()
         {
-            transform.translation = *origin;
-            transform.scale = Vec3::splat(10.0);
             visibility.is_visible = true;
         }
     }
@@ -426,79 +370,4 @@ pub fn relay_vector_ball_updates(
             });
         }
     }
-}
-
-const BALL_RADIUS: f32 = 3.5;
-const FLOAT_HEIGHT: f32 = 2.0;
-const VECTOR_LENGTH: f32 = 14.0;
-const VECTOR_SCALE: f32 = 1.0;
-
-pub fn create_vector_ball_singletons(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
-    [VectorBallElement::Momentum, VectorBallElement::Force]
-        .iter()
-        .for_each(|element_kind| {
-            commands
-                .spawn_bundle(SpatialBundle::default())
-                .with_children(|child| {
-                    child
-                        .spawn_bundle(PbrBundle {
-                            visibility: Visibility { is_visible: true },
-                            mesh: meshes.add(
-                                (Cone {
-                                    radius: 2.0 * VECTOR_SCALE,
-                                    height: 2.0 * VECTOR_SCALE,
-                                    ..Default::default()
-                                })
-                                .into(),
-                            ),
-                            transform: Transform::from_xyz(
-                                0.0,
-                                VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
-                                0.0,
-                            ),
-                            material: materials.add(Color::GREEN.into()),
-                            ..Default::default()
-                        })
-                        .insert(*element_kind);
-                    child.spawn_bundle(PbrBundle {
-                        visibility: Visibility { is_visible: true },
-                        mesh: meshes.add(
-                            (Cylinder {
-                                height: vector_cylinder_length,
-                                radius_bottom: VECTOR_SCALE,
-                                radius_top: VECTOR_SCALE,
-                                ..Default::default()
-                            })
-                            .into(),
-                        ),
-                        transform: Transform::from_xyz(
-                            0.0,
-                            vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
-                            0.0,
-                        ),
-                        material: materials.add(Color::GREEN.into()),
-                        ..Default::default()
-                    });
-                })
-                .insert(*element_kind);
-        });
-    commands
-        .spawn_bundle(PbrBundle {
-            visibility: Visibility { is_visible: true },
-            mesh: meshes.add(
-                (shape::Icosphere {
-                    radius: BALL_RADIUS,
-                    ..Default::default()
-                })
-                .into(),
-            ),
-            material: materials.add(Color::GREEN.into()),
-            ..Default::default()
-        })
-        .insert(VectorBallElement::Ball);
 }
