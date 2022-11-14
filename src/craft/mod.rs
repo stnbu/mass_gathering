@@ -242,7 +242,9 @@ pub fn spacecraft_setup(
         .iter()
         .for_each(|element_kind| {
             commands
-                .spawn_bundle(TransformBundle::default())
+                .spawn_bundle(TransformBundle::from_transform(Transform::from_scale(
+                    Vec3::splat(0.03),
+                )))
                 .insert_bundle(VisibilityBundle::default())
                 //.spawn_bundle(SpatialBundle::default())
                 .insert(*element_kind)
