@@ -294,8 +294,6 @@ pub enum VectorBallElement {
     Momentum,
     Force,
 }
-#[derive(Component)]
-pub struct VectorBall(pub Entity);
 
 pub fn set_default_vector_ball_visibility(
     mut vector_ball_query: Query<&mut Visibility, With<VectorBallElement>>,
