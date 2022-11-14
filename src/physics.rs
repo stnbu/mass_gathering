@@ -307,6 +307,11 @@ pub fn update_vector_ball(
 ) {
     for VectorBallUpdate { element, vector } in vector_ball_updates.iter() {
         for (mut transform, mut visibility, element_) in vector_ball_query.iter_mut() {
+            if *element == *element_ && *element == VectorBallElement::Momentum {
+                let new_direction = vector.unwrap().normalize();
+                debug!("wee: {new_direction:?}");
+                transform.rotation = Quat::from_rotation_arc(Vec3::ZERO, new_direction);
+            }
             visibility.is_visible = true;
         }
     }
