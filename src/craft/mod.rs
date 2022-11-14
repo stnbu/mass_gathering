@@ -240,6 +240,9 @@ pub fn spacecraft_setup(
         .id();
 
     let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT;
+    let cylinder_translation = vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT;
+    let cone_translation = VECTOR_LENGTH - CONE_HEIGHT / 2.0;
+
     [VectorBallElement::Momentum]
         .iter()
         .for_each(|element_kind| {
@@ -254,7 +257,6 @@ pub fn spacecraft_setup(
                 .insert(*element_kind)
                 .with_children(|child| {
                     child.spawn_bundle(PbrBundle {
-                        visibility: Visibility { is_visible: true },
                         mesh: meshes.add(
                             (Cone {
                                 radius: CONE_RADIUS,
@@ -263,12 +265,11 @@ pub fn spacecraft_setup(
                             })
                             .into(),
                         ),
-                        transform: Transform::from_xyz(0.0, VECTOR_LENGTH - CONE_HEIGHT / 2.0, 0.0),
+                        transform: Transform::from_xyz(0.0, cone_translation, 0.0),
                         material: materials.add(Color::GREEN.into()),
                         ..Default::default()
                     });
                     child.spawn_bundle(PbrBundle {
-                        visibility: Visibility { is_visible: true },
                         mesh: meshes.add(
                             (Cylinder {
                                 height: 1.0,
@@ -278,16 +279,8 @@ pub fn spacecraft_setup(
                             })
                             .into(),
                         ),
-                        transform: Transform::from_xyz(
-                            0.0,
-                            vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
-                            0.0,
-                        )
-                        .with_scale(Vec3::new(
-                            1.0,
-                            vector_cylinder_length,
-                            1.0,
-                        )),
+                        transform: Transform::from_xyz(0.0, cylinder_translation, 0.0)
+                            .with_scale(Vec3::new(1.0, vector_cylinder_length, 1.0)),
                         material: materials.add(Color::GREEN.into()),
                         ..Default::default()
                     });
@@ -310,6 +303,24 @@ pub fn spacecraft_setup(
             //                         vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
             //                         0.0,
             //                     ),
+
+            /*
+            let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT;
+            let cylinder_translation = vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT
+            let cone_translation = VECTOR_LENGTH - CONE_HEIGHT / 2.0
+
+                        cone transform: Transform::from_xyz(0.0, VECTOR_LENGTH - CONE_HEIGHT / 2.0, 0.0),
+                        cylinder transform: Transform::from_xyz(
+                                                    0.0,
+                                                    vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
+                                                    0.0,
+                                                )
+                                                .with_scale(Vec3::new(
+                                                    1.0,
+                                                    vector_cylinder_length,
+                                                    1.0,
+                                                )),
+                        */
         })
 }
 
