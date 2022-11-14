@@ -300,22 +300,15 @@ pub struct VectorBall(pub Entity);
 pub fn set_default_vector_ball_visibility(
     mut vector_ball_query: Query<&mut Visibility, With<VectorBallElement>>,
 ) {
-    vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = true);
+    vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = false);
 }
 
 pub fn update_vector_ball(
     mut vector_ball_updates: EventReader<VectorBallUpdate>,
-    mut vector_ball_query: Query<(
-        &mut Transform,
-        &mut Visibility,
-        &VectorBall,
-        &VectorBallElement,
-    )>,
+    mut vector_ball_query: Query<(&mut Transform, &mut Visibility, &VectorBallElement)>,
 ) {
     for VectorBallUpdate { element, vector } in vector_ball_updates.iter() {
-        for (mut transform, mut visibility, VectorBall(parent_planet), element_) in
-            vector_ball_query.iter_mut()
-        {
+        for (mut transform, mut visibility, element_) in vector_ball_query.iter_mut() {
             visibility.is_visible = true;
         }
     }
