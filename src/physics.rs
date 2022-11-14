@@ -305,9 +305,10 @@ pub fn update_vector_ball(
     for VectorBallUpdate { vector, origin, .. } in vector_ball_updates.iter() {
         let (mut transform, mut visibility) = vector_ball_query.get_single_mut().unwrap();
         let new_direction = vector.normalize();
-        debug!("wee: {new_direction:?}");
+        let new_length = vector.length();
         visibility.is_visible = true;
         transform.translation = *origin;
+        transform.scale = Vec3::new(0.03, 0.03 * new_length / 14.0, 0.03);
         transform.rotation = Quat::from_rotation_arc(Vec3::Y, new_direction);
     }
 }
