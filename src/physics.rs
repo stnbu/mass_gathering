@@ -383,23 +383,9 @@ pub fn update_vector_ball(
         for (mut transform, mut visibility, VectorBall(parent_planet), element_) in
             vector_ball_query.iter_mut()
         {
-            if *parent_planet != *planet || *element != *element_ {
-                continue;
-            }
-            match element_ {
-                VectorBallElement::Ball => {
-                    transform.translation = *origin;
-                    visibility.is_visible = true;
-                }
-                VectorBallElement::Force => {
-                    transform.translation = *origin;
-                    visibility.is_visible = true;
-                }
-                VectorBallElement::Momentum => {
-                    transform.translation = *origin;
-                    visibility.is_visible = true;
-                }
-            }
+            transform.translation = *origin;
+            transform.scale = Vec3::splat(10.0);
+            visibility.is_visible = true;
         }
     }
 }
@@ -461,7 +447,7 @@ pub fn create_vector_ball_singletons(
                 .with_children(|child| {
                     child
                         .spawn_bundle(PbrBundle {
-                            visibility: Visibility { is_visible: false },
+                            visibility: Visibility { is_visible: true },
                             mesh: meshes.add(
                                 (Cone {
                                     radius: 2.0 * VECTOR_SCALE,
@@ -480,7 +466,7 @@ pub fn create_vector_ball_singletons(
                         })
                         .insert(*element_kind);
                     child.spawn_bundle(PbrBundle {
-                        visibility: Visibility { is_visible: false },
+                        visibility: Visibility { is_visible: true },
                         mesh: meshes.add(
                             (Cylinder {
                                 height: vector_cylinder_length,
@@ -503,7 +489,7 @@ pub fn create_vector_ball_singletons(
         });
     commands
         .spawn_bundle(PbrBundle {
-            visibility: Visibility { is_visible: false },
+            visibility: Visibility { is_visible: true },
             mesh: meshes.add(
                 (shape::Icosphere {
                     radius: BALL_RADIUS,
