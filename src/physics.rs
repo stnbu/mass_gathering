@@ -290,9 +290,8 @@ pub struct VectorBallUpdate {
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq)]
 pub enum VectorBallElement {
-    Ball,
     Momentum,
-    Force,
+    Bob,
 }
 
 pub fn set_default_vector_ball_visibility(
@@ -310,9 +309,9 @@ pub fn update_vector_ball(
             if *element == *element_ && *element == VectorBallElement::Momentum {
                 let new_direction = vector.unwrap().normalize();
                 debug!("wee: {new_direction:?}");
-                transform.rotation = Quat::from_rotation_arc(Vec3::ZERO, new_direction);
+                visibility.is_visible = true;
+                //transform.rotation = Quat::from_rotation_arc(Vec3::ZERO, new_direction);
             }
-            visibility.is_visible = true;
         }
     }
 }
@@ -326,19 +325,10 @@ pub fn relay_vector_ball_updates(
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
-            vector_ball_updates.send(VectorBallUpdate {
-                element: VectorBallElement::Ball,
-                vector: None,
-            });
             let scaled_momentum = momentum.velocity * momentum.mass * VB_SCALING_FACTOR;
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Momentum,
                 vector: Some(scaled_momentum),
-            });
-            let scaled_force = momentum.force_ro * VB_SCALING_FACTOR;
-            vector_ball_updates.send(VectorBallUpdate {
-                element: VectorBallElement::Force,
-                vector: Some(scaled_force),
             });
         }
     }

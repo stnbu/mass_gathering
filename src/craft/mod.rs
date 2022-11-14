@@ -226,76 +226,64 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-        })
-        .id();
-
-    let vector_ball = commands
-        .spawn_bundle(PbrBundle {
-            visibility: Visibility { is_visible: false },
-            mesh: meshes.add(
-                (shape::Icosphere {
-                    radius: BALL_RADIUS,
-                    ..Default::default()
-                })
-                .into(),
-            ),
-            transform: Transform::from_xyz(-3.0, -2.0, -7.0).with_scale(Vec3::splat(0.03)),
-            material: materials.add(Color::GREEN.into()),
-            ..Default::default()
-        })
-        .insert(VectorBallElement::Ball)
-        .with_children(|child| {
+            // momentum vector
             let vector_cylinder_length =
                 VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
-            [VectorBallElement::Momentum, VectorBallElement::Force]
+            [VectorBallElement::Momentum]
                 .iter()
                 .for_each(|element_kind| {
                     child
-                        .spawn_bundle(PbrBundle {
-                            visibility: Visibility { is_visible: false },
-                            mesh: meshes.add(
-                                (Cone {
-                                    radius: 2.0 * VECTOR_SCALE,
-                                    height: 2.0 * VECTOR_SCALE,
-                                    ..Default::default()
-                                })
-                                .into(),
-                            ),
-                            transform: Transform::from_xyz(
-                                0.0,
-                                VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
-                                0.0,
-                            ),
-                            material: materials.add(Color::GREEN.into()),
-                            ..Default::default()
-                        })
-                        .insert(*element_kind);
-                    child
-                        .spawn_bundle(PbrBundle {
-                            visibility: Visibility { is_visible: false },
-                            mesh: meshes.add(
-                                (Cylinder {
-                                    height: vector_cylinder_length,
-                                    radius_bottom: VECTOR_SCALE,
-                                    radius_top: VECTOR_SCALE,
-                                    ..Default::default()
-                                })
-                                .into(),
-                            ),
-                            transform: Transform::from_xyz(
-                                0.0,
-                                vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
-                                0.0,
-                            ),
-                            material: materials.add(Color::GREEN.into()),
-                            ..Default::default()
-                        })
-                        .insert(*element_kind);
+                        .spawn_bundle(TransformBundle::from_transform(
+                            Transform::from_xyz(-3.0, -2.0, -7.0).with_scale(Vec3::splat(0.03)),
+                        ))
+                        .insert_bundle(VisibilityBundle::default())
+                        //.spawn_bundle(SpatialBundle::default())
+                        .insert(*element_kind)
+                        .with_children(|grandchild| {
+                            // blah
+                            grandchild.spawn_bundle(PbrBundle {
+                                visibility: Visibility { is_visible: true },
+                                mesh: meshes.add(
+                                    (Cone {
+                                        radius: 2.0 * VECTOR_SCALE,
+                                        height: 2.0 * VECTOR_SCALE,
+                                        ..Default::default()
+                                    })
+                                    .into(),
+                                ),
+                                transform: Transform::from_xyz(
+                                    0.0,
+                                    VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
+                                    0.0,
+                                ),
+                                material: materials.add(Color::GREEN.into()),
+                                ..Default::default()
+                            });
+                            grandchild.spawn_bundle(PbrBundle {
+                                visibility: Visibility { is_visible: true },
+                                mesh: meshes.add(
+                                    (Cylinder {
+                                        height: vector_cylinder_length,
+                                        radius_bottom: VECTOR_SCALE,
+                                        radius_top: VECTOR_SCALE,
+                                        ..Default::default()
+                                    })
+                                    .into(),
+                                ),
+                                transform: Transform::from_xyz(
+                                    0.0,
+                                    vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
+                                    0.0,
+                                ),
+                                material: materials.add(Color::GREEN.into()),
+                                ..Default::default()
+                            });
+                            // blah
+                        });
                 })
+            // end of spacecraft children
         })
         .id();
-
-    commands.entity(spacecraft).add_child(vector_ball);
 }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
