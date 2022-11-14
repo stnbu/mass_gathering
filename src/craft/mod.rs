@@ -127,7 +127,6 @@ pub fn spacecraft_setup(
         .insert_bundle(VisibilityBundle::default())
         .insert(Spacecraft {
             speed: config.start_speed,
-            ..Default::default()
         })
         .with_children(|parent| {
             if config.stereo_enabled {
@@ -232,6 +231,7 @@ pub fn spacecraft_setup(
 
     let vector_ball = commands
         .spawn_bundle(PbrBundle {
+            visibility: Visibility { is_visible: false },
             mesh: meshes.add(
                 (shape::Icosphere {
                     radius: BALL_RADIUS,
@@ -252,6 +252,7 @@ pub fn spacecraft_setup(
                 .for_each(|element_kind| {
                     child
                         .spawn_bundle(PbrBundle {
+                            visibility: Visibility { is_visible: false },
                             mesh: meshes.add(
                                 (Cone {
                                     radius: 2.0 * VECTOR_SCALE,
@@ -271,6 +272,7 @@ pub fn spacecraft_setup(
                         .insert(*element_kind);
                     child
                         .spawn_bundle(PbrBundle {
+                            visibility: Visibility { is_visible: false },
                             mesh: meshes.add(
                                 (Cylinder {
                                     height: vector_cylinder_length,
@@ -438,13 +440,13 @@ pub fn spawn_projectile_explosion_animation(
 		    local_impact_site,
                 );
             } else {
-                debug!(
+                warn!(
                     "While spawning explosion animation: planet {:?} not found",
                     event.planet
                 );
             }
         } else {
-            debug!(
+            warn!(
                 "While spawning explosion animation: projectile {:?} not found",
                 event.projectile
             );
@@ -506,7 +508,7 @@ pub fn move_projectiles(
             trace!(" Projectile {projectile:?} traveling toward target on planet {:?} by delta_p={translation:?}", target.planet);
             projectile_transform.translation += translation;
         } else {
-            debug!(
+            warn!(
                 "While moving projectile: planet {:?} not found",
                 target.planet
             );
