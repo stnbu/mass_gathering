@@ -245,8 +245,10 @@ pub fn spacecraft_setup(
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_scale(
                     Vec3::splat(0.03),
                 )))
-                .insert_bundle(VisibilityBundle::default())
-                //.spawn_bundle(SpatialBundle::default())
+                .insert_bundle(VisibilityBundle {
+                    visibility: Visibility { is_visible: false },
+                    ..Default::default()
+                })
                 .insert(*element_kind)
                 .with_children(|child| {
                     child.spawn_bundle(PbrBundle {

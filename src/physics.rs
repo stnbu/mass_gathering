@@ -300,7 +300,7 @@ pub fn update_vector_ball(
     mut vector_ball_query: Query<(&mut Transform, &mut Visibility), With<VectorBallElement>>,
 ) {
     if vector_ball_updates.is_empty() {
-        vector_ball_query.for_each_mut(|(_, mut visibility)| visibility.is_visible = true);
+        vector_ball_query.for_each_mut(|(_, mut visibility)| visibility.is_visible = false);
     }
     for VectorBallUpdate { vector, origin, .. } in vector_ball_updates.iter() {
         let (mut transform, mut visibility) = vector_ball_query.get_single_mut().unwrap();
