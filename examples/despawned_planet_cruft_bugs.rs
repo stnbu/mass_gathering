@@ -54,15 +54,6 @@ fn setup(
     */
 
     spawn_planet(
-        10.0,
-        Vec3::ZERO,
-        Vec3::ZERO,
-        Color::RED,
-        &mut commands,
-        &mut meshes,
-        &mut materials,
-    );
-    spawn_planet(
         9.0,
         Vec3::Z * 30.0,
         Vec3::Z * -2.0,

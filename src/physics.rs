@@ -308,7 +308,7 @@ pub fn update_vector_ball(
         debug!("wee: {new_direction:?}");
         visibility.is_visible = true;
         transform.translation = *origin;
-        transform.rotation = Quat::from_rotation_arc(Vec3::ZERO, new_direction);
+        transform.rotation = Quat::from_rotation_arc(Vec3::Y, new_direction);
     }
 }
 
