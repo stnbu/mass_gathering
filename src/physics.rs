@@ -294,25 +294,19 @@ pub enum VectorBallElement {
     Bob,
 }
 
-pub fn set_default_vector_ball_visibility(
-    mut vector_ball_query: Query<&mut Visibility, With<VectorBallElement>>,
-) {
-    vector_ball_query.for_each_mut(|mut visibility| visibility.is_visible = false);
-}
-
 pub fn update_vector_ball(
     mut vector_ball_updates: EventReader<VectorBallUpdate>,
-    mut vector_ball_query: Query<(&mut Transform, &mut Visibility, &VectorBallElement)>,
+    mut vector_ball_query: Query<(&mut Transform, &mut Visibility), With<VectorBallElement>>,
 ) {
-    for VectorBallUpdate { element, vector } in vector_ball_updates.iter() {
-        for (mut transform, mut visibility, element_) in vector_ball_query.iter_mut() {
-            if *element == *element_ && *element == VectorBallElement::Momentum {
-                let new_direction = vector.unwrap().normalize();
-                debug!("wee: {new_direction:?}");
-                visibility.is_visible = true;
-                //transform.rotation = Quat::from_rotation_arc(Vec3::ZERO, new_direction);
-            }
-        }
+    if vector_ball_updates.is_empty() {
+        vector_ball_query.for_each_mut(|(_, mut visibility)| visibility.is_visible = false);
+    }
+    for VectorBallUpdate { vector, .. } in vector_ball_updates.iter() {
+        let (mut transform, mut visibility) = vector_ball_query.get_single_mut().unwrap();
+        let new_direction = vector.unwrap().normalize();
+        debug!("wee: {new_direction:?}");
+        visibility.is_visible = true;
+        transform.rotate(Quat::from_rotation_arc(Vec3::ZERO, new_direction));
     }
 }
 
