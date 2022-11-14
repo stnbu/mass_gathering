@@ -239,7 +239,7 @@ pub fn spacecraft_setup(
                 })
                 .into(),
             ),
-            transform: Transform::from_xyz(0.0, 0.0, -7.0).with_scale(Vec3::splat(0.1)),
+            transform: Transform::from_xyz(-3.0, -2.0, -7.0).with_scale(Vec3::splat(0.03)),
             material: materials.add(Color::GREEN.into()),
             ..Default::default()
         })
