@@ -284,8 +284,6 @@ pub fn handle_freefall(
 }
 
 pub struct VectorBallUpdate {
-    planet: Entity,
-    origin: Vec3,
     element: VectorBallElement,
     vector: Option<Vec3>,
 }
@@ -314,13 +312,7 @@ pub fn update_vector_ball(
         &VectorBallElement,
     )>,
 ) {
-    for VectorBallUpdate {
-        planet,
-        origin,
-        element,
-        vector,
-    } in vector_ball_updates.iter()
-    {
+    for VectorBallUpdate { element, vector } in vector_ball_updates.iter() {
         for (mut transform, mut visibility, VectorBall(parent_planet), element_) in
             vector_ball_query.iter_mut()
         {
@@ -329,8 +321,6 @@ pub fn update_vector_ball(
     }
 }
 
-const VB_RADII_AHEAD: f32 = 1.0;
-const VB_ORIGIN_BALL_RADIUS: f32 = 0.5;
 const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
 
 pub fn relay_vector_ball_updates(
@@ -339,27 +329,18 @@ pub fn relay_vector_ball_updates(
     mut vector_ball_updates: EventWriter<VectorBallUpdate>,
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
-        if let Ok((transform, momentum)) = planet_query.get(planet) {
-            let planet_radius = mass_to_radius(momentum.mass);
-            let origin_local = Vec3::Y * (planet_radius + (VB_RADII_AHEAD * VB_ORIGIN_BALL_RADIUS));
-            let origin = transform.translation + origin_local;
+        if let Ok((_, momentum)) = planet_query.get(planet) {
             vector_ball_updates.send(VectorBallUpdate {
-                planet,
-                origin,
                 element: VectorBallElement::Ball,
                 vector: None,
             });
             let scaled_momentum = momentum.velocity * momentum.mass * VB_SCALING_FACTOR;
             vector_ball_updates.send(VectorBallUpdate {
-                planet,
-                origin,
                 element: VectorBallElement::Momentum,
                 vector: Some(scaled_momentum),
             });
             let scaled_force = momentum.force_ro * VB_SCALING_FACTOR;
             vector_ball_updates.send(VectorBallUpdate {
-                planet,
-                origin,
                 element: VectorBallElement::Force,
                 vector: Some(scaled_force),
             });
