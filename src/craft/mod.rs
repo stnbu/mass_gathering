@@ -111,7 +111,9 @@ pub fn drift(mut query: Query<&mut Transform, With<Spacecraft>>) {
 const BALL_RADIUS: f32 = 3.5;
 const FLOAT_HEIGHT: f32 = 2.0;
 const VECTOR_LENGTH: f32 = 14.0;
-const VECTOR_SCALE: f32 = 1.0;
+const CYLINDER_RADIUS: f32 = 1.0;
+const CONE_HEIGHT: f32 = 2.0;
+const CONE_RADIUS: f32 = 2.0;
 
 use crate::mg_shapes::*;
 use crate::physics::VectorBallElement;
@@ -237,7 +239,7 @@ pub fn spacecraft_setup(
         })
         .id();
 
-    let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
+    let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT;
     [VectorBallElement::Momentum]
         .iter()
         .for_each(|element_kind| {
@@ -255,17 +257,13 @@ pub fn spacecraft_setup(
                         visibility: Visibility { is_visible: true },
                         mesh: meshes.add(
                             (Cone {
-                                radius: 2.0 * VECTOR_SCALE,
-                                height: 2.0 * VECTOR_SCALE,
+                                radius: CONE_RADIUS,
+                                height: CONE_HEIGHT,
                                 ..Default::default()
                             })
                             .into(),
                         ),
-                        transform: Transform::from_xyz(
-                            0.0,
-                            VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
-                            0.0,
-                        ),
+                        transform: Transform::from_xyz(0.0, VECTOR_LENGTH - CONE_HEIGHT / 2.0, 0.0),
                         material: materials.add(Color::GREEN.into()),
                         ..Default::default()
                     });
@@ -273,9 +271,9 @@ pub fn spacecraft_setup(
                         visibility: Visibility { is_visible: true },
                         mesh: meshes.add(
                             (Cylinder {
-                                height: vector_cylinder_length,
-                                radius_bottom: VECTOR_SCALE,
-                                radius_top: VECTOR_SCALE,
+                                height: 1.0,
+                                radius_bottom: CYLINDER_RADIUS,
+                                radius_top: CYLINDER_RADIUS,
                                 ..Default::default()
                             })
                             .into(),
@@ -284,13 +282,51 @@ pub fn spacecraft_setup(
                             0.0,
                             vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
                             0.0,
-                        ),
+                        )
+                        .with_scale(Vec3::new(
+                            1.0,
+                            vector_cylinder_length,
+                            1.0,
+                        )),
                         material: materials.add(Color::GREEN.into()),
                         ..Default::default()
                     });
                 });
+
+            // 	    //
+            // 	    // just the math
+            // WHO SCALES THE _WHOLE THING_?
+            //     let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0;
+            //                         (Cone {
+            //                     transform: Transform::from_xyz(
+            //                         0.0,
+            //                         VECTOR_LENGTH - 2.0,
+            //                         0.0,
+            //                     ),
+
+            //                         (Cylinder {
+            //                     transform: Transform::from_xyz(
+            //                         0.0,
+            //                         vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
+            //                         0.0,
+            //                     ),
         })
 }
+
+// pub struct ARVectorScaling {
+//     cone_transform: Transform,
+//     cylinder_transform: Transform,
+// }
+
+// impl ARVectorScaling {
+//     pub fn from_vec3(vector: Vec3) -> Self {
+//         // HERE
+//         Self {
+//             cone_transform: foo,
+//             cylinder_transform: bar,
+//         }
+//     }
+// }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in ar_query.iter_mut() {
