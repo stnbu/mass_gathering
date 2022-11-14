@@ -503,7 +503,7 @@ pub fn move_projectiles(
                 // shouldn't it be a function of radius?
                 translation = translation_to_target * 1.1;
             }
-            debug!(" Projectile {projectile:?} traveling toward target on planet {:?} by delta_p={translation:?}", target.planet);
+            trace!(" Projectile {projectile:?} traveling toward target on planet {:?} by delta_p={translation:?}", target.planet);
             projectile_transform.translation += translation;
         } else {
             debug!(
