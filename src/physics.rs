@@ -284,8 +284,7 @@ pub fn handle_freefall(
 }
 
 pub struct VectorBallUpdate {
-    element: VectorBallElement,
-    vector: Vec3,
+    momentum: Vec3,
     origin: Vec3,
 }
 
@@ -302,13 +301,16 @@ pub fn update_vector_ball(
     if vector_ball_updates.is_empty() {
         vector_ball_query.for_each_mut(|(_, mut visibility)| visibility.is_visible = false);
     }
-    for VectorBallUpdate { vector, origin, .. } in vector_ball_updates.iter() {
+    for VectorBallUpdate {
+        momentum, origin, ..
+    } in vector_ball_updates.iter()
+    {
         let (mut transform, mut visibility) = vector_ball_query.get_single_mut().unwrap();
-        let new_direction = vector.normalize();
-        let new_length = vector.length();
+        let new_direction = momentum.normalize();
+        let new_length = momentum.length();
         visibility.is_visible = true;
         transform.translation = *origin;
-        transform.scale = Vec3::new(0.03, 0.03 * new_length / 14.0, 0.03);
+        //transform.scale = Vec3::new(0.03, 0.03 * new_length / 14.0, 0.03);
         transform.rotation = Quat::from_rotation_arc(Vec3::Y, new_direction);
     }
 }
@@ -329,8 +331,7 @@ pub fn relay_vector_ball_updates(
                 .unwrap()
                 .translation();
             vector_ball_updates.send(VectorBallUpdate {
-                element: VectorBallElement::Momentum,
-                vector: scaled_momentum,
+                momentum: scaled_momentum,
                 origin,
             });
         }

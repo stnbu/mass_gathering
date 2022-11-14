@@ -285,59 +285,8 @@ pub fn spacecraft_setup(
                         ..Default::default()
                     });
                 });
-
-            // 	    //
-            // 	    // just the math
-            // WHO SCALES THE _WHOLE THING_?
-            //     let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0;
-            //                         (Cone {
-            //                     transform: Transform::from_xyz(
-            //                         0.0,
-            //                         VECTOR_LENGTH - 2.0,
-            //                         0.0,
-            //                     ),
-
-            //                         (Cylinder {
-            //                     transform: Transform::from_xyz(
-            //                         0.0,
-            //                         vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
-            //                         0.0,
-            //                     ),
-
-            /*
-            let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT;
-            let cylinder_translation = vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT
-            let cone_translation = VECTOR_LENGTH - CONE_HEIGHT / 2.0
-
-                        cone transform: Transform::from_xyz(0.0, VECTOR_LENGTH - CONE_HEIGHT / 2.0, 0.0),
-                        cylinder transform: Transform::from_xyz(
-                                                    0.0,
-                                                    vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
-                                                    0.0,
-                                                )
-                                                .with_scale(Vec3::new(
-                                                    1.0,
-                                                    vector_cylinder_length,
-                                                    1.0,
-                                                )),
-                        */
         })
 }
-
-// pub struct ARVectorScaling {
-//     cone_transform: Transform,
-//     cylinder_transform: Transform,
-// }
-
-// impl ARVectorScaling {
-//     pub fn from_vec3(vector: Vec3) -> Self {
-//         // HERE
-//         Self {
-//             cone_transform: foo,
-//             cylinder_transform: bar,
-//         }
-//     }
-// }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in ar_query.iter_mut() {
