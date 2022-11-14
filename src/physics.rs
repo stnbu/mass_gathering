@@ -1,5 +1,5 @@
 use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
-use crate::prelude::HotPlanetEvent;
+use crate::prelude::{HotPlanetEvent, VectorBallTransform};
 use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
@@ -285,7 +285,8 @@ pub fn handle_freefall(
 
 pub struct VectorBallUpdate {
     element: VectorBallElement,
-    vector: Option<Vec3>,
+    vector: Vec3,
+    origin: Vec3,
 }
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq)]
@@ -299,14 +300,15 @@ pub fn update_vector_ball(
     mut vector_ball_query: Query<(&mut Transform, &mut Visibility), With<VectorBallElement>>,
 ) {
     if vector_ball_updates.is_empty() {
-        vector_ball_query.for_each_mut(|(_, mut visibility)| visibility.is_visible = false);
+        vector_ball_query.for_each_mut(|(_, mut visibility)| visibility.is_visible = true);
     }
-    for VectorBallUpdate { vector, .. } in vector_ball_updates.iter() {
+    for VectorBallUpdate { vector, origin, .. } in vector_ball_updates.iter() {
         let (mut transform, mut visibility) = vector_ball_query.get_single_mut().unwrap();
-        let new_direction = vector.unwrap().normalize();
+        let new_direction = vector.normalize();
         debug!("wee: {new_direction:?}");
         visibility.is_visible = true;
-        transform.rotate(Quat::from_rotation_arc(Vec3::ZERO, new_direction));
+        transform.translation = *origin;
+        transform.rotation = Quat::from_rotation_arc(Vec3::ZERO, new_direction);
     }
 }
 
@@ -314,15 +316,21 @@ const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
 
 pub fn relay_vector_ball_updates(
     planet_query: Query<(&Transform, &Momentum)>,
+    vector_ball_transform_query: Query<&GlobalTransform, With<VectorBallTransform>>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
     mut vector_ball_updates: EventWriter<VectorBallUpdate>,
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
             let scaled_momentum = momentum.velocity * momentum.mass * VB_SCALING_FACTOR;
+            let origin = vector_ball_transform_query
+                .get_single()
+                .unwrap()
+                .translation();
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Momentum,
-                vector: Some(scaled_momentum),
+                vector: scaled_momentum,
+                origin,
             });
         }
     }

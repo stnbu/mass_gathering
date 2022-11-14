@@ -116,6 +116,9 @@ const VECTOR_SCALE: f32 = 1.0;
 use crate::mg_shapes::*;
 use crate::physics::VectorBallElement;
 
+#[derive(Component)]
+pub struct VectorBallTransform;
+
 pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -226,64 +229,63 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            // momentum vector
-            let vector_cylinder_length =
-                VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
-            [VectorBallElement::Momentum]
-                .iter()
-                .for_each(|element_kind| {
-                    child
-                        .spawn_bundle(TransformBundle::from_transform(
-                            Transform::from_xyz(-3.0, -2.0, -7.0).with_scale(Vec3::splat(0.03)),
-                        ))
-                        .insert_bundle(VisibilityBundle::default())
-                        //.spawn_bundle(SpatialBundle::default())
-                        .insert(*element_kind)
-                        .with_children(|grandchild| {
-                            // blah
-                            grandchild.spawn_bundle(PbrBundle {
-                                visibility: Visibility { is_visible: true },
-                                mesh: meshes.add(
-                                    (Cone {
-                                        radius: 2.0 * VECTOR_SCALE,
-                                        height: 2.0 * VECTOR_SCALE,
-                                        ..Default::default()
-                                    })
-                                    .into(),
-                                ),
-                                transform: Transform::from_xyz(
-                                    0.0,
-                                    VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
-                                    0.0,
-                                ),
-                                material: materials.add(Color::GREEN.into()),
-                                ..Default::default()
-                            });
-                            grandchild.spawn_bundle(PbrBundle {
-                                visibility: Visibility { is_visible: true },
-                                mesh: meshes.add(
-                                    (Cylinder {
-                                        height: vector_cylinder_length,
-                                        radius_bottom: VECTOR_SCALE,
-                                        radius_top: VECTOR_SCALE,
-                                        ..Default::default()
-                                    })
-                                    .into(),
-                                ),
-                                transform: Transform::from_xyz(
-                                    0.0,
-                                    vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
-                                    0.0,
-                                ),
-                                material: materials.add(Color::GREEN.into()),
-                                ..Default::default()
-                            });
-                            // blah
-                        });
-                })
-            // end of spacecraft children
+            child
+                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                    -3.0, -2.0, -7.0,
+                )))
+                .insert(VectorBallTransform);
         })
         .id();
+
+    let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
+    [VectorBallElement::Momentum]
+        .iter()
+        .for_each(|element_kind| {
+            commands
+                .spawn_bundle(TransformBundle::default())
+                .insert_bundle(VisibilityBundle::default())
+                //.spawn_bundle(SpatialBundle::default())
+                .insert(*element_kind)
+                .with_children(|child| {
+                    child.spawn_bundle(PbrBundle {
+                        visibility: Visibility { is_visible: true },
+                        mesh: meshes.add(
+                            (Cone {
+                                radius: 2.0 * VECTOR_SCALE,
+                                height: 2.0 * VECTOR_SCALE,
+                                ..Default::default()
+                            })
+                            .into(),
+                        ),
+                        transform: Transform::from_xyz(
+                            0.0,
+                            VECTOR_LENGTH - 2.0 * VECTOR_SCALE,
+                            0.0,
+                        ),
+                        material: materials.add(Color::GREEN.into()),
+                        ..Default::default()
+                    });
+                    child.spawn_bundle(PbrBundle {
+                        visibility: Visibility { is_visible: true },
+                        mesh: meshes.add(
+                            (Cylinder {
+                                height: vector_cylinder_length,
+                                radius_bottom: VECTOR_SCALE,
+                                radius_top: VECTOR_SCALE,
+                                ..Default::default()
+                            })
+                            .into(),
+                        ),
+                        transform: Transform::from_xyz(
+                            0.0,
+                            vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
+                            0.0,
+                        ),
+                        material: materials.add(Color::GREEN.into()),
+                        ..Default::default()
+                    });
+                });
+        })
 }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
@@ -562,6 +564,7 @@ pub fn set_camera_viewports(
 
 pub struct HotPlanetEvent {
     pub planet: Entity,
+    // This is: the direction to the impact site relative to the planet's transform
     pub local_direction: Vec3,
 }
 
