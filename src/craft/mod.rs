@@ -128,16 +128,16 @@ pub fn spacecraft_setup(
         .insert(Spacecraft {
             speed: config.start_speed,
         })
-        .with_children(|parent| {
+        .with_children(|child| {
             if config.stereo_enabled {
                 let offset = config.stereo_iod / 2.0;
-                parent
+                child
                     .spawn_bundle(Camera3dBundle {
                         transform: Transform::from_xyz(offset, 0.0, 0.0),
                         ..default()
                     })
                     .insert(LeftCamera);
-                parent
+                child
                     .spawn_bundle(Camera3dBundle {
                         transform: Transform::from_xyz(-offset, 0.0, 0.0),
                         camera: Camera {
@@ -152,13 +152,13 @@ pub fn spacecraft_setup(
                     })
                     .insert(RightCamera);
             } else {
-                parent.spawn_bundle(Camera3dBundle {
+                child.spawn_bundle(Camera3dBundle {
                     transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),
                     ..default()
                 });
             }
             // Possibly the worst way to implement "crosshairs" evar.
-            parent
+            child
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 0.01,
@@ -170,7 +170,7 @@ pub fn spacecraft_setup(
                     ..Default::default()
                 })
                 .insert(SpacecraftAR::CrosshairsCold);
-            parent
+            child
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.08))),
                     material: materials.add(Color::GREEN.into()),
@@ -179,7 +179,7 @@ pub fn spacecraft_setup(
                     ..Default::default()
                 })
                 .insert(SpacecraftAR::CrosshairsHot);
-            parent
+            child
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.08))),
                     material: materials.add(Color::GREEN.into()),
@@ -190,7 +190,7 @@ pub fn spacecraft_setup(
                 .insert(SpacecraftAR::CrosshairsHot);
 
             // Various lights for seeing
-            parent.spawn_bundle(PointLightBundle {
+            child.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.7,
@@ -199,7 +199,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            parent.spawn_bundle(PointLightBundle {
+            child.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(-10.0, 5.0, -35.0),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.5,
@@ -208,7 +208,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            parent.spawn_bundle(PointLightBundle {
+            child.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(30.0, -20.0, 80.0),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.7,
@@ -217,7 +217,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            parent.spawn_bundle(PointLightBundle {
+            child.spawn_bundle(PointLightBundle {
                 transform: Transform::from_xyz(-30.0, 10.0, 100.0),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.8,
