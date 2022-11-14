@@ -290,11 +290,6 @@ pub struct VectorBallUpdate {
     vector: Option<Vec3>,
 }
 
-pub struct VectorBallCreate {
-    planet: Entity,
-    element: VectorBallElement,
-}
-
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq)]
 pub enum VectorBallElement {
     Ball,

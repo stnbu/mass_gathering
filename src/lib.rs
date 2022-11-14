@@ -71,7 +71,6 @@ impl Plugin for Spacetime {
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnPlanetEvent>()
             .add_event::<VectorBallUpdate>()
-            .add_event::<VectorBallCreate>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(handle_despawn_planet)
