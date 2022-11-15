@@ -598,15 +598,17 @@ pub struct VectorParts {
 }
 use std::collections::HashMap;
 pub struct VectorBallData {
-    pub scale: f32,
+    pub ball: Option<Entity>,
     pub vectors: HashMap<VectorBallElement, VectorParts>,
+    pub scale: f32,
 }
 
 impl Default for VectorBallData {
     fn default() -> Self {
         Self {
-            scale: 1.0,
+            ball: None,
             vectors: HashMap::new(),
+            scale: 1.0,
         }
     }
 }
@@ -615,11 +617,29 @@ pub fn create_vector_ball(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut vector_ball: ResMut<VectorBallData>,
+    mut vector_ball_data: ResMut<VectorBallData>,
 ) {
+    let ball = commands
+        .spawn_bundle(PbrBundle {
+            visibility: Visibility { is_visible: false },
+            mesh: meshes.add(
+                (shape::Icosphere {
+                    radius: BALL_RADIUS,
+                    ..Default::default()
+                })
+                .into(),
+            ),
+            material: materials.add(Color::GREEN.into()),
+            ..Default::default()
+        })
+        .insert(VectorBallElement::Ball)
+        .id();
+    vector_ball_data.ball = Some(ball);
+
     [VectorBallElement::Momentum].iter().for_each(|element| {
         let cone = commands
             .spawn_bundle(PbrBundle {
+                visibility: Visibility { is_visible: false },
                 mesh: meshes.add(
                     (Cone {
                         radius: CONE_RADIUS,
@@ -635,6 +655,7 @@ pub fn create_vector_ball(
             .id();
         let cylinder = commands
             .spawn_bundle(PbrBundle {
+                visibility: Visibility { is_visible: false },
                 mesh: meshes.add(
                     (Cylinder {
                         height: 1.0,
@@ -649,8 +670,8 @@ pub fn create_vector_ball(
             })
             .insert(*element)
             .id();
-        //
-        vector_ball
+
+        vector_ball_data
             .vectors
             .insert(*element, VectorParts { cylinder, cone });
     });
@@ -659,7 +680,7 @@ pub fn create_vector_ball(
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum VectorBallElement {
     Momentum,
-    Bob,
+    Ball,
 }
 
 pub fn update_vector_ball(
@@ -676,12 +697,23 @@ pub fn update_vector_ball(
         origin,  // and where shall I put it?
     } in vector_ball_updates.iter()
     {
+        if let Some(ball) = vector_ball_data.ball {
+            if let Ok((mut ball_transform, mut ball_visibility)) = vector_parts.get_mut(ball) {
+                ball_transform.translation = *origin;
+                ball_transform.scale = Vec3::splat(vector_ball_data.scale);
+                ball_visibility.is_visible = true;
+            } else {
+                error!("{element:?} vector missing ball {ball:?}");
+            }
+        } else {
+            error!("Vector ball not set");
+        }
         if let Some(VectorParts { cone, cylinder }) = vector_ball_data.vectors.get(element) {
             let vector_scaling = ARVectorScaling::from_vec3(*vector);
 
             if let Ok((mut cone_transform, mut cone_visibility)) = vector_parts.get_mut(*cone) {
+                // cone_transform.rotation = vector_scaling.rotation;
                 cone_transform.translation = *origin + vector_scaling.cone_translation;
-                cone_transform.rotation = vector_scaling.rotation;
                 cone_transform.scale = Vec3::splat(vector_ball_data.scale);
                 cone_visibility.is_visible = true;
             } else {
@@ -691,10 +723,9 @@ pub fn update_vector_ball(
             if let Ok((mut cylinder_transform, mut cylinder_visibility)) =
                 vector_parts.get_mut(*cylinder)
             {
-                cylinder_transform.scale =
-                    Vec3::new(1.0, vector_scaling.cylinder_length, 1.0) * vector_ball_data.scale;
+                //cylinder_transform.rotation = vector_scaling.rotation;
+                cylinder_transform.scale = Vec3::new(1.0, 1.0, 1.0) * vector_ball_data.scale;
                 cylinder_transform.translation = *origin + vector_scaling.cylinder_translation;
-                cylinder_transform.rotation = vector_scaling.rotation;
                 cylinder_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing cylinder {cylinder:?}");
