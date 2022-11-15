@@ -7,7 +7,7 @@ fn main() {
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
-            start_transform: Transform::from_xyz(5.0, 5.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+            start_transform: Transform::from_xyz(0.0, 0.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
             impact_magnitude: 5.0,
             ..Default::default()
         })

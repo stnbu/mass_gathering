@@ -14,7 +14,6 @@ fn main() {
 
 const BALL_RADIUS: f32 = 3.5;
 const FLOAT_HEIGHT: f32 = 2.0;
-
 const VECTOR_LENGTH: f32 = 14.0;
 const VECTOR_SCALE: f32 = 1.0;
 
@@ -24,7 +23,6 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - 2.0 * VECTOR_SCALE;
-
     let momentum_vector = commands
         .spawn_bundle(SpatialBundle::default())
         .with_children(|child| {
@@ -72,6 +70,5 @@ fn setup(
             ),
             material: materials.add(Color::GREEN.into()),
             ..Default::default()
-        })
-        .add_child(momentum_vector);
+        }).insert(VectorBallElement::Ball);
 }
