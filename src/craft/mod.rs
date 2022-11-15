@@ -584,13 +584,13 @@ pub fn create_vector_ball(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut vector_ball_data: ResMut<VectorBallData>,
 ) {
-    let material = materials.add(StandardMaterial {
+    let material = StandardMaterial {
         base_color: Color::GREEN,
-        emissive: Color::rgba_linear(0.0, 100.0, 0.0, 0.0),
+        //emissive: Color::rgba_linear(0.0, 0.0, 0.0, 0.0),
+        reflectance: 0.005,
         ..default()
-    });
+    };
 
-    //Color::GREEN.into());
     let ball = commands
         .spawn_bundle(PbrBundle {
             visibility: Visibility { is_visible: false },
@@ -601,7 +601,7 @@ pub fn create_vector_ball(
                 })
                 .into(),
             ),
-            material,
+            material: materials.add(material.clone()),
             ..Default::default()
         })
         .insert(VectorBallElement::Ball)
@@ -609,17 +609,6 @@ pub fn create_vector_ball(
     vector_ball_data.ball = Some(ball);
 
     [VectorBallElement::Momentum].iter().for_each(|element| {
-        let material_cone = materials.add(StandardMaterial {
-            base_color: Color::GREEN,
-            emissive: Color::rgba_linear(0.0, 100.0, 0.0, 0.0),
-            ..default()
-        });
-        let material_cylinder = materials.add(StandardMaterial {
-            base_color: Color::GREEN,
-            emissive: Color::rgba_linear(0.0, 100.0, 0.0, 0.0),
-            ..default()
-        });
-
         let cone = commands
             .spawn_bundle(PbrBundle {
                 visibility: Visibility { is_visible: false },
@@ -631,7 +620,7 @@ pub fn create_vector_ball(
                     })
                     .into(),
                 ),
-                material: material_cone,
+                material: materials.add(material.clone()),
                 ..Default::default()
             })
             .insert(*element)
@@ -648,7 +637,7 @@ pub fn create_vector_ball(
                     })
                     .into(),
                 ),
-                material: material_cylinder,
+                material: materials.add(material.clone()),
                 ..Default::default()
             })
             .insert(*element)
