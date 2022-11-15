@@ -232,25 +232,12 @@ pub fn spacecraft_setup(
             });
             child
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                    -0.09, -0.08, -0.25,
+                    -0.1, -0.08, -0.25,
                 )))
                 .insert(VectorBallTransform);
         })
         .id();
 }
-
-//use crate::VectorBallElement;
-// #[derive(Component)]
-// pub struct ARVectorCone(pub VectorBallElement);
-// #[derive(Component)]
-// pub struct ARVectorCylinder(pub VectorBallElement);
-
-/*
-   let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT;
-   let cylinder_translation = vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT;
-   let cone_translation = VECTOR_LENGTH - CONE_HEIGHT / 2.0;
-
-*/
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in ar_query.iter_mut() {
@@ -588,7 +575,7 @@ impl Default for VectorBallData {
         Self {
             ball: None,
             vectors: HashMap::new(),
-            scale: 1.0,
+            scale: 0.03,
         }
     }
 }
