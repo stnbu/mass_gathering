@@ -39,7 +39,6 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(move_forward)
                     .with_system(control)
                     .with_system(stars)
-                    .with_system(drift)
                     .with_system(signal_hot_planet)
                     .with_system(relay_vector_ball_updates.after(signal_hot_planet))
                     .with_system(update_vector_ball.after(relay_vector_ball_updates))

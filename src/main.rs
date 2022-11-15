@@ -14,7 +14,7 @@ fn main() {
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
             start_transform: Transform::from_xyz(d, d, d).looking_at(Vec3::ZERO, Vec3::Y),
-            impact_magnitude: 100.0,
+            impact_magnitude: 5.0,
             ..Default::default()
         })
         .add_plugins(FullGame)

@@ -110,7 +110,6 @@ pub fn drift(mut query: Query<&mut Transform, With<Spacecraft>>) {
 
 const BALL_RADIUS: f32 = 3.5 / 14.0;
 const FLOAT_HEIGHT: f32 = 2.0 / 14.0;
-const VECTOR_LENGTH: f32 = 1.0;
 const CYLINDER_RADIUS: f32 = 1.0 / 14.0;
 const CONE_HEIGHT: f32 = 2.0 / 14.0;
 const CONE_RADIUS: f32 = 2.0 / 14.0;
@@ -237,6 +236,7 @@ pub fn spacecraft_setup(
                 .insert(VectorBallTransform);
         })
         .id();
+    debug!("Spawned spacecraft with entity {spacecraft:?}");
 }
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
