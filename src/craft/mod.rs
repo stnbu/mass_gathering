@@ -232,7 +232,7 @@ pub fn spacecraft_setup(
             });
             child
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                    -3.0, -2.0, -7.0,
+                    -0.09, -0.08, -0.25,
                 )))
                 .insert(VectorBallTransform);
         })
@@ -679,11 +679,11 @@ fn transform_vector_parts<'a>(
 
     cone.scale = Vec3::splat(scale);
     cone.rotation = rotation;
-    cone.translation = direction * (length - CONE_HEIGHT / 2.0) * scale;
+    cone.translation = direction * (length - CONE_HEIGHT / 2.0) * scale + origin;
 
     cylinder.scale = Vec3::new(scale, scale * unscaled_cylinder_length, scale);
     cylinder.rotation = rotation;
-    cylinder.translation = direction * unscaled_cylinder_translation * scale;
+    cylinder.translation = direction * unscaled_cylinder_translation * scale + origin;
 }
 
 pub fn update_vector_ball(
@@ -704,6 +704,7 @@ pub fn update_vector_ball(
         if let Some(ball) = vector_ball_data.ball {
             if let Ok((mut ball_transform, mut ball_visibility)) = vector_parts.get_mut(ball) {
                 ball_transform.scale = Vec3::splat(scale);
+                ball_transform.translation = *origin;
                 ball_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing ball {ball:?}");
