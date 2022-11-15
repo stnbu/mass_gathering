@@ -750,7 +750,7 @@ pub fn relay_vector_ball_updates(
                 .translation();
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Momentum,
-                vector: Vec3::Y,
+                vector,
                 origin,
             });
         }

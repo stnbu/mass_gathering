@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use mass_gathering::prelude::*;
 
 fn main() {
+    let d = 0.03 * (2.0 / 14.0);
     App::new()
         .add_plugins(FullGame)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
@@ -11,8 +12,7 @@ fn main() {
         })
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
-            start_transform: Transform::from_xyz(0.0, 0.03 * (2.0 / 14.0), 0.108)
-                .looking_at(Vec3::ZERO, Vec3::Y),
+            start_transform: Transform::from_xyz(0.1, 0.0, 0.5).looking_at(Vec3::ZERO, Vec3::Y),
             impact_magnitude: 5.0,
             ..Default::default()
         })
