@@ -699,8 +699,8 @@ pub fn update_vector_ball(
     {
         if let Some(ball) = vector_ball_data.ball {
             if let Ok((mut ball_transform, mut ball_visibility)) = vector_parts.get_mut(ball) {
-                ball_transform.translation = *origin;
-                ball_transform.scale = Vec3::splat(vector_ball_data.scale);
+                //ball_transform.translation = *origin;
+                //ball_transform.scale = Vec3::splat(vector_ball_data.scale);
                 ball_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing ball {ball:?}");
@@ -712,9 +712,8 @@ pub fn update_vector_ball(
             let vector_scaling = ARVectorScaling::from_vec3(*vector);
 
             if let Ok((mut cone_transform, mut cone_visibility)) = vector_parts.get_mut(*cone) {
-                // cone_transform.rotation = vector_scaling.rotation;
-                cone_transform.translation = *origin + vector_scaling.cone_translation;
-                cone_transform.scale = Vec3::splat(vector_ball_data.scale);
+                //cone_transform.translation = *origin;
+                //cone_transform.scale = Vec3::splat(vector_ball_data.scale);
                 cone_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing cone {cone:?}");
@@ -723,9 +722,8 @@ pub fn update_vector_ball(
             if let Ok((mut cylinder_transform, mut cylinder_visibility)) =
                 vector_parts.get_mut(*cylinder)
             {
-                //cylinder_transform.rotation = vector_scaling.rotation;
-                cylinder_transform.scale = Vec3::new(1.0, 1.0, 1.0) * vector_ball_data.scale;
-                cylinder_transform.translation = *origin + vector_scaling.cylinder_translation;
+                //cylinder_transform.scale = Vec3::splat(vector_ball_data.scale);
+                //cylinder_transform.translation = *origin;
                 cylinder_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing cylinder {cylinder:?}");
@@ -753,7 +751,7 @@ pub fn relay_vector_ball_updates(
                 .translation();
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Momentum,
-                vector,
+                vector: Vec3::Y,
                 origin,
             });
         }
