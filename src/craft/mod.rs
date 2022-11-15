@@ -260,12 +260,15 @@ pub struct ARVectorScaling {
 }
 
 impl ARVectorScaling {
-    pub fn from_vec3(vector: Vec3) -> Self {
-        let cylinder_length = (vector.length() - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT).max(0.0);
+    pub fn from_vec3(vector: Vec3, scale: f32) -> Self {
+        let cylinder_length =
+            scale * (vector.length() - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT).max(0.0);
         let rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
         Self {
-            cone_translation: Vec3::Y * (VECTOR_LENGTH - CONE_HEIGHT / 2.0),
-            cylinder_translation: Vec3::Y * (cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT),
+            cone_translation: scale * Vec3::Y * (VECTOR_LENGTH - CONE_HEIGHT / 2.0),
+            cylinder_translation: scale
+                * Vec3::Y
+                * (cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT),
             cylinder_length,
             rotation,
         }
@@ -697,10 +700,11 @@ pub fn update_vector_ball(
         origin,  // and where shall I put it?
     } in vector_ball_updates.iter()
     {
+        let vector_scaling = ARVectorScaling::from_vec3(Vec3::Y, vector_ball_data.scale);
         if let Some(ball) = vector_ball_data.ball {
             if let Ok((mut ball_transform, mut ball_visibility)) = vector_parts.get_mut(ball) {
                 //ball_transform.translation = *origin;
-                //ball_transform.scale = Vec3::splat(vector_ball_data.scale);
+                ball_transform.scale = Vec3::splat(vector_ball_data.scale);
                 ball_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing ball {ball:?}");
@@ -709,11 +713,9 @@ pub fn update_vector_ball(
             error!("Vector ball not set");
         }
         if let Some(VectorParts { cone, cylinder }) = vector_ball_data.vectors.get(element) {
-            let vector_scaling = ARVectorScaling::from_vec3(Vec3::Y);
-
             if let Ok((mut cone_transform, mut cone_visibility)) = vector_parts.get_mut(*cone) {
                 //cone_transform.translation = *origin;
-                //cone_transform.scale = Vec3::splat(vector_ball_data.scale);
+                cone_transform.scale = Vec3::splat(vector_ball_data.scale);
                 cone_transform.translation = vector_scaling.cone_translation;
                 cone_visibility.is_visible = true;
             } else {
@@ -723,8 +725,7 @@ pub fn update_vector_ball(
             if let Ok((mut cylinder_transform, mut cylinder_visibility)) =
                 vector_parts.get_mut(*cylinder)
             {
-                //cylinder_transform.scale = Vec3::splat(vector_ball_data.scale);
-                cylinder_transform.scale = Vec3::new(1.0, vector_scaling.cylinder_length, 1.0);
+                cylinder_transform.scale = Vec3::splat(vector_ball_data.scale);
                 cylinder_transform.translation = vector_scaling.cylinder_translation;
                 cylinder_visibility.is_visible = true;
             } else {

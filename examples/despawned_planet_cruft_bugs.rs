@@ -5,6 +5,10 @@ fn main() {
     App::new()
         .add_plugins(FullGame)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
+        .insert_resource(VectorBallData {
+            scale: 0.03,
+            ..Default::default()
+        })
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
             start_transform: Transform::from_xyz(0.0, 0.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
