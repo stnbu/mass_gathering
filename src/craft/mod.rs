@@ -264,7 +264,7 @@ impl ARVectorScaling {
         let cylinder_length = (vector.length() - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT).max(0.0);
         let rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
         Self {
-            cone_translation: Vec3::Y * VECTOR_LENGTH - CONE_HEIGHT / 2.0,
+            cone_translation: Vec3::Y * (VECTOR_LENGTH - CONE_HEIGHT / 2.0),
             cylinder_translation: Vec3::Y * (cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT),
             cylinder_length,
             rotation,
@@ -714,7 +714,7 @@ pub fn update_vector_ball(
             if let Ok((mut cone_transform, mut cone_visibility)) = vector_parts.get_mut(*cone) {
                 //cone_transform.translation = *origin;
                 //cone_transform.scale = Vec3::splat(vector_ball_data.scale);
-                //cone_transform.translation = vector_scaling.cone_translation;
+                cone_transform.translation = vector_scaling.cone_translation;
                 cone_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing cone {cone:?}");
@@ -724,7 +724,6 @@ pub fn update_vector_ball(
                 vector_parts.get_mut(*cylinder)
             {
                 //cylinder_transform.scale = Vec3::splat(vector_ball_data.scale);
-                warn!("cyl tran: {:?}", vector_scaling.cylinder_translation);
                 cylinder_transform.scale = Vec3::new(1.0, vector_scaling.cylinder_length, 1.0);
                 cylinder_transform.translation = vector_scaling.cylinder_translation;
                 cylinder_visibility.is_visible = true;
