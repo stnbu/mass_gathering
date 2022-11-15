@@ -616,6 +616,21 @@ impl Default for VectorBallData {
     }
 }
 
+impl VectorBallData {
+    pub fn get_scaling_data(&self, vector: Vec3) -> ARVectorScaling {
+        let cylinder_length = (vector.length() - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT).max(0.0);
+        let rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
+        ARVectorScaling {
+            cone_translation: self.scale * Vec3::Y * (VECTOR_LENGTH - CONE_HEIGHT / 2.0),
+            cylinder_translation: Vec3::Y
+                * self.scale
+                * (cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT),
+            cylinder_length: cylinder_length * self.scale,
+            rotation,
+        }
+    }
+}
+
 pub fn create_vector_ball(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -700,7 +715,7 @@ pub fn update_vector_ball(
         origin,  // and where shall I put it?
     } in vector_ball_updates.iter()
     {
-        let vector_scaling = ARVectorScaling::from_vec3(Vec3::Y, vector_ball_data.scale);
+        let vector_scaling = vector_ball_data.get_scaling_data(*vector);
         if let Some(ball) = vector_ball_data.ball {
             if let Ok((mut ball_transform, mut ball_visibility)) = vector_parts.get_mut(ball) {
                 //ball_transform.translation = *origin;
@@ -725,8 +740,12 @@ pub fn update_vector_ball(
             if let Ok((mut cylinder_transform, mut cylinder_visibility)) =
                 vector_parts.get_mut(*cylinder)
             {
-                cylinder_transform.scale = Vec3::splat(vector_ball_data.scale);
                 cylinder_transform.translation = vector_scaling.cylinder_translation;
+                cylinder_transform.scale = Vec3::new(
+                    vector_ball_data.scale,
+                    vector_scaling.cylinder_length,
+                    vector_ball_data.scale,
+                );
                 cylinder_visibility.is_visible = true;
             } else {
                 error!("{element:?} vector missing cylinder {cylinder:?}");
