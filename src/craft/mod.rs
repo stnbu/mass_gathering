@@ -701,6 +701,31 @@ pub enum VectorBallElement {
     Ball,
 }
 
+//     commands: &'a mut Commands,
+fn transform_vector_parts<'a>(
+    scale: f32,
+    vector: Vec3,
+    cone: &'a mut Transform,
+    cylinder: &'a mut Transform,
+) {
+    // scale the cone
+    // rotate the cone
+    // translate the cone *in the direction* of vector by scale. minus half of the scaled cone's height
+
+    // scale cylinder in the Y direction by vector length
+    // scale cylinder uniformly by "scale"
+    // rotate cylinder
+    // translate the cylinder in the direction of vector by: scale * (cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT) * vector.normalize()
+
+    let cylinder_length = (vector.length() - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT).max(0.0);
+    let rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
+
+    let cone_translation = scale * Vec3::Y * (VECTOR_LENGTH - CONE_HEIGHT / 2.0);
+    let cylinder_translation =
+        Vec3::Y * scale * (cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT);
+    let cylinder_length = cylinder_length * scale;
+}
+
 pub fn update_vector_ball(
     mut vector_ball_updates: EventReader<VectorBallUpdate>,
     mut vector_parts: Query<(&mut Transform, &mut Visibility), With<VectorBallElement>>,
@@ -731,6 +756,7 @@ pub fn update_vector_ball(
             if let Ok((mut cone_transform, mut cone_visibility)) = vector_parts.get_mut(*cone) {
                 //cone_transform.translation = *origin;
                 cone_transform.scale = Vec3::splat(vector_ball_data.scale);
+                cone_transform.rotation = vector_scaling.rotation;
                 cone_transform.translation = vector_scaling.cone_translation;
                 cone_visibility.is_visible = true;
             } else {
