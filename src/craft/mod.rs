@@ -551,8 +551,6 @@ pub fn signal_hot_planet(
     }
 }
 
-// //
-
 pub struct VectorBallUpdate {
     element: VectorBallElement,
     vector: Vec3,
