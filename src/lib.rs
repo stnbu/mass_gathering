@@ -29,6 +29,8 @@ pub struct SpacecraftPlugin;
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
+            .init_resource::<VectorBallData>()
+            .add_startup_system(create_vector_ball)
             .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
             .add_event::<FireProjectileEvent>()

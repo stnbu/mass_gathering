@@ -116,7 +116,6 @@ const CONE_HEIGHT: f32 = 2.0 / 14.0;
 const CONE_RADIUS: f32 = 2.0 / 14.0;
 
 use crate::mg_shapes::*;
-use crate::physics::VectorBallElement;
 
 #[derive(Component)]
 pub struct VectorBallTransform;
@@ -238,55 +237,13 @@ pub fn spacecraft_setup(
                 .insert(VectorBallTransform);
         })
         .id();
-
-    let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT;
-    let cylinder_translation = vector_cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT;
-    let cone_translation = VECTOR_LENGTH - CONE_HEIGHT / 2.0;
-
-    [VectorBallElement::Momentum]
-        .iter()
-        .for_each(|element_kind| {
-            commands
-                .spawn_bundle(TransformBundle::from_transform(Transform::from_scale(
-                    Vec3::splat(0.03 * 14.0),
-                )))
-                .insert_bundle(VisibilityBundle {
-                    visibility: Visibility { is_visible: false },
-                    ..Default::default()
-                })
-                .insert(*element_kind)
-                .with_children(|child| {
-                    child.spawn_bundle(PbrBundle {
-                        mesh: meshes.add(
-                            (Cone {
-                                radius: CONE_RADIUS,
-                                height: CONE_HEIGHT,
-                                ..Default::default()
-                            })
-                            .into(),
-                        ),
-                        transform: Transform::from_xyz(0.0, cone_translation, 0.0),
-                        material: materials.add(Color::GREEN.into()),
-                        ..Default::default()
-                    });
-                    child.spawn_bundle(PbrBundle {
-                        mesh: meshes.add(
-                            (Cylinder {
-                                height: 1.0,
-                                radius_bottom: CYLINDER_RADIUS,
-                                radius_top: CYLINDER_RADIUS,
-                                ..Default::default()
-                            })
-                            .into(),
-                        ),
-                        transform: Transform::from_xyz(0.0, cylinder_translation, 0.0)
-                            .with_scale(Vec3::new(1.0, vector_cylinder_length, 1.0)),
-                        material: materials.add(Color::GREEN.into()),
-                        ..Default::default()
-                    });
-                });
-        })
 }
+
+//use crate::VectorBallElement;
+#[derive(Component)]
+pub struct ARVectorCone(pub VectorBallElement);
+#[derive(Component)]
+pub struct ARVectorCylinder(pub VectorBallElement);
 
 /*
    let vector_cylinder_length = VECTOR_LENGTH - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT;
@@ -295,20 +252,25 @@ pub fn spacecraft_setup(
 
 */
 
-// pub struct ARVectorScaling {
-//     cone_transform: Transform,
-//     cylinder_transform: Transform,
-// }
+pub struct ARVectorScaling {
+    pub cone_translation: Vec3,
+    pub cylinder_translation: Vec3,
+    pub cylinder_length: f32,
+    pub rotation: Quat,
+}
 
-// impl ARVectorScaling {
-//     pub fn from_vec3(vector: Vec3) -> Self {
-//         // HERE
-//         Self {
-//             cone_transform: foo,
-//             cylinder_transform: bar,
-//         }
-//     }
-// }
+impl ARVectorScaling {
+    pub fn from_vec3(vector: Vec3) -> Self {
+        let cylinder_length = (vector.length() - BALL_RADIUS - FLOAT_HEIGHT - CONE_HEIGHT).max(0.0);
+        let rotation = Quat::from_rotation_arc(Vec3::Y, vector.normalize());
+        Self {
+            cone_translation: Vec3::Y * VECTOR_LENGTH - CONE_HEIGHT / 2.0,
+            cylinder_translation: Vec3::Y * cylinder_length * 0.5 + BALL_RADIUS + FLOAT_HEIGHT,
+            cylinder_length,
+            rotation,
+        }
+    }
+}
 
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in ar_query.iter_mut() {
@@ -618,6 +580,151 @@ pub fn signal_hot_planet(
                 };
                 hot_planet_events.send(event);
             }
+        }
+    }
+}
+
+// //
+
+pub struct VectorBallUpdate {
+    element: VectorBallElement,
+    vector: Vec3,
+    origin: Vec3,
+}
+
+pub struct VectorParts {
+    cylinder: Entity,
+    cone: Entity,
+}
+use std::collections::HashMap;
+pub struct VectorBallData {
+    pub scale: f32,
+    pub vectors: HashMap<VectorBallElement, VectorParts>,
+}
+
+impl Default for VectorBallData {
+    fn default() -> Self {
+        Self {
+            scale: 1.0,
+            vectors: HashMap::new(),
+        }
+    }
+}
+
+pub fn create_vector_ball(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut vector_ball: ResMut<VectorBallData>,
+) {
+    [VectorBallElement::Momentum].iter().for_each(|element| {
+        let cone = commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(
+                    (Cone {
+                        radius: CONE_RADIUS,
+                        height: CONE_HEIGHT,
+                        ..Default::default()
+                    })
+                    .into(),
+                ),
+                material: materials.add(Color::GREEN.into()),
+                ..Default::default()
+            })
+            .insert(*element)
+            .id();
+        let cylinder = commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(
+                    (Cylinder {
+                        height: 1.0,
+                        radius_bottom: CYLINDER_RADIUS,
+                        radius_top: CYLINDER_RADIUS,
+                        ..Default::default()
+                    })
+                    .into(),
+                ),
+                material: materials.add(Color::GREEN.into()),
+                ..Default::default()
+            })
+            .insert(*element)
+            .id();
+        //
+        vector_ball
+            .vectors
+            .insert(*element, VectorParts { cylinder, cone });
+    });
+}
+
+#[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
+pub enum VectorBallElement {
+    Momentum,
+    Bob,
+}
+
+pub fn update_vector_ball(
+    mut vector_ball_updates: EventReader<VectorBallUpdate>,
+    mut vector_parts: Query<(&mut Transform, &mut Visibility), With<VectorBallElement>>,
+    vector_ball_data: Res<VectorBallData>,
+) {
+    if vector_ball_updates.is_empty() {
+        vector_parts.for_each_mut(|(_, mut visibility)| visibility.is_visible = false);
+    }
+    for VectorBallUpdate {
+        element, // which vector are we talking about?
+        vector,  // in which direction shall it point?
+        origin,  // and where shall I put it?
+    } in vector_ball_updates.iter()
+    {
+        if let Some(VectorParts { cone, cylinder }) = vector_ball_data.vectors.get(element) {
+            let vector_scaling = ARVectorScaling::from_vec3(*vector);
+
+            if let Ok((mut cone_transform, mut cone_visibility)) = vector_parts.get_mut(*cone) {
+                cone_transform.translation = *origin + vector_scaling.cone_translation;
+                cone_transform.rotation = vector_scaling.rotation;
+                cone_transform.scale = Vec3::splat(vector_ball_data.scale);
+                cone_visibility.is_visible = true;
+            } else {
+                error!("{element:?} vector missing cone {cone:?}");
+            }
+
+            if let Ok((mut cylinder_transform, mut cylinder_visibility)) =
+                vector_parts.get_mut(*cylinder)
+            {
+                cylinder_transform.scale =
+                    Vec3::new(1.0, vector_scaling.cylinder_length, 1.0) * vector_ball_data.scale;
+                cylinder_transform.translation = *origin + vector_scaling.cylinder_translation;
+                cylinder_transform.rotation = vector_scaling.rotation;
+                cylinder_visibility.is_visible = true;
+            } else {
+                error!("{element:?} vector missing cylinder {cylinder:?}");
+            }
+        } else {
+            error!("did not find {element:?}");
+        }
+    }
+}
+
+const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
+
+pub fn relay_vector_ball_updates(
+    planet_query: Query<(&Transform, &Momentum)>,
+    vector_ball_transform_query: Query<&GlobalTransform, With<VectorBallTransform>>,
+    mut hot_planet_events: EventReader<HotPlanetEvent>,
+    mut vector_ball_updates: EventWriter<VectorBallUpdate>,
+) {
+    for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
+        if let Ok((_, momentum)) = planet_query.get(planet) {
+            let vector = momentum.velocity * momentum.mass * VB_SCALING_FACTOR;
+            let origin = vector_ball_transform_query
+                .get_single()
+                .unwrap()
+                .translation();
+            vector_ball_updates.send(VectorBallUpdate {
+                element: VectorBallElement::Momentum,
+                vector,
+                origin,
+            });
         }
     }
 }
