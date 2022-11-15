@@ -232,7 +232,7 @@ pub fn spacecraft_setup(
             });
             child
                 .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
-                    -0.1, -0.08, -0.25,
+                    -0.12, -0.06, -0.25,
                 )))
                 .insert(VectorBallTransform);
         })
@@ -575,7 +575,7 @@ impl Default for VectorBallData {
         Self {
             ball: None,
             vectors: HashMap::new(),
-            scale: 0.03,
+            scale: 0.02,
         }
     }
 }
