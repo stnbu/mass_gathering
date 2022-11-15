@@ -2,17 +2,12 @@ use bevy::prelude::*;
 use mass_gathering::prelude::*;
 
 fn main() {
-    let d = 0.03 * (2.0 / 14.0);
     App::new()
         .add_plugins(FullGame)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
-        .insert_resource(VectorBallData {
-            scale: 0.03,
-            ..Default::default()
-        })
         .insert_resource(SpacecraftConfig {
             stereo_enabled: false,
-            start_transform: Transform::from_xyz(0.1, 0.0, 0.5).looking_at(Vec3::ZERO, Vec3::Y),
+            start_transform: Transform::from_xyz(0.0, 0.0, 100.0).looking_at(Vec3::ZERO, Vec3::Y),
             impact_magnitude: 5.0,
             ..Default::default()
         })
@@ -59,9 +54,18 @@ fn setup(
     */
 
     spawn_planet(
-        9.0,
-        Vec3::Z * -20.0,
+        10.0,
         Vec3::ZERO,
+        Vec3::ZERO,
+        Color::RED,
+        &mut commands,
+        &mut meshes,
+        &mut materials,
+    );
+    spawn_planet(
+        9.0,
+        Vec3::Z * 30.0,
+        Vec3::Z * -2.0,
         Color::BLUE,
         &mut commands,
         &mut meshes,
