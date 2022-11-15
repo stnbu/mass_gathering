@@ -681,7 +681,7 @@ fn transform_vector_parts<'a>(
     cone.rotation = rotation;
     cone.translation = direction * (length - CONE_HEIGHT / 2.0) * scale;
 
-    cylinder.scale = Vec3::new(scale, scale * length, scale);
+    cylinder.scale = Vec3::new(scale, scale * unscaled_cylinder_length, scale);
     cylinder.rotation = rotation;
     cylinder.translation = direction * unscaled_cylinder_translation * scale;
 }
