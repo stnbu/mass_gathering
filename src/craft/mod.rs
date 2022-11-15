@@ -725,6 +725,7 @@ pub fn update_vector_ball(
             {
                 //cylinder_transform.scale = Vec3::splat(vector_ball_data.scale);
                 warn!("cyl tran: {:?}", vector_scaling.cylinder_translation);
+                cylinder_transform.scale = Vec3::new(1.0, vector_scaling.cylinder_length, 1.0);
                 cylinder_transform.translation = vector_scaling.cylinder_translation;
                 cylinder_visibility.is_visible = true;
             } else {
