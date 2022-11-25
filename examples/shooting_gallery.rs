@@ -6,8 +6,6 @@ fn main() {
         .add_plugins(FullGame)
         .insert_resource(ClearColor(Color::MIDNIGHT_BLUE * 0.1))
         .insert_resource(SpacecraftConfig {
-            stereo_enabled: false,
-            stereo_iod: 2.0,
             start_transform: Transform::from_xyz(0.0, 0.0, 50.0).looking_at(Vec3::ZERO, Vec3::Y),
             // FIXME: all this got miscalibrated after much refactoring. Not sure what this value sould be.
             //        mostly the problem is fire-control. you shoot of so many. maybe other causes..?
