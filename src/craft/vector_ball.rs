@@ -232,6 +232,11 @@ pub fn relay_vector_ball_updates(
                 .unwrap()
                 .translation();
             vector_ball_updates.send(VectorBallUpdate {
+                element: VectorBallElement::Ball,
+                vector: Vec3::ZERO,
+                origin,
+            });
+            vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Momentum,
                 vector,
                 origin,
