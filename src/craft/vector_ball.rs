@@ -134,6 +134,7 @@ pub fn create_vector_ball(
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum VectorBallElement {
     Momentum,
+    Force,
     Ball,
 }
 
@@ -175,35 +176,44 @@ pub fn update_vector_ball(
     } in vector_ball_updates.iter()
     {
         let scale = vector_ball_data.scale;
-        if let Some(ball) = vector_ball_data.ball {
-            if let Ok((mut ball_transform, mut ball_visibility)) = vector_parts.get_mut(ball) {
-                ball_transform.scale = Vec3::splat(scale);
-                ball_transform.translation = *origin;
-                ball_visibility.is_visible = true;
-            } else {
-                error!("{element:?} vector missing ball {ball:?}");
+        match *element {
+            VectorBallElement::Ball => {
+                if let Some(ball) = vector_ball_data.ball {
+                    if let Ok((mut ball_transform, mut ball_visibility)) =
+                        vector_parts.get_mut(ball)
+                    {
+                        ball_transform.scale = Vec3::splat(scale);
+                        ball_transform.translation = *origin;
+                        ball_visibility.is_visible = true;
+                    } else {
+                        error!("{element:?} vector missing ball {ball:?}");
+                    }
+                } else {
+                    error!("Vector ball not set");
+                }
             }
-        } else {
-            error!("Vector ball not set");
-        }
-        if let Some(VectorParts { cone, cylinder }) = vector_ball_data.vectors.get(element) {
-            if let Ok([cone, cylinder]) = vector_parts.get_many_mut([*cone, *cylinder]) {
-                let (mut cone_transform, mut cone_visibility) = cone;
-                let (mut cylinder_transform, mut cylinder_visibility) = cylinder;
-                transform_vector_parts(
-                    scale,
-                    *vector,
-                    *origin,
-                    &mut cone_transform,
-                    &mut cylinder_transform,
-                );
-                cone_visibility.is_visible = true;
-                cylinder_visibility.is_visible = true;
-            } else {
-                error!("One of cone {cone:?} or cylinder {cylinder:?} missing");
+            _ => {
+                if let Some(VectorParts { cone, cylinder }) = vector_ball_data.vectors.get(element)
+                {
+                    if let Ok([cone, cylinder]) = vector_parts.get_many_mut([*cone, *cylinder]) {
+                        let (mut cone_transform, mut cone_visibility) = cone;
+                        let (mut cylinder_transform, mut cylinder_visibility) = cylinder;
+                        transform_vector_parts(
+                            scale,
+                            *vector,
+                            *origin,
+                            &mut cone_transform,
+                            &mut cylinder_transform,
+                        );
+                        cone_visibility.is_visible = true;
+                        cylinder_visibility.is_visible = true;
+                    } else {
+                        error!("One of cone {cone:?} or cylinder {cylinder:?} missing");
+                    }
+                } else {
+                    error!("Did not find vector parts for {element:?}");
+                }
             }
-        } else {
-            error!("Did not find vector parts for {element:?}");
         }
     }
 }
