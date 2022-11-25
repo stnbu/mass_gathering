@@ -391,11 +391,17 @@ pub fn create_vector_ball(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut vector_ball_data: ResMut<VectorBallData>,
 ) {
-    let material = StandardMaterial {
-        base_color: Color::GREEN,
-        //emissive: Color::rgba_linear(0.0, 0.0, 0.0, 0.0),
-        reflectance: 0.005,
-        ..default()
+    let crt_green_dark = StandardMaterial {
+        base_color: Color::rgb(155.0, 243.0, 44.0),
+        ..Default::default()
+    };
+    let crt_green_medium = StandardMaterial {
+        base_color: Color::rgb(177.0, 246.0, 91.0),
+        ..Default::default()
+    };
+    let crt_green_light = StandardMaterial {
+        base_color: Color::rgb(211.0, 250.0, 161.0),
+        ..Default::default()
     };
 
     let ball = commands
@@ -408,7 +414,7 @@ pub fn create_vector_ball(
                 })
                 .into(),
             ),
-            material: materials.add(material.clone()),
+            material: materials.add(crt_green_dark.clone()),
             ..Default::default()
         })
         .insert(VectorBallElement::Ball)
@@ -427,7 +433,7 @@ pub fn create_vector_ball(
                     })
                     .into(),
                 ),
-                material: materials.add(material.clone()),
+                material: materials.add(crt_green_medium.clone()),
                 ..Default::default()
             })
             .insert(*element)
@@ -444,7 +450,7 @@ pub fn create_vector_ball(
                     })
                     .into(),
                 ),
-                material: materials.add(material.clone()),
+                material: materials.add(crt_green_light.clone()),
                 ..Default::default()
             })
             .insert(*element)
