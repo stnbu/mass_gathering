@@ -1,7 +1,5 @@
 use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
-#[cfg(debug_assertions)]
-use bevy::log::LogSettings;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -20,8 +18,11 @@ use prelude::*;
 pub struct FullGame;
 
 impl PluginGroup for FullGame {
-    fn build(&mut self, group: &mut PluginGroupBuilder) {
-        group.add(Core).add(SpacecraftPlugin).add(Spacetime);
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
+            .add(Core)
+            .add(SpacecraftPlugin)
+            .add(Spacetime)
     }
 }
 
@@ -84,28 +85,31 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MinimalPlugins);
+        // app.add_plugins(MinimalPlugins);
 
-        #[cfg(debug_assertions)]
-        app.insert_resource(LogSettings {
-            filter: "warn,mass_gathering=debug".into(),
-            level: bevy::log::Level::DEBUG,
-        })
-        .add_plugin(bevy::log::LogPlugin);
-        debug!("DEBUG LEVEL LOGGING ! !");
+        // #[cfg(debug_assertions)]
+        // app.add_plugin(bevy::log::LogPlugin {
+        //     filter: "warn,mass_gathering=debug".into(),
+        //     level: bevy::log::Level::DEBUG,
+        // });
+        // debug!("DEBUG LEVEL LOGGING ! !");
 
         // An attempt at minimizing DefaultPlugins for our purposes
-        app.add_plugin(bevy::transform::TransformPlugin)
-            .add_plugin(bevy::input::InputPlugin)
-            .add_plugin(bevy::window::WindowPlugin)
-            .add_plugin(bevy::asset::AssetPlugin)
-            .add_plugin(bevy::scene::ScenePlugin)
-            .add_plugin(bevy::winit::WinitPlugin)
-            .add_plugin(bevy::render::RenderPlugin)
-            .add_plugin(bevy::core_pipeline::CorePipelinePlugin)
-            .add_plugin(bevy::pbr::PbrPlugin)
-	    // ...
-	    ;
+        app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
+            filter: "warn,mass_gathering=debug".into(),
+            level: bevy::log::Level::DEBUG,
+        }));
+        // app.add_plugin(bevy::transform::TransformPlugin)
+        //     .add_plugin(bevy::input::InputPlugin)
+        //     .add_plugin(bevy::window::WindowPlugin { ..Default::default() })
+        //     .add_plugin(bevy::asset::AssetPlugin { ..Default::default() })
+        //     .add_plugin(bevy::scene::ScenePlugin)
+        //     .add_plugin(bevy::winit::WinitPlugin)
+        //     .add_plugin(bevy::render::RenderPlugin)
+        //     .add_plugin(bevy::core_pipeline::CorePipelinePlugin)
+        //     .add_plugin(bevy::pbr::PbrPlugin)
+        //     // ...
+        //     ;
 
         #[cfg(not(debug_assertions))]
         {
@@ -138,7 +142,7 @@ enum AppState {
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
     rapier_config.gravity = Vec3::ZERO;
 }
-
+use bevy::window::CursorGrabMode;
 fn handle_game_state(
     mut app_state: ResMut<State<AppState>>,
     keys: Res<Input<KeyCode>>,
@@ -150,7 +154,7 @@ fn handle_game_state(
     let next_state = if *app_state.current() == Help && !mouse_button_input_events.is_empty() {
         let window = windows.get_primary_mut().unwrap();
         window.set_cursor_visibility(false);
-        window.set_cursor_lock_mode(true);
+        window.set_cursor_grab_mode(CursorGrabMode::Locked);
         Some(Playing)
     } else {
         keys.get_just_pressed()
@@ -158,7 +162,7 @@ fn handle_game_state(
                 (Playing, P | H | M) => {
                     let window = windows.get_primary_mut().unwrap();
                     window.set_cursor_visibility(true);
-                    window.set_cursor_lock_mode(false);
+                    window.set_cursor_grab_mode(CursorGrabMode::Locked);
                     Some(Help)
                 }
                 (_, _) => Some(Playing),
@@ -244,7 +248,7 @@ pub fn my_planets(
         let (r, w, y) = (rf() * 40.0, rf() * 400.0, rf() * 20.0);
         let star_colored = (Color::RED * r + Color::WHITE * w + Color::YELLOW * y) * 1000.0;
         commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                     radius,
                     ..default()

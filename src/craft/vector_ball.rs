@@ -1,6 +1,7 @@
 use bevy::prelude::{
     shape, Assets, Color, Commands, Component, Entity, EventReader, EventWriter, GlobalTransform,
-    Mesh, PbrBundle, Quat, Query, Res, ResMut, StandardMaterial, Transform, Vec3, Visibility, With,
+    Mesh, PbrBundle, Quat, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3,
+    Visibility, With,
 };
 
 use bevy::log::error;
@@ -35,6 +36,8 @@ pub struct VectorParts {
     cone: Entity,
 }
 use std::collections::HashMap;
+
+#[derive(Resource)]
 pub struct VectorBallData {
     pub ball: Option<Entity>,
     pub vectors: HashMap<VectorBallElement, VectorParts>,
@@ -71,7 +74,7 @@ pub fn create_vector_ball(
     };
 
     let ball = commands
-        .spawn_bundle(PbrBundle {
+        .spawn(PbrBundle {
             visibility: Visibility { is_visible: false },
             mesh: meshes.add(
                 (shape::Icosphere {
@@ -89,7 +92,7 @@ pub fn create_vector_ball(
 
     [VectorBallElement::Momentum].iter().for_each(|element| {
         let cone = commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 visibility: Visibility { is_visible: false },
                 mesh: meshes.add(
                     (Cone {
@@ -105,7 +108,7 @@ pub fn create_vector_ball(
             .insert(*element)
             .id();
         let cylinder = commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 visibility: Visibility { is_visible: false },
                 mesh: meshes.add(
                     (Cylinder {

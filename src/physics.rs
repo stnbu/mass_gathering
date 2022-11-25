@@ -3,6 +3,7 @@ use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
+#[derive(Resource)]
 pub struct PhysicsConfig {
     pub trails: bool,
     pub sims_per_frame: u8,
@@ -201,7 +202,7 @@ pub fn spawn_planet<'a>(
         collider: Collider::ball(radius),
         ..Default::default()
     };
-    let planet_id = commands.spawn_bundle(planet_bundle).id();
+    let planet_id = commands.spawn(planet_bundle).id();
     debug!("Spawned planet={planet_id:?}");
 }
 

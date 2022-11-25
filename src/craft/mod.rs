@@ -37,6 +37,7 @@ pub struct LeftCamera;
 #[derive(Component)]
 pub struct RightCamera;
 
+#[derive(Resource)]
 pub struct SpacecraftConfig {
     pub show_impact_explosions: bool,
     pub projectile_radius: f32,
@@ -138,7 +139,7 @@ pub fn fire_on_hot_planet(
             let spacecraft_transform = spacecraft_query.get_single_mut().unwrap();
             debug!("Firing at planet {planet:?}, planet-local direction to target: {local_direction:?}");
             commands
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: config.projectile_radius,
                         ..Default::default()
@@ -191,7 +192,7 @@ pub fn spawn_projectile_explosion_animation(
                 let local_impact_site =
                     event.local_impact_site / (planet_transform.scale.length() / SQRT_3);
                 let explosion = commands
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
                             radius: 0.2,
                             ..Default::default()

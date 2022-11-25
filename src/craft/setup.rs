@@ -15,19 +15,19 @@ pub fn spacecraft_setup(
     config: Res<SpacecraftConfig>,
 ) {
     let spacecraft = commands
-        .spawn_bundle(TransformBundle::from_transform(config.start_transform))
-        .insert_bundle(VisibilityBundle::default())
+        .spawn(TransformBundle::from_transform(config.start_transform))
+        .insert(VisibilityBundle::default())
         .insert(Spacecraft {
             speed: config.start_speed,
         })
         .with_children(|child| {
-            child.spawn_bundle(Camera3dBundle {
+            child.spawn(Camera3dBundle {
                 transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),
                 ..Default::default()
             });
             // Possibly the worst way to implement "crosshairs" evar.
             child
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 0.01,
                         ..Default::default()
@@ -39,7 +39,7 @@ pub fn spacecraft_setup(
                 })
                 .insert(SpacecraftAR::CrosshairsCold);
             child
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.08))),
                     material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -7.0),
@@ -48,7 +48,7 @@ pub fn spacecraft_setup(
                 })
                 .insert(SpacecraftAR::CrosshairsHot);
             child
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.08))),
                     material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -6.0),
@@ -58,7 +58,7 @@ pub fn spacecraft_setup(
                 .insert(SpacecraftAR::CrosshairsHot);
 
             // Various lights for seeing
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.7,
@@ -67,7 +67,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(-10.0, 5.0, -35.0),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.5,
@@ -76,7 +76,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(30.0, -20.0, 80.0),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.7,
@@ -85,7 +85,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(-30.0, 10.0, 100.0),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.8,
@@ -95,7 +95,7 @@ pub fn spacecraft_setup(
                 ..Default::default()
             });
             child
-                .spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+                .spawn(TransformBundle::from_transform(Transform::from_xyz(
                     -0.12, -0.06, -0.25,
                 )))
                 .insert(VectorBallTransform);
