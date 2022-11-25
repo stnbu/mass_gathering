@@ -90,45 +90,47 @@ pub fn create_vector_ball(
         .id();
     vector_ball_data.ball = Some(ball);
 
-    [VectorBallElement::Momentum].iter().for_each(|element| {
-        let cone = commands
-            .spawn(PbrBundle {
-                visibility: Visibility { is_visible: false },
-                mesh: meshes.add(
-                    (Cone {
-                        radius: CONE_RADIUS,
-                        height: CONE_HEIGHT,
-                        ..Default::default()
-                    })
-                    .into(),
-                ),
-                material: materials.add(crt_green_medium.clone()),
-                ..Default::default()
-            })
-            .insert(*element)
-            .id();
-        let cylinder = commands
-            .spawn(PbrBundle {
-                visibility: Visibility { is_visible: false },
-                mesh: meshes.add(
-                    (Cylinder {
-                        height: 1.0,
-                        radius_bottom: CYLINDER_RADIUS,
-                        radius_top: CYLINDER_RADIUS,
-                        ..Default::default()
-                    })
-                    .into(),
-                ),
-                material: materials.add(crt_amber_light.clone()),
-                ..Default::default()
-            })
-            .insert(*element)
-            .id();
+    [VectorBallElement::Momentum, VectorBallElement::Force]
+        .iter()
+        .for_each(|element| {
+            let cone = commands
+                .spawn(PbrBundle {
+                    visibility: Visibility { is_visible: false },
+                    mesh: meshes.add(
+                        (Cone {
+                            radius: CONE_RADIUS,
+                            height: CONE_HEIGHT,
+                            ..Default::default()
+                        })
+                        .into(),
+                    ),
+                    material: materials.add(crt_green_medium.clone()),
+                    ..Default::default()
+                })
+                .insert(*element)
+                .id();
+            let cylinder = commands
+                .spawn(PbrBundle {
+                    visibility: Visibility { is_visible: false },
+                    mesh: meshes.add(
+                        (Cylinder {
+                            height: 1.0,
+                            radius_bottom: CYLINDER_RADIUS,
+                            radius_top: CYLINDER_RADIUS,
+                            ..Default::default()
+                        })
+                        .into(),
+                    ),
+                    material: materials.add(crt_amber_light.clone()),
+                    ..Default::default()
+                })
+                .insert(*element)
+                .id();
 
-        vector_ball_data
-            .vectors
-            .insert(*element, VectorParts { cylinder, cone });
-    });
+            vector_ball_data
+                .vectors
+                .insert(*element, VectorParts { cylinder, cone });
+        });
 }
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -217,7 +219,7 @@ pub fn update_vector_ball(
         }
     }
 }
-
+use std::f32::consts::TAU;
 pub fn relay_vector_ball_updates(
     planet_query: Query<(&Transform, &Momentum)>,
     vector_ball_transform_query: Query<&GlobalTransform, With<VectorBallTransform>>,
@@ -231,6 +233,7 @@ pub fn relay_vector_ball_updates(
                 .get_single()
                 .unwrap()
                 .translation();
+
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Ball,
                 vector: Vec3::ZERO,
@@ -239,6 +242,14 @@ pub fn relay_vector_ball_updates(
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Momentum,
                 vector,
+                origin,
+            });
+
+            // FIXME: fake force vector for now/demo.
+            let rot_quat = Quat::from_rotation_x(TAU / 8.0);
+            vector_ball_updates.send(VectorBallUpdate {
+                element: VectorBallElement::Force,
+                vector: rot_quat.mul_vec3(vector),
                 origin,
             });
         }
