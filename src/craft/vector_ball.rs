@@ -61,7 +61,7 @@ pub fn create_vector_ball(
     mut vector_ball_data: ResMut<VectorBallData>,
 ) {
     let ball_texture = StandardMaterial {
-        base_color: Color::rgb(51.0, 255.0, 0.0),
+        base_color: Color::rgba(1.0, 1.0, 1.0, 0.7),
         ..Default::default()
     };
 
@@ -72,12 +72,12 @@ pub fn create_vector_ball(
             (
                 // Cone
                 StandardMaterial {
-                    base_color: Color::rgb(102.0, 255.0, 102.0),
+                    base_color: Color::GRAY,
                     ..Default::default()
                 },
                 // Cylinder
                 StandardMaterial {
-                    base_color: Color::rgb(255.0, 176.0, 0.0),
+                    base_color: Color::OLIVE,
                     ..Default::default()
                 },
             ),
@@ -86,11 +86,11 @@ pub fn create_vector_ball(
             VectorBallElement::Force,
             (
                 StandardMaterial {
-                    base_color: Color::rgb(155.0, 243.0, 44.0),
+                    base_color: Color::BLUE,
                     ..Default::default()
                 },
                 StandardMaterial {
-                    base_color: Color::rgb(177.0, 246.0, 91.0),
+                    base_color: Color::DARK_GREEN,
                     ..Default::default()
                 },
             ),
@@ -102,7 +102,7 @@ pub fn create_vector_ball(
             visibility: Visibility { is_visible: false },
             mesh: meshes.add(
                 (shape::Icosphere {
-                    radius: BALL_RADIUS,
+                    radius: BALL_RADIUS * 0.8,
                     ..Default::default()
                 })
                 .into(),
