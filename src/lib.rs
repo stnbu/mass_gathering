@@ -128,13 +128,15 @@ enum AppState {
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
     rapier_config.gravity = Vec3::ZERO;
 }
-use bevy::window::CursorGrabMode;
+
 fn handle_game_state(
     mut app_state: ResMut<State<AppState>>,
     keys: Res<Input<KeyCode>>,
     mouse_button_input_events: EventReader<MouseButtonInput>,
     mut windows: ResMut<Windows>,
 ) {
+    #[cfg(target_arch = "wasm32")]
+    use bevy::window::CursorGrabMode;
     use AppState::*;
     use KeyCode::*;
     let next_state = if *app_state.current() == Help && !mouse_button_input_events.is_empty() {

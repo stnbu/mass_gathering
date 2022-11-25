@@ -60,18 +60,42 @@ pub fn create_vector_ball(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut vector_ball_data: ResMut<VectorBallData>,
 ) {
-    let crt_green_dark = StandardMaterial {
+    let ball_texture = StandardMaterial {
         base_color: Color::rgb(51.0, 255.0, 0.0),
         ..Default::default()
     };
-    let crt_green_medium = StandardMaterial {
-        base_color: Color::rgb(102.0, 255.0, 102.0),
-        ..Default::default()
-    };
-    let crt_amber_light = StandardMaterial {
-        base_color: Color::rgb(255.0, 176.0, 0.0),
-        ..Default::default()
-    };
+
+    // [(element, (cone_color, cylinder_color))]
+    let vector_colors = HashMap::from([
+        (
+            VectorBallElement::Momentum,
+            (
+                // Cone
+                StandardMaterial {
+                    base_color: Color::rgb(102.0, 255.0, 102.0),
+                    ..Default::default()
+                },
+                // Cylinder
+                StandardMaterial {
+                    base_color: Color::rgb(255.0, 176.0, 0.0),
+                    ..Default::default()
+                },
+            ),
+        ),
+        (
+            VectorBallElement::Force,
+            (
+                StandardMaterial {
+                    base_color: Color::rgb(155.0, 243.0, 44.0),
+                    ..Default::default()
+                },
+                StandardMaterial {
+                    base_color: Color::rgb(177.0, 246.0, 91.0),
+                    ..Default::default()
+                },
+            ),
+        ),
+    ]);
 
     let ball = commands
         .spawn(PbrBundle {
@@ -83,7 +107,7 @@ pub fn create_vector_ball(
                 })
                 .into(),
             ),
-            material: materials.add(crt_green_dark.clone()),
+            material: materials.add(ball_texture.clone()),
             ..Default::default()
         })
         .insert(VectorBallElement::Ball)
@@ -93,6 +117,7 @@ pub fn create_vector_ball(
     [VectorBallElement::Momentum, VectorBallElement::Force]
         .iter()
         .for_each(|element| {
+            let (cone_color, cylinder_color) = vector_colors.get(element).unwrap();
             let cone = commands
                 .spawn(PbrBundle {
                     visibility: Visibility { is_visible: false },
@@ -104,7 +129,7 @@ pub fn create_vector_ball(
                         })
                         .into(),
                     ),
-                    material: materials.add(crt_green_medium.clone()),
+                    material: materials.add(cone_color.clone()),
                     ..Default::default()
                 })
                 .insert(*element)
@@ -121,7 +146,7 @@ pub fn create_vector_ball(
                         })
                         .into(),
                     ),
-                    material: materials.add(crt_amber_light.clone()),
+                    material: materials.add(cylinder_color.clone()),
                     ..Default::default()
                 })
                 .insert(*element)
