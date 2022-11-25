@@ -55,7 +55,6 @@ impl Plugin for SpacecraftPlugin {
                     ),
             )
             .add_startup_system(spacecraft_setup)
-            .add_system(set_camera_viewports)
             .add_system_set(SystemSet::on_update(AppState::Help).with_system(helpscreen));
     }
 }
