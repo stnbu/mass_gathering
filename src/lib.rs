@@ -140,7 +140,7 @@ fn handle_game_state(
     let next_state = if *app_state.current() == Help && !mouse_button_input_events.is_empty() {
         let window = windows.get_primary_mut().unwrap();
         window.set_cursor_visibility(false);
-        window.set_cursor_grab_mode(CursorGrabMode::Locked);
+        window.set_cursor_grab_mode(CursorGrabMode::Confined);
         Some(Playing)
     } else {
         keys.get_just_pressed()
@@ -148,7 +148,7 @@ fn handle_game_state(
                 (Playing, P | H | M) => {
                     let window = windows.get_primary_mut().unwrap();
                     window.set_cursor_visibility(true);
-                    window.set_cursor_grab_mode(CursorGrabMode::Locked);
+                    window.set_cursor_grab_mode(CursorGrabMode::Confined);
                     Some(Help)
                 }
                 (_, _) => Some(Playing),
