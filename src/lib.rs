@@ -1,5 +1,6 @@
 use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
+#[cfg(debug_assertions)]
 use bevy::log::LogSettings;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
