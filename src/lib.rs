@@ -85,37 +85,23 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
-        // app.add_plugins(MinimalPlugins);
-
-        // #[cfg(debug_assertions)]
-        // app.add_plugin(bevy::log::LogPlugin {
-        //     filter: "warn,mass_gathering=debug".into(),
-        //     level: bevy::log::Level::DEBUG,
-        // });
-        // debug!("DEBUG LEVEL LOGGING ! !");
-
-        // An attempt at minimizing DefaultPlugins for our purposes
-        app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
-            filter: "warn,mass_gathering=debug".into(),
-            level: bevy::log::Level::DEBUG,
-        }));
-        // app.add_plugin(bevy::transform::TransformPlugin)
-        //     .add_plugin(bevy::input::InputPlugin)
-        //     .add_plugin(bevy::window::WindowPlugin { ..Default::default() })
-        //     .add_plugin(bevy::asset::AssetPlugin { ..Default::default() })
-        //     .add_plugin(bevy::scene::ScenePlugin)
-        //     .add_plugin(bevy::winit::WinitPlugin)
-        //     .add_plugin(bevy::render::RenderPlugin)
-        //     .add_plugin(bevy::core_pipeline::CorePipelinePlugin)
-        //     .add_plugin(bevy::pbr::PbrPlugin)
-        //     // ...
-        //     ;
+        // Stuff broke when migrating 0.8 -> 0.9 ... It is worth only using the
+        // bare essential plugins as that makes the WASM binary smaller.
+        #[cfg(debug_assertions)]
+        {
+            debug!("DEBUG LEVEL LOGGING ! !");
+            app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
+                filter: "warn,mass_gathering=debug".into(),
+                level: bevy::log::Level::DEBUG,
+            }));
+        }
 
         #[cfg(not(debug_assertions))]
         {
             error!("We have no logging, and yet you SEE this message...?");
             // FIXME: num-triangles on a mesh is a different thing
             app.insert_resource(Msaa { samples: 4 });
+            app.add_plugins(DefaultPlugins);
         }
 
         #[cfg(target_arch = "wasm32")]
