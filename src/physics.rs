@@ -277,7 +277,7 @@ pub fn handle_freefall(
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
-            momentum.force_ro += event.force_ro;
+            momentum.force_ro = event.force_ro * momentum.mass;
             transform.scale *= event.delta_s;
         }
     }

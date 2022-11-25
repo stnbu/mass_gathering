@@ -219,7 +219,7 @@ pub fn update_vector_ball(
         }
     }
 }
-use std::f32::consts::TAU;
+
 pub fn relay_vector_ball_updates(
     planet_query: Query<(&Transform, &Momentum)>,
     vector_ball_transform_query: Query<&GlobalTransform, With<VectorBallTransform>>,
@@ -228,7 +228,6 @@ pub fn relay_vector_ball_updates(
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
-            let vector = momentum.velocity * momentum.mass * VB_SCALING_FACTOR;
             let origin = vector_ball_transform_query
                 .get_single()
                 .unwrap()
@@ -239,17 +238,17 @@ pub fn relay_vector_ball_updates(
                 vector: Vec3::ZERO,
                 origin,
             });
+            let vector = momentum.velocity * momentum.mass * VB_SCALING_FACTOR;
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Momentum,
                 vector,
                 origin,
             });
 
-            // FIXME: fake force vector for now/demo.
-            let rot_quat = Quat::from_rotation_x(TAU / 8.0);
+            let vector = momentum.force_ro * momentum.mass * VB_SCALING_FACTOR;
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Force,
-                vector: rot_quat.mul_vec3(vector),
+                vector,
                 origin,
             });
         }
