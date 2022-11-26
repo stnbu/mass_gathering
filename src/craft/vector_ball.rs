@@ -1,17 +1,12 @@
-use bevy::hierarchy::BuildChildren;
 use bevy::prelude::{
     shape, Assets, Color, Commands, Component, Entity, EventReader, EventWriter, Mesh, PbrBundle,
     Quat, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3, Visibility, With,
 };
 
+use super::*;
 use bevy::log::error;
 
-//use super::{HotPlanetEvent, Spacecraft};
-use super::*;
-
 use crate::physics::Momentum;
-
-// //
 
 const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
 
