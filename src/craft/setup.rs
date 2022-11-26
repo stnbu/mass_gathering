@@ -1,16 +1,14 @@
+use bevy::log::debug;
 use bevy::prelude::{
     shape, Assets, BuildChildren, Camera3dBundle, Color, Commands, Mesh, PbrBundle, PointLight,
     PointLightBundle, Res, ResMut, StandardMaterial, Transform, TransformBundle, Vec3, Visibility,
     VisibilityBundle,
 };
-
-use bevy::log::debug;
-
-//use super::{Spacecraft, SpacecraftAR, SpacecraftConfig, VectorBallData};
-use super::*;
-//use super::vector_ball::*;
-use crate::mg_shapes::*;
 use std::collections::HashMap;
+
+use super::*;
+use crate::mg_shapes::*;
+
 pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -102,7 +100,8 @@ pub fn spacecraft_setup(
         .id();
     debug!("Spawned spacecraft with entity {spacecraft:?}");
 
-    // BUTWHY
+    // Vector Ball Stuff...
+    //
 
     let ball_texture = StandardMaterial {
         base_color: Color::rgba(1.0, 1.0, 1.0, 0.7),
@@ -141,8 +140,6 @@ pub fn spacecraft_setup(
         ),
     ]);
 
-    //let spacecraft_entity = spacecraft_query.get_single().unwrap();
-
     let ball = commands
         .spawn(PbrBundle {
             visibility: Visibility { is_visible: false },
@@ -153,7 +150,7 @@ pub fn spacecraft_setup(
                 })
                 .into(),
             ),
-            material: materials.add(ball_texture.clone()),
+            material: materials.add(ball_texture),
             ..Default::default()
         })
         .insert(VectorBallElement::Ball)

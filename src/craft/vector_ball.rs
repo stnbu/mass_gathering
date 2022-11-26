@@ -1,6 +1,6 @@
 use bevy::prelude::{
-    Component, Entity, EventReader, EventWriter,
-    Quat, Query, Res, Resource, Transform, Vec3, Visibility, With,
+    Component, Entity, EventReader, EventWriter, Quat, Query, Res, Resource, Transform, Vec3,
+    Visibility, With,
 };
 
 use super::*;
@@ -13,6 +13,8 @@ const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
 pub struct VectorBallUpdate {
     element: VectorBallElement,
     vector: Vec3,
+    // Note that vector ball parts are children of spacecraft, therefore, this
+    // is the "local" origin (where it sits in space as you look out the window).
     origin: Vec3,
 }
 
@@ -128,18 +130,11 @@ pub fn update_vector_ball(
 
 pub fn relay_vector_ball_updates(
     planet_query: Query<(&Transform, &Momentum)>,
-    //spacecraft_query: Query<&Transform, With<Spacecraft>>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
     mut vector_ball_updates: EventWriter<VectorBallUpdate>,
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
-            // let spacecraft_transform = spacecraft_query.get_single().unwrap();
-            // let origin = spacecraft_transform.translation
-            //     + spacecraft_transform
-            //         .rotation
-            //     .mul_vec3(Vec3::new(-0.12, -0.06, -0.25));
-
             let origin = Vec3::new(-0.12, -0.06, -0.25);
 
             vector_ball_updates.send(VectorBallUpdate {
