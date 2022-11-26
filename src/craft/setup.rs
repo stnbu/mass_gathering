@@ -6,12 +6,16 @@ use bevy::prelude::{
 
 use bevy::log::debug;
 
-use super::{Spacecraft, SpacecraftAR, SpacecraftConfig};
-
+//use super::{Spacecraft, SpacecraftAR, SpacecraftConfig, VectorBallData};
+use super::*;
+//use super::vector_ball::*;
+use crate::mg_shapes::*;
+use std::collections::HashMap;
 pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut vector_ball_data: ResMut<VectorBallData>,
     config: Res<SpacecraftConfig>,
 ) {
     let spacecraft = commands
@@ -97,4 +101,108 @@ pub fn spacecraft_setup(
         })
         .id();
     debug!("Spawned spacecraft with entity {spacecraft:?}");
+
+    // BUTWHY
+
+    let ball_texture = StandardMaterial {
+        base_color: Color::rgba(1.0, 1.0, 1.0, 0.7),
+        ..Default::default()
+    };
+
+    // [(element, (cone_color, cylinder_color))]
+    let vector_colors = HashMap::from([
+        (
+            VectorBallElement::Momentum,
+            (
+                // Cone
+                StandardMaterial {
+                    base_color: Color::GRAY,
+                    ..Default::default()
+                },
+                // Cylinder
+                StandardMaterial {
+                    base_color: Color::OLIVE,
+                    ..Default::default()
+                },
+            ),
+        ),
+        (
+            VectorBallElement::Force,
+            (
+                StandardMaterial {
+                    base_color: Color::BLUE,
+                    ..Default::default()
+                },
+                StandardMaterial {
+                    base_color: Color::DARK_GREEN,
+                    ..Default::default()
+                },
+            ),
+        ),
+    ]);
+
+    //let spacecraft_entity = spacecraft_query.get_single().unwrap();
+
+    let ball = commands
+        .spawn(PbrBundle {
+            visibility: Visibility { is_visible: false },
+            mesh: meshes.add(
+                (shape::Icosphere {
+                    radius: BALL_RADIUS * 0.8,
+                    ..Default::default()
+                })
+                .into(),
+            ),
+            material: materials.add(ball_texture.clone()),
+            ..Default::default()
+        })
+        .insert(VectorBallElement::Ball)
+        .id();
+    vector_ball_data.ball = Some(ball);
+    commands.entity(spacecraft).add_child(ball);
+
+    [VectorBallElement::Momentum, VectorBallElement::Force]
+        .iter()
+        .for_each(|element| {
+            let (cone_color, cylinder_color) = vector_colors.get(element).unwrap();
+            let cone = commands
+                .spawn(PbrBundle {
+                    visibility: Visibility { is_visible: false },
+                    mesh: meshes.add(
+                        (Cone {
+                            radius: CONE_RADIUS,
+                            height: CONE_HEIGHT,
+                            ..Default::default()
+                        })
+                        .into(),
+                    ),
+                    material: materials.add(cone_color.clone()),
+                    ..Default::default()
+                })
+                .insert(*element)
+                .id();
+            let cylinder = commands
+                .spawn(PbrBundle {
+                    visibility: Visibility { is_visible: false },
+                    mesh: meshes.add(
+                        (Cylinder {
+                            height: 1.0,
+                            radius_bottom: CYLINDER_RADIUS,
+                            radius_top: CYLINDER_RADIUS,
+                            ..Default::default()
+                        })
+                        .into(),
+                    ),
+                    material: materials.add(cylinder_color.clone()),
+                    ..Default::default()
+                })
+                .insert(*element)
+                .id();
+
+            vector_ball_data
+                .vectors
+                .insert(*element, VectorParts { cylinder, cone });
+
+            commands.entity(spacecraft).push_children(&[cylinder, cone]);
+        });
 }

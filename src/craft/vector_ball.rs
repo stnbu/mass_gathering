@@ -1,26 +1,19 @@
+use bevy::hierarchy::BuildChildren;
 use bevy::prelude::{
-    shape, Assets, Color, Commands, Component, Entity, EventReader, EventWriter,
-    Mesh, PbrBundle, Quat, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3,
-    Visibility, With,
+    shape, Assets, Color, Commands, Component, Entity, EventReader, EventWriter, Mesh, PbrBundle,
+    Quat, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3, Visibility, With,
 };
 
 use bevy::log::error;
 
-use super::{HotPlanetEvent, Spacecraft};
+//use super::{HotPlanetEvent, Spacecraft};
+use super::*;
 
 use crate::physics::Momentum;
 
 // //
 
-use crate::mg_shapes::*;
-
 const VB_SCALING_FACTOR: f32 = 1.0 / 30.0;
-
-const BALL_RADIUS: f32 = 3.5 / 14.0;
-const FLOAT_HEIGHT: f32 = 2.0 / 14.0;
-const CYLINDER_RADIUS: f32 = 1.0 / 14.0;
-const CONE_HEIGHT: f32 = 2.0 / 14.0;
-const CONE_RADIUS: f32 = 2.0 / 14.0;
 
 pub struct VectorBallUpdate {
     element: VectorBallElement,
@@ -29,8 +22,8 @@ pub struct VectorBallUpdate {
 }
 
 pub struct VectorParts {
-    cylinder: Entity,
-    cone: Entity,
+    pub cylinder: Entity,
+    pub cone: Entity,
 }
 use std::collections::HashMap;
 
@@ -49,110 +42,6 @@ impl Default for VectorBallData {
             scale: 0.02,
         }
     }
-}
-
-pub fn create_vector_ball(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut vector_ball_data: ResMut<VectorBallData>,
-) {
-    let ball_texture = StandardMaterial {
-        base_color: Color::rgba(1.0, 1.0, 1.0, 0.7),
-        ..Default::default()
-    };
-
-    // [(element, (cone_color, cylinder_color))]
-    let vector_colors = HashMap::from([
-        (
-            VectorBallElement::Momentum,
-            (
-                // Cone
-                StandardMaterial {
-                    base_color: Color::GRAY,
-                    ..Default::default()
-                },
-                // Cylinder
-                StandardMaterial {
-                    base_color: Color::OLIVE,
-                    ..Default::default()
-                },
-            ),
-        ),
-        (
-            VectorBallElement::Force,
-            (
-                StandardMaterial {
-                    base_color: Color::BLUE,
-                    ..Default::default()
-                },
-                StandardMaterial {
-                    base_color: Color::DARK_GREEN,
-                    ..Default::default()
-                },
-            ),
-        ),
-    ]);
-
-    let ball = commands
-        .spawn(PbrBundle {
-            visibility: Visibility { is_visible: false },
-            mesh: meshes.add(
-                (shape::Icosphere {
-                    radius: BALL_RADIUS * 0.8,
-                    ..Default::default()
-                })
-                .into(),
-            ),
-            material: materials.add(ball_texture.clone()),
-            ..Default::default()
-        })
-        .insert(VectorBallElement::Ball)
-        .id();
-    vector_ball_data.ball = Some(ball);
-
-    [VectorBallElement::Momentum, VectorBallElement::Force]
-        .iter()
-        .for_each(|element| {
-            let (cone_color, cylinder_color) = vector_colors.get(element).unwrap();
-            let cone = commands
-                .spawn(PbrBundle {
-                    visibility: Visibility { is_visible: false },
-                    mesh: meshes.add(
-                        (Cone {
-                            radius: CONE_RADIUS,
-                            height: CONE_HEIGHT,
-                            ..Default::default()
-                        })
-                        .into(),
-                    ),
-                    material: materials.add(cone_color.clone()),
-                    ..Default::default()
-                })
-                .insert(*element)
-                .id();
-            let cylinder = commands
-                .spawn(PbrBundle {
-                    visibility: Visibility { is_visible: false },
-                    mesh: meshes.add(
-                        (Cylinder {
-                            height: 1.0,
-                            radius_bottom: CYLINDER_RADIUS,
-                            radius_top: CYLINDER_RADIUS,
-                            ..Default::default()
-                        })
-                        .into(),
-                    ),
-                    material: materials.add(cylinder_color.clone()),
-                    ..Default::default()
-                })
-                .insert(*element)
-                .id();
-
-            vector_ball_data
-                .vectors
-                .insert(*element, VectorParts { cylinder, cone });
-        });
 }
 
 #[derive(Component, Copy, Clone, Debug, Eq, PartialEq, Hash)]
@@ -244,17 +133,19 @@ pub fn update_vector_ball(
 
 pub fn relay_vector_ball_updates(
     planet_query: Query<(&Transform, &Momentum)>,
-    spacecraft_query: Query<&Transform, With<Spacecraft>>,
+    //spacecraft_query: Query<&Transform, With<Spacecraft>>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
     mut vector_ball_updates: EventWriter<VectorBallUpdate>,
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
-            let spacecraft_transform = spacecraft_query.get_single().unwrap();
-            let origin = spacecraft_transform.translation
-                + spacecraft_transform
-                    .rotation
-                    .mul_vec3(Vec3::new(-0.12, -0.06, -0.25));
+            // let spacecraft_transform = spacecraft_query.get_single().unwrap();
+            // let origin = spacecraft_transform.translation
+            //     + spacecraft_transform
+            //         .rotation
+            //     .mul_vec3(Vec3::new(-0.12, -0.06, -0.25));
+
+            let origin = Vec3::new(-0.12, -0.06, -0.25);
 
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Ball,

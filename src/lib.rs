@@ -32,7 +32,8 @@ impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
             .init_resource::<VectorBallData>()
-            .add_startup_system(create_vector_ball)
+            .add_startup_system(spacecraft_setup)
+            //.add_startup_system(create_vector_ball.after(spacecraft_setup))
             .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
             .add_event::<FireProjectileEvent>()
@@ -56,7 +57,6 @@ impl Plugin for SpacecraftPlugin {
                         handle_projectile_despawn.after(spawn_projectile_explosion_animation),
                     ),
             )
-            .add_startup_system(spacecraft_setup)
             .add_system_set(SystemSet::on_update(AppState::Help).with_system(helpscreen));
     }
 }
