@@ -326,6 +326,8 @@ pub fn signal_hot_planet(
     mut hot_planet_events: EventWriter<HotPlanetEvent>,
 ) {
     for pov in spacecraft_query.iter() {
+        // TODO: can we use "native" raycasting here?
+        // https://docs.rs/bevy/0.9.0/bevy/render/camera/struct.Camera.html#method.viewport_to_world
         let ray_origin = pov.translation;
         let ray_direction = -1.0 * pov.local_z();
         let intersection = rapier_context.cast_ray(
