@@ -74,13 +74,18 @@ fn transform_vector_parts<'a>(
 #[derive(Default)]
 pub struct VectorBallPreviousValues(pub HashMap<VectorBallElement, Vec3>);
 
+// Is this terrible? It might be.
+#[derive(Default)]
+pub struct VectorBallFramecount(u32);
+
 pub fn update_vector_ball(
     mut vector_ball_updates: EventReader<VectorBallUpdate>,
     mut vector_parts: Query<(&mut Transform, &mut Visibility), With<VectorBallElement>>,
     vector_ball_data: Res<VectorBallData>,
     mut prev_value: Local<VectorBallPreviousValues>,
+    mut frame_count: Local<VectorBallFramecount>,
 ) {
-    // Because this is cheap. Is that wrong? Is this
+    frame_count.0 += 1;
     if vector_ball_updates.is_empty() {
         vector_parts.for_each_mut(|(_, mut visibility)| visibility.is_visible = false);
     }
@@ -110,28 +115,22 @@ pub fn update_vector_ball(
             _ => {
                 if let Some(VectorParts { cone, cylinder }) = vector_ball_data.vectors.get(element)
                 {
+                    // if frame_count.0 % 30 != 0 {
+                    //     continue;
+                    // }
                     if let Ok([cone, cylinder]) = vector_parts.get_many_mut([*cone, *cylinder]) {
-                        //
-                        //
-                        //
-                        let prev: Vec3 = if let Some(prev) = prev_value.0.insert(*element, *vector)
-                        {
-                            prev
+                        // Smoother code
+                        let prev: Vec3 = if let Some(prev) = prev_value.0.get(element) {
+                            *prev
                         } else {
                             *vector
                         };
-                        println!("+ update value:   {vector:?}");
-                        println!("+ previous value: {prev:?}");
                         let delta = *vector - prev;
-                        println!("delta: {delta:?}");
                         let length = delta.length();
-                        println!("length: {length:?}");
                         let coeff = if length >= 1.0 { 1.0 } else { length.powi(2) };
-                        //let coeff = (1.0 / delta.length().powi(2));
-                        println!("coeff: {coeff:?}");
                         let vector = prev + delta * coeff;
-                        println!("+ new adjusted value: {vector:?}");
-                        println!("----------------------");
+                        prev_value.0.insert(*element, vector);
+                        // End Smoother code
 
                         let (mut cone_transform, mut cone_visibility) = cone;
                         let (mut cylinder_transform, mut cylinder_visibility) = cylinder;
