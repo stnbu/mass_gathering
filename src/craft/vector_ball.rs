@@ -6,7 +6,7 @@ use bevy::prelude::{
 
 use bevy::log::error;
 
-use super::HotPlanetEvent;
+use super::{HotPlanetEvent, Spacecraft};
 
 use crate::physics::Momentum;
 
@@ -247,16 +247,15 @@ pub fn update_vector_ball(
 
 pub fn relay_vector_ball_updates(
     planet_query: Query<(&Transform, &Momentum)>,
-    vector_ball_transform_query: Query<&GlobalTransform, With<VectorBallTransform>>,
+    spacecraft_query: Query<&Transform, With<Spacecraft>>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
     mut vector_ball_updates: EventWriter<VectorBallUpdate>,
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
-            let origin = vector_ball_transform_query
-                .get_single()
-                .unwrap()
-                .translation();
+            // -0.12, -0.06, -0.25
+            let origin =
+                spacecraft_query.get_single().unwrap().translation + Vec3::new(-0.2, -0.1, -0.25);
 
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Ball,
