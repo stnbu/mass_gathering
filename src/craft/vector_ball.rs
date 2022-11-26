@@ -90,6 +90,15 @@ pub fn update_vector_ball(
     } in vector_ball_updates.iter()
     {
         let scale = vector_ball_data.scale;
+        let longest = prev_value.0.values().fold(Vec3::ZERO, |longest, current| {
+            if current.length() > longest.length() {
+                *current
+            } else {
+                longest
+            }
+        });
+        let longest_length = longest.length();
+        let scale = vector_ball_data.scale * 1.0 / longest_length;
         match *element {
             VectorBallElement::Ball => {
                 if let Some(ball) = vector_ball_data.ball {
