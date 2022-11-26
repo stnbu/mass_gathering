@@ -1,6 +1,6 @@
 use bevy::prelude::{
-    shape, Assets, Color, Commands, Component, Entity, EventReader, EventWriter, Mesh, PbrBundle,
-    Quat, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3, Visibility, With,
+    Component, Entity, EventReader, EventWriter,
+    Quat, Query, Res, Resource, Transform, Vec3, Visibility, With,
 };
 
 use super::*;
