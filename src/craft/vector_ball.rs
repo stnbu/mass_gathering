@@ -27,6 +27,7 @@ use std::collections::HashMap;
 #[derive(Resource)]
 pub struct VectorBallData {
     pub ball: Option<Entity>,
+    pub container: Option<Entity>,
     pub vectors: HashMap<VectorBallElement, VectorParts>,
     pub scale: f32,
 }
@@ -35,8 +36,9 @@ impl Default for VectorBallData {
     fn default() -> Self {
         Self {
             ball: None,
+            container: None,
             vectors: HashMap::new(),
-            scale: 0.02,
+            scale: 0.03,
         }
     }
 }
@@ -46,6 +48,7 @@ pub enum VectorBallElement {
     Momentum,
     Force,
     Ball,
+    Container,
 }
 
 fn transform_vector_parts<'a>(
@@ -89,7 +92,6 @@ pub fn update_vector_ball(
         origin,  // and where shall I put it?
     } in vector_ball_updates.iter()
     {
-        let scale = vector_ball_data.scale;
         let longest = prev_value.0.values().fold(Vec3::ZERO, |longest, current| {
             if current.length() > longest.length() {
                 *current
@@ -98,8 +100,24 @@ pub fn update_vector_ball(
             }
         });
         let longest_length = longest.length();
+        let container_scale = vector_ball_data.scale;
         let scale = vector_ball_data.scale * 1.0 / longest_length;
         match *element {
+            VectorBallElement::Container => {
+                if let Some(container) = vector_ball_data.container {
+                    if let Ok((mut container_transform, mut container_visibility)) =
+                        vector_parts.get_mut(container)
+                    {
+                        container_transform.scale = Vec3::splat(container_scale);
+                        container_transform.translation = *origin;
+                        container_visibility.is_visible = true;
+                    } else {
+                        error!("{element:?} vector missing container {container:?}");
+                    }
+                } else {
+                    error!("Vector container not set");
+                }
+            }
             VectorBallElement::Ball => {
                 if let Some(ball) = vector_ball_data.ball {
                     if let Ok((mut ball_transform, mut ball_visibility)) =
@@ -165,6 +183,11 @@ pub fn relay_vector_ball_updates(
 
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Ball,
+                vector: Vec3::ZERO,
+                origin,
+            });
+            vector_ball_updates.send(VectorBallUpdate {
+                element: VectorBallElement::Container,
                 vector: Vec3::ZERO,
                 origin,
             });

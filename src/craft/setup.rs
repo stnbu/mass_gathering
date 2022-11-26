@@ -100,15 +100,9 @@ pub fn spacecraft_setup(
         .id();
     debug!("Spawned spacecraft with entity {spacecraft:?}");
 
-    // Vector Ball Stuff...
-    //
+    // Vector Ball Stuff... //
 
-    let ball_texture = StandardMaterial {
-        base_color: Color::rgba(1.0, 1.0, 1.0, 0.7),
-        ..Default::default()
-    };
-
-    // [(element, (cone_color, cylinder_color))]
+    // Vector part colors: [(element, (cone_color, cylinder_color))]
     let vector_colors = HashMap::from([
         (
             VectorBallElement::Momentum,
@@ -150,13 +144,28 @@ pub fn spacecraft_setup(
                 })
                 .into(),
             ),
-            material: materials.add(ball_texture),
+            material: materials.add(Color::rgba(1.0, 1.0, 1.0, 0.7).into()),
             ..Default::default()
         })
         .insert(VectorBallElement::Ball)
         .id();
     vector_ball_data.ball = Some(ball);
     commands.entity(spacecraft).add_child(ball);
+
+    let container = commands
+        .spawn(PbrBundle {
+            visibility: Visibility { is_visible: false },
+            mesh: meshes.add(shape::Box::new(2.0, 2.0, 2.0).into()),
+            material: materials.add(Color::rgba(0.0, 1.0, 1.0, 0.01).into()),
+            ..Default::default()
+        })
+        .insert(VectorBallElement::Container)
+        .id();
+    vector_ball_data.ball = Some(ball);
+    commands.entity(spacecraft).add_child(ball);
+
+    vector_ball_data.container = Some(container);
+    commands.entity(spacecraft).add_child(container);
 
     [VectorBallElement::Momentum, VectorBallElement::Force]
         .iter()
