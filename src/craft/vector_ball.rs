@@ -22,9 +22,6 @@ const CYLINDER_RADIUS: f32 = 1.0 / 14.0;
 const CONE_HEIGHT: f32 = 2.0 / 14.0;
 const CONE_RADIUS: f32 = 2.0 / 14.0;
 
-#[derive(Component)]
-pub struct VectorBallTransform;
-
 pub struct VectorBallUpdate {
     element: VectorBallElement,
     vector: Vec3,
@@ -253,9 +250,11 @@ pub fn relay_vector_ball_updates(
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
-            // -0.12, -0.06, -0.25
-            let origin =
-                spacecraft_query.get_single().unwrap().translation + Vec3::new(-0.2, -0.1, -0.25);
+            let spacecraft_transform = spacecraft_query.get_single().unwrap();
+            let origin = spacecraft_transform.translation
+                + spacecraft_transform
+                    .rotation
+                    .mul_vec3(Vec3::new(-0.12, -0.06, -0.25));
 
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Ball,

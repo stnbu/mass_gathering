@@ -6,7 +6,7 @@ use bevy::prelude::{
 
 use bevy::log::debug;
 
-use super::{Spacecraft, SpacecraftAR, SpacecraftConfig, VectorBallTransform};
+use super::{Spacecraft, SpacecraftAR, SpacecraftConfig};
 
 pub fn spacecraft_setup(
     mut commands: Commands,
@@ -94,11 +94,6 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child
-                .spawn(TransformBundle::from_transform(Transform::from_xyz(
-                    -0.12, -0.06, -0.25,
-                )))
-                .insert(VectorBallTransform);
         })
         .id();
     debug!("Spawned spacecraft with entity {spacecraft:?}");
