@@ -179,7 +179,7 @@ pub fn relay_vector_ball_updates(
 ) {
     for &HotPlanetEvent { planet, .. } in hot_planet_events.iter() {
         if let Ok((_, momentum)) = planet_query.get(planet) {
-            let origin = Vec3::new(-0.12, -0.06, -0.25);
+            let origin = Vec3::new(-0.12, -0.05, -0.25);
 
             vector_ball_updates.send(VectorBallUpdate {
                 element: VectorBallElement::Ball,
