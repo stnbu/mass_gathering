@@ -1,5 +1,5 @@
 use bevy::prelude::{
-    shape, Assets, Color, Commands, Component, Entity, EventReader, EventWriter, GlobalTransform,
+    shape, Assets, Color, Commands, Component, Entity, EventReader, EventWriter,
     Mesh, PbrBundle, Quat, Query, Res, ResMut, Resource, StandardMaterial, Transform, Vec3,
     Visibility, With,
 };
