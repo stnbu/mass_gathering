@@ -74,18 +74,12 @@ fn transform_vector_parts<'a>(
 #[derive(Default)]
 pub struct VectorBallPreviousValues(pub HashMap<VectorBallElement, Vec3>);
 
-// Is this terrible? It might be.
-#[derive(Default)]
-pub struct VectorBallFramecount(u32);
-
 pub fn update_vector_ball(
     mut vector_ball_updates: EventReader<VectorBallUpdate>,
     mut vector_parts: Query<(&mut Transform, &mut Visibility), With<VectorBallElement>>,
     vector_ball_data: Res<VectorBallData>,
     mut prev_value: Local<VectorBallPreviousValues>,
-    mut frame_count: Local<VectorBallFramecount>,
 ) {
-    frame_count.0 += 1;
     if vector_ball_updates.is_empty() {
         vector_parts.for_each_mut(|(_, mut visibility)| visibility.is_visible = false);
     }
@@ -115,9 +109,6 @@ pub fn update_vector_ball(
             _ => {
                 if let Some(VectorParts { cone, cylinder }) = vector_ball_data.vectors.get(element)
                 {
-                    // if frame_count.0 % 30 != 0 {
-                    //     continue;
-                    // }
                     if let Ok([cone, cylinder]) = vector_parts.get_many_mut([*cone, *cylinder]) {
                         // Smoother code
                         let prev: Vec3 = if let Some(prev) = prev_value.0.get(element) {
