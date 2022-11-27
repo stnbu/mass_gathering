@@ -279,3 +279,25 @@ fn handle_browser_resize(mut windows: ResMut<Windows>) {
         window.set_resolution(target_width, target_height);
     }
 }
+
+// // // // // // // // // //
+// Copying this mess verbatim for now
+// mwbryant/logic-renet-showcase : src/lib.rs
+
+pub use bevy::prelude::*;
+pub use bevy_renet::renet::*;
+pub use bevy_renet::*;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ClientMessage {
+    StateBroadcast { translation: Vec3 },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum ServerMessage {
+    RelayedBroadcast { translation: Vec3 },
+}
+
+pub const PORT_NUMBER: u16 = 25271;
+pub const PROTOCOL_ID: u64 = 1001;

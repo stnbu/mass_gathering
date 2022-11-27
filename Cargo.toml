@@ -7,6 +7,8 @@ edition = "2021"
 bevy = { version = "0.9.0", default-features = false, features = ["bevy_winit", "bevy_core_pipeline", "bevy_pbr"] }
 bevy_egui = { version = "0.17.1", default-features = false, features = ["default_fonts"] }
 bevy_rapier3d = { version = "0.19.0", default-features = false, features = ["dim3"] }
+serde = { version = "1.0", features = [ "derive" ] }
+bevy_renet = "0.0.6"
 egui = "0.19.0"
 egui_extras = "0.19.0"
 rand = "0.8.5"
