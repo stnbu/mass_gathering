@@ -1505,6 +1505,18 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "348108ab3fba42ec82ff6e9564fc4ca0247bdccdc68dd8af9764bbc79c3c8ffb"
 
 [[package]]
+name = "local-ip-address"
+version = "0.4.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9eab7f092fb08006040e656c2adce6670e6a516bea831a8b2b3d0fb24d4488f5"
+dependencies = [
+ "libc",
+ "neli",
+ "thiserror",
+ "windows-sys 0.42.0",
+]
+
+[[package]]
 name = "lock_api"
 version = "0.4.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1534,14 +1546,16 @@ dependencies = [
 
 [[package]]
 name = "mass_gathering"
-version = "0.10.9"
+version = "0.11.0"
 dependencies = [
  "bevy",
  "bevy_egui",
  "bevy_rapier3d",
  "bevy_renet",
+ "bincode",
  "egui",
  "egui_extras",
+ "local-ip-address",
  "rand",
  "rapier3d",
  "serde",
@@ -1702,6 +1716,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3cf2aae958bd232cac5069850591667ad422d263686d75b52a065f9badeee5a3"
 dependencies = [
  "jni-sys",
+]
+
+[[package]]
+name = "neli"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9053554eb5dcb7e10d9cdab1206965bde870eed5d0d341532ca035e3ba221508"
+dependencies = [
+ "byteorder",
+ "libc",
 ]
 
 [[package]]
