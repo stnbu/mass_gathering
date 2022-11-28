@@ -10,6 +10,7 @@ use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetError},
     run_if_client_connected, RenetClientPlugin,
 };
+use clap::Parser;
 use mg_renet_play::{
     client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
     PlayerInput, Ray3d, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
@@ -34,23 +35,13 @@ struct ClientLobby {
     players: HashMap<u64, PlayerInfo>,
 }
 
-//
-use clap::Parser;
-#[derive(Parser, Debug)]
-#[command(author, version, about, long_about = None)]
+#[derive(Parser)]
 struct Args {
     #[arg(short, long)]
     id: String,
     #[arg(short, long, default_value_t = 1)]
     value: u64,
 }
-// fn main() {
-//     let args = Args::parse();
-//     for _ in 0..args.value {
-//         println!("Hello {}!", args.id)
-//     }
-// }
-//
 
 fn new_renet_client() -> RenetClient {
     let client_id = Args::parse().value;
