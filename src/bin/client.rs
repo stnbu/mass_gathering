@@ -85,7 +85,6 @@ fn main() {
     ));
     app.add_system(update_visulizer_system);
 
-    app.add_system(bevy::window::close_on_esc);
     app.add_system(exit_on_esc);
 
     app.add_startup_system(setup_level);
