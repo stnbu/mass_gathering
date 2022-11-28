@@ -2,7 +2,10 @@ use std::time::Duration;
 
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
-use bevy_renet::renet::{ChannelConfig, ReliableChannelConfig, RenetConnectionConfig, UnreliableChannelConfig, NETCODE_KEY_BYTES};
+use bevy_renet::renet::{
+    ChannelConfig, ReliableChannelConfig, RenetConnectionConfig, UnreliableChannelConfig,
+    NETCODE_KEY_BYTES,
+};
 use serde::{Deserialize, Serialize};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"an example very very secret key."; // 32-bytes
@@ -38,10 +41,21 @@ pub enum ServerChannel {
 
 #[derive(Debug, Serialize, Deserialize, Component)]
 pub enum ServerMessages {
-    PlayerCreate { entity: Entity, id: u64, translation: [f32; 3] },
-    PlayerRemove { id: u64 },
-    SpawnProjectile { entity: Entity, translation: [f32; 3] },
-    DespawnProjectile { entity: Entity },
+    PlayerCreate {
+        entity: Entity,
+        id: u64,
+        translation: [f32; 3],
+    },
+    PlayerRemove {
+        id: u64,
+    },
+    SpawnProjectile {
+        entity: Entity,
+        translation: [f32; 3],
+    },
+    DespawnProjectile {
+        entity: Entity,
+    },
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -123,7 +137,11 @@ pub fn server_connection_config() -> RenetConnectionConfig {
 }
 
 /// set up a simple 3D scene
-pub fn setup_level(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+pub fn setup_level(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     // plane
     commands
         .spawn(PbrBundle {
@@ -193,7 +211,11 @@ impl Ray3d {
         Ray3d { origin, direction }
     }
 
-    pub fn from_screenspace(windows: &Res<Windows>, camera: &Camera, camera_transform: &GlobalTransform) -> Option<Self> {
+    pub fn from_screenspace(
+        windows: &Res<Windows>,
+        camera: &Camera,
+        camera_transform: &GlobalTransform,
+    ) -> Option<Self> {
         let window = windows.get_primary().unwrap();
         let cursor_position = match window.cursor_position() {
             Some(c) => c,

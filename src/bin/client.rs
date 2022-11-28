@@ -10,8 +10,8 @@ use bevy_renet::{
     run_if_client_connected, RenetClientPlugin,
 };
 use demo_bevy::{
-    client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand, PlayerInput, Ray3d, ServerChannel,
-    ServerMessages, PROTOCOL_ID,
+    client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
+    PlayerInput, Ray3d, ServerChannel, ServerMessages, PROTOCOL_ID,
 };
 use renet_visualizer::{RenetClientVisualizer, RenetVisualizerStyle};
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
@@ -37,7 +37,9 @@ fn new_renet_client() -> RenetClient {
     let server_addr = "127.0.0.1:5000".parse().unwrap();
     let socket = UdpSocket::bind("127.0.0.1:0").unwrap();
     let connection_config = client_connection_config();
-    let current_time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+    let current_time = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap();
     let client_id = current_time.as_millis() as u64;
     let authentication = ClientAuthentication::Unsecure {
         client_id,
@@ -72,7 +74,9 @@ fn main() {
     app.add_system(client_send_player_commands.with_run_criteria(run_if_client_connected));
     app.add_system(client_sync_players.with_run_criteria(run_if_client_connected));
 
-    app.insert_resource(RenetClientVisualizer::<200>::new(RenetVisualizerStyle::default()));
+    app.insert_resource(RenetClientVisualizer::<200>::new(
+        RenetVisualizerStyle::default(),
+    ));
     app.add_system(update_visulizer_system);
 
     app.add_startup_system(setup_level);
@@ -114,7 +118,8 @@ fn player_input(
     mut player_commands: EventWriter<PlayerCommand>,
 ) {
     player_input.left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
-    player_input.right = keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
+    player_input.right =
+        keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
     player_input.up = keyboard_input.pressed(KeyCode::W) || keyboard_input.pressed(KeyCode::Up);
     player_input.down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
 
@@ -132,7 +137,10 @@ fn client_send_input(player_input: Res<PlayerInput>, mut client: ResMut<RenetCli
     client.send_message(ClientChannel::Input, input_message);
 }
 
-fn client_send_player_commands(mut player_commands: EventReader<PlayerCommand>, mut client: ResMut<RenetClient>) {
+fn client_send_player_commands(
+    mut player_commands: EventReader<PlayerCommand>,
+    mut client: ResMut<RenetClient>,
+) {
     for command in player_commands.iter() {
         let command_message = bincode::serialize(command).unwrap();
         client.send_message(ClientChannel::Command, command_message);
@@ -151,7 +159,11 @@ fn client_sync_players(
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
-            ServerMessages::PlayerCreate { id, translation, entity } => {
+            ServerMessages::PlayerCreate {
+                id,
+                translation,
+                entity,
+            } => {
                 println!("Player {} connected.", id);
                 let mut client_entity = commands.spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Capsule::default())),
@@ -182,7 +194,10 @@ fn client_sync_players(
                     network_mapping.0.remove(&server_entity);
                 }
             }
-            ServerMessages::SpawnProjectile { entity, translation } => {
+            ServerMessages::SpawnProjectile {
+                entity,
+                translation,
+            } => {
                 let projectile_entity = commands.spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 0.1,
@@ -245,12 +260,17 @@ fn setup_camera(mut commands: Commands) {
             smoother: Smoother::new(0.9),
         })
         .insert(Camera3dBundle {
-            transform: Transform::from_xyz(0., 8.0, 2.5).looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
+            transform: Transform::from_xyz(0., 8.0, 2.5)
+                .looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
             ..default()
         });
 }
 
-fn setup_target(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+fn setup_target(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     commands
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {

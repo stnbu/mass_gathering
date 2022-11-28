@@ -11,8 +11,8 @@ use bevy_renet::{
     RenetServerPlugin,
 };
 use demo_bevy::{
-    server_connection_config, setup_level, spawn_fireball, ClientChannel, NetworkedEntities, Player, PlayerCommand, PlayerInput,
-    Projectile, ServerChannel, ServerMessages, PROTOCOL_ID,
+    server_connection_config, setup_level, spawn_fireball, ClientChannel, NetworkedEntities,
+    Player, PlayerCommand, PlayerInput, Projectile, ServerChannel, ServerMessages, PROTOCOL_ID,
 };
 use renet_visualizer::RenetServerVisualizer;
 
@@ -27,8 +27,11 @@ fn new_renet_server() -> RenetServer {
     let server_addr = "127.0.0.1:5000".parse().unwrap();
     let socket = UdpSocket::bind(server_addr).unwrap();
     let connection_config = server_connection_config();
-    let server_config = ServerConfig::new(64, PROTOCOL_ID, server_addr, ServerAuthentication::Unsecure);
-    let current_time = SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap();
+    let server_config =
+        ServerConfig::new(64, PROTOCOL_ID, server_addr, ServerAuthentication::Unsecure);
+    let current_time = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap();
     RenetServer::new(current_time, server_config, connection_config, socket).unwrap()
 }
 
@@ -125,7 +128,8 @@ fn server_update_system(
                     commands.entity(player_entity).despawn();
                 }
 
-                let message = bincode::serialize(&ServerMessages::PlayerRemove { id: *id }).unwrap();
+                let message =
+                    bincode::serialize(&ServerMessages::PlayerRemove { id: *id }).unwrap();
                 server.broadcast_message(ServerChannel::ServerMessages, message);
             }
         }
@@ -136,17 +140,27 @@ fn server_update_system(
             let command: PlayerCommand = bincode::deserialize(&message).unwrap();
             match command {
                 PlayerCommand::BasicAttack { mut cast_at } => {
-                    println!("Received basic attack from client {}: {:?}", client_id, cast_at);
+                    println!(
+                        "Received basic attack from client {}: {:?}",
+                        client_id, cast_at
+                    );
 
                     if let Some(player_entity) = lobby.players.get(&client_id) {
                         if let Ok((_, _, player_transform)) = players.get(*player_entity) {
                             cast_at[1] = player_transform.translation[1];
 
-                            let direction = (cast_at - player_transform.translation).normalize_or_zero();
+                            let direction =
+                                (cast_at - player_transform.translation).normalize_or_zero();
                             let mut translation = player_transform.translation + (direction * 0.7);
                             translation[1] = 1.0;
 
-                            let fireball_entity = spawn_fireball(&mut commands, &mut meshes, &mut materials, translation, direction);
+                            let fireball_entity = spawn_fireball(
+                                &mut commands,
+                                &mut meshes,
+                                &mut materials,
+                                translation,
+                                direction,
+                            );
                             let message = ServerMessages::SpawnProjectile {
                                 entity: fireball_entity,
                                 translation: translation.into(),
@@ -167,7 +181,11 @@ fn server_update_system(
     }
 }
 
-fn update_projectiles_system(mut commands: Commands, mut projectiles: Query<(Entity, &mut Projectile)>, time: Res<Time>) {
+fn update_projectiles_system(
+    mut commands: Commands,
+    mut projectiles: Query<(Entity, &mut Projectile)>,
+    time: Res<Time>,
+) {
     for (entity, mut projectile) in projectiles.iter_mut() {
         projectile.duration.tick(time.delta());
         if projectile.duration.finished() {
@@ -186,11 +204,16 @@ fn update_visulizer_system(
 }
 
 #[allow(clippy::type_complexity)]
-fn server_network_sync(mut server: ResMut<RenetServer>, query: Query<(Entity, &Transform), Or<(With<Player>, With<Projectile>)>>) {
+fn server_network_sync(
+    mut server: ResMut<RenetServer>,
+    query: Query<(Entity, &Transform), Or<(With<Player>, With<Projectile>)>>,
+) {
     let mut networked_entities = NetworkedEntities::default();
     for (entity, transform) in query.iter() {
         networked_entities.entities.push(entity);
-        networked_entities.translations.push(transform.translation.into());
+        networked_entities
+            .translations
+            .push(transform.translation.into());
     }
 
     let sync_message = bincode::serialize(&networked_entities).unwrap();
@@ -232,7 +255,10 @@ fn despawn_projectile_system(
     }
 }
 
-fn projectile_on_removal_system(mut server: ResMut<RenetServer>, removed_projectiles: RemovedComponents<Projectile>) {
+fn projectile_on_removal_system(
+    mut server: ResMut<RenetServer>,
+    removed_projectiles: RemovedComponents<Projectile>,
+) {
     for entity in removed_projectiles.iter() {
         let message = ServerMessages::DespawnProjectile { entity };
         let message = bincode::serialize(&message).unwrap();
