@@ -1,10 +1,6 @@
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
-use bevy::{
-    app::AppExit,
-    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
-    prelude::*,
-};
+use bevy::{app::AppExit, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_egui::{EguiContext, EguiPlugin};
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetError},
@@ -68,7 +64,6 @@ fn main() {
     app.add_plugin(RenetClientPlugin::default());
     app.add_plugin(LookTransformPlugin);
     app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-    app.add_plugin(LogDiagnosticsPlugin::default());
     app.add_plugin(EguiPlugin);
 
     app.add_event::<PlayerCommand>();
