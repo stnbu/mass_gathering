@@ -12,7 +12,8 @@ use bevy_renet::{
 };
 use mg_renet_play::{
     server_connection_config, setup_level, spawn_fireball, ClientChannel, NetworkedEntities,
-    Player, PlayerCommand, PlayerInput, Projectile, ServerChannel, ServerMessages, PROTOCOL_ID,
+    Player, PlayerCommand, PlayerInput, Projectile, ServerChannel, ServerMessages, PORT_NUMBER,
+    PROTOCOL_ID,
 };
 use renet_visualizer::RenetServerVisualizer;
 
@@ -24,7 +25,7 @@ pub struct ServerLobby {
 const PLAYER_MOVE_SPEED: f32 = 5.0;
 
 fn new_renet_server() -> RenetServer {
-    let server_addr = "127.0.0.1:5000".parse().unwrap();
+    let server_addr = format!("127.0.0.1:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind(server_addr).unwrap();
     let connection_config = server_connection_config();
     let server_config =

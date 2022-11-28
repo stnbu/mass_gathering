@@ -11,7 +11,7 @@ use bevy_renet::{
 };
 use mg_renet_play::{
     client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
-    PlayerInput, Ray3d, ServerChannel, ServerMessages, PROTOCOL_ID,
+    PlayerInput, Ray3d, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
 };
 use renet_visualizer::{RenetClientVisualizer, RenetVisualizerStyle};
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
@@ -34,7 +34,7 @@ struct ClientLobby {
 }
 
 fn new_renet_client() -> RenetClient {
-    let server_addr = "127.0.0.1:5000".parse().unwrap();
+    let server_addr = format!("127.0.0.1:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("127.0.0.1:0").unwrap();
     let connection_config = client_connection_config();
     let current_time = SystemTime::now()

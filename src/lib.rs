@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"an example very very secret key."; // 32-bytes
 pub const PROTOCOL_ID: u64 = 7;
+pub const PORT_NUMBER: u16 = 5239;
 
 #[derive(Debug, Component)]
 pub struct Player {
