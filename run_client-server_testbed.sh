@@ -1,6 +1,8 @@
 #!/bin/sh -u
 
-echo ">>> Running client \"in the background\"..." >&2
-cargo run --bin client &
+for ID in 0 1 ; do
+    echo ">>> Running client ${ID} \"in the background\"..." >&2
+    cargo run --bin client -- --id $ID &
+done &
 echo ">>> Running server \"in the forground\"..." >&2
 cargo run --bin server
