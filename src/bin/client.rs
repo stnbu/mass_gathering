@@ -1,6 +1,7 @@
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
 use bevy::{
+    app::AppExit,
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
 };
@@ -80,6 +81,7 @@ fn main() {
     app.add_system(update_visulizer_system);
 
     app.add_system(bevy::window::close_on_esc);
+    app.add_system(exit_on_esc);
 
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_camera);
@@ -93,6 +95,18 @@ fn main() {
 fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
         panic!("{}", e);
+    }
+}
+
+fn exit_on_esc(
+    mut exit: EventWriter<AppExit>,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut client: ResMut<RenetClient>,
+) {
+    if keyboard_input.just_pressed(KeyCode::Escape) {
+        client.disconnect();
+        info!("Client sent disconnect; exiting.");
+        exit.send(AppExit);
     }
 }
 

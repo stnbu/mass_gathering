@@ -1,6 +1,7 @@
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
 use bevy::{
+    app::AppExit,
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     prelude::*,
 };
@@ -75,6 +76,7 @@ fn server_update_system(
     mut server: ResMut<RenetServer>,
     mut visualizer: ResMut<RenetServerVisualizer<200>>,
     players: Query<(Entity, &Player, &Transform)>,
+    mut exit: EventWriter<AppExit>,
 ) {
     for event in server_events.iter() {
         match event {
@@ -129,7 +131,10 @@ fn server_update_system(
                     commands.entity(player_entity).despawn();
                 }
 
-                // EXIT server here.
+                if lobby.players.is_empty() {
+                    warn!("All clients disconnected; server exiting.");
+                    exit.send(AppExit);
+                }
 
                 let message =
                     bincode::serialize(&ServerMessages::PlayerRemove { id: *id }).unwrap();
