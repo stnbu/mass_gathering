@@ -129,6 +129,8 @@ fn server_update_system(
                     commands.entity(player_entity).despawn();
                 }
 
+                // EXIT server here.
+
                 let message =
                     bincode::serialize(&ServerMessages::PlayerRemove { id: *id }).unwrap();
                 server.broadcast_message(ServerChannel::ServerMessages, message);
