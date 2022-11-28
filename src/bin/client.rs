@@ -52,8 +52,6 @@ fn new_renet_client() -> RenetClient {
     let current_time = SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap();
-    //let client_id = current_time.as_millis() as u64;
-    //let client_id =
     let authentication = ClientAuthentication::Unsecure {
         client_id,
         protocol_id: PROTOCOL_ID,
