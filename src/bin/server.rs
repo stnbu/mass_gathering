@@ -10,7 +10,7 @@ use bevy_renet::{
     renet::{RenetServer, ServerAuthentication, ServerConfig, ServerEvent},
     RenetServerPlugin,
 };
-use demo_bevy::{
+use mg_renet_play::{
     server_connection_config, setup_level, spawn_fireball, ClientChannel, NetworkedEntities,
     Player, PlayerCommand, PlayerInput, Projectile, ServerChannel, ServerMessages, PROTOCOL_ID,
 };
