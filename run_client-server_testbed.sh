@@ -1,6 +1,6 @@
 #!/bin/sh -u
 
-for ID in 0 1 ; do
+for ID in 49 ; do
     echo ">>> Running client ${ID} \"in the background\"..." >&2
     cargo run --bin client -- --id $ID &
 done &
