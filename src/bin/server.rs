@@ -101,7 +101,7 @@ fn server_update_system(
                 let player_entity = commands
                     .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Capsule::default())),
-                        material: materials.add(Color::rgb(0.8, 0.7, 0.6).into()),
+                        material: materials.add(Color::rgb(0.8, *id as f32 / 100.0, 0.6).into()),
                         transform,
                         ..Default::default()
                     })
