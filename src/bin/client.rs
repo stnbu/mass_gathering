@@ -39,8 +39,6 @@ struct Args {
 
 fn new_renet_client() -> RenetClient {
     let client_id = Args::parse().id;
-    println!("OK OMG SO EMBARRAS. The client id izzzzs.... {client_id}");
-
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("127.0.0.1:0").unwrap();
     let connection_config = client_connection_config();
