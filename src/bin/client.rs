@@ -1,10 +1,7 @@
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
 use bevy::{
-    app::AppExit,
-    diagnostic::FrameTimeDiagnosticsPlugin,
-    prelude::*,
-    window::{WindowCloseRequested, WindowClosed},
+    app::AppExit, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, window::WindowCloseRequested,
 };
 use bevy_egui::{EguiContext, EguiPlugin};
 use bevy_renet::{
@@ -12,7 +9,7 @@ use bevy_renet::{
     run_if_client_connected, RenetClientPlugin,
 };
 use clap::Parser;
-use mg_renet_play::{
+use mass_gathering::{
     client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
     PlayerInput, Ray3d, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };

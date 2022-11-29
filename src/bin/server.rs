@@ -7,7 +7,7 @@ use bevy_renet::{
     renet::{RenetServer, ServerAuthentication, ServerConfig, ServerEvent},
     RenetServerPlugin,
 };
-use mg_renet_play::{
+use mass_gathering::{
     server_connection_config, setup_level, spawn_fireball, ClientChannel, NetworkedEntities,
     Player, PlayerCommand, PlayerInput, Projectile, ServerChannel, ServerMessages, PORT_NUMBER,
     PROTOCOL_ID, SERVER_ADDR,
@@ -39,7 +39,6 @@ fn main() {
 
     app.add_plugin(RenetServerPlugin::default());
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-    app.add_plugin(RapierDebugRenderPlugin::default());
     app.add_plugin(FrameTimeDiagnosticsPlugin::default());
     app.add_plugin(EguiPlugin);
 
