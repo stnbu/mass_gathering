@@ -1,6 +1,11 @@
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
-use bevy::{app::AppExit, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
+use bevy::{
+    app::AppExit,
+    diagnostic::FrameTimeDiagnosticsPlugin,
+    prelude::*,
+    window::{WindowCloseRequested, WindowClosed},
+};
 use bevy_egui::{EguiContext, EguiPlugin};
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetError},
@@ -103,11 +108,15 @@ fn exit_on_esc(
     mut exit: EventWriter<AppExit>,
     keyboard_input: Res<Input<KeyCode>>,
     mut client: ResMut<RenetClient>,
+    window_closed: EventReader<WindowCloseRequested>,
 ) {
-    if keyboard_input.just_pressed(KeyCode::Escape) {
+    let any_window_closed = !window_closed.is_empty();
+    if keyboard_input.just_pressed(KeyCode::Escape) || any_window_closed {
+        info!("Disconnecting");
         client.disconnect();
-        info!("Client sent disconnect; exiting.");
-        exit.send(AppExit);
+        if !any_window_closed {
+            exit.send(AppExit);
+        }
     }
 }
 
