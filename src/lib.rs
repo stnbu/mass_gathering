@@ -9,9 +9,9 @@ use bevy_renet::renet::{
 use serde::{Deserialize, Serialize};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"an example very very secret key."; // 32-bytes
-pub const PROTOCOL_ID: u64 = 9;
+pub const PROTOCOL_ID: u64 = 11;
 pub const SERVER_ADDR: &str = "192.168.1.43";
-pub const PORT_NUMBER: u16 = 5239;
+pub const PORT_NUMBER: u16 = 5241;
 
 #[derive(Debug, Component)]
 pub struct Player {
