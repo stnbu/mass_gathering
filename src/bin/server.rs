@@ -1,4 +1,4 @@
-use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
+use std::{collections::HashMap, f32::consts::TAU, net::UdpSocket, time::SystemTime};
 
 use bevy::{app::AppExit, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
 use bevy_egui::{EguiContext, EguiPlugin};
@@ -91,8 +91,13 @@ fn server_update_system(
                     server.send_message(*id, ServerChannel::ServerMessages, message);
                 }
 
+                let height = Vec3::new(0.0, 0.51, 0.0);
+                let r = 1.05 / 100.0 * TAU;
+                let direction_from_origin = Quat::from_rotation_y(r * (*id as f32));
+                let translation = direction_from_origin.mul_vec3(Vec3::Z) * 1.7 + height;
+
                 // Spawn new player
-                let transform = Transform::from_xyz(0.0, 0.51, 0.0);
+                let transform = Transform::from_translation(translation);
                 let player_entity = commands
                     .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Capsule::default())),
