@@ -1848,7 +1848,6 @@ dependencies = [
  "renet_visualizer",
  "serde",
  "smooth-bevy-cameras",
- "web-sys",
 ]
 
 [[package]]

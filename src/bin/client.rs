@@ -6,15 +6,13 @@ use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetError},
     run_if_client_connected, RenetClientPlugin,
 };
+use clap::Parser;
 use mg_renet_play::{
     client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
     PlayerInput, Ray3d, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 use renet_visualizer::{RenetClientVisualizer, RenetVisualizerStyle};
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
-
-#[cfg(not(target_arch = "wasm32"))]
-use clap::Parser;
 
 #[derive(Component)]
 struct ControlledPlayer;
@@ -33,7 +31,6 @@ struct ClientLobby {
     players: HashMap<u64, PlayerInfo>,
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 #[derive(Parser)]
 struct Args {
     #[arg(short, long)]
@@ -41,11 +38,7 @@ struct Args {
 }
 
 fn new_renet_client() -> RenetClient {
-    #[cfg(target_arch = "wasm32")]
-    let client_id = 26;
-    #[cfg(not(target_arch = "wasm32"))]
     let client_id = Args::parse().id;
-
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let connection_config = client_connection_config();
@@ -90,9 +83,6 @@ fn main() {
     app.add_system(update_visulizer_system);
 
     app.add_system(exit_on_esc);
-
-    #[cfg(target_arch = "wasm32")]
-    app.add_system(handle_browser_resize);
 
     app.add_startup_system(setup_level);
     app.add_startup_system(setup_camera);
@@ -320,18 +310,5 @@ fn camera_follow(
         cam_transform.eye.x = player_transform.translation.x;
         cam_transform.eye.z = player_transform.translation.z + 2.5;
         cam_transform.target = player_transform.translation;
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn handle_browser_resize(mut windows: ResMut<Windows>) {
-    let window = windows.get_primary_mut().unwrap();
-    let wasm_window = web_sys::window().unwrap();
-    let (target_width, target_height) = (
-        wasm_window.inner_width().unwrap().as_f64().unwrap() as f32,
-        wasm_window.inner_height().unwrap().as_f64().unwrap() as f32,
-    );
-    if window.width() != target_width || window.height() != target_height {
-        window.set_resolution(target_width, target_height);
     }
 }

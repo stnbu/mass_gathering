@@ -22,4 +22,4 @@ smooth-bevy-cameras = { git = "https://github.com/bonsairobo/smooth-bevy-cameras
 bevy_renet = "0.0.6"
 renet_visualizer = { version = "0.0.3", features = ["bevy"] }
 clap = { version = "4.0.27", features = ["derive"] }
-web-sys = { version = "0.3.60", default-features = false, features = ["Window"] }
+
