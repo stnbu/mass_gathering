@@ -1,7 +1,6 @@
 use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
 use bevy::prelude::*;
-use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 use std::f32::consts::{PI, TAU};
@@ -9,8 +8,6 @@ mod physics;
 use physics::*;
 
 mod craft;
-mod helpscreen;
-mod mg_shapes;
 pub mod prelude;
 
 use prelude::*;
@@ -31,7 +28,6 @@ pub struct SpacecraftPlugin;
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
-            .init_resource::<VectorBallData>()
             .add_startup_system(spacecraft_setup)
             .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
@@ -40,8 +36,6 @@ impl Plugin for SpacecraftPlugin {
                 SystemSet::on_update(AppState::Playing)
                     .with_system(control)
                     .with_system(signal_hot_planet)
-                    .with_system(relay_vector_ball_updates.after(signal_hot_planet))
-                    .with_system(update_vector_ball.after(relay_vector_ball_updates))
                     .with_system(fire_on_hot_planet)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
@@ -53,8 +47,7 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(
                         handle_projectile_despawn.after(spawn_projectile_explosion_animation),
                     ),
-            )
-            .add_system_set(SystemSet::on_update(AppState::Help).with_system(helpscreen));
+            );
     }
 }
 
@@ -66,7 +59,6 @@ impl Plugin for Spacetime {
             .add_event::<DeltaEvent>()
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnPlanetEvent>()
-            .add_event::<VectorBallUpdate>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(handle_despawn_planet)
@@ -107,8 +99,7 @@ impl Plugin for Core {
         #[cfg(not(target_arch = "wasm32"))]
         app.add_system(bevy::window::close_on_esc);
 
-        app.add_plugin(EguiPlugin)
-            .add_state(AppState::Help)
+        app.add_state(AppState::Paused)
             .add_startup_system(disable_rapier_gravity)
             .add_system(handle_game_state)
             .add_system(timer_despawn)
@@ -119,7 +110,7 @@ impl Plugin for Core {
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
 enum AppState {
     Playing,
-    Help,
+    Paused,
 }
 
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
@@ -136,7 +127,7 @@ fn handle_game_state(
     use bevy::window::CursorGrabMode;
     use AppState::*;
     use KeyCode::*;
-    let next_state = if *app_state.current() == Help && !mouse_button_input_events.is_empty() {
+    let next_state = if *app_state.current() == Paused && !mouse_button_input_events.is_empty() {
         let window = windows.get_primary_mut().unwrap();
         window.set_cursor_visibility(false);
         #[cfg(target_arch = "wasm32")]
@@ -150,7 +141,7 @@ fn handle_game_state(
                     window.set_cursor_visibility(true);
                     #[cfg(target_arch = "wasm32")]
                     window.set_cursor_grab_mode(CursorGrabMode::Confined);
-                    Some(Help)
+                    Some(Paused)
                 }
                 (_, _) => Some(Playing),
             })

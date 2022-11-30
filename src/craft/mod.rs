@@ -12,17 +12,8 @@ pub use controls::*;
 mod setup;
 pub use setup::*;
 
-mod vector_ball;
-pub use vector_ball::*;
-
 use crate::mass_to_radius;
 use crate::physics::Momentum;
-
-const BALL_RADIUS: f32 = 3.5 / 14.0;
-const FLOAT_HEIGHT: f32 = 2.0 / 14.0;
-const CYLINDER_RADIUS: f32 = 1.0 / 14.0;
-const CONE_HEIGHT: f32 = 2.0 / 14.0;
-const CONE_RADIUS: f32 = 2.0 / 14.0;
 
 pub const SQRT_3: f32 = 1.7320508_f32;
 
