@@ -19,7 +19,7 @@ pub fn spacecraft_setup(
             pbr: PbrBundle::default(),
             momentum: Momentum {
                 velocity: Vec3::ZERO,
-                mass: 1.0,
+                mass: mass_to_radius(10.0),
                 ..Default::default()
             },
             collider: Collider::ball(1.0),

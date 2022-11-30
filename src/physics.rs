@@ -222,7 +222,11 @@ pub fn signal_freefall_delta(
             .map(|((entity, translation, mass, velocity), acceleration)| {
                 let force = acceleration * dt;
                 let delta_p = *velocity * dt;
-                let delta_v = force / *mass;
+                let delta_v = if *mass == 0.0 {
+                    Vec3::ZERO
+                } else {
+                    force / *mass
+                };
                 let delta_s = 1.0;
                 delta_events.send(DeltaEvent {
                     entity: *entity,
