@@ -1,6 +1,8 @@
 use bevy::prelude::{App, ClearColor, Color, Transform, Vec3};
-use mass_gathering::prelude::{my_planets, PhysicsConfig, SpacecraftConfig};
+use mass_gathering::prelude::{PhysicsConfig, SpacecraftConfig};
 use mass_gathering::FullGame;
+
+fn my_planets() {}
 
 fn main() {
     let d = 60.0 / 3.0_f32.powf(0.5); // about right for my_planets

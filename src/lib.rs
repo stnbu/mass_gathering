@@ -188,33 +188,6 @@ pub fn timer_despawn(
     }
 }
 
-pub fn my_planets(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    let mut rng = rand::thread_rng();
-    let mut rf = || rng.gen::<f32>();
-    let pair_count = 18;
-    for _ in 0..pair_count {
-        let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
-        let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
-        let radius = rf() + 2.0;
-        for side in [-1.0, 1.0] {
-            let color = Color::rgb(rf(), rf(), rf());
-            spawn_planet(
-                radius,
-                position * side,
-                velocity * side,
-                color,
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-            );
-        }
-    }
-}
-
 // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // //
