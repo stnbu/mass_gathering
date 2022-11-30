@@ -3,7 +3,6 @@ use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 use bevy::{
     app::AppExit, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, window::WindowCloseRequested,
 };
-use bevy_egui::{EguiContext, EguiPlugin};
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetError},
     run_if_client_connected, RenetClientPlugin,
@@ -13,7 +12,6 @@ use mass_gathering::{
     client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
     PlayerInput, Ray3d, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
-use renet_visualizer::{RenetClientVisualizer, RenetVisualizerStyle};
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 
 #[derive(Component)]
@@ -63,7 +61,6 @@ fn main() {
     app.add_plugin(RenetClientPlugin::default());
     app.add_plugin(LookTransformPlugin);
     app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-    app.add_plugin(EguiPlugin);
 
     app.add_event::<PlayerCommand>();
 
@@ -78,11 +75,6 @@ fn main() {
     app.add_system(client_send_input.with_run_criteria(run_if_client_connected));
     app.add_system(client_send_player_commands.with_run_criteria(run_if_client_connected));
     app.add_system(client_sync_players.with_run_criteria(run_if_client_connected));
-
-    app.insert_resource(RenetClientVisualizer::<200>::new(
-        RenetVisualizerStyle::default(),
-    ));
-    app.add_system(update_visulizer_system);
 
     app.add_system(exit_on_esc);
 
@@ -114,22 +106,6 @@ fn exit_on_esc(
         if !any_window_closed {
             exit.send(AppExit);
         }
-    }
-}
-
-fn update_visulizer_system(
-    mut egui_context: ResMut<EguiContext>,
-    mut visualizer: ResMut<RenetClientVisualizer<200>>,
-    client: Res<RenetClient>,
-    mut show_visualizer: Local<bool>,
-    keyboard_input: Res<Input<KeyCode>>,
-) {
-    visualizer.add_network_info(client.network_info());
-    if keyboard_input.just_pressed(KeyCode::F1) {
-        *show_visualizer = !*show_visualizer;
-    }
-    if *show_visualizer {
-        visualizer.show_window(egui_context.ctx_mut());
     }
 }
 

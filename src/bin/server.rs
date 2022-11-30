@@ -1,7 +1,6 @@
 use std::{collections::HashMap, f32::consts::TAU, net::UdpSocket, time::SystemTime};
 
 use bevy::{app::AppExit, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*};
-use bevy_egui::{EguiContext, EguiPlugin};
 use bevy_rapier3d::prelude::*;
 use bevy_renet::{
     renet::{RenetServer, ServerAuthentication, ServerConfig, ServerEvent},
@@ -12,7 +11,6 @@ use mass_gathering::{
     Player, PlayerCommand, PlayerInput, Projectile, ServerChannel, ServerMessages, PORT_NUMBER,
     PROTOCOL_ID, SERVER_ADDR,
 };
-use renet_visualizer::RenetServerVisualizer;
 
 #[derive(Debug, Default, Resource)]
 pub struct ServerLobby {
@@ -40,17 +38,14 @@ fn main() {
     app.add_plugin(RenetServerPlugin::default());
     app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-    app.add_plugin(EguiPlugin);
 
     app.insert_resource(ServerLobby::default());
     app.insert_resource(new_renet_server());
-    app.insert_resource(RenetServerVisualizer::<200>::default());
 
     app.add_system(server_update_system);
     app.add_system(server_network_sync);
     app.add_system(move_players_system);
     app.add_system(update_projectiles_system);
-    app.add_system(update_visulizer_system);
     app.add_system(despawn_projectile_system);
     app.add_system_to_stage(CoreStage::PostUpdate, projectile_on_removal_system);
 
@@ -68,16 +63,12 @@ fn server_update_system(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut lobby: ResMut<ServerLobby>,
     mut server: ResMut<RenetServer>,
-    mut visualizer: ResMut<RenetServerVisualizer<200>>,
     players: Query<(Entity, &Player, &Transform)>,
     mut exit: EventWriter<AppExit>,
 ) {
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, _) => {
-                println!("Player {} connected.", id);
-                visualizer.add_client(*id);
-
                 // Initialize other players for this new client
                 for (entity, player, transform) in players.iter() {
                     let translation: [f32; 3] = transform.translation.into();
@@ -125,7 +116,6 @@ fn server_update_system(
             }
             ServerEvent::ClientDisconnected(id) => {
                 println!("Player {} disconnected.", id);
-                visualizer.remove_client(*id);
                 if let Some(player_entity) = lobby.players.remove(id) {
                     commands.entity(player_entity).despawn();
                 }
@@ -199,15 +189,6 @@ fn update_projectiles_system(
             commands.entity(entity).despawn();
         }
     }
-}
-
-fn update_visulizer_system(
-    mut egui_context: ResMut<EguiContext>,
-    mut visualizer: ResMut<RenetServerVisualizer<200>>,
-    server: Res<RenetServer>,
-) {
-    visualizer.update(&server);
-    visualizer.show_window(egui_context.ctx_mut());
 }
 
 #[allow(clippy::type_complexity)]
