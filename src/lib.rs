@@ -51,6 +51,16 @@ impl Plugin for SpacecraftPlugin {
     }
 }
 
+pub fn let_light(mut commands: Commands) {
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            shadows_enabled: true,
+            ..default()
+        },
+        ..default()
+    });
+}
+
 pub struct Spacetime;
 
 impl Plugin for Spacetime {
@@ -91,6 +101,7 @@ impl Plugin for Core {
             app.add_plugins(DefaultPlugins);
         }
 
+        app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
 
         app.add_state(AppState::Paused)

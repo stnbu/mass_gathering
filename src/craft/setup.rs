@@ -1,8 +1,7 @@
 use bevy::log::debug;
 use bevy::prelude::{
-    shape, Assets, BuildChildren, Camera3dBundle, Color, Commands, Mesh, PbrBundle, PointLight,
-    PointLightBundle, Res, ResMut, StandardMaterial, Transform, TransformBundle, Vec3, Visibility,
-    VisibilityBundle,
+    shape, Assets, BuildChildren, Camera3dBundle, Color, Commands, Mesh, PbrBundle, Res, ResMut,
+    StandardMaterial, Transform, TransformBundle, Vec3, Visibility, VisibilityBundle,
 };
 
 use super::*;
@@ -55,44 +54,6 @@ pub fn spacecraft_setup(
                     ..Default::default()
                 })
                 .insert(SpacecraftAR::CrosshairsHot);
-
-            // Various lights for seeing
-            child.spawn(PointLightBundle {
-                transform: Transform::from_xyz(10.0, -10.0, -25.0),
-                point_light: PointLight {
-                    intensity: 5000.0 * 1.7,
-                    range: 1000.0,
-                    ..Default::default()
-                },
-                ..Default::default()
-            });
-            child.spawn(PointLightBundle {
-                transform: Transform::from_xyz(-10.0, 5.0, -35.0),
-                point_light: PointLight {
-                    intensity: 5000.0 * 1.5,
-                    range: 1000.0,
-                    ..Default::default()
-                },
-                ..Default::default()
-            });
-            child.spawn(PointLightBundle {
-                transform: Transform::from_xyz(30.0, -20.0, 80.0),
-                point_light: PointLight {
-                    intensity: 1000000.0 * 0.7,
-                    range: 1000.0,
-                    ..Default::default()
-                },
-                ..Default::default()
-            });
-            child.spawn(PointLightBundle {
-                transform: Transform::from_xyz(-30.0, 10.0, 100.0),
-                point_light: PointLight {
-                    intensity: 1000000.0 * 0.8,
-                    range: 1000.0,
-                    ..Default::default()
-                },
-                ..Default::default()
-            });
         })
         .id();
     debug!("Spawned spacecraft with entity {spacecraft:?}");
