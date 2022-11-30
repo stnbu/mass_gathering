@@ -1,7 +1,7 @@
 use bevy::log::debug;
 use bevy::prelude::{
     shape, Assets, BuildChildren, Camera3dBundle, Color, Commands, Mesh, PbrBundle, Res, ResMut,
-    StandardMaterial, Transform, TransformBundle, Vec3, Visibility, VisibilityBundle,
+    StandardMaterial, Transform, Vec3, Visibility,
 };
 
 use crate::PointMassBundle;
