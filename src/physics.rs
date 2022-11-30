@@ -1,5 +1,5 @@
 use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
-use crate::{mass_to_radius, radius_to_mass};
+use crate::mass_to_radius;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
@@ -151,7 +151,7 @@ pub fn transfer_planet_momentum(
 }
 
 #[derive(Bundle)]
-pub struct PlanetBundle {
+pub struct PointMassBundle {
     #[bundle]
     pbr: PbrBundle,
     momentum: Momentum,
@@ -161,7 +161,7 @@ pub struct PlanetBundle {
     sensor: Sensor,
 }
 
-impl Default for PlanetBundle {
+impl Default for PointMassBundle {
     fn default() -> Self {
         Self {
             pbr: Default::default(),
@@ -172,38 +172,6 @@ impl Default for PlanetBundle {
             sensor: Default::default(),
         }
     }
-}
-
-pub fn spawn_planet<'a>(
-    radius: f32,
-    position: Vec3,
-    velocity: Vec3,
-    color: Color,
-    commands: &'a mut Commands,
-    meshes: &'a mut ResMut<Assets<Mesh>>,
-    materials: &'a mut ResMut<Assets<StandardMaterial>>,
-) {
-    let mass = radius_to_mass(radius);
-    let planet_bundle = PlanetBundle {
-        pbr: PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius,
-                ..default()
-            })),
-            material: materials.add(color.into()),
-            transform: Transform::from_translation(position),
-            ..default()
-        },
-        momentum: Momentum {
-            velocity,
-            mass,
-            ..Default::default()
-        },
-        collider: Collider::ball(radius),
-        ..Default::default()
-    };
-    let planet_id = commands.spawn(planet_bundle).id();
-    debug!("Spawned planet={planet_id:?}");
 }
 
 #[derive(Component, Debug, Default)]

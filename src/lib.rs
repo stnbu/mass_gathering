@@ -2,8 +2,7 @@ use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-use rand::Rng;
-use std::f32::consts::{PI, TAU};
+use std::f32::consts::PI;
 mod physics;
 use physics::*;
 
@@ -150,18 +149,7 @@ fn handle_game_state(
     }
 }
 
-// Take the latitude (poles are [1,-1]) and the longitude (portion around, starting at (0,0,1))
-// and return the x, y, z on the unit sphere.
-fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
-    let theta = (lat * 2.0 - 1.0).acos(); // latitude. -1 & 1 are poles. 0 is equator.
-    let phi = lon * TAU; // portion around the planet `[0,1)` (from Greenwich)
-    let x = theta.sin() * phi.cos();
-    let y = theta.sin() * phi.sin();
-    let z = theta.cos();
-    Vec3::new(x, y, z)
-}
-
-pub(crate) fn radius_to_mass(radius: f32) -> f32 {
+pub fn radius_to_mass(radius: f32) -> f32 {
     (4.0 / 3.0) * PI * radius.powf(3.0)
 }
 
