@@ -3,13 +3,12 @@ use bevy::input::mouse::MouseButtonInput;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use std::f32::consts::PI;
-mod physics;
-use physics::*;
 
-mod craft;
-pub mod prelude;
+pub mod physics;
+pub use physics::*;
 
-use prelude::*;
+pub mod craft;
+pub use craft::*;
 
 pub struct FullGame;
 

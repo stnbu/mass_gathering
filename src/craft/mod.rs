@@ -13,7 +13,7 @@ mod setup;
 pub use setup::*;
 
 use crate::mass_to_radius;
-use crate::physics::Momentum;
+use crate::{DeltaEvent, Momentum};
 
 const SQRT_3: f32 = 1.7320508_f32;
 
@@ -27,12 +27,6 @@ pub(crate) enum SpacecraftAR {
 pub struct Spacecraft {
     pub speed: f32,
 }
-
-#[derive(Component)]
-pub struct LeftCamera;
-
-#[derive(Component)]
-pub struct RightCamera;
 
 #[derive(Resource)]
 pub struct SpacecraftConfig {
@@ -60,12 +54,6 @@ pub struct ProjectileTarget {
     pub local_direction: Vec3,
 }
 
-#[derive(Component, Default)]
-pub struct Blink {
-    pub hertz: f64,
-    pub start_angle: f64, // what the! not-zero seems to break.
-}
-
 #[derive(Component)]
 pub struct ProjectileExplosion {
     pub rising: bool,
@@ -83,7 +71,6 @@ pub(crate) fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &S
     }
 }
 
-use crate::prelude::DeltaEvent;
 pub(crate) fn handle_hot_planet(
     spacecraft_query: Query<&Children, With<Spacecraft>>,
     mut ar_query: Query<(&mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
