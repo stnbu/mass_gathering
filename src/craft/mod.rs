@@ -15,10 +15,10 @@ pub use setup::*;
 use crate::mass_to_radius;
 use crate::physics::Momentum;
 
-pub const SQRT_3: f32 = 1.7320508_f32;
+const SQRT_3: f32 = 1.7320508_f32;
 
 #[derive(Component, PartialEq, Eq)]
-pub enum SpacecraftAR {
+pub(crate) enum SpacecraftAR {
     CrosshairsHot,
     CrosshairsCold,
 }
@@ -74,7 +74,7 @@ pub struct ProjectileExplosion {
 #[derive(Default)]
 pub struct Despawned(HashSet<Entity>);
 
-pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
+pub(crate) fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in ar_query.iter_mut() {
         match mode {
             SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
@@ -84,7 +84,7 @@ pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &Spacecra
 }
 
 use crate::prelude::DeltaEvent;
-pub fn handle_hot_planet(
+pub(crate) fn handle_hot_planet(
     spacecraft_query: Query<&Children, With<Spacecraft>>,
     mut ar_query: Query<(&mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
     hot_planet_events: EventReader<HotPlanetEvent>,
