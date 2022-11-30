@@ -153,12 +153,12 @@ pub fn transfer_planet_momentum(
 #[derive(Bundle)]
 pub struct PointMassBundle {
     #[bundle]
-    pbr: PbrBundle,
-    momentum: Momentum,
-    rigid_body: RigidBody,
-    collider: Collider,
-    active_events: ActiveEvents,
-    sensor: Sensor,
+    pub pbr: PbrBundle,
+    pub momentum: Momentum,
+    pub rigid_body: RigidBody,
+    pub collider: Collider,
+    pub active_events: ActiveEvents,
+    pub sensor: Sensor,
 }
 
 impl Default for PointMassBundle {

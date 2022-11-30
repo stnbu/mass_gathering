@@ -4,6 +4,8 @@ use bevy::prelude::{
     StandardMaterial, Transform, TransformBundle, Vec3, Visibility, VisibilityBundle,
 };
 
+use crate::PointMassBundle;
+
 use super::*;
 
 pub fn spacecraft_setup(
@@ -13,8 +15,16 @@ pub fn spacecraft_setup(
     config: Res<SpacecraftConfig>,
 ) {
     let spacecraft = commands
-        .spawn(TransformBundle::from_transform(config.start_transform))
-        .insert(VisibilityBundle::default())
+        .spawn(PointMassBundle {
+            pbr: PbrBundle::default(),
+            momentum: Momentum {
+                velocity: Vec3::ZERO,
+                mass: 1.0,
+                ..Default::default()
+            },
+            collider: Collider::ball(1.0),
+            ..Default::default()
+        })
         .insert(Spacecraft {
             speed: config.start_speed,
         })
