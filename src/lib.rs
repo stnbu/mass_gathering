@@ -74,8 +74,6 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
-        // Stuff broke when migrating 0.8 -> 0.9 ... It is worth only using the
-        // bare essential plugins as that makes the WASM binary smaller.
         #[cfg(debug_assertions)]
         {
             debug!("DEBUG LEVEL LOGGING ! !");
@@ -93,10 +91,6 @@ impl Plugin for Core {
             app.add_plugins(DefaultPlugins);
         }
 
-        #[cfg(target_arch = "wasm32")]
-        app.add_system(handle_browser_resize);
-
-        #[cfg(not(target_arch = "wasm32"))]
         app.add_system(bevy::window::close_on_esc);
 
         app.add_state(AppState::Paused)
@@ -123,15 +117,11 @@ fn handle_game_state(
     mouse_button_input_events: EventReader<MouseButtonInput>,
     mut windows: ResMut<Windows>,
 ) {
-    #[cfg(target_arch = "wasm32")]
-    use bevy::window::CursorGrabMode;
     use AppState::*;
     use KeyCode::*;
     let next_state = if *app_state.current() == Paused && !mouse_button_input_events.is_empty() {
         let window = windows.get_primary_mut().unwrap();
         window.set_cursor_visibility(false);
-        #[cfg(target_arch = "wasm32")]
-        window.set_cursor_grab_mode(CursorGrabMode::Confined);
         Some(Playing)
     } else {
         keys.get_just_pressed()
@@ -139,8 +129,6 @@ fn handle_game_state(
                 (Playing, P | H | M) => {
                     let window = windows.get_primary_mut().unwrap();
                     window.set_cursor_visibility(true);
-                    #[cfg(target_arch = "wasm32")]
-                    window.set_cursor_grab_mode(CursorGrabMode::Confined);
                     Some(Paused)
                 }
                 (_, _) => Some(Playing),
@@ -213,19 +201,6 @@ pub fn my_planets(
                 &mut materials,
             );
         }
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-fn handle_browser_resize(mut windows: ResMut<Windows>) {
-    let window = windows.get_primary_mut().unwrap();
-    let wasm_window = web_sys::window().unwrap();
-    let (target_width, target_height) = (
-        wasm_window.inner_width().unwrap().as_f64().unwrap() as f32,
-        wasm_window.inner_height().unwrap().as_f64().unwrap() as f32,
-    );
-    if window.width() != target_width || window.height() != target_height {
-        window.set_resolution(target_width, target_height);
     }
 }
 
