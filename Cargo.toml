@@ -2,6 +2,7 @@
 name = "mass_gathering"
 version = "0.11.0"
 edition = "2021"
+default-run = "client"
 
 [dependencies]
 bevy = { version = "0.9.0", default-features = false, features = ["bevy_winit", "bevy_core_pipeline", "bevy_pbr"] }
