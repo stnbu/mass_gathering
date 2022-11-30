@@ -33,15 +33,12 @@ impl Plugin for SpacecraftPlugin {
         app.init_resource::<SpacecraftConfig>()
             .init_resource::<VectorBallData>()
             .add_startup_system(spacecraft_setup)
-            //.add_startup_system(create_vector_ball.after(spacecraft_setup))
             .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
             .add_event::<FireProjectileEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
-                    .with_system(move_forward)
                     .with_system(control)
-                    .with_system(stars)
                     .with_system(signal_hot_planet)
                     .with_system(relay_vector_ball_updates.after(signal_hot_planet))
                     .with_system(update_vector_ball.after(relay_vector_ball_updates))
@@ -183,9 +180,6 @@ pub(crate) fn mass_to_radius(mass: f32) -> f32 {
 }
 
 #[derive(Component)]
-pub struct Star;
-
-#[derive(Component)]
 pub struct DespawnTimer {
     pub ttl: Timer,
 }
@@ -229,42 +223,6 @@ pub fn my_planets(
             );
         }
     }
-
-    // poorly implemented stars!!
-    let star_count = 40;
-    for _ in 0..star_count {
-        let position = latlon_to_cartesian(rf(), rf()) * 400.0;
-        let radius = rf() * 0.3 + 0.7;
-        let (r, w, y) = (rf() * 40.0, rf() * 400.0, rf() * 20.0);
-        let star_colored = (Color::RED * r + Color::WHITE * w + Color::YELLOW * y) * 1000.0;
-        commands
-            .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius,
-                    ..default()
-                })),
-                material: materials.add(star_colored.into()),
-                transform: Transform::from_translation(position),
-                ..default()
-            })
-            .insert(Star);
-    }
-}
-
-#[derive(Default)]
-pub struct Prev(pub Vec3);
-
-fn stars(
-    mut stars_query: Query<&mut Transform, (With<Star>, Without<Spacecraft>)>,
-
-    spacecraft_query: Query<&mut Transform, With<Spacecraft>>,
-    mut previous: Local<Prev>,
-) {
-    let spacecraft = spacecraft_query.get_single().unwrap();
-    for mut star in stars_query.iter_mut() {
-        star.translation += spacecraft.translation - previous.0;
-    }
-    previous.0 = spacecraft.translation;
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -539,3 +497,6 @@ impl Ray3d {
         }
     }
 }
+
+// End from prototype
+// // // // // // // // // // // // // // // // // // // //

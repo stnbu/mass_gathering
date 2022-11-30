@@ -85,13 +85,6 @@ pub struct ProjectileExplosion {
 #[derive(Default)]
 pub struct Despawned(HashSet<Entity>);
 
-pub fn move_forward(mut query: Query<(&mut Transform, &Spacecraft)>, time: Res<Time>) {
-    for (mut transform, spacecraft) in query.iter_mut() {
-        let direction = transform.local_z();
-        transform.translation -= direction * time.delta_seconds() * spacecraft.speed;
-    }
-}
-
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in ar_query.iter_mut() {
         match mode {
