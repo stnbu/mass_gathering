@@ -37,7 +37,6 @@ pub struct RightCamera;
 #[derive(Resource)]
 pub struct SpacecraftConfig {
     pub show_impact_explosions: bool,
-    pub projectile_radius: f32,
     /// Hint: use a negative value for "crosseyed" mode.
     pub start_transform: Transform,
     pub impact_magnitude: f32,
@@ -48,7 +47,6 @@ impl Default for SpacecraftConfig {
     fn default() -> Self {
         Self {
             show_impact_explosions: true,
-            projectile_radius: 0.1,
             start_transform: Default::default(),
             impact_magnitude: 25.0,
             start_speed: 0.0,
@@ -113,10 +111,7 @@ pub struct FireProjectileEvent;
 
 pub fn fire_on_hot_planet(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     mut spacecraft_query: Query<&mut Transform, With<Spacecraft>>,
-    config: Res<SpacecraftConfig>,
     mut hot_planet_events: EventReader<HotPlanetEvent>,
     mut fire_projectile_events: EventReader<FireProjectileEvent>,
 ) {
@@ -127,17 +122,12 @@ pub fn fire_on_hot_planet(
     {
         for _ in fire_projectile_events.iter() {
             let spacecraft_transform = spacecraft_query.get_single_mut().unwrap();
-            debug!("Firing at planet {planet:?}, planet-local direction to target: {local_direction:?}");
+            debug!("Firing (invisible) at planet {planet:?}, planet-local direction to target: {local_direction:?}");
+
             commands
-                .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: config.projectile_radius,
-                        ..Default::default()
-                    })),
-                    material: materials.add(Color::WHITE.into()),
-                    transform: Transform::from_translation(spacecraft_transform.translation),
-                    ..Default::default()
-                })
+                .spawn(TransformBundle::from_transform(
+                    Transform::from_translation(spacecraft_transform.translation),
+                ))
                 .insert(ProjectileTarget {
                     planet,
                     local_direction,
