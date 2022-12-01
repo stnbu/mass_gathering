@@ -110,9 +110,8 @@ impl Plugin for Core {
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
 
-        app.add_state(AppState::Paused)
+        app.add_state(AppState::Playing)
             .add_startup_system(disable_rapier_gravity)
-            .add_system(handle_game_state)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
@@ -120,39 +119,10 @@ impl Plugin for Core {
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
 enum AppState {
     Playing,
-    Paused,
 }
 
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
     rapier_config.gravity = Vec3::ZERO;
-}
-
-fn handle_game_state(
-    mut app_state: ResMut<State<AppState>>,
-    keys: Res<Input<KeyCode>>,
-    mouse_button_input_events: EventReader<MouseButtonInput>,
-    mut windows: ResMut<Windows>,
-) {
-    use AppState::*;
-    use KeyCode::*;
-    let next_state = if *app_state.current() == Paused && !mouse_button_input_events.is_empty() {
-        let window = windows.get_primary_mut().unwrap();
-        window.set_cursor_visibility(false);
-        Some(Playing)
-    } else {
-        keys.get_just_pressed()
-            .fold(None, |_state, key| match (*app_state.current(), *key) {
-                (Playing, P | H | M) => {
-                    let window = windows.get_primary_mut().unwrap();
-                    window.set_cursor_visibility(true);
-                    Some(Paused)
-                }
-                (_, _) => Some(Playing),
-            })
-    };
-    if let Some(state) = next_state {
-        let _ = app_state.overwrite_set(state);
-    }
 }
 
 pub fn radius_to_mass(radius: f32) -> f32 {
