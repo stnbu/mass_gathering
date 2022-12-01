@@ -1,8 +1,10 @@
 use bevy::log::debug;
 use bevy::prelude::{
-    shape, Assets, BuildChildren, Camera3dBundle, Color, Commands, Mesh, PbrBundle, Res, ResMut,
+    shape, Assets, BuildChildren, Camera3dBundle, Color, Commands, Mesh, PbrBundle, ResMut,
     StandardMaterial, Transform, Vec3, Visibility,
 };
+
+use crate::{radius_to_mass, PointMassBundle};
 
 use super::*;
 
@@ -10,30 +12,35 @@ pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    config: Res<SpacecraftConfig>,
 ) {
     let radius = 1.0;
+    let mass = radius_to_mass(radius);
     let spacecraft = commands
-        .spawn(TransformBundle::from_transform(
-            Transform::from_xyz(10.0, 10.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ))
-        .insert(VisibilityBundle::default())
-        .insert(Spacecraft)
-        .insert(Momentum {
-            velocity: Vec3::ZERO,
-            mass: mass_to_radius(radius),
+        .spawn(PointMassBundle {
+            pbr: PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius,
+                    ..Default::default()
+                })),
+                // TODO: spacraft shape/color
+                material: materials.add(Color::rgba(1.0, 1.0, 1.0, 0.5).into()),
+                transform: Transform::from_xyz(10.0, 10.0, 10.0).looking_at(Vec3::ZERO, Vec3::Y),
+                ..Default::default()
+            },
+            momentum: Momentum {
+                velocity: Vec3::ZERO,
+                mass,
+                ..Default::default()
+            },
+            collider: Collider::ball(radius),
             ..Default::default()
         })
-        .insert(Collider::ball(0.01))
+        .insert(Spacecraft)
         .with_children(|child| {
             child.spawn(Camera3dBundle {
                 transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),
                 ..Default::default()
             });
-            // Possibly the worst way to implement "crosshairs" evar.
-            //
-            // This coefficient to make the crosshairs "as close as possible" to our "eyeball"
-            // (By complete luck, this gives us a nice flickering hair...)
             let distance = 0.025;
             child
                 .spawn(PbrBundle {
@@ -75,5 +82,5 @@ pub fn spacecraft_setup(
                 .insert(SpacecraftAR::CrosshairsHot);
         })
         .id();
-    debug!("Spawned spacecraft with entity {spacecraft:?}");
+    debug!("Spawned spacecraft with entity={spacecraft:?} radius={radius:?}, mass={mass:?}")
 }

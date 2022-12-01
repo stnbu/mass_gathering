@@ -10,7 +10,7 @@ pub struct PhysicsConfig {
 
 impl Default for PhysicsConfig {
     fn default() -> Self {
-        Self { sims_per_frame: 1 }
+        Self { sims_per_frame: 10 }
     }
 }
 
@@ -26,7 +26,11 @@ pub fn handle_planet_collisions(
 ) {
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
-        if let CollisionEvent::Started(e0, e1, _) = collision_event {
+        if let CollisionEvent::Started(e0, e1, flags) = collision_event {
+            debug!(
+                "CollisionEvent::Started({:?}, {:?}, flags={:?})",
+                e0, e1, flags
+            );
             if planet_query.get_many([*e0, *e1]).is_ok() {
                 let event = PlanetCollisionEvent(*e0, *e1);
                 debug!("Sending planet collision event: {event:?}");
