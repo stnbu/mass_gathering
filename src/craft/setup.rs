@@ -4,8 +4,6 @@ use bevy::prelude::{
     StandardMaterial, Transform, Vec3, Visibility,
 };
 
-use crate::PointMassBundle;
-
 use super::*;
 
 pub fn spacecraft_setup(
@@ -15,26 +13,6 @@ pub fn spacecraft_setup(
     config: Res<SpacecraftConfig>,
 ) {
     let spacecraft = commands
-        /*
-            .spawn(PointMassBundle {
-                pbr: PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.1,
-                        ..Default::default()
-                    })),
-                    material: materials.add(Color::rgba(1.0, 1.0, 1.0, 0.5).into()),
-                    visibility: Visibility { is_visible: true },
-                    ..Default::default()
-                },
-                momentum: Momentum {
-                    velocity: Vec3::ZERO,
-                    mass: mass_to_radius(10.0),
-                    ..Defappult::default()
-                },
-                collider: Collider::ball(1.0),
-                ..Default::default()
-            })
-        */
         .spawn(TransformBundle::from_transform(config.start_transform))
         .insert(VisibilityBundle::default())
         .insert(Spacecraft {
@@ -42,9 +20,10 @@ pub fn spacecraft_setup(
         })
         .insert(Momentum {
             velocity: Vec3::ZERO,
-            mass: mass_to_radius(10.0),
+            mass: mass_to_radius(1.0),
             ..Default::default()
         })
+        //.insert(Collider::ball(1.0))
         .with_children(|child| {
             child.spawn(Camera3dBundle {
                 transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),

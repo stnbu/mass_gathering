@@ -23,7 +23,7 @@ fn planets(
             },
             momentum: Momentum {
                 velocity: Vec3::ZERO,
-                mass: radius_to_mass(100.0),
+                mass: radius_to_mass(1.0),
                 ..Default::default()
             },
             collider: Collider::ball(1.0),
