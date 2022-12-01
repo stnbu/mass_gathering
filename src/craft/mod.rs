@@ -106,7 +106,7 @@ pub fn fire_on_hot_planet(
     {
         for _ in fire_projectile_events.iter() {
             let spacecraft_transform = spacecraft_query.get_single_mut().unwrap();
-            debug!("Firing (invisible) at planet {planet:?}, planet-local direction to target: {local_direction:?}");
+            debug!("Firing (invisible) projectile at planet {planet:?}, planet-local direction to target: {local_direction:?}");
 
             commands
                 .spawn(TransformBundle::from_transform(
