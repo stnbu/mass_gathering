@@ -24,7 +24,7 @@ pub fn spacecraft_setup(
             mass: mass_to_radius(radius),
             ..Default::default()
         })
-        //.insert(Collider::ball(radius))
+        .insert(Collider::ball(0.01))
         .with_children(|child| {
             child.spawn(Camera3dBundle {
                 transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),

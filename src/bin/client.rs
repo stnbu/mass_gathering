@@ -1,6 +1,8 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::Collider;
-use mass_gathering::{radius_to_mass, FullGame, Momentum, PointMassBundle, SpacecraftConfig};
+use mass_gathering::{
+    radius_to_mass, FullGame, Momentum, PhysicsConfig, PointMassBundle, SpacecraftConfig,
+};
 
 fn planets(
     mut commands: Commands,
@@ -39,6 +41,7 @@ fn main() {
             impact_magnitude: 5.0,
             ..Default::default()
         })
+        .insert_resource(PhysicsConfig { sims_per_frame: 5 })
         .add_plugins(FullGame)
         .add_startup_system(planets)
         .run();
