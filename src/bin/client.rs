@@ -9,7 +9,7 @@ fn planets(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for n in [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)] {
+    for n in [(0.0, 0.0, 0.0)] {
         let (a, b, c) = n;
         commands.spawn(PointMassBundle {
             pbr: PbrBundle {
@@ -17,13 +17,13 @@ fn planets(
                     radius: 1.0,
                     ..Default::default()
                 })),
-                material: materials.add(Color::rgb(a, b, c).into()),
-                transform: Transform::from_xyz(a * 50.0, b * 50.0, c * 50.0),
+                material: materials.add(Color::rgb(1.0, b, c).into()),
+                transform: Transform::from_xyz(a * 6.0, b * 6.0, c * 6.0),
                 ..Default::default()
             },
             momentum: Momentum {
                 velocity: Vec3::ZERO,
-                mass: radius_to_mass(10.0),
+                mass: radius_to_mass(100.0),
                 ..Default::default()
             },
             collider: Collider::ball(1.0),
@@ -41,7 +41,7 @@ fn main() {
             trail_ttl: 2500 * 5,
         })
         .insert_resource(SpacecraftConfig {
-            start_transform: Transform::from_xyz(0.0, 0.0, 200.0).looking_at(Vec3::ZERO, Vec3::Y),
+            start_transform: Transform::from_xyz(0.0, 0.0, 12.0).looking_at(Vec3::ZERO, Vec3::Y),
             impact_magnitude: 5.0,
             ..Default::default()
         })
