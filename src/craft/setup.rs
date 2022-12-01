@@ -15,20 +15,35 @@ pub fn spacecraft_setup(
     config: Res<SpacecraftConfig>,
 ) {
     let spacecraft = commands
-        // .spawn(PointMassBundle {
-        //     pbr: PbrBundle::default(),
-        //     momentum: Momentum {
-        //         velocity: Vec3::ZERO,
-        //         mass: mass_to_radius(10.0),
-        //         ..Default::default()
-        //     },
-        //     collider: Collider::ball(1.0),
-        //     ..Default::default()
-        // })
+        /*
+            .spawn(PointMassBundle {
+                pbr: PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.1,
+                        ..Default::default()
+                    })),
+                    material: materials.add(Color::rgba(1.0, 1.0, 1.0, 0.5).into()),
+                    visibility: Visibility { is_visible: true },
+                    ..Default::default()
+                },
+                momentum: Momentum {
+                    velocity: Vec3::ZERO,
+                    mass: mass_to_radius(10.0),
+                    ..Defappult::default()
+                },
+                collider: Collider::ball(1.0),
+                ..Default::default()
+            })
+        */
         .spawn(TransformBundle::from_transform(config.start_transform))
         .insert(VisibilityBundle::default())
         .insert(Spacecraft {
             speed: config.start_speed,
+        })
+        .insert(Momentum {
+            velocity: Vec3::ZERO,
+            mass: mass_to_radius(10.0),
+            ..Default::default()
         })
         .with_children(|child| {
             child.spawn(Camera3dBundle {
