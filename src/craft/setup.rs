@@ -18,10 +18,10 @@ pub fn spacecraft_setup(
         .insert(Spacecraft)
         .insert(Momentum {
             velocity: Vec3::ZERO,
-            mass: mass_to_radius(1.0),
+            mass: config.mass,
             ..Default::default()
         })
-        //.insert(Collider::ball(1.0))
+        .insert(Collider::ball(config.radius))
         .with_children(|child| {
             child.spawn(Camera3dBundle {
                 transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),

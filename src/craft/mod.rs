@@ -32,16 +32,19 @@ pub struct SpacecraftConfig {
     /// Hint: use a negative value for "crosseyed" mode.
     pub start_transform: Transform,
     pub impact_magnitude: f32,
-    pub start_speed: f32,
+    pub mass: f32,
+    pub radius: f32,
 }
 
 impl Default for SpacecraftConfig {
     fn default() -> Self {
+        let radius = 1.0;
         Self {
             show_impact_explosions: true,
             start_transform: Default::default(),
             impact_magnitude: 25.0,
-            start_speed: 0.0,
+            mass: mass_to_radius(radius),
+            radius,
         }
     }
 }
