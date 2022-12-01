@@ -49,10 +49,71 @@ impl Plugin for SpacecraftPlugin {
     }
 }
 
+//
+//
+//
+// CHAOS
+
+fn adjust_directional_light_biases(
+    input: Res<Input<KeyCode>>,
+    mut query: Query<&mut DirectionalLight>,
+) {
+    let depth_bias_step_size = 0.001;
+    let normal_bias_step_size = 0.1;
+    for mut light in &mut query {
+        if input.just_pressed(KeyCode::Key5) {
+            light.shadow_depth_bias -= depth_bias_step_size;
+            println!(
+                "DirectionalLight shadow_depth_bias: {}",
+                light.shadow_depth_bias
+            );
+        }
+        if input.just_pressed(KeyCode::Key6) {
+            light.shadow_depth_bias += depth_bias_step_size;
+            println!(
+                "DirectionalLight shadow_depth_bias: {}",
+                light.shadow_depth_bias
+            );
+        }
+        if input.just_pressed(KeyCode::Key7) {
+            light.shadow_normal_bias -= normal_bias_step_size;
+            println!(
+                "DirectionalLight shadow_normal_bias: {}",
+                light.shadow_normal_bias
+            );
+        }
+        if input.just_pressed(KeyCode::Key8) {
+            light.shadow_normal_bias += normal_bias_step_size;
+            println!(
+                "DirectionalLight shadow_normal_bias: {}",
+                light.shadow_normal_bias
+            );
+        }
+    }
+}
+
+/*
+    pub shadow_depth_bias: f32,
+    /// A bias applied along the direction of the fragment's surface normal. It is scaled to the
+    /// shadow map's texel size so that it is automatically adjusted to the orthographic projection.
+    pub shadow_normal_bias: f32,
+
+
+    pub const DEFAULT_SHADOW_DEPTH_BIAS: f32 = 0.02;
+    pub const DEFAULT_SHADOW_NORMAL_BIAS: f32 = 0.6;
+
+
+bevy::prelude::DirectionalLight
+
+ */
+//use bevy::prelude::DirectionalLightBundle;
+// END CHAOS
 pub fn let_light(mut commands: Commands) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             shadows_enabled: true,
+            shadow_normal_bias: DirectionalLight::DEFAULT_SHADOW_NORMAL_BIAS,
+            shadow_depth_bias: 0.01, //DirectionalLight::DEFAULT_SHADOW_DEPTH_BIAS,
             ..default()
         },
         transform: Transform::from_xyz(-5.0, -5.0, -10.0),
@@ -102,6 +163,7 @@ impl Plugin for Core {
         }
 
         app.add_startup_system(let_light);
+        app.add_system(adjust_directional_light_biases);
         app.add_system(bevy::window::close_on_esc);
 
         app.add_state(AppState::Paused)
