@@ -64,7 +64,8 @@ pub struct Spacetime;
 
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
-        app.init_resource::<PhysicsConfig>()
+        app.insert_resource(ClearColor(Color::BLACK))
+            .init_resource::<PhysicsConfig>()
             .add_event::<DeltaEvent>()
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnPlanetEvent>()
@@ -106,7 +107,6 @@ impl Plugin for Core {
         app.add_state(AppState::Paused)
             .add_startup_system(disable_rapier_gravity)
             .add_system(handle_game_state)
-            .add_system(timer_despawn)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
@@ -155,25 +155,6 @@ pub fn radius_to_mass(radius: f32) -> f32 {
 
 pub(crate) fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
-}
-
-#[derive(Component)]
-pub struct DespawnTimer {
-    pub ttl: Timer,
-}
-
-pub fn timer_despawn(
-    mut commands: Commands,
-    mut despawn_query: Query<(Entity, &mut DespawnTimer)>,
-    time: Res<Time>,
-) {
-    for (entity, mut despawn_timer) in despawn_query.iter_mut() {
-        despawn_timer.ttl.tick(time.delta());
-        if despawn_timer.ttl.finished() {
-            debug!("Despawning by timer: {entity:?}");
-            commands.entity(entity).despawn();
-        }
-    }
 }
 
 // // // // // // // // // // // // // // // // // // // //

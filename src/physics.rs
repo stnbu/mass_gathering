@@ -5,18 +5,12 @@ use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, 
 
 #[derive(Resource)]
 pub struct PhysicsConfig {
-    pub trails: bool,
     pub sims_per_frame: u8,
-    pub trail_ttl: u64,
 }
 
 impl Default for PhysicsConfig {
     fn default() -> Self {
-        Self {
-            trails: false,
-            sims_per_frame: 10,
-            trail_ttl: 2500,
-        }
+        Self { sims_per_frame: 1 }
     }
 }
 
