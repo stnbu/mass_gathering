@@ -9,14 +9,11 @@ fn planets(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    let radius = 0.5;
+    let radius = 2.5;
     //for n in [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)] {
     for n in [(0.0, 0.0, 0.0)] {
         //for side in [1.0, -1.0] {
         for side in [1.0] {
-            println!("watt!!");
-            println!("watt!!");
-            println!("watt!!");
             let (a, b, c) = n;
             let (a, b, c) = (a * side, b * side, c * side);
             let id = commands
