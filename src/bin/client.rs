@@ -7,12 +7,13 @@ fn planets(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let radius = 0.5;
     for n in [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)] {
         let (a, b, c) = n;
         commands.spawn(PointMassBundle {
             pbr: PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 1.0,
+                    radius,
                     ..Default::default()
                 })),
 
@@ -22,10 +23,10 @@ fn planets(
             },
             momentum: Momentum {
                 velocity: Vec3::ZERO,
-                mass: radius_to_mass(1.0),
+                mass: radius_to_mass(radius),
                 ..Default::default()
             },
-            collider: Collider::ball(1.0),
+            collider: Collider::ball(radius),
             ..Default::default()
         });
     }
