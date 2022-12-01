@@ -60,7 +60,8 @@ pub fn let_light(mut commands: Commands) {
             shadow_depth_bias: SHADOW_BIAS,
             ..default()
         },
-        transform: Transform::from_xyz(-5.0, -5.0, -10.0),
+        // TODO: figure out what _translation_ means for directional
+        transform: Transform::from_xyz(-500000.0, -500000.0, -500000.0),
         ..default()
     });
 }
