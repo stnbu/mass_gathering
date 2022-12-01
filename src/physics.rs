@@ -1,5 +1,5 @@
 use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
-use crate::mass_to_radius;
+use crate::{mass_to_radius, Spacecraft};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
@@ -21,7 +21,7 @@ pub fn handle_planet_collisions(
     mut events: EventReader<CollisionEvent>,
     mut projectile_collision_events: EventWriter<ProjectileCollisionEvent>,
     mut planet_collision_events: EventWriter<PlanetCollisionEvent>,
-    planet_query: Query<(&Transform, &Momentum)>,
+    planet_query: Query<(&Transform, &Momentum), Without<Spacecraft>>,
     projectile_query: Query<&Transform, With<ProjectileTarget>>,
 ) {
     for collision_event in events.iter() {

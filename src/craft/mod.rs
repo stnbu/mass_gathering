@@ -283,11 +283,11 @@ pub struct HotPlanetEvent {
 
 pub fn signal_hot_planet(
     planet_query: Query<&Transform, With<Momentum>>,
-    spacecraft_query: Query<&Transform, With<Spacecraft>>,
+    spacecraft_query: Query<(Entity, &Transform), With<Spacecraft>>,
     rapier_context: Res<RapierContext>,
     mut hot_planet_events: EventWriter<HotPlanetEvent>,
 ) {
-    for pov in spacecraft_query.iter() {
+    for (spacecraft_id, pov) in spacecraft_query.iter() {
         // TODO: can we use "native" raycasting here?
         // https://docs.rs/bevy/0.9.0/bevy/render/camera/struct.Camera.html#method.viewport_to_world
         let ray_origin = pov.translation;
@@ -297,7 +297,7 @@ pub fn signal_hot_planet(
             ray_direction,
             150.0, // what's reasonable here...?
             true,
-            QueryFilter::only_dynamic(),
+            QueryFilter::only_dynamic().exclude_collider(spacecraft_id),
         );
 
         if let Some((planet, distance)) = intersection {
