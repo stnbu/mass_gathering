@@ -22,7 +22,7 @@ fn planets(
                             ..Default::default()
                         })),
 
-                        material: materials.add(Color::rgb(a, b, c).into()),
+                        material: materials.add(Color::rgb(1.0 - a, 1.0 - b, 1.0 - c).into()),
                         transform: Transform::from_xyz(a * 6.0, b * 6.0, c * 6.0),
                         ..Default::default()
                     },
@@ -35,7 +35,7 @@ fn planets(
                     ..Default::default()
                 })
                 .id();
-            warn!(">>> Spawned (other) planet {id:?}");
+            debug!("Spawned (non-'spacecraft') planet {id:?}");
         }
     }
 }
@@ -44,10 +44,10 @@ fn main() {
     App::new()
         .insert_resource(SpacecraftConfig {
             start_transform: Transform::from_xyz(0.0, 0.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
-            impact_magnitude: 5.0,
+            impact_magnitude: 0.5,
             ..Default::default()
         })
-        .insert_resource(PhysicsConfig { sims_per_frame: 1 })
+        .insert_resource(PhysicsConfig { sims_per_frame: 2 })
         .add_plugins(FullGame)
         .add_startup_system(planets)
         .run();
