@@ -15,9 +15,7 @@ pub fn spacecraft_setup(
     let spacecraft = commands
         .spawn(TransformBundle::from_transform(config.start_transform))
         .insert(VisibilityBundle::default())
-        .insert(Spacecraft {
-            speed: config.start_speed,
-        })
+        .insert(Spacecraft)
         .insert(Momentum {
             velocity: Vec3::ZERO,
             mass: mass_to_radius(1.0),

@@ -1,5 +1,4 @@
 use bevy::app::PluginGroupBuilder;
-use bevy::input::mouse::MouseButtonInput;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use std::f32::consts::PI;

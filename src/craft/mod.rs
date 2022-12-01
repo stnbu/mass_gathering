@@ -24,9 +24,7 @@ pub(crate) enum SpacecraftAR {
 }
 
 #[derive(Debug, Default, Component)]
-pub struct Spacecraft {
-    pub speed: f32,
-}
+pub struct Spacecraft;
 
 #[derive(Resource)]
 pub struct SpacecraftConfig {
