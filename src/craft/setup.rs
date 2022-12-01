@@ -30,7 +30,8 @@ pub fn spacecraft_setup(
             // Possibly the worst way to implement "crosshairs" evar.
             //
             // This coefficient to make the crosshairs "as close as possible" to our "eyeball"
-            let distance = 0.05;
+            // (By complete luck, this gives us a nice flickering hair...)
+            let distance = 0.025;
             child
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
