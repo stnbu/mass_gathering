@@ -9,8 +9,8 @@ use bevy_renet::{
 };
 use clap::Parser;
 use mass_gathering::{
-    client_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
-    PlayerInput, Ray3d, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, setup_level, ClientChannel, NetworkedEntities, Ray3d, ServerChannel,
+    ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 
@@ -59,28 +59,11 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins);
     app.add_plugin(RenetClientPlugin::default());
-    app.add_plugin(LookTransformPlugin);
-    app.add_plugin(FrameTimeDiagnosticsPlugin::default());
-
-    app.add_event::<PlayerCommand>();
-
     app.insert_resource(ClientLobby::default());
-    app.insert_resource(PlayerInput::default());
     app.insert_resource(new_renet_client());
     app.insert_resource(NetworkMapping::default());
 
-    app.add_system(player_input);
-    app.add_system(camera_follow);
-    app.add_system(update_target_system);
-    app.add_system(client_send_input.with_run_criteria(run_if_client_connected));
-    app.add_system(client_send_player_commands.with_run_criteria(run_if_client_connected));
     app.add_system(client_sync_players.with_run_criteria(run_if_client_connected));
-
-    app.add_system(exit_on_esc);
-
-    app.add_startup_system(setup_level);
-    app.add_startup_system(setup_camera);
-    app.add_startup_system(setup_target);
     app.add_system(panic_on_error_system);
 
     app.run();
@@ -90,59 +73,6 @@ fn main() {
 fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
         panic!("{}", e);
-    }
-}
-
-fn exit_on_esc(
-    mut exit: EventWriter<AppExit>,
-    keyboard_input: Res<Input<KeyCode>>,
-    mut client: ResMut<RenetClient>,
-    window_closed: EventReader<WindowCloseRequested>,
-) {
-    let any_window_closed = !window_closed.is_empty();
-    if keyboard_input.just_pressed(KeyCode::Escape) || any_window_closed {
-        info!("Disconnecting");
-        client.disconnect();
-        if !any_window_closed {
-            exit.send(AppExit);
-        }
-    }
-}
-
-fn player_input(
-    keyboard_input: Res<Input<KeyCode>>,
-    mut player_input: ResMut<PlayerInput>,
-    mouse_button_input: Res<Input<MouseButton>>,
-    target_query: Query<&Transform, With<Target>>,
-    mut player_commands: EventWriter<PlayerCommand>,
-) {
-    player_input.left = keyboard_input.pressed(KeyCode::A) || keyboard_input.pressed(KeyCode::Left);
-    player_input.right =
-        keyboard_input.pressed(KeyCode::D) || keyboard_input.pressed(KeyCode::Right);
-    player_input.up = keyboard_input.pressed(KeyCode::W) || keyboard_input.pressed(KeyCode::Up);
-    player_input.down = keyboard_input.pressed(KeyCode::S) || keyboard_input.pressed(KeyCode::Down);
-
-    if mouse_button_input.just_pressed(MouseButton::Left) {
-        let target_transform = target_query.single();
-        player_commands.send(PlayerCommand::BasicAttack {
-            cast_at: target_transform.translation,
-        });
-    }
-}
-
-fn client_send_input(player_input: Res<PlayerInput>, mut client: ResMut<RenetClient>) {
-    let input_message = bincode::serialize(&*player_input).unwrap();
-
-    client.send_message(ClientChannel::Input, input_message);
-}
-
-fn client_send_player_commands(
-    mut player_commands: EventReader<PlayerCommand>,
-    mut client: ResMut<RenetClient>,
-) {
-    for command in player_commands.iter() {
-        let command_message = bincode::serialize(command).unwrap();
-        client.send_message(ClientChannel::Command, command_message);
     }
 }
 
@@ -156,141 +86,10 @@ fn client_sync_players(
 ) {
     let client_id = client.client_id();
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
-        let server_message = bincode::deserialize(&message).unwrap();
-        match server_message {
-            ServerMessages::PlayerCreate {
-                id,
-                translation,
-                entity,
-            } => {
-                println!("Player {} connected.", id);
-                let mut client_entity = commands.spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Capsule::default())),
-                    material: materials.add(Color::rgb(0.8, id as f32 / 100.0, 0.6).into()),
-                    transform: Transform::from_xyz(translation[0], translation[1], translation[2]),
-                    ..Default::default()
-                });
-
-                if client_id == id {
-                    client_entity.insert(ControlledPlayer);
-                }
-
-                let player_info = PlayerInfo {
-                    server_entity: entity,
-                    client_entity: client_entity.id(),
-                };
-                lobby.players.insert(id, player_info);
-                network_mapping.0.insert(entity, client_entity.id());
-            }
-            ServerMessages::PlayerRemove { id } => {
-                println!("Player {} disconnected.", id);
-                if let Some(PlayerInfo {
-                    server_entity,
-                    client_entity,
-                }) = lobby.players.remove(&id)
-                {
-                    commands.entity(client_entity).despawn();
-                    network_mapping.0.remove(&server_entity);
-                }
-            }
-            ServerMessages::SpawnProjectile {
-                entity,
-                translation,
-            } => {
-                let projectile_entity = commands.spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.1,
-                        subdivisions: 5,
-                    })),
-                    material: materials.add(Color::rgb(1.0, 0.0, 0.0).into()),
-                    transform: Transform::from_translation(translation.into()),
-                    ..Default::default()
-                });
-                network_mapping.0.insert(entity, projectile_entity.id());
-            }
-            ServerMessages::DespawnProjectile { entity } => {
-                if let Some(entity) = network_mapping.0.remove(&entity) {
-                    commands.entity(entity).despawn();
-                }
-            }
-        }
+        let _server_message: ServerMessages = bincode::deserialize(&message).unwrap();
     }
 
     while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
-        let networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
-
-        for i in 0..networked_entities.entities.len() {
-            if let Some(entity) = network_mapping.0.get(&networked_entities.entities[i]) {
-                let translation = networked_entities.translations[i].into();
-                let transform = Transform {
-                    translation,
-                    ..Default::default()
-                };
-                commands.entity(*entity).insert(transform);
-            }
-        }
-    }
-}
-
-#[derive(Component)]
-struct Target;
-
-fn update_target_system(
-    windows: Res<Windows>,
-    mut target_query: Query<&mut Transform, With<Target>>,
-    camera_query: Query<(&Camera, &GlobalTransform)>,
-) {
-    let (camera, camera_transform) = camera_query.single();
-    let mut target_transform = target_query.single_mut();
-    if let Some(ray) = Ray3d::from_screenspace(&windows, camera, camera_transform) {
-        if let Some(pos) = ray.intersect_y_plane(1.0) {
-            target_transform.translation = pos;
-        }
-    }
-}
-
-fn setup_camera(mut commands: Commands) {
-    commands
-        .spawn(LookTransformBundle {
-            transform: LookTransform {
-                eye: Vec3::new(0.0, 8., 2.5),
-                target: Vec3::new(0.0, 0.5, 0.0),
-            },
-            smoother: Smoother::new(0.9),
-        })
-        .insert(Camera3dBundle {
-            transform: Transform::from_xyz(0., 8.0, 2.5)
-                .looking_at(Vec3::new(0.0, 0.5, 0.0), Vec3::Y),
-            ..default()
-        });
-}
-
-fn setup_target(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-) {
-    commands
-        .spawn(PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius: 0.1,
-                subdivisions: 5,
-            })),
-            material: materials.add(Color::rgb(1.0, 0.0, 0.0).into()),
-            transform: Transform::from_xyz(0.0, 0., 0.0),
-            ..Default::default()
-        })
-        .insert(Target);
-}
-
-fn camera_follow(
-    mut camera_query: Query<&mut LookTransform, (With<Camera>, Without<ControlledPlayer>)>,
-    player_query: Query<&Transform, With<ControlledPlayer>>,
-) {
-    let mut cam_transform = camera_query.single_mut();
-    if let Ok(player_transform) = player_query.get_single() {
-        cam_transform.eye.x = player_transform.translation.x;
-        cam_transform.eye.z = player_transform.translation.z + 2.5;
-        cam_transform.target = player_transform.translation;
+        let _networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
     }
 }
