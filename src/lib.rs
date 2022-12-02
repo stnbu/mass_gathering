@@ -26,24 +26,13 @@ impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
             .add_startup_system(spacecraft_setup)
-            .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
-            .add_event::<FireProjectileEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(control)
                     .with_system(signal_hot_planet)
-                    .with_system(fire_on_hot_planet)
-                    .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
-                    .with_system(set_ar_default_visibility.before(handle_hot_planet))
-                    .with_system(move_projectiles.before(handle_despawn_planet))
-                    .with_system(transfer_projectile_momentum)
-                    // FIXME: even though `handle_despawn_planet` added by another plugin?
-                    .with_system(spawn_projectile_explosion_animation.after(handle_despawn_planet))
-                    .with_system(
-                        handle_projectile_despawn.after(spawn_projectile_explosion_animation),
-                    ),
+                    .with_system(set_ar_default_visibility.before(handle_hot_planet)),
             );
     }
 }
@@ -128,7 +117,7 @@ pub fn radius_to_mass(radius: f32) -> f32 {
     (4.0 / 3.0) * PI * radius.powf(3.0)
 }
 
-pub(crate) fn mass_to_radius(mass: f32) -> f32 {
+pub fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
 

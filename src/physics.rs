@@ -1,4 +1,3 @@
-use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
 use crate::{mass_to_radius, Spacecraft};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
@@ -19,10 +18,8 @@ pub struct PlanetCollisionEvent(pub Entity, pub Entity);
 
 pub fn handle_planet_collisions(
     mut events: EventReader<CollisionEvent>,
-    mut projectile_collision_events: EventWriter<ProjectileCollisionEvent>,
     mut planet_collision_events: EventWriter<PlanetCollisionEvent>,
     planet_query: Query<(&Transform, &Momentum), Without<Spacecraft>>,
-    projectile_query: Query<&Transform, With<ProjectileTarget>>,
 ) {
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
@@ -35,26 +32,6 @@ pub fn handle_planet_collisions(
                 let event = PlanetCollisionEvent(*e0, *e1);
                 debug!("Sending planet collision event: {event:?}");
                 planet_collision_events.send(event);
-            } else {
-                for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
-                    if let Ok(projectile_transform) = projectile_query.get(projectile) {
-                        if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
-                            let radius = mass_to_radius(planet_momentum.mass);
-                            // unit vector at planet center pointing at projectile
-                            let direction = (projectile_transform.translation
-                                - planet_transform.translation)
-                                .normalize();
-                            let local_impact_site = direction * radius;
-                            let event = ProjectileCollisionEvent {
-                                planet,
-                                projectile,
-                                local_impact_site,
-                            };
-                            debug!("Sending projectile impact event: {event:?}");
-                            projectile_collision_events.send(event);
-                        }
-                    }
-                }
             }
         }
     }
@@ -65,15 +42,9 @@ pub struct DespawnPlanetEvent(pub Entity);
 pub fn handle_despawn_planet(
     mut commands: Commands,
     mut despawn_planet_events: EventReader<DespawnPlanetEvent>,
-    projectile_query: Query<(Entity, &ProjectileTarget)>,
 ) {
     for &DespawnPlanetEvent(entity) in despawn_planet_events.iter() {
-        debug!("RECURSIVELY despawning planet {entity:?} and all of its in-flight projectiles");
-        for (projectile, &ProjectileTarget { planet, .. }) in projectile_query.iter() {
-            if entity == planet {
-                commands.entity(projectile).despawn_recursive();
-            }
-        }
+        debug!("RECURSIVELY despawning planet {entity:?}");
         commands.entity(entity).despawn_recursive();
     }
 }
