@@ -19,7 +19,7 @@ struct NetworkMapping(HashMap<Entity, Entity>);
 
 #[derive(Debug)]
 struct PlayerInfo {
-    id: u64,
+    _id: u64,
 }
 
 #[derive(Debug, Default, Resource)]
@@ -71,22 +71,18 @@ fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     }
 }
 
-fn client_sync_players(
-    mut client: ResMut<RenetClient>,
-    mut lobby: ResMut<ClientLobby>,
-    network_mapping: ResMut<NetworkMapping>,
-) {
+fn client_sync_players(mut client: ResMut<RenetClient>, mut lobby: ResMut<ClientLobby>) {
     let _my_id = client.client_id(); // is it "my"?
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
             ServerMessages::PlayerCreate { id } => {
-                println!("Player {} connected.", id);
-                let player_info = PlayerInfo { id };
+                info!("Player {} connected.", id);
+                let player_info = PlayerInfo { _id: id };
                 lobby.players.insert(id, player_info);
             }
             ServerMessages::PlayerRemove { id } => {
-                println!("Player {} disconnected.", id);
+                info!("Player {} disconnected.", id);
             }
         }
     }

@@ -82,7 +82,7 @@ impl Plugin for Core {
         {
             debug!("DEBUG LEVEL LOGGING ! !");
             app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
-                filter: "warn,mass_gathering=debug".into(),
+                filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug".into(),
                 level: bevy::log::Level::DEBUG,
             }));
         }
@@ -131,8 +131,7 @@ use std::time::Duration;
 //use bevy::prelude::*;
 use bevy_rapier3d::prelude::*;
 use bevy_renet::renet::{
-    ChannelConfig, ReliableChannelConfig, RenetConnectionConfig, UnreliableChannelConfig,
-    NETCODE_KEY_BYTES,
+    ChannelConfig, ReliableChannelConfig, RenetConnectionConfig, NETCODE_KEY_BYTES,
 };
 use serde::{Deserialize, Serialize};
 
@@ -192,7 +191,7 @@ impl ClientChannel {
 impl From<ServerChannel> for u8 {
     fn from(channel_id: ServerChannel) -> Self {
         match channel_id {
-            ServerChannel::ServerMessages => 1,
+            ServerChannel::ServerMessages => 0, // is this the index of `channels_config()`?
         }
     }
 }

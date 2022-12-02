@@ -46,13 +46,13 @@ fn server_update_system(
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, _) => {
-                println!("Player {} connected.", id);
+                info!("Player {} connected.", id);
                 let message =
                     bincode::serialize(&ServerMessages::PlayerCreate { id: *id }).unwrap();
                 server.broadcast_message(ServerChannel::ServerMessages, message);
             }
             ServerEvent::ClientDisconnected(id) => {
-                println!("Player {} disconnected.", id);
+                info!("Player {} disconnected.", id);
                 let message =
                     bincode::serialize(&ServerMessages::PlayerRemove { id: *id }).unwrap();
                 server.broadcast_message(ServerChannel::ServerMessages, message);
@@ -63,11 +63,11 @@ fn server_update_system(
     for client_id in server.clients_id().into_iter() {
         while let Some(message) = server.receive_message(client_id, ClientChannel::Command) {
             let command: PlayerCommand = bincode::deserialize(&message).unwrap();
-            println!("Got command from client {client_id:?}: {command:?}");
+            info!("Got command from client {client_id:?}: {command:?}");
         }
         while let Some(message) = server.receive_message(client_id, ClientChannel::Input) {
             let command: PlayerInput = bincode::deserialize(&message).unwrap();
-            println!("Got input from client {client_id:?}: {command:?}");
+            info!("Got input from client {client_id:?}: {command:?}");
         }
     }
 }

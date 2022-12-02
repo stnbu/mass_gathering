@@ -38,7 +38,7 @@ fn planets(
                     ..Default::default()
                 })
                 .id();
-            warn!("Spawned (non-'spacecraft') planet {id:?}");
+            debug!("Spawned (non-'spacecraft') planet {id:?}");
         }
     }
 }
