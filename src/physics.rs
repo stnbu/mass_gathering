@@ -1,4 +1,4 @@
-use crate::{mass_to_radius, Spacecraft};
+use crate::Spacecraft;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
