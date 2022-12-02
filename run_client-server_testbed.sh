@@ -1,8 +1,8 @@
 #!/bin/sh -u
 
-for ID in 49 95 ; do
+for ID in 49 ; do
     echo ">>> Running client ${ID} \"in the background\"..." >&2
-    RUST_LOG=error cargo run --bin client -- --id $ID &
+    RUST_LOG=error cargo run --bin prototype-client -- --id $ID &
 done &
 echo ">>> Running server \"in the forground\"..." >&2
 cargo run --bin server
