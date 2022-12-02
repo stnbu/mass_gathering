@@ -153,19 +153,12 @@ pub enum ClientChannel {
 
 pub enum ServerChannel {
     ServerMessages,
-    NetworkedEntities,
 }
 
 #[derive(Debug, Serialize, Deserialize, Component)]
 pub enum ServerMessages {
     PlayerCreate { id: u64 },
     PlayerRemove { id: u64 },
-}
-
-#[derive(Debug, Serialize, Deserialize, Default)]
-pub struct NetworkedEntities {
-    pub entities: Vec<Entity>,
-    pub translations: Vec<[f32; 3]>,
 }
 
 impl From<ClientChannel> for u8 {
@@ -199,7 +192,6 @@ impl ClientChannel {
 impl From<ServerChannel> for u8 {
     fn from(channel_id: ServerChannel) -> Self {
         match channel_id {
-            ServerChannel::NetworkedEntities => 0,
             ServerChannel::ServerMessages => 1,
         }
     }
@@ -207,20 +199,12 @@ impl From<ServerChannel> for u8 {
 
 impl ServerChannel {
     pub fn channels_config() -> Vec<ChannelConfig> {
-        vec![
-            UnreliableChannelConfig {
-                channel_id: Self::NetworkedEntities.into(),
-                sequenced: true, // We don't care about old positions
-                ..Default::default()
-            }
-            .into(),
-            ReliableChannelConfig {
-                channel_id: Self::ServerMessages.into(),
-                message_resend_time: Duration::from_millis(200),
-                ..Default::default()
-            }
-            .into(),
-        ]
+        vec![ReliableChannelConfig {
+            channel_id: Self::ServerMessages.into(),
+            message_resend_time: Duration::from_millis(200),
+            ..Default::default()
+        }
+        .into()]
     }
 }
 

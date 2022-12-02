@@ -8,8 +8,7 @@ use bevy_renet::{
 };
 use clap::Parser;
 use mass_gathering::{
-    client_connection_config, NetworkedEntities, ServerChannel, ServerMessages, PORT_NUMBER,
-    PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 
 #[derive(Component)]
@@ -75,7 +74,7 @@ fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
 fn client_sync_players(
     mut client: ResMut<RenetClient>,
     mut lobby: ResMut<ClientLobby>,
-    mut network_mapping: ResMut<NetworkMapping>,
+    network_mapping: ResMut<NetworkMapping>,
 ) {
     let _my_id = client.client_id(); // is it "my"?
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
@@ -88,14 +87,6 @@ fn client_sync_players(
             }
             ServerMessages::PlayerRemove { id } => {
                 println!("Player {} disconnected.", id);
-            }
-        }
-    }
-    while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
-        let networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
-        for i in 0..networked_entities.entities.len() {
-            if let Some(_entity) = network_mapping.0.get(&networked_entities.entities[i]) {
-                //
             }
         }
     }

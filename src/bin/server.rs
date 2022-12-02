@@ -4,8 +4,8 @@ use bevy_renet::{
     RenetServerPlugin,
 };
 use mass_gathering::{
-    server_connection_config, setup_level, ClientChannel, NetworkedEntities, PlayerCommand,
-    PlayerInput, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    server_connection_config, setup_level, ClientChannel, PlayerCommand, PlayerInput,
+    ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
@@ -33,7 +33,6 @@ fn main() {
     app.insert_resource(ServerLobby::default());
     app.insert_resource(new_renet_server());
     app.add_system(server_update_system);
-    app.add_system(server_network_sync);
     app.add_startup_system(setup_level);
     app.run();
 }
@@ -71,11 +70,4 @@ fn server_update_system(
             println!("Got input from client {client_id:?}: {command:?}");
         }
     }
-}
-
-#[allow(clippy::type_complexity)]
-fn server_network_sync(mut server: ResMut<RenetServer>) {
-    let networked_entities = NetworkedEntities::default();
-    let sync_message = bincode::serialize(&networked_entities).unwrap();
-    server.broadcast_message(ServerChannel::NetworkedEntities, sync_message);
 }
