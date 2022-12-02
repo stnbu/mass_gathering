@@ -1,18 +1,16 @@
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
-use bevy::{
-    app::AppExit, diagnostic::FrameTimeDiagnosticsPlugin, prelude::*, window::WindowCloseRequested,
-};
+use bevy::prelude::*;
+
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetError},
     run_if_client_connected, RenetClientPlugin,
 };
 use clap::Parser;
 use mass_gathering::{
-    client_connection_config, setup_level, ClientChannel, NetworkedEntities, Ray3d, ServerChannel,
-    ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, ClientChannel, NetworkedEntities, ServerChannel, ServerMessages,
+    PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
-use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 
 #[derive(Component)]
 struct ControlledPlayer;
