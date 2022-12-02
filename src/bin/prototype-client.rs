@@ -20,8 +20,7 @@ struct NetworkMapping(HashMap<Entity, Entity>);
 
 #[derive(Debug)]
 struct PlayerInfo {
-    client_entity: Entity,
-    server_entity: Entity,
+    id: u64,
 }
 
 #[derive(Debug, Default, Resource)]
@@ -74,6 +73,33 @@ fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     }
 }
 
+// fn client_sync_players(
+//     mut commands: Commands,
+//     mut meshes: ResMut<Assets<Mesh>>,
+//     mut materials: ResMut<Assets<StandardMaterial>>,
+//     mut client: ResMut<RenetClient>,
+//     mut lobby: ResMut<ClientLobby>,
+//     mut network_mapping: ResMut<NetworkMapping>,
+// ) {
+//     let client_id = client.client_id();
+//     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
+//         let _server_message: ServerMessages = bincode::deserialize(&message).unwrap();
+//     }
+//     while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
+//         let _networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
+//     }
+// }
+
+// //
+
+// //
+//
+// use mass_gathering::{
+//     client_connection_config, setup_level, ClientChannel, NetworkedEntities, Ray3d, ServerChannel,
+//     ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+// };
+//
+
 fn client_sync_players(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -84,10 +110,14 @@ fn client_sync_players(
 ) {
     let client_id = client.client_id();
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
-        let _server_message: ServerMessages = bincode::deserialize(&message).unwrap();
-    }
-
-    while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
-        let _networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
+        let server_message = bincode::deserialize(&message).unwrap();
+        match server_message {
+            ServerMessages::PlayerCreate { id } => {
+                println!("Player {} connected.", id);
+                let player_info = PlayerInfo { id };
+                lobby.players.insert(id, player_info);
+            }
+            ServerMessages::PlayerRemove { id } => {}
+        }
     }
 }

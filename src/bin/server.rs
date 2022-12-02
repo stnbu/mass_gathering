@@ -55,7 +55,7 @@ fn server_update_system(
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, _) => {
-                // Initialize other players for this new client
+                println!("Player {} connected.", id);
                 let message =
                     bincode::serialize(&ServerMessages::PlayerCreate { id: *id }).unwrap();
                 server.broadcast_message(ServerChannel::ServerMessages, message);
