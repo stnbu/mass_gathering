@@ -137,9 +137,9 @@ use bevy_renet::renet::{
 use serde::{Deserialize, Serialize};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"an example very very secret key."; // 32-bytes
-pub const PROTOCOL_ID: u64 = 11;
+pub const PROTOCOL_ID: u64 = 12;
 pub const SERVER_ADDR: &str = "192.168.1.43";
-pub const PORT_NUMBER: u16 = 5241;
+pub const PORT_NUMBER: u16 = 5242;
 
 #[derive(Debug, Component)]
 pub struct Player {
@@ -357,3 +357,18 @@ impl Ray3d {
 
 // End from prototype
 // // // // // // // // // // // // // // // // // // // //
+
+// //
+
+#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Component, Resource)]
+pub struct PlayerInput {
+    pub up: bool,
+    pub down: bool,
+    pub left: bool,
+    pub right: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize, Component)]
+pub enum PlayerCommand {
+    BasicAttack { cast_at: Vec3 },
+}

@@ -8,8 +8,8 @@ use bevy_renet::{
 };
 use clap::Parser;
 use mass_gathering::{
-    client_connection_config, ClientChannel, NetworkedEntities, ServerChannel, ServerMessages,
-    PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, NetworkedEntities, ServerChannel, ServerMessages, PORT_NUMBER,
+    PROTOCOL_ID, SERVER_ADDR,
 };
 
 #[derive(Component)]
@@ -66,49 +66,18 @@ fn main() {
     app.run();
 }
 
-// If any error is found we just panic
 fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
         panic!("{}", e);
     }
 }
 
-// fn client_sync_players(
-//     mut commands: Commands,
-//     mut meshes: ResMut<Assets<Mesh>>,
-//     mut materials: ResMut<Assets<StandardMaterial>>,
-//     mut client: ResMut<RenetClient>,
-//     mut lobby: ResMut<ClientLobby>,
-//     mut network_mapping: ResMut<NetworkMapping>,
-// ) {
-//     let client_id = client.client_id();
-//     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
-//         let _server_message: ServerMessages = bincode::deserialize(&message).unwrap();
-//     }
-//     while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
-//         let _networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
-//     }
-// }
-
-// //
-
-// //
-//
-// use mass_gathering::{
-//     client_connection_config, setup_level, ClientChannel, NetworkedEntities, Ray3d, ServerChannel,
-//     ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
-// };
-//
-
 fn client_sync_players(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     mut client: ResMut<RenetClient>,
     mut lobby: ResMut<ClientLobby>,
     mut network_mapping: ResMut<NetworkMapping>,
 ) {
-    let client_id = client.client_id();
+    let _my_id = client.client_id(); // is it "my"?
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
@@ -117,7 +86,17 @@ fn client_sync_players(
                 let player_info = PlayerInfo { id };
                 lobby.players.insert(id, player_info);
             }
-            ServerMessages::PlayerRemove { id } => {}
+            ServerMessages::PlayerRemove { id } => {
+                println!("Player {} disconnected.", id);
+            }
+        }
+    }
+    while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
+        let networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
+        for i in 0..networked_entities.entities.len() {
+            if let Some(_entity) = network_mapping.0.get(&networked_entities.entities[i]) {
+                //
+            }
         }
     }
 }
