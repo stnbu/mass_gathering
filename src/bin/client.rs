@@ -49,7 +49,7 @@ fn main() {
             impact_magnitude: 0.5,
             ..Default::default()
         })
-        .insert_resource(PhysicsConfig { sims_per_frame: 2 })
+        .insert_resource(PhysicsConfig { sims_per_frame: 20 })
         .add_plugins(FullGame)
         .add_startup_system(planets)
         .run();

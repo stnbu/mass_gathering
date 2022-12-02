@@ -69,7 +69,7 @@ impl Plugin for Spacetime {
                     .with_system(signal_freefall_delta.before(handle_despawn_planet))
                     .with_system(handle_freefall.before(handle_despawn_planet))
                     .with_system(handle_planet_collisions.before(handle_despawn_planet))
-                    .with_system(transfer_planet_momentum.before(handle_despawn_planet)),
+                    .with_system(merge_planets.before(handle_despawn_planet)),
             );
     }
 }
