@@ -12,6 +12,10 @@ fn planets(
         for side in [1.0, -1.0] {
             let (a, b, c) = n;
             let (a, b, c) = (a * side, b * side, c * side);
+
+            let position = Vec3::new(a * 6.0, b * 6.0, c * 6.0);
+            let velocity = Vec3::ZERO; // position.cross(Vec3::Z).normalize() * 0.5 * 0.0;
+
             commands.spawn(PointMassBundle {
                 pbr: PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -22,11 +26,11 @@ fn planets(
                     material: materials.add(
                         Color::rgba((1.0 - a) / 2.0, (1.0 - b) / 2.0, (1.0 - c) / 2.0, 0.4).into(),
                     ),
-                    transform: Transform::from_xyz(a * 6.0, b * 6.0, c * 6.0),
+                    transform: Transform::from_translation(position),
                     ..Default::default()
                 },
                 momentum: Momentum {
-                    velocity: Vec3::ZERO,
+                    velocity,
                     mass: radius_to_mass(radius),
                     ..Default::default()
                 },
