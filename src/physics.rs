@@ -1,4 +1,3 @@
-use crate::Spacecraft;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
@@ -51,30 +50,16 @@ pub fn handle_despawn_planet(
 
 pub fn merge_planets(
     mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
-    spacecraft_query: Query<Entity, With<Spacecraft>>,
     mut planet_events: EventReader<PlanetCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_planet_events: EventWriter<DespawnPlanetEvent>,
 ) {
     for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
-        let involved_spacecraft = spacecraft_query.iter_many([*e0, *e1]).collect::<Vec<_>>();
-        if involved_spacecraft.len() == 2 {
-            debug!("Spacecraft {e0:?} and {e1:?} collided. Ignoring.");
-            continue;
-        }
-        let spacecraft = if involved_spacecraft.len() == 1 {
-            let id = involved_spacecraft[0];
-            debug!("Spacecraft {id:?} was involved in a collision.");
-            Some(id)
-        } else {
-            None
-        };
-
         // FIXME: We have write access to `Momentum` and yet we update
         // `delta_v` via an event. Just update it here? Should `DeltaEvent`
         // even have a `delta_v` field?
         if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
-            let (mut major, mut minor) = if p0.1.mass > p1.1.mass {
+            let (mut major, minor) = if p0.1.mass > p1.1.mass {
                 (p0, p1)
             // FIXME: tie-breaker!
             } else {
@@ -85,18 +70,6 @@ pub fn merge_planets(
                 "We have major-mass={:?} and minor-mass={:?}",
                 major.1.mass, minor.1.mass
             );
-
-            if let Some(c) = spacecraft {
-                if c == minor.2 {
-                    debug!("Spacecraft {c:?} was the 'minor'! Swapping major for minor.");
-                    (major, minor) = (minor, major);
-                } else {
-                    debug!(
-                        "Spacecraft {c:?} was the 'major', which should be '{:?}'. No swapping.",
-                        major.2
-                    )
-                }
-            }
 
             debug!("Collision of planets:");
             debug!(" Major planet {:?}", major.2);

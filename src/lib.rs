@@ -6,33 +6,11 @@ use std::f32::consts::PI;
 pub mod physics;
 pub use physics::*;
 
-pub mod craft;
-pub use craft::*;
-
 pub struct FullGame;
 
 impl PluginGroup for FullGame {
     fn build(self) -> PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>()
-            .add(Core)
-            .add(SpacecraftPlugin)
-            .add(Spacetime)
-    }
-}
-
-pub struct SpacecraftPlugin;
-
-impl Plugin for SpacecraftPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_startup_system(spacecraft_setup)
-            .add_event::<HotPlanetEvent>()
-            .add_system_set(
-                SystemSet::on_update(AppState::Playing)
-                    .with_system(control)
-                    .with_system(signal_hot_planet)
-                    .with_system(handle_hot_planet)
-                    .with_system(set_ar_default_visibility.before(handle_hot_planet)),
-            );
+        PluginGroupBuilder::start::<Self>().add(Core).add(Spacetime)
     }
 }
 

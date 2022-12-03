@@ -36,11 +36,11 @@ fn planets(
                     ..Default::default()
                 })
                 .id();
-            debug!("Spawned (non-'spacecraft') planet {id:?}");
         }
     }
 }
 
+/*
 use std::collections::HashMap;
 
 struct PlanetConfig {
@@ -48,18 +48,12 @@ struct PlanetConfig {
     color: Color,
 }
 
-struct SpacecraftConfig_ {
-    client_id: u64,
-    mass: f32,
-    color: Color,
-}
-
 struct GameConfig {
     planets: HashMap<u64, PlanetConfig>,
-    spacecraft: HashMap<u64, SpacecraftConfig_>,
 }
 
 struct Locations(HashMap<u64, Vec3>);
+*/
 
 fn main() {
     App::new()
