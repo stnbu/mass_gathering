@@ -4,8 +4,8 @@ use bevy_renet::{
     RenetServerPlugin,
 };
 use mass_gathering::{
-    server_connection_config, setup_level, ClientChannel, PlayerCommand, PlayerInput,
-    ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    server_connection_config, setup_level, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
+    SERVER_ADDR,
 };
 use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
@@ -57,17 +57,6 @@ fn server_update_system(
                     bincode::serialize(&ServerMessages::PlayerRemove { id: *id }).unwrap();
                 server.broadcast_message(ServerChannel::ServerMessages, message);
             }
-        }
-    }
-
-    for client_id in server.clients_id().into_iter() {
-        while let Some(message) = server.receive_message(client_id, ClientChannel::Command) {
-            let command: PlayerCommand = bincode::deserialize(&message).unwrap();
-            info!("Got command from client {client_id:?}: {command:?}");
-        }
-        while let Some(message) = server.receive_message(client_id, ClientChannel::Input) {
-            let command: PlayerInput = bincode::deserialize(&message).unwrap();
-            info!("Got input from client {client_id:?}: {command:?}");
         }
     }
 }

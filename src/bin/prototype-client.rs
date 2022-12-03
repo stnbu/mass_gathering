@@ -14,9 +14,6 @@ use mass_gathering::{
 #[derive(Component)]
 struct ControlledPlayer;
 
-#[derive(Default, Resource)]
-struct NetworkMapping(HashMap<Entity, Entity>);
-
 #[derive(Debug)]
 struct PlayerInfo {
     _id: u64,
@@ -57,7 +54,6 @@ fn main() {
     app.add_plugin(RenetClientPlugin::default());
     app.insert_resource(ClientLobby::default());
     app.insert_resource(new_renet_client());
-    app.insert_resource(NetworkMapping::default());
 
     app.add_system(client_sync_players.with_run_criteria(run_if_client_connected));
     app.add_system(panic_on_error_system);

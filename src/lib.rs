@@ -145,11 +145,6 @@ pub struct Player {
     pub id: u64,
 }
 
-pub enum ClientChannel {
-    Input,
-    Command,
-}
-
 pub enum ServerChannel {
     ServerMessages,
 }
@@ -158,34 +153,6 @@ pub enum ServerChannel {
 pub enum ServerMessages {
     PlayerCreate { id: u64 },
     PlayerRemove { id: u64 },
-}
-
-impl From<ClientChannel> for u8 {
-    fn from(channel_id: ClientChannel) -> Self {
-        match channel_id {
-            ClientChannel::Command => 0,
-            ClientChannel::Input => 1,
-        }
-    }
-}
-
-impl ClientChannel {
-    pub fn channels_config() -> Vec<ChannelConfig> {
-        vec![
-            ReliableChannelConfig {
-                channel_id: Self::Input.into(),
-                message_resend_time: Duration::ZERO,
-                ..Default::default()
-            }
-            .into(),
-            ReliableChannelConfig {
-                channel_id: Self::Command.into(),
-                message_resend_time: Duration::ZERO,
-                ..Default::default()
-            }
-            .into(),
-        ]
-    }
 }
 
 impl From<ServerChannel> for u8 {
@@ -209,7 +176,6 @@ impl ServerChannel {
 
 pub fn client_connection_config() -> RenetConnectionConfig {
     RenetConnectionConfig {
-        send_channels_config: ClientChannel::channels_config(),
         receive_channels_config: ServerChannel::channels_config(),
         ..Default::default()
     }
@@ -218,7 +184,6 @@ pub fn client_connection_config() -> RenetConnectionConfig {
 pub fn server_connection_config() -> RenetConnectionConfig {
     RenetConnectionConfig {
         send_channels_config: ServerChannel::channels_config(),
-        receive_channels_config: ClientChannel::channels_config(),
         ..Default::default()
     }
 }
@@ -342,16 +307,3 @@ impl Ray3d {
 // // // // // // // // // // // // // // // // // // // //
 
 // //
-
-#[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Component, Resource)]
-pub struct PlayerInput {
-    pub up: bool,
-    pub down: bool,
-    pub left: bool,
-    pub right: bool,
-}
-
-#[derive(Debug, Serialize, Deserialize, Component)]
-pub enum PlayerCommand {
-    BasicAttack { cast_at: Vec3 },
-}
