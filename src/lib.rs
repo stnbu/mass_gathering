@@ -6,6 +6,8 @@ use std::f32::consts::PI;
 pub mod physics;
 pub use physics::*;
 
+pub mod systems;
+
 pub struct FullGame;
 
 impl PluginGroup for FullGame {
