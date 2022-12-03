@@ -21,25 +21,6 @@ pub(crate) enum SpacecraftAR {
 #[derive(Debug, Default, Component)]
 pub struct Spacecraft;
 
-#[derive(Resource)]
-pub struct SpacecraftConfig {
-    pub show_impact_explosions: bool,
-    pub start_transform: Transform,
-    pub impact_magnitude: f32,
-    pub radius: f32,
-}
-
-impl Default for SpacecraftConfig {
-    fn default() -> Self {
-        Self {
-            show_impact_explosions: true,
-            start_transform: Transform::from_xyz(0.0, 0.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y), // Default::default(),
-            impact_magnitude: 25.0,
-            radius: 1.0,
-        }
-    }
-}
-
 #[derive(Default)]
 pub struct Despawned(HashSet<Entity>);
 

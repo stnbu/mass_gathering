@@ -1,8 +1,6 @@
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::Collider;
-use mass_gathering::{
-    radius_to_mass, FullGame, Momentum, PhysicsConfig, PointMassBundle, SpacecraftConfig,
-};
+use mass_gathering::{radius_to_mass, FullGame, Momentum, PhysicsConfig, PointMassBundle};
 
 fn planets(
     mut commands: Commands,
@@ -43,13 +41,28 @@ fn planets(
     }
 }
 
+use std::collections::HashMap;
+
+struct PlanetConfig {
+    mass: f32,
+    color: Color,
+}
+
+struct SpacecraftConfig_ {
+    client_id: u64,
+    mass: f32,
+    color: Color,
+}
+
+struct GameConfig {
+    planets: HashMap<u64, PlanetConfig>,
+    spacecraft: HashMap<u64, SpacecraftConfig_>,
+}
+
+struct Locations(HashMap<u64, Vec3>);
+
 fn main() {
     App::new()
-        .insert_resource(SpacecraftConfig {
-            start_transform: Transform::from_xyz(0.0, 0.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
-            impact_magnitude: 0.5,
-            ..Default::default()
-        })
         .insert_resource(PhysicsConfig { sims_per_frame: 2 })
         .add_plugins(FullGame)
         .add_startup_system(planets)

@@ -12,9 +12,10 @@ pub fn spacecraft_setup(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    config: Res<SpacecraftConfig>,
 ) {
-    let radius = config.radius;
+    let color = Color::rgba(1.0, 1.0, 1.0, 0.5);
+    let location = Vec3::ZERO;
+    let radius = 1.0;
     let mass = radius_to_mass(radius);
     let spacecraft = commands
         .spawn(PointMassBundle {
@@ -24,8 +25,8 @@ pub fn spacecraft_setup(
                     ..Default::default()
                 })),
                 // TODO: spacraft shape/color
-                material: materials.add(Color::rgba(1.0, 1.0, 1.0, 0.5).into()),
-                transform: config.start_transform,
+                material: materials.add(color.into()),
+                transform: Transform::from_translation(location),
                 ..Default::default()
             },
             momentum: Momentum {

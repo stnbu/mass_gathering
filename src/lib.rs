@@ -24,8 +24,7 @@ pub struct SpacecraftPlugin;
 
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<SpacecraftConfig>()
-            .add_startup_system(spacecraft_setup)
+        app.add_startup_system(spacecraft_setup)
             .add_event::<HotPlanetEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
