@@ -12,32 +12,35 @@ fn planets(
         for side in [1.0, -1.0] {
             let (a, b, c) = n;
             let (a, b, c) = (a * side, b * side, c * side);
-            let id = commands
-                .spawn(PointMassBundle {
-                    pbr: PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius,
-                            ..Default::default()
-                        })),
+            commands.spawn(PointMassBundle {
+                pbr: PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius,
+                        ..Default::default()
+                    })),
 
-                        material: materials.add(
-                            Color::rgba((1.0 - a) / 2.0, (1.0 - b) / 2.0, (1.0 - c) / 2.0, 0.4)
-                                .into(),
-                        ),
-                        transform: Transform::from_xyz(a * 6.0, b * 6.0, c * 6.0),
-                        ..Default::default()
-                    },
-                    momentum: Momentum {
-                        velocity: Vec3::ZERO,
-                        mass: radius_to_mass(radius),
-                        ..Default::default()
-                    },
-                    collider: Collider::ball(radius),
+                    material: materials.add(
+                        Color::rgba((1.0 - a) / 2.0, (1.0 - b) / 2.0, (1.0 - c) / 2.0, 0.4).into(),
+                    ),
+                    transform: Transform::from_xyz(a * 6.0, b * 6.0, c * 6.0),
                     ..Default::default()
-                })
-                .id();
+                },
+                momentum: Momentum {
+                    velocity: Vec3::ZERO,
+                    mass: radius_to_mass(radius),
+                    ..Default::default()
+                },
+                collider: Collider::ball(radius),
+                ..Default::default()
+            });
         }
     }
+
+    // cam
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(10.0, 10.0, 10.0).looking_at(-Vec3::Z, Vec3::Y),
+        ..Default::default()
+    });
 }
 
 /*
@@ -53,6 +56,13 @@ struct GameConfig {
 }
 
 struct Locations(HashMap<u64, Vec3>);
+ */
+
+/*
+commands.spawn(Camera3dBundle {
+                transform: Transform::from_xyz(10.0, 10.0, 10.0).looking_at(-Vec3::Z, Vec3::Y),
+                ..Default::default()
+            });
 */
 
 fn main() {
