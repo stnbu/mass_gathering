@@ -1,62 +1,57 @@
 use bevy::prelude::*;
-use bevy_renet::{
-    renet::{RenetServer, ServerAuthentication, ServerConfig, ServerEvent},
-    RenetServerPlugin,
-};
+use bevy_rapier3d::prelude::Collider;
 use mass_gathering::{
-    server_connection_config, setup_level, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
-    SERVER_ADDR,
+    radius_to_mass, FullGame, Momentum, PhysicsConfig, PointMassBundle, SpacecraftConfig,
 };
-use std::{collections::HashMap, net::UdpSocket, time::SystemTime};
 
-#[derive(Debug, Default, Resource)]
-pub struct ServerLobby {
-    pub players: HashMap<u64, Entity>,
-}
+fn planets(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    let radius = 0.5;
+    for n in [(1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0)] {
+        for side in [1.0, -1.0] {
+            let (a, b, c) = n;
+            let (a, b, c) = (a * side, b * side, c * side);
+            let id = commands
+                .spawn(PointMassBundle {
+                    pbr: PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius,
+                            ..Default::default()
+                        })),
 
-fn new_renet_server() -> RenetServer {
-    let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
-    let socket = UdpSocket::bind(server_addr).unwrap();
-    let connection_config = server_connection_config();
-    let server_config =
-        ServerConfig::new(64, PROTOCOL_ID, server_addr, ServerAuthentication::Unsecure);
-    let current_time = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
-    RenetServer::new(current_time, server_config, connection_config, socket).unwrap()
+                        material: materials.add(
+                            Color::rgba((1.0 - a) / 2.0, (1.0 - b) / 2.0, (1.0 - c) / 2.0, 0.4)
+                                .into(),
+                        ),
+                        transform: Transform::from_xyz(a * 6.0, b * 6.0, c * 6.0),
+                        ..Default::default()
+                    },
+                    momentum: Momentum {
+                        velocity: Vec3::ZERO,
+                        mass: radius_to_mass(radius),
+                        ..Default::default()
+                    },
+                    collider: Collider::ball(radius),
+                    ..Default::default()
+                })
+                .id();
+            debug!("Spawned (non-'spacecraft') planet {id:?}");
+        }
+    }
 }
 
 fn main() {
-    let mut app = App::new();
-    app.add_plugins(DefaultPlugins);
-    app.add_plugin(RenetServerPlugin::default());
-    app.insert_resource(ServerLobby::default());
-    app.insert_resource(new_renet_server());
-    app.add_system(server_update_system);
-    app.add_startup_system(setup_level);
-    app.run();
-}
-
-#[allow(clippy::too_many_arguments)]
-fn server_update_system(
-    mut server_events: EventReader<ServerEvent>,
-    mut _lobby: ResMut<ServerLobby>,
-    mut server: ResMut<RenetServer>,
-) {
-    for event in server_events.iter() {
-        match event {
-            ServerEvent::ClientConnected(id, _) => {
-                info!("Player {} connected.", id);
-                let message =
-                    bincode::serialize(&ServerMessages::PlayerCreate { id: *id }).unwrap();
-                server.broadcast_message(ServerChannel::ServerMessages, message);
-            }
-            ServerEvent::ClientDisconnected(id) => {
-                info!("Player {} disconnected.", id);
-                let message =
-                    bincode::serialize(&ServerMessages::PlayerRemove { id: *id }).unwrap();
-                server.broadcast_message(ServerChannel::ServerMessages, message);
-            }
-        }
-    }
+    App::new()
+        .insert_resource(SpacecraftConfig {
+            start_transform: Transform::from_xyz(0.0, 0.0, 15.0).looking_at(Vec3::ZERO, Vec3::Y),
+            impact_magnitude: 0.5,
+            ..Default::default()
+        })
+        .insert_resource(PhysicsConfig { sims_per_frame: 2 })
+        .add_plugins(FullGame)
+        .add_startup_system(planets)
+        .run();
 }
