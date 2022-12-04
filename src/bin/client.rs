@@ -29,16 +29,6 @@ fn new_renet_client() -> RenetClient {
     RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
 }
 
-/*
-    App::new()
-        .insert_resource(PhysicsConfig { sims_per_frame: 4 })
-        .add_plugins(FullGame)
-
-
-        .run();
-
-*/
-
 fn main() {
     App::new()
         .insert_resource(PhysicsConfig { sims_per_frame: 4 })
