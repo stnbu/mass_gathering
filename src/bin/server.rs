@@ -4,8 +4,9 @@ use bevy_renet::{
     RenetServerPlugin,
 };
 use mass_gathering::{
-    server_connection_config, spawn_server_view_camera, systems::*, FullGame, InitData,
-    PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    server_connection_config, spawn_server_view_camera, systems::*, ClientChannel, ClientMessages,
+    FullGame, InitData, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
+    SERVER_ADDR,
 };
 use std::net::UdpSocket;
 use std::time::SystemTime;
@@ -51,6 +52,17 @@ fn handle_server_events(
             }
             ServerEvent::ClientDisconnected(id) => {
                 info!("client {id} disconnected");
+            }
+        }
+    }
+
+    for client_id in server.clients_id().into_iter() {
+        while let Some(message) = server.receive_message(client_id, ClientChannel::ClientMessages) {
+            match message {
+                _ => {
+                    println!("Got `Ready` from client {client_id}");
+                    println!("{message:?}")
+                }
             }
         }
     }

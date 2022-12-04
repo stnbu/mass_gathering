@@ -83,8 +83,8 @@ impl Plugin for Core {
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
-enum GameState {
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Serialize, Deserialize)]
+pub enum GameState {
     Running,
     Stopped,
 }
@@ -147,9 +147,15 @@ pub enum ServerChannel {
     ServerMessages,
 }
 
+#[derive(Serialize, Deserialize)]
+pub enum ClientTask {
+    FromToState(GameState, GameState, u64),
+}
+
 #[derive(Serialize, Deserialize, Component)]
 pub enum ServerMessages {
     SendInitData(InitData),
+    SetDeadlineTask(ClientTask),
 }
 
 impl From<ServerChannel> for u8 {
@@ -193,4 +199,34 @@ pub fn spawn_server_view_camera(mut commands: Commands) {
         transform: Transform::from_xyz(10.0, 10.0, 10.0).looking_at(-Vec3::Z, Vec3::Y),
         ..Default::default()
     });
+}
+
+//
+
+#[derive(Debug, Serialize, Deserialize, Component)]
+pub enum ClientMessages {
+    Ready,
+}
+
+pub enum ClientChannel {
+    ClientMessages,
+}
+
+impl From<ClientChannel> for u8 {
+    fn from(channel_id: ClientChannel) -> Self {
+        match channel_id {
+            ClientChannel::ClientMessages => 0,
+        }
+    }
+}
+
+impl ClientChannel {
+    pub fn channels_config() -> Vec<ChannelConfig> {
+        vec![ReliableChannelConfig {
+            channel_id: Self::ClientMessages.into(),
+            message_resend_time: Duration::ZERO,
+            ..Default::default()
+        }
+        .into()]
+    }
 }

@@ -8,8 +8,9 @@ use bevy_renet::{
 };
 
 use mass_gathering::{
-    client_connection_config, spawn_server_view_camera, systems::spawn_planet, FullGame,
-    PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, spawn_server_view_camera, systems::spawn_planet, ClientMessages,
+    ClientTask, FullGame, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
+    SERVER_ADDR,
 };
 
 fn new_renet_client() -> RenetClient {
@@ -31,6 +32,7 @@ fn new_renet_client() -> RenetClient {
 
 fn main() {
     App::new()
+        .add_event::<ClientMessages>()
         .insert_resource(PhysicsConfig { sims_per_frame: 4 })
         .add_plugins(FullGame)
         .add_startup_system(spawn_server_view_camera)
@@ -52,6 +54,7 @@ fn client_sync_players(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut client: ResMut<RenetClient>,
+    mut client_messages: EventWriter<ClientMessages>,
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
@@ -72,8 +75,15 @@ fn client_sync_players(
                         &mut materials,
                     );
                 }
-                //
+                let message = ClientMessages::Ready;
+                info!("  sending message to server `{message:?}`");
+                client_messages.send(message);
             }
+            ServerMessages::SetDeadlineTask(task) => match task {
+                ClientTask::FromToState(now_state, next_state, deadline) => {
+                    println!("{now_state:?}, {next_state:?}, {deadline:?}");
+                }
+            },
         }
     }
 }
