@@ -8,8 +8,8 @@ use bevy_renet::{
 };
 
 use mass_gathering::{
-    client_connection_config, systems::spawn_planet, ServerChannel, ServerMessages, PORT_NUMBER,
-    PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, spawn_server_view_camera, systems::spawn_planet, ServerChannel,
+    ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 
 fn new_renet_client() -> RenetClient {
@@ -34,6 +34,7 @@ fn main() {
     app.add_plugins(DefaultPlugins);
     app.add_plugin(RenetClientPlugin::default());
     app.insert_resource(new_renet_client());
+    app.add_startup_system(spawn_server_view_camera);
     app.add_system(client_sync_players.with_run_criteria(run_if_client_connected));
     app.add_system(panic_on_error_system);
     app.run();

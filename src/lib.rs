@@ -187,3 +187,10 @@ pub fn server_connection_config() -> RenetConnectionConfig {
 
 #[derive(Component)]
 pub struct MassID(pub u64);
+
+pub fn spawn_server_view_camera(mut commands: Commands) {
+    commands.spawn(Camera3dBundle {
+        transform: Transform::from_xyz(10.0, 10.0, 10.0).looking_at(-Vec3::Z, Vec3::Y),
+        ..Default::default()
+    });
+}

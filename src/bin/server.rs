@@ -4,25 +4,18 @@ use bevy_renet::{
     RenetServerPlugin,
 };
 use mass_gathering::{
-    server_connection_config, systems::*, FullGame, InitData, PhysicsConfig, ServerChannel,
-    ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    server_connection_config, spawn_server_view_camera, systems::*, FullGame, InitData,
+    PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 use std::net::UdpSocket;
 use std::time::SystemTime;
-
-fn add_camera(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(10.0, 10.0, 10.0).looking_at(-Vec3::Z, Vec3::Y),
-        ..Default::default()
-    });
-}
 
 fn main() {
     App::new()
         .init_resource::<InitData>()
         .insert_resource(PhysicsConfig { sims_per_frame: 4 })
         .add_plugins(FullGame)
-        .add_startup_system(add_camera)
+        .add_startup_system(spawn_server_view_camera)
         .add_startup_system(cubic)
         .add_plugin(RenetServerPlugin::default())
         .insert_resource(new_renet_server())
