@@ -8,9 +8,9 @@ use bevy_renet::{
 };
 
 use mass_gathering::{
-    client_connection_config, spawn_server_view_camera, systems::spawn_planet, ClientMessages,
-    ClientTask, FullGame, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
-    SERVER_ADDR,
+    client_connection_config, spawn_server_view_camera, systems::spawn_planet, ClientChannel,
+    ClientMessages, ClientTask, FullGame, PhysicsConfig, ServerChannel, ServerMessages,
+    PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 
 fn new_renet_client() -> RenetClient {
@@ -38,6 +38,7 @@ fn main() {
         .add_startup_system(spawn_server_view_camera)
         .add_plugin(RenetClientPlugin::default())
         .insert_resource(new_renet_client())
+        .add_system(send_client_messages)
         .add_system(client_sync_players.with_run_criteria(run_if_client_connected))
         .add_system(panic_on_error_system)
         .run();
@@ -85,5 +86,15 @@ fn client_sync_players(
                 }
             },
         }
+    }
+}
+
+fn send_client_messages(
+    mut client_messages: EventReader<ClientMessages>,
+    mut client: ResMut<RenetClient>,
+) {
+    for command in client_messages.iter() {
+        let message = bincode::serialize(command).unwrap();
+        client.send_message(ClientChannel::ClientMessages, message);
     }
 }
