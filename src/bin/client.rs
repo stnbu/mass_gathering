@@ -8,7 +8,8 @@ use bevy_renet::{
 };
 
 use mass_gathering::{
-    client_connection_config, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, systems::spawn_planet, ServerChannel, ServerMessages, PORT_NUMBER,
+    PROTOCOL_ID, SERVER_ADDR,
 };
 
 fn new_renet_client() -> RenetClient {
@@ -44,7 +45,12 @@ fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     }
 }
 
-fn client_sync_players(mut client: ResMut<RenetClient>) {
+fn client_sync_players(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut client: ResMut<RenetClient>,
+) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
@@ -54,6 +60,17 @@ fn client_sync_players(mut client: ResMut<RenetClient>) {
                     init_data.planets.len(),
                     client.client_id()
                 );
+                info!("  spawning planets...");
+                for (&planet_id, &planet_init_data) in init_data.planets.iter() {
+                    spawn_planet(
+                        planet_id,
+                        planet_init_data,
+                        &mut commands,
+                        &mut meshes,
+                        &mut materials,
+                    );
+                }
+                //
             }
         }
     }
