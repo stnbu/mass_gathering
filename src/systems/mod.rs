@@ -27,12 +27,12 @@ pub fn cubic(
                 (0, 0, 1) => Vec3::X * side,
                 _ => panic!(),
             } * speed;
-            let color = Color::rgba(
-                (1.0 - a as f32) / 2.0,
-                (1.0 - b as f32) / 2.0,
-                (1.0 - c as f32) / 2.0,
-                0.8,
-            );
+            let (r, g, b) = (a as f32, b as f32, c as f32);
+            let color = if side > 0.0 {
+                Color::rgba(r, g, b, 0.8)
+            } else {
+                Color::rgba((1.0 - r) / 2.0, (1.0 - g) / 2.0, (1.0 - b) / 2.0, 0.8)
+            };
             let planet_init_data = PlanetInitData {
                 position,
                 velocity,
