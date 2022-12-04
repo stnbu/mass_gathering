@@ -104,7 +104,7 @@ pub fn mass_to_radius(mass: f32) -> f32 {
 // Additions while _trying to use_ renet for an actual "mass gathering"
 // ====
 use std::collections::HashMap;
-#[derive(Default, Serialize, Deserialize, Clone, Copy)]
+#[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct PlanetInitData {
     pub position: Vec3,
     pub velocity: Vec3,
@@ -112,7 +112,7 @@ pub struct PlanetInitData {
     pub radius: f32,
 }
 
-#[derive(Default, Serialize, Deserialize, Resource)]
+#[derive(Default, Serialize, Deserialize, Resource, Debug)]
 pub struct InitData {
     pub planets: HashMap<u64, PlanetInitData>,
 }
@@ -147,15 +147,10 @@ pub enum ServerChannel {
     ServerMessages,
 }
 
-#[derive(Serialize, Deserialize)]
-pub enum ClientTask {
-    FromToState(GameState, GameState, u64),
-}
-
-#[derive(Serialize, Deserialize, Component)]
+#[derive(Serialize, Deserialize, Component, Debug)]
 pub enum ServerMessages {
-    SendInitData(InitData),
-    SetDeadlineTask(ClientTask),
+    Init(InitData),
+    SetGameState(GameState),
 }
 
 impl From<ServerChannel> for u8 {

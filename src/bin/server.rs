@@ -5,8 +5,8 @@ use bevy_renet::{
 };
 use mass_gathering::{
     server_connection_config, spawn_server_view_camera, systems::*, ClientChannel, ClientMessages,
-    FullGame, InitData, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
-    SERVER_ADDR,
+    FullGame, GameState, InitData, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER,
+    PROTOCOL_ID, SERVER_ADDR,
 };
 use std::net::UdpSocket;
 use std::time::SystemTime;
@@ -45,8 +45,7 @@ fn handle_server_events(
         match event {
             ServerEvent::ClientConnected(id, _) => {
                 info!("client {id} connected");
-                let message =
-                    bincode::serialize(&ServerMessages::SendInitData(init_data.clone())).unwrap();
+                let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
                 info!("sending initial data to client {id}");
                 server.send_message(*id, ServerChannel::ServerMessages, message);
             }
@@ -60,8 +59,14 @@ fn handle_server_events(
         while let Some(message) = server.receive_message(client_id, ClientChannel::ClientMessages) {
             match message {
                 _ => {
-                    println!("Got `Ready` from client {client_id}");
-                    println!("{message:?}")
+                    if client_id == 0 {
+                        let set_state = ServerMessages::SetGameState(GameState::Running);
+                        let message = bincode::serialize(&set_state).unwrap();
+                        info!("Broadcasting {set_state:?}");
+                        server.broadcast_message(ServerChannel::ServerMessages, message);
+
+                        // I SHOULD SET STATE TOO
+                    }
                 }
             }
         }

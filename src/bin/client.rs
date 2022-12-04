@@ -9,8 +9,8 @@ use bevy_renet::{
 
 use mass_gathering::{
     client_connection_config, spawn_server_view_camera, systems::spawn_planet, ClientChannel,
-    ClientMessages, ClientTask, FullGame, PhysicsConfig, ServerChannel, ServerMessages,
-    PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    ClientMessages, FullGame, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER,
+    PROTOCOL_ID, SERVER_ADDR,
 };
 
 fn new_renet_client() -> RenetClient {
@@ -56,11 +56,12 @@ fn client_sync_players(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut client: ResMut<RenetClient>,
     mut client_messages: EventWriter<ClientMessages>,
+    // mut app_state: ResMut<State<AppState>>
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
-            ServerMessages::SendInitData(init_data) => {
+            ServerMessages::Init(init_data) => {
                 info!(
                     "Server sent init data for {} planets to client {}",
                     init_data.planets.len(),
@@ -80,11 +81,10 @@ fn client_sync_players(
                 info!("  sending message to server `{message:?}`");
                 client_messages.send(message);
             }
-            ServerMessages::SetDeadlineTask(task) => match task {
-                ClientTask::FromToState(now_state, next_state, deadline) => {
-                    println!("{now_state:?}, {next_state:?}, {deadline:?}");
-                }
-            },
+            ServerMessages::SetGameState(game_state) => {
+                info!("Server says set state to {game_state:?}");
+                // set state
+            }
         }
     }
 }
