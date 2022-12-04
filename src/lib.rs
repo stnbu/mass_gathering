@@ -184,3 +184,6 @@ pub fn server_connection_config() -> RenetConnectionConfig {
         ..Default::default()
     }
 }
+
+#[derive(Component)]
+pub struct MassID(pub u64);

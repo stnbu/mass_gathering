@@ -1,4 +1,4 @@
-use crate::{radius_to_mass, InitData, Momentum, PlanetInitData, PointMassBundle};
+use crate::{radius_to_mass, InitData, MassID, Momentum, PlanetInitData, PointMassBundle};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::Collider;
 
@@ -40,25 +40,49 @@ pub fn cubic(
                 radius,
             };
             planet_data.planets.insert(planet_id, planet_init_data);
-            planet_id += 1; // !
-            commands.spawn(PointMassBundle {
-                pbr: PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius,
-                        ..Default::default()
-                    })),
-                    material: materials.add(color.into()),
-                    transform: Transform::from_translation(position),
-                    ..Default::default()
-                },
-                momentum: Momentum {
-                    velocity,
-                    mass: radius_to_mass(radius),
-                    ..Default::default()
-                },
-                collider: Collider::ball(radius),
-                ..Default::default()
-            });
+            planet_id += 1;
+            spawn_planet(
+                planet_id,
+                planet_init_data,
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+            );
         }
     }
+}
+
+pub fn spawn_planet<'a>(
+    planet_id: u64,
+    planet_init_data: PlanetInitData,
+    commands: &'a mut Commands,
+    meshes: &'a mut ResMut<Assets<Mesh>>,
+    materials: &'a mut ResMut<Assets<StandardMaterial>>,
+) {
+    let PlanetInitData {
+        position,
+        velocity,
+        color,
+        radius,
+    } = planet_init_data;
+    commands
+        .spawn(PointMassBundle {
+            pbr: PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius,
+                    ..Default::default()
+                })),
+                material: materials.add(color.into()),
+                transform: Transform::from_translation(position),
+                ..Default::default()
+            },
+            momentum: Momentum {
+                velocity,
+                mass: radius_to_mass(radius),
+                ..Default::default()
+            },
+            collider: Collider::ball(radius),
+            ..Default::default()
+        })
+        .insert(MassID(planet_id));
 }
