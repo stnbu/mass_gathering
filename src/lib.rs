@@ -139,9 +139,9 @@ use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx29e0)cs2@66#vxo0s5np{_";
-pub const PROTOCOL_ID: u64 = 13;
-pub const SERVER_ADDR: &str = "192.168.1.43";
-pub const PORT_NUMBER: u16 = 5243;
+pub const PROTOCOL_ID: u64 = 17;
+pub const SERVER_ADDR: &str = "127.0.0.1";
+pub const PORT_NUMBER: u16 = 5247;
 
 pub enum ServerChannel {
     ServerMessages,

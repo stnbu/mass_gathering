@@ -4,9 +4,9 @@ use bevy_renet::{
     RenetServerPlugin,
 };
 use mass_gathering::{
-    server_connection_config, spawn_server_view_camera, systems::*, ClientChannel, ClientMessages,
-    FullGame, GameState, InitData, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER,
-    PROTOCOL_ID, SERVER_ADDR,
+    server_connection_config, spawn_server_view_camera, systems::*, ClientChannel, FullGame,
+    GameState, InitData, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
+    SERVER_ADDR,
 };
 use std::net::UdpSocket;
 use std::time::SystemTime;

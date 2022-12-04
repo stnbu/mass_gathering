@@ -1446,7 +1446,7 @@ dependencies = [
 
 [[package]]
 name = "mass_gathering"
-version = "0.11.0"
+version = "0.17.42"
 dependencies = [
  "bevy",
  "bevy_rapier3d",
