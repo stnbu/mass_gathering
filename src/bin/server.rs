@@ -26,6 +26,7 @@ fn main() {
         .add_startup_system(cubic)
         .add_plugin(RenetServerPlugin::default())
         .insert_resource(new_renet_server())
+        .add_system(handle_server_events)
         .run();
 }
 
@@ -41,7 +42,7 @@ fn new_renet_server() -> RenetServer {
     RenetServer::new(current_time, server_config, connection_config, socket).unwrap()
 }
 
-fn _USE_ME_server_update_system(
+fn handle_server_events(
     mut server_events: EventReader<ServerEvent>,
     mut server: ResMut<RenetServer>,
     init_data: Res<InitData>,
@@ -49,13 +50,14 @@ fn _USE_ME_server_update_system(
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, _) => {
-                println!("client {id} connected");
+                info!("client {id} connected");
                 let message =
                     bincode::serialize(&ServerMessages::SendInitData(init_data.clone())).unwrap();
+                info!("sending initial data to client {id}");
                 server.send_message(*id, ServerChannel::ServerMessages, message);
             }
             ServerEvent::ClientDisconnected(id) => {
-                println!("client {id} disconnected");
+                info!("client {id} disconnected");
             }
         }
     }
