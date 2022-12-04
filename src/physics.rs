@@ -3,7 +3,7 @@ use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, 
 
 #[derive(Resource)]
 pub struct PhysicsConfig {
-    pub sims_per_frame: u8,
+    pub sims_per_frame: u32,
 }
 
 impl Default for PhysicsConfig {
