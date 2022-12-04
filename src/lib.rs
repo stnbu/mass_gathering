@@ -43,7 +43,7 @@ impl Plugin for Spacetime {
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnPlanetEvent>()
             .add_system_set(
-                SystemSet::on_update(AppState::Playing)
+                SystemSet::on_update(GameState::Running)
                     .with_system(handle_despawn_planet)
                     .with_system(signal_freefall_delta.before(handle_despawn_planet))
                     .with_system(handle_freefall.before(handle_despawn_planet))
@@ -77,15 +77,16 @@ impl Plugin for Core {
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
 
-        app.add_state(AppState::Playing)
+        app.add_state(GameState::Stopped)
             .add_startup_system(disable_rapier_gravity)
             .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
-enum AppState {
-    Playing,
+enum GameState {
+    Running,
+    Stopped,
 }
 
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
