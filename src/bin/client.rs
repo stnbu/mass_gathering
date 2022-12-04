@@ -33,7 +33,7 @@ fn new_renet_client() -> RenetClient {
 fn main() {
     App::new()
         .add_event::<ClientMessages>()
-        .insert_resource(PhysicsConfig { sims_per_frame: 4 })
+        .insert_resource(PhysicsConfig { sims_per_frame: 5 })
         .add_plugins(FullGame)
         .add_startup_system(spawn_server_view_camera)
         .add_plugin(RenetClientPlugin::default())

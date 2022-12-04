@@ -14,7 +14,7 @@ use std::time::SystemTime;
 fn main() {
     App::new()
         .init_resource::<InitData>()
-        .insert_resource(PhysicsConfig { sims_per_frame: 4 })
+        .insert_resource(PhysicsConfig { sims_per_frame: 5 })
         .add_plugins(FullGame)
         .add_startup_system(spawn_server_view_camera)
         .add_startup_system(cubic)

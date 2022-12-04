@@ -31,6 +31,17 @@ pub fn let_light(mut commands: Commands) {
         transform: Transform::from_xyz(-500000.0, -500000.0, 0.0),
         ..default()
     });
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            shadows_enabled: true,
+            shadow_normal_bias: NORMAL_BIAS,
+            shadow_depth_bias: SHADOW_BIAS,
+            ..default()
+        },
+        // TODO: figure out what _translation_ means for directional
+        transform: Transform::from_xyz(500000.0, 500000.0, 0.0),
+        ..default()
+    });
 }
 
 pub struct Spacetime;
@@ -191,7 +202,7 @@ pub struct MassID(pub u64);
 
 pub fn spawn_server_view_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(10.0, 10.0, 10.0).looking_at(-Vec3::Z, Vec3::Y),
+        transform: Transform::from_xyz(20.0, 18.0, 23.0).looking_at(-Vec3::Z, Vec3::Y),
         ..Default::default()
     });
 }

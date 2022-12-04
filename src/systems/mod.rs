@@ -11,11 +11,13 @@ pub fn cubic(
 ) {
     let mut planet_id = 2000;
     let radius = 0.5;
-    let from_origin = 6.0;
+    let from_origin = 9.0;
     for n in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
         for side in [1.0, -1.0] {
+            let fun_factor = 1.0 + (planet_id as f32 - 2000.0) / 20.0;
+
             let (a, b, c) = n;
-            let speed = 0.1;
+            let speed = 0.15;
             let position = Vec3::new(
                 a as f32 * side * from_origin,
                 b as f32 * side * from_origin,
@@ -28,17 +30,25 @@ pub fn cubic(
                 _ => panic!(),
             } * speed;
             let (r, g, b) = (a as f32, b as f32, c as f32);
-            let (color, tweak) = if side > 0.0 {
-                (Color::rgba(r, g, b, 0.8), 1.3)
+            let plus_side = side > 0.0;
+            let color = if plus_side {
+                Color::rgba(r, g, b, 0.8)
             } else {
-                (
-                    Color::rgba((1.0 - r) / 2.0, (1.0 - g) / 2.0, (1.0 - b) / 2.0, 0.8),
-                    0.92,
-                )
+                Color::rgba((1.0 - r) / 2.0, (1.0 - g) / 2.0, (1.0 - b) / 2.0, 0.8)
             };
-            let velocity = velocity * tweak;
-            let radius = radius / tweak * (1.0 + ((planet_id as f32 - 2000.0) / 20.0));
-            let position = position * tweak;
+            let velocity = if c == 1 {
+                velocity
+            } else {
+                velocity * fun_factor
+            };
+            let radius = if a == 1 { radius } else { radius * fun_factor };
+
+            let position = if c == 1 {
+                position
+            } else {
+                position * fun_factor
+            };
+
             let planet_init_data = PlanetInitData {
                 position,
                 velocity,
