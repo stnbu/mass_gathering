@@ -9,7 +9,7 @@ use bevy_renet::{
 
 use mass_gathering::{
     client_connection_config, spawn_server_view_camera, systems::spawn_planet, ClientChannel,
-    ClientMessages, FullGame, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER,
+    ClientMessages, FullGame, GameState, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER,
     PROTOCOL_ID, SERVER_ADDR,
 };
 
@@ -56,7 +56,7 @@ fn client_sync_players(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut client: ResMut<RenetClient>,
     mut client_messages: EventWriter<ClientMessages>,
-    // mut app_state: ResMut<State<AppState>>
+    mut app_state: ResMut<State<GameState>>,
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
@@ -83,7 +83,7 @@ fn client_sync_players(
             }
             ServerMessages::SetGameState(game_state) => {
                 info!("Server says set state to {game_state:?}");
-                // set state
+                let _ = app_state.overwrite_set(game_state);
             }
         }
     }
