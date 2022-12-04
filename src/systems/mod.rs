@@ -28,11 +28,17 @@ pub fn cubic(
                 _ => panic!(),
             } * speed;
             let (r, g, b) = (a as f32, b as f32, c as f32);
-            let color = if side > 0.0 {
-                Color::rgba(r, g, b, 0.8)
+            let (color, tweak) = if side > 0.0 {
+                (Color::rgba(r, g, b, 0.8), 1.3)
             } else {
-                Color::rgba((1.0 - r) / 2.0, (1.0 - g) / 2.0, (1.0 - b) / 2.0, 0.8)
+                (
+                    Color::rgba((1.0 - r) / 2.0, (1.0 - g) / 2.0, (1.0 - b) / 2.0, 0.8),
+                    0.92,
+                )
             };
+            let velocity = velocity * tweak;
+            let radius = radius / tweak * (1.0 + ((planet_id as f32 - 2000.0) / 20.0));
+            let position = position * tweak;
             let planet_init_data = PlanetInitData {
                 position,
                 velocity,
