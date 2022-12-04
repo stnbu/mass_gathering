@@ -99,3 +99,87 @@ pub fn radius_to_mass(radius: f32) -> f32 {
 pub fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
 }
+
+// Additions while _trying to use_ renet for an actual "mass gathering"
+// ====
+use std::collections::HashMap;
+#[derive(Default, Serialize, Deserialize, Clone, Copy)]
+pub struct PlanetInitData {
+    pub position: Vec3,
+    pub velocity: Vec3,
+    pub color: Color,
+    pub radius: f32,
+}
+
+#[derive(Default, Serialize, Deserialize, Resource)]
+pub struct InitData {
+    pub planets: HashMap<u64, PlanetInitData>,
+}
+
+impl Clone for InitData {
+    fn clone(&self) -> Self {
+        let mut planets = HashMap::new();
+        planets.extend(&self.planets);
+        Self { planets }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        let mut planets = HashMap::new();
+        planets.extend(&source.planets);
+        self.planets = planets;
+    }
+}
+
+//
+use bevy_renet::renet::{
+    ChannelConfig, ReliableChannelConfig, RenetConnectionConfig, NETCODE_KEY_BYTES,
+};
+use serde::{Deserialize, Serialize};
+use std::time::Duration;
+
+pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx29e0)cs2@66#vxo0s5np{_";
+pub const PROTOCOL_ID: u64 = 13;
+pub const SERVER_ADDR: &str = "192.168.1.43";
+pub const PORT_NUMBER: u16 = 5243;
+
+pub enum ServerChannel {
+    ServerMessages,
+}
+
+#[derive(Serialize, Deserialize, Component)]
+pub enum ServerMessages {
+    SendInitData(InitData),
+}
+
+impl From<ServerChannel> for u8 {
+    fn from(channel_id: ServerChannel) -> Self {
+        match channel_id {
+            ServerChannel::ServerMessages => 0,
+        }
+    }
+}
+
+impl ServerChannel {
+    pub fn channels_config() -> Vec<ChannelConfig> {
+        vec![ReliableChannelConfig {
+            channel_id: Self::ServerMessages.into(),
+            message_resend_time: Duration::from_millis(200),
+            ..Default::default()
+        }
+        .into()]
+    }
+}
+
+pub fn client_connection_config() -> RenetConnectionConfig {
+    RenetConnectionConfig {
+        receive_channels_config: ServerChannel::channels_config(),
+        ..Default::default()
+    }
+}
+
+pub fn server_connection_config() -> RenetConnectionConfig {
+    RenetConnectionConfig {
+        send_channels_config: ServerChannel::channels_config(),
+        ..Default::default()
+    }
+}
