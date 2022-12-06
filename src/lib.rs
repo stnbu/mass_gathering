@@ -73,7 +73,7 @@ use bevy_egui::EguiPlugin;
 
 #[derive(Resource, Default)]
 pub struct GameConfig {
-    pub nick: Option<String>,
+    pub nick: String,
     pub menu_page: u8,
 }
 

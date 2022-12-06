@@ -15,7 +15,13 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConf
             fill: FILL_COLOR,
             ..Default::default()
         })
-        .show(ctx.ctx_mut(), |_| ());
+        .show(ctx.ctx_mut(), |ui| {
+            ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                if ui.button("NEXT>").clicked() {
+                    game_config.menu_page += 1;
+                }
+            });
+        });
 
     SidePanel::left("left_panel")
         .resizable(false)
@@ -45,7 +51,7 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConf
         .show(ctx.ctx_mut(), |_| ());
 
     match game_config.menu_page {
-        _ => {
+        0 => {
             CentralPanel::default()
                 .frame(Frame {
                     fill: FILL_COLOR,
@@ -65,6 +71,30 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConf
                             });
                             strip.cell(|ui| {
                                 build_table(ui);
+                            });
+                        });
+                });
+        }
+        _ => {
+            CentralPanel::default()
+                .frame(Frame {
+                    fill: FILL_COLOR,
+                    ..Default::default()
+                })
+                .show(ctx.ctx_mut(), |ui| {
+                    StripBuilder::new(ui)
+                        .size(Size::exact(65.0))
+                        .size(Size::exact(30.0))
+                        .size(Size::remainder())
+                        .vertical(|mut strip| {
+                            strip.cell(|ui| {
+                                styled_text_label(22.0, ui, "Choose an eight-character nickname.");
+                            });
+                            strip.cell(|ui| {
+                                ui.horizontal(|ui| {
+                                    ui.label("Nickname: ");
+                                    ui.text_edit_singleline(&mut game_config.nick);
+                                });
                             });
                         });
                 });
