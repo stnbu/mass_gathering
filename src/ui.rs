@@ -43,12 +43,7 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>) {
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |_| ());
-}
 
-//use crate::GameConfig;
-//use egui_extras::StripBuilder;
-
-pub fn page_01(mut ctx: ResMut<EguiContext>, game_config: Res<GameConfig>) {
     CentralPanel::default()
         .frame(Frame {
             fill: FILL_COLOR,
