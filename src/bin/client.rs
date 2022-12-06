@@ -37,8 +37,8 @@ fn main() {
         .add_plugins(FullGame)
         .add_startup_system(spawn_server_view_camera)
         .add_plugin(RenetClientPlugin::default())
-        .insert_resource(new_renet_client())
-        .add_system(send_client_messages)
+        //.insert_resource(new_renet_client())
+        //.add_system(send_client_messages)
         .add_system(client_sync_players.with_run_criteria(run_if_client_connected))
         .add_system(panic_on_error_system)
         .run();
