@@ -40,6 +40,7 @@ fn main() {
         //.insert_resource(new_renet_client())
         //.add_system(send_client_messages)
         .add_system(client_sync_players.with_run_criteria(run_if_client_connected))
+        .add_system(send_client_messages.with_run_criteria(run_if_client_connected))
         .add_system(panic_on_error_system)
         .run();
 }
