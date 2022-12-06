@@ -7,7 +7,7 @@ use egui_extras::{Size, StripBuilder, TableBuilder};
 use crate::GameConfig;
 
 const FILL_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 240);
-pub fn menu_frame(mut ctx: ResMut<EguiContext>) {
+pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConfig>) {
     TopBottomPanel::top("top_panel")
         .resizable(false)
         .min_height(200.0)
@@ -44,28 +44,32 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>) {
         })
         .show(ctx.ctx_mut(), |_| ());
 
-    CentralPanel::default()
-        .frame(Frame {
-            fill: FILL_COLOR,
-            ..Default::default()
-        })
-        .show(ctx.ctx_mut(), |ui| {
-            StripBuilder::new(ui)
-                .size(Size::exact(65.0))
-                .size(Size::exact(30.0))
-                .size(Size::remainder())
-                .vertical(|mut strip| {
-                    strip.cell(|ui| {
-                        styled_text_label(50.0, ui, "CLICK ANYWHERE TO BEGIN!");
-                    });
-                    strip.cell(|ui| {
-                        styled_text_label(22.0, ui, ".. Input Bindings ..");
-                    });
-                    strip.cell(|ui| {
-                        build_table(ui);
-                    });
+    match game_config.menu_page {
+        _ => {
+            CentralPanel::default()
+                .frame(Frame {
+                    fill: FILL_COLOR,
+                    ..Default::default()
+                })
+                .show(ctx.ctx_mut(), |ui| {
+                    StripBuilder::new(ui)
+                        .size(Size::exact(65.0))
+                        .size(Size::exact(30.0))
+                        .size(Size::remainder())
+                        .vertical(|mut strip| {
+                            strip.cell(|ui| {
+                                styled_text_label(50.0, ui, "CLICK ANYWHERE TO BEGIN!");
+                            });
+                            strip.cell(|ui| {
+                                styled_text_label(22.0, ui, ".. Input Bindings ..");
+                            });
+                            strip.cell(|ui| {
+                                build_table(ui);
+                            });
+                        });
                 });
-        });
+        }
+    }
 }
 
 fn styled_text_label(height: f32, ui: &mut egui::Ui, text: &str) {
