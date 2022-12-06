@@ -66,6 +66,17 @@ impl Plugin for Spacetime {
 
 pub struct Core;
 
+mod ui;
+pub use ui::*;
+
+use bevy_egui::EguiPlugin;
+
+#[derive(Resource, Default)]
+pub struct GameConfig {
+    pub nick: Option<String>,
+    pub menu_page: u8,
+}
+
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
         #[cfg(debug_assertions)]
@@ -85,12 +96,18 @@ impl Plugin for Core {
             app.add_plugins(DefaultPlugins);
         }
 
+        app.init_resource::<GameConfig>();
+        app.add_plugin(EguiPlugin);
+        app.add_state(GameState::Stopped);
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
-
-        app.add_state(GameState::Stopped)
-            .add_startup_system(disable_rapier_gravity)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        app.add_startup_system(disable_rapier_gravity);
+        app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        app.add_system_set(
+            SystemSet::on_update(GameState::Stopped)
+                .with_system(menu_frame)
+                .with_system(page_01),
+        );
     }
 }
 
