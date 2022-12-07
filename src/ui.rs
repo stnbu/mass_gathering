@@ -169,148 +169,56 @@ fn build_table(ui: &mut egui::Ui) {
 // // //
 // It tries to cobble together "connect logic"
 // // //
-pub fn draw_lobby_list(ui: &mut Ui, lobby_list: Vec<LobbyListing>) -> Option<(u64, bool)> {
-    ui.separator();
-    ui.heading("Lobby list");
-    if lobby_list.is_empty() {
-        ui.label("No lobbies available");
-        return None;
-    }
-
+pub fn draw_lobby_list(ui: &mut Ui) -> Option<String> {
     let mut connect_server_id = None;
-    TableBuilder::new(ui)
-        .striped(true)
-        .cell_layout(Layout::left_to_right(Align::Min))
-        .column(Size::exact(12.))
-        .column(Size::remainder())
-        .column(Size::exact(40.))
-        .column(Size::exact(60.))
-        .header(12.0, |mut header| {
-            header.col(|_| {});
-            header.col(|ui| {
-                ui.label("Name");
-            });
-        })
-        .body(|mut body| {
-            for lobby in lobby_list.iter() {
-                body.row(30., |mut row| {
-                    row.col(|ui| {
-                        if lobby.is_protected {
-                            ui.label("🔒");
-                        }
-                    });
-
-                    row.col(|ui| {
-                        ui.label(&lobby.name);
-                    });
-
-                    row.col(|ui| {
-                        ui.label(format!("{}/{}", lobby.current_clients, lobby.max_clients));
-                    });
-
-                    row.col(|ui| {
-                        if ui.button("connect").clicked() {
-                            connect_server_id = Some((lobby.id, lobby.is_protected));
-                        }
-                    });
-                });
-            }
-        });
-
+    if ui.button("connect").clicked() {
+        connect_server_id = Some("chat.net.host.foo:1234".to_string());
+    }
     connect_server_id
 }
 
 pub fn draw_main_screen(
-    ui_state: &mut UiState,
-    state: &mut AppState,
-    lobby_list: Vec<LobbyListing>,
+    // ui_state: &mut UiState,
+    // state: &mut AppState,
+    // lobby_list: Vec<LobbyListing>,
     ctx: &egui::Context,
 ) {
-    egui::CentralPanel::default().show(ctx, |ui| {
-        egui::Area::new("buttons")
-            .anchor(egui::Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
-            .show(ui.ctx(), |ui| {
-                ui.set_width(300.);
-                ui.set_height(300.);
-                ui.vertical_centered(|ui| {
-                    ui.horizontal(|ui| {
-                        ui.label("Nick:");
-                        ui.text_edit_singleline(&mut ui_state.username)
-                    });
+    if let Some(address) = draw_lobby_list(ui, lobby_list) {
+        let (sender, receiver) = mpsc::channel();
+        let request_connection = RequestConnection {
+            username: ui_state.username.clone(),
+        };
 
-                    ui.horizontal(|ui| {
-                        ui.label("Lobby name:");
-                        ui.text_edit_singleline(&mut ui_state.lobby_name)
-                    });
+        std::thread::spawn(move || {
+            if let Err(e) = connect_token_request(address) {
+                log::error!(
+                    "Failed to get connect token for server {}: {}",
+                    connect_server_id,
+                    e
+                );
+            }
+        });
+        *state = AppState::RequestingToken { token: receiver };
+    }
+}
 
-                    ui.horizontal(|ui| {
-                        ui.label("Lobby password:")
-                            .on_hover_text("Password can be empty");
-                        egui::TextEdit::singleline(&mut ui_state.password)
-                            .password(true)
-                            .ui(ui)
-                    });
+pub fn connect_token_request(
+    server_id: u64,
+    request_connection: RequestConnection,
+    sender: Sender<reqwest::Result<ConnectToken>>,
+) -> Result<(), Box<dyn Error>> {
+    let client = reqwest::blocking::Client::new();
+    let res = client
+        .post(format!("http://localhost:8889/server/{server_id}/connect"))
+        .json(&request_connection)
+        .send()?;
+    if let Err(e) = res.error_for_status_ref() {
+        sender.send(Err(e))?;
+    } else {
+        let bytes = res.bytes()?;
+        let token = ConnectToken::read(&mut bytes.as_ref())?;
+        sender.send(Ok(token))?;
+    }
 
-                    ui.vertical_centered_justified(|ui| {
-                        if ui.button("Host").clicked() {
-                            if ui_state.username.is_empty() || ui_state.lobby_name.is_empty() {
-                                ui_state.error =
-                                    Some("Nick or Lobby name can't be empty".to_owned());
-                            } else {
-                                let server = ChatServer::new(
-                                    ui_state.lobby_name.clone(),
-                                    ui_state.username.clone(),
-                                    ui_state.password.clone(),
-                                );
-                                *state = AppState::HostChat {
-                                    chat_server: Box::new(server),
-                                };
-                            }
-                        }
-                    });
-
-                    if let Some(error) = &ui_state.error {
-                        ui.separator();
-                        ui.colored_label(Color32::RED, format!("Error: {}", error));
-                    }
-
-                    if let Some((connect_server_id, is_protected)) = draw_lobby_list(ui, lobby_list)
-                    {
-                        if ui_state.username.is_empty() {
-                            ui_state.error = Some("Nick can't be empty".to_owned());
-                        } else if is_protected && ui_state.password.is_empty() {
-                            ui_state.error =
-                                Some("Lobby is protected, please insert a password".to_owned());
-                        } else {
-                            let (sender, receiver) = mpsc::channel();
-                            let password = if is_protected {
-                                Some(ui_state.password.clone())
-                            } else {
-                                None
-                            };
-                            let request_connection = RequestConnection {
-                                username: ui_state.username.clone(),
-                                password,
-                            };
-
-                            std::thread::spawn(move || {
-                                if let Err(e) = connect_token_request(
-                                    connect_server_id,
-                                    request_connection,
-                                    sender,
-                                ) {
-                                    log::error!(
-                                        "Failed to get connect token for server {}: {}",
-                                        connect_server_id,
-                                        e
-                                    );
-                                }
-                            });
-
-                            *state = AppState::RequestingToken { token: receiver };
-                        }
-                    }
-                });
-            });
-    });
+    Ok(())
 }
