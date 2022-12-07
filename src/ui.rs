@@ -7,7 +7,11 @@ use egui_extras::{Size, StripBuilder, TableBuilder};
 use crate::{new_renet_client, GameConfig};
 
 const FILL_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 240);
-pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConfig>) {
+pub fn menu_frame(
+    mut ctx: ResMut<EguiContext>,
+    mut game_config: ResMut<GameConfig>,
+    mut commands: Commands,
+) {
     TopBottomPanel::top("top_panel")
         .resizable(false)
         .min_height(200.0)
@@ -117,8 +121,7 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConf
                             strip.cell(|ui| {
                                 if !game_config.connected && ui.button("CONNECT NOW").clicked() {
                                     warn!("clicked!!");
-                                    let mut world = World::new();
-                                    world.insert_resource(new_renet_client());
+                                    commands.insert_resource(new_renet_client());
                                     game_config.connected = true;
                                 }
                             });
