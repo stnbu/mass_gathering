@@ -4,7 +4,7 @@ use bevy_egui::egui::*;
 use bevy_egui::*;
 use egui_extras::{Size, StripBuilder, TableBuilder};
 
-use crate::GameConfig;
+use crate::{new_renet_client, GameConfig};
 
 const FILL_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 240);
 pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConfig>) {
@@ -75,7 +75,7 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConf
                         });
                 });
         }
-        _ => {
+        1 => {
             CentralPanel::default()
                 .frame(Frame {
                     fill: FILL_COLOR,
@@ -99,6 +99,33 @@ pub fn menu_frame(mut ctx: ResMut<EguiContext>, mut game_config: ResMut<GameConf
                         });
                 });
         }
+        2 => {
+            CentralPanel::default()
+                .frame(Frame {
+                    fill: FILL_COLOR,
+                    ..Default::default()
+                })
+                .show(ctx.ctx_mut(), |ui| {
+                    StripBuilder::new(ui)
+                        .size(Size::exact(65.0))
+                        .size(Size::exact(30.0))
+                        .size(Size::remainder())
+                        .vertical(|mut strip| {
+                            strip.cell(|ui| {
+                                styled_text_label(22.0, ui, "Click to connect.");
+                            });
+                            strip.cell(|ui| {
+                                if !game_config.connected && ui.button("CONNECT NOW").clicked() {
+                                    warn!("clicked!!");
+                                    let mut world = World::new();
+                                    world.insert_resource(new_renet_client());
+                                    game_config.connected = true;
+                                }
+                            });
+                        });
+                });
+        }
+        _ => panic!(),
     }
 }
 
@@ -164,61 +191,4 @@ fn build_table(ui: &mut egui::Ui) {
                 });
             });
         });
-}
-
-// // //
-// It tries to cobble together "connect logic"
-// // //
-pub fn draw_lobby_list(ui: &mut Ui) -> Option<String> {
-    let mut connect_server_id = None;
-    if ui.button("connect").clicked() {
-        connect_server_id = Some("chat.net.host.foo:1234".to_string());
-    }
-    connect_server_id
-}
-
-pub fn draw_main_screen(
-    // ui_state: &mut UiState,
-    // state: &mut AppState,
-    // lobby_list: Vec<LobbyListing>,
-    ctx: &egui::Context,
-) {
-    if let Some(address) = draw_lobby_list(ui, lobby_list) {
-        let (sender, receiver) = mpsc::channel();
-        let request_connection = RequestConnection {
-            username: ui_state.username.clone(),
-        };
-
-        std::thread::spawn(move || {
-            if let Err(e) = connect_token_request(address) {
-                log::error!(
-                    "Failed to get connect token for server {}: {}",
-                    connect_server_id,
-                    e
-                );
-            }
-        });
-        *state = AppState::RequestingToken { token: receiver };
-    }
-}
-
-pub fn connect_token_request(
-    server_id: u64,
-    request_connection: RequestConnection,
-    sender: Sender<reqwest::Result<ConnectToken>>,
-) -> Result<(), Box<dyn Error>> {
-    let client = reqwest::blocking::Client::new();
-    let res = client
-        .post(format!("http://localhost:8889/server/{server_id}/connect"))
-        .json(&request_connection)
-        .send()?;
-    if let Err(e) = res.error_for_status_ref() {
-        sender.send(Err(e))?;
-    } else {
-        let bytes = res.bytes()?;
-        let token = ConnectToken::read(&mut bytes.as_ref())?;
-        sender.send(Ok(token))?;
-    }
-
-    Ok(())
 }

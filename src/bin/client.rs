@@ -8,27 +8,10 @@ use bevy_renet::{
 };
 
 use mass_gathering::{
-    client_connection_config, spawn_server_view_camera, systems::spawn_planet, ClientChannel,
-    ClientMessages, FullGame, GameState, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER,
-    PROTOCOL_ID, SERVER_ADDR,
+    client_connection_config, new_renet_client, spawn_server_view_camera, systems::spawn_planet,
+    ClientChannel, ClientMessages, FullGame, GameState, PhysicsConfig, ServerChannel,
+    ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
-
-fn new_renet_client() -> RenetClient {
-    let client_id = 0;
-    let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
-    let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    let connection_config = client_connection_config();
-    let current_time = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
-    let authentication = ClientAuthentication::Unsecure {
-        client_id,
-        protocol_id: PROTOCOL_ID,
-        server_addr,
-        user_data: None,
-    };
-    RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
-}
 
 fn main() {
     App::new()
@@ -38,7 +21,6 @@ fn main() {
         .add_startup_system(spawn_server_view_camera)
         .add_plugin(RenetClientPlugin::default())
         //.insert_resource(new_renet_client())
-        //.add_system(send_client_messages)
         .add_system(client_sync_players.with_run_criteria(run_if_client_connected))
         .add_system(send_client_messages.with_run_criteria(run_if_client_connected))
         .add_system(panic_on_error_system)

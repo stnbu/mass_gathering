@@ -1,7 +1,9 @@
 use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_renet::renet::ClientAuthentication;
 use std::f32::consts::PI;
+use std::{net::UdpSocket, time::SystemTime};
 
 pub mod physics;
 pub use physics::*;
@@ -75,6 +77,7 @@ use bevy_egui::EguiPlugin;
 pub struct GameConfig {
     pub nick: String,
     pub menu_page: u8,
+    pub connected: bool,
 }
 
 impl Plugin for Core {
@@ -157,7 +160,7 @@ impl Clone for InitData {
 
 //
 use bevy_renet::renet::{
-    ChannelConfig, ReliableChannelConfig, RenetConnectionConfig, NETCODE_KEY_BYTES,
+    ChannelConfig, ReliableChannelConfig, RenetClient, RenetConnectionConfig, NETCODE_KEY_BYTES,
 };
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
@@ -248,4 +251,22 @@ impl ClientChannel {
         }
         .into()]
     }
+}
+
+pub fn new_renet_client() -> RenetClient {
+    let client_id = 0;
+    let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
+    let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
+    let connection_config = client_connection_config();
+    let current_time = SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap();
+    let authentication = ClientAuthentication::Unsecure {
+        client_id,
+        protocol_id: PROTOCOL_ID,
+        server_addr,
+        user_data: None,
+    };
+    warn!("returning the dang ol client");
+    RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
 }
