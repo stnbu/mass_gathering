@@ -106,7 +106,6 @@ impl Plugin for Core {
         app.add_system(bevy::window::close_on_esc);
         app.add_startup_system(disable_rapier_gravity);
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-        app.add_system_set(SystemSet::on_update(GameState::Stopped).with_system(menu_frame));
     }
 }
 
