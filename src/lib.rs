@@ -265,7 +265,6 @@ pub fn new_renet_client(client_id: u64) -> RenetClient {
         server_addr,
         user_data: None,
     };
-    warn!("returning the dang ol client");
     RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
 }
 

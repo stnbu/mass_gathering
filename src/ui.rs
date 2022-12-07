@@ -111,7 +111,6 @@ pub fn client_menu(
                             });
                             strip.cell(|ui| {
                                 if !game_config.connected && ui.button("CONNECT NOW").clicked() {
-                                    warn!("clicked!!");
                                     commands.insert_resource(new_renet_client(from_nick(
                                         &game_config.nick,
                                     )));
