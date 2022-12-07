@@ -60,15 +60,14 @@ fn handle_server_events(
         while let Some(message) = server.receive_message(client_id, ClientChannel::ClientMessages) {
             match message {
                 _ => {
-                    if client_id == 0 {
-                        let state = GameState::Running;
-                        let set_state = ServerMessages::SetGameState(state);
-                        let message = bincode::serialize(&set_state).unwrap();
-                        info!("Broadcasting {set_state:?}");
-                        server.broadcast_message(ServerChannel::ServerMessages, message);
-                        info!("  and setting my state to {state:?}");
-                        let _ = app_state.overwrite_set(state);
-                    }
+                    // FIXME: we need to do this "when everybody is ready"
+                    let state = GameState::Running;
+                    let set_state = ServerMessages::SetGameState(state);
+                    let message = bincode::serialize(&set_state).unwrap();
+                    info!("Broadcasting {set_state:?}");
+                    server.broadcast_message(ServerChannel::ServerMessages, message);
+                    info!("  and setting my state to {state:?}");
+                    let _ = app_state.overwrite_set(state);
                 }
             }
         }

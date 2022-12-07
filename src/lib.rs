@@ -252,8 +252,7 @@ impl ClientChannel {
     }
 }
 
-pub fn new_renet_client() -> RenetClient {
-    let client_id = 0;
+pub fn new_renet_client(client_id: u64) -> RenetClient {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let connection_config = client_connection_config();
@@ -268,4 +267,20 @@ pub fn new_renet_client() -> RenetClient {
     };
     warn!("returning the dang ol client");
     RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
+}
+
+pub fn to_nick(id: u64) -> String {
+    let nic_vec: Vec<u8> = id.to_ne_bytes().to_vec();
+    String::from_utf8(nic_vec).unwrap().trim_end().to_string()
+}
+
+pub fn from_nick(nick: &str) -> u64 {
+    let mut nick_vec = [b' '; 8];
+    if nick.len() > 8 {
+        panic!()
+    }
+    for (i, c) in nick.as_bytes().iter().enumerate() {
+        nick_vec[i] = *c;
+    }
+    u64::from_ne_bytes(nick_vec)
 }
