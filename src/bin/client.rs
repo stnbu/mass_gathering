@@ -5,7 +5,7 @@ use bevy_renet::{
 };
 
 use mass_gathering::{
-    menu_frame, spawn_server_view_camera, systems::spawn_planet, ClientChannel, ClientMessages,
+    client_menu, spawn_server_view_camera, systems::spawn_planet, ClientChannel, ClientMessages,
     FullGame, GameState, PhysicsConfig, ServerChannel, ServerMessages,
 };
 
@@ -19,7 +19,7 @@ fn main() {
         .add_system(client_sync_players.with_run_criteria(run_if_client_connected))
         .add_system(send_client_messages.with_run_criteria(run_if_client_connected))
         .add_system(panic_on_error_system)
-        .add_system_set(SystemSet::on_update(GameState::Stopped).with_system(menu_frame))
+        .add_system_set(SystemSet::on_update(GameState::Stopped).with_system(client_menu))
         .run();
 }
 

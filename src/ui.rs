@@ -7,7 +7,7 @@ use egui_extras::{Size, StripBuilder, TableBuilder};
 use crate::{new_renet_client, GameConfig};
 
 const FILL_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 0, 0, 240);
-pub fn menu_frame(
+pub fn client_menu(
     mut ctx: ResMut<EguiContext>,
     mut game_config: ResMut<GameConfig>,
     mut commands: Commands,
