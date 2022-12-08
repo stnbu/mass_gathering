@@ -9,6 +9,8 @@ pub use physics::*;
 
 pub mod systems;
 
+pub mod networking;
+
 pub enum FullGame {
     Client,
     Server,
