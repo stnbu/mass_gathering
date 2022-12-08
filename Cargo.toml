@@ -1,6 +1,6 @@
 [package]
 name = "mass_gathering"
-version = "0.17.42" # celebrating "minimal networking works now"
+version = "0.19.2496" # celebrating "minimal networking works now"
 edition = "2021"
 default-run = "server"
 

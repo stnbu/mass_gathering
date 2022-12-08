@@ -1,13 +1,8 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-
-
 use serde::{Deserialize, Serialize};
-
 use std::f32::consts::PI;
-
-
 
 pub mod ui;
 pub use ui::*;

@@ -1,6 +1,6 @@
-use bevy_renet::renet::ClientAuthentication;
 use bevy_renet::renet::{
-    ChannelConfig, ReliableChannelConfig, RenetClient, RenetConnectionConfig, NETCODE_KEY_BYTES,
+    ChannelConfig, ClientAuthentication, ReliableChannelConfig, RenetClient, RenetConnectionConfig,
+    NETCODE_KEY_BYTES, NETCODE_USER_DATA_BYTES,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -10,8 +10,9 @@ use std::{net::UdpSocket, time::SystemTime};
 
 use crate::{systems::spawn_planet, Core, GameState, Spacetime};
 use bevy::prelude::*;
-use bevy_renet::renet::RenetError;
-use bevy_renet::renet::{RenetServer, ServerAuthentication, ServerConfig, ServerEvent};
+use bevy_renet::renet::{
+    DefaultChannel, RenetError, RenetServer, ServerAuthentication, ServerConfig, ServerEvent,
+};
 
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct PlanetInitData {
@@ -53,13 +54,14 @@ pub fn handle_client_events(
     mut client: ResMut<RenetClient>,
     mut client_messages: EventWriter<ClientMessages>,
     mut app_state: ResMut<State<GameState>>,
+    mut lobby: ResMut<Lobby>,
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
             ServerMessages::Init(init_data) => {
                 info!(
-                    "Server sent init data for {} planets to client {}",
+                    "Server sent init data for {} planets to me, client {}",
                     init_data.planets.len(),
                     client.client_id()
                 );
@@ -78,8 +80,20 @@ pub fn handle_client_events(
                 client_messages.send(message);
             }
             ServerMessages::SetGameState(game_state) => {
-                info!("Server says set state to {game_state:?}");
+                info!("Server says set state to {game_state:?}. Setting state now.");
                 let _ = app_state.overwrite_set(game_state);
+            }
+            ServerMessages::ClientConnected {
+                id,
+                client_preferences,
+            } => {
+                info!(
+                    "Server says ({}, {:?}) connected. Updating my lobby.",
+                    id, client_preferences
+                );
+                if let Some(old) = lobby.clients.insert(id, client_preferences) {
+                    info!("  the value {old:?} was replaced for client {id}");
+                }
             }
         }
     }
@@ -112,18 +126,39 @@ pub fn handle_server_events(
     mut server: ResMut<RenetServer>,
     init_data: Res<InitData>,
     mut app_state: ResMut<State<GameState>>,
+    mut lobby: ResMut<Lobby>,
 ) {
     for event in server_events.iter() {
         match event {
-            ServerEvent::ClientConnected(id, _) => {
-                info!("client {id} connected");
+            ServerEvent::ClientConnected(id, user_data) => {
+                let id = *id;
+                info!("Server got connect from client {id}");
                 let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
-                info!("sending initial data to client {id}");
-                server.send_message(*id, ServerChannel::ServerMessages, message);
-                //lobby.players.insert(*id, client_preferences);
+                info!("Server sending initial data to client {id}");
+                server.send_message(id, ServerChannel::ServerMessages, message.clone());
+                let client_preferences = ClientPreferences::from_user_data(user_data);
+                lobby.clients.insert(id, client_preferences);
+                let client_preferences = client_preferences.clone();
+                let message = ServerMessages::ClientConnected {
+                    id,
+                    client_preferences,
+                };
+                for &id in lobby.clients.keys() {
+                    info!("  sending {message:?} to client {id}");
+                    server.send_message(
+                        id,
+                        DefaultChannel::Reliable,
+                        bincode::serialize(&message).unwrap(),
+                    );
+                }
+                info!("  broadcasting {message:?}");
+                server.broadcast_message(
+                    DefaultChannel::Reliable,
+                    bincode::serialize(&message).unwrap(),
+                );
             }
             ServerEvent::ClientDisconnected(id) => {
-                info!("client {id} disconnected");
+                info!("Server got disconnect from client {id}");
             }
         }
     }
@@ -146,10 +181,10 @@ pub fn handle_server_events(
     }
 }
 
-pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx29e0)cs2@66#vxo0s5np{_";
-pub const PROTOCOL_ID: u64 = 17;
+pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx29,0)cs2@66#vxo0s5np{_";
+pub const PROTOCOL_ID: u64 = 19;
 pub const SERVER_ADDR: &str = "127.0.0.1";
-pub const PORT_NUMBER: u16 = 5247;
+pub const PORT_NUMBER: u16 = 5736;
 
 pub enum ServerChannel {
     ServerMessages,
@@ -159,6 +194,10 @@ pub enum ServerChannel {
 pub enum ServerMessages {
     Init(InitData),
     SetGameState(GameState),
+    ClientConnected {
+        id: u64,
+        client_preferences: ClientPreferences,
+    },
 }
 
 impl From<ServerChannel> for u8 {
@@ -234,7 +273,7 @@ impl ClientChannel {
     }
 }
 
-pub fn new_renet_client(client_id: u64) -> RenetClient {
+pub fn new_renet_client(client_id: u64, client_preferences: ClientPreferences) -> RenetClient {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let connection_config = client_connection_config();
@@ -245,7 +284,7 @@ pub fn new_renet_client(client_id: u64) -> RenetClient {
         client_id,
         protocol_id: PROTOCOL_ID,
         server_addr,
-        user_data: None,
+        user_data: Some(client_preferences.to_netcode_user_data()),
     };
     RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
 }
@@ -266,13 +305,27 @@ pub fn from_nick(nick: &str) -> u64 {
     u64::from_ne_bytes(nick_vec)
 }
 
+#[derive(Serialize, Deserialize, Component, Debug, Copy, Clone)]
 pub struct ClientPreferences {
     pub autostart: bool,
 }
 
+impl ClientPreferences {
+    fn to_netcode_user_data(&self) -> [u8; NETCODE_USER_DATA_BYTES] {
+        let mut user_data = [0u8; NETCODE_USER_DATA_BYTES];
+        user_data[0] = self.autostart as u8;
+        user_data
+    }
+
+    fn from_user_data(user_data: &[u8; NETCODE_USER_DATA_BYTES]) -> Self {
+        let autostart = user_data[0] == 1_u8;
+        Self { autostart }
+    }
+}
+
 #[derive(Default, Resource)]
 pub struct Lobby {
-    pub players: HashMap<u64, ClientPreferences>,
+    pub clients: HashMap<u64, ClientPreferences>,
 }
 
 pub enum FullGame {
