@@ -1,4 +1,3 @@
-use bevy::app::PluginGroupBuilder;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use bevy_renet::renet::ClientAuthentication;
@@ -10,11 +9,15 @@ pub use physics::*;
 
 pub mod systems;
 
-pub struct FullGame;
+pub enum FullGame {
+    Client,
+    Server,
+}
 
-impl PluginGroup for FullGame {
-    fn build(self) -> PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>().add(Core).add(Spacetime)
+impl Plugin for FullGame {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(Core);
+        app.add_plugin(Spacetime);
     }
 }
 
@@ -215,7 +218,7 @@ pub fn server_connection_config() -> RenetConnectionConfig {
 #[derive(Component)]
 pub struct MassID(pub u64);
 
-pub fn spawn_server_view_camera(mut commands: Commands) {
+pub fn spawn_arena_view_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
         transform: Transform::from_xyz(20.0, 18.0, 23.0).looking_at(-Vec3::Z, Vec3::Y),
         ..Default::default()

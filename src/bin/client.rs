@@ -5,7 +5,7 @@ use bevy_renet::{
 };
 
 use mass_gathering::{
-    client_menu, spawn_server_view_camera, systems::spawn_planet, ClientChannel, ClientMessages,
+    client_menu, spawn_arena_view_camera, systems::spawn_planet, ClientChannel, ClientMessages,
     FullGame, GameState, PhysicsConfig, ServerChannel, ServerMessages,
 };
 
@@ -13,8 +13,8 @@ fn main() {
     App::new()
         .add_event::<ClientMessages>()
         .insert_resource(PhysicsConfig { sims_per_frame: 5 })
-        .add_plugins(FullGame)
-        .add_startup_system(spawn_server_view_camera)
+        .add_plugin(FullGame::Client)
+        .add_startup_system(spawn_arena_view_camera)
         .add_plugin(RenetClientPlugin::default())
         .add_system(client_sync_players.with_run_criteria(run_if_client_connected))
         .add_system(send_client_messages.with_run_criteria(run_if_client_connected))

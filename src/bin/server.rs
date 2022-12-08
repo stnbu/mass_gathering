@@ -4,7 +4,7 @@ use bevy_renet::{
     RenetServerPlugin,
 };
 use mass_gathering::{
-    server_connection_config, spawn_server_view_camera, systems::*, ClientChannel, FullGame,
+    server_connection_config, spawn_arena_view_camera, systems::*, ClientChannel, FullGame,
     GameState, InitData, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID,
     SERVER_ADDR,
 };
@@ -15,8 +15,8 @@ fn main() {
     App::new()
         .init_resource::<InitData>()
         .insert_resource(PhysicsConfig { sims_per_frame: 5 })
-        .add_plugins(FullGame)
-        .add_startup_system(spawn_server_view_camera)
+        .add_plugin(FullGame::Server)
+        .add_startup_system(spawn_arena_view_camera)
         .add_startup_system(cubic)
         .add_plugin(RenetServerPlugin::default())
         .insert_resource(new_renet_server())
