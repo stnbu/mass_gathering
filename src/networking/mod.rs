@@ -1,18 +1,14 @@
 use bevy_renet::renet::{
-    ChannelConfig, ReliableChannelConfig,
-    NETCODE_KEY_BYTES, NETCODE_USER_DATA_BYTES,
+    ChannelConfig, ReliableChannelConfig, NETCODE_KEY_BYTES, NETCODE_USER_DATA_BYTES,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use std::time::Duration;
 
-
 use crate::{Core, GameState, Spacetime};
 use bevy::prelude::*;
-use bevy_renet::renet::{
-    RenetError,
-};
+use bevy_renet::renet::RenetError;
 
 pub mod client;
 pub mod server;

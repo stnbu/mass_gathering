@@ -18,12 +18,12 @@ pub fn handle_client_events(
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
             ServerMessages::Init(init_data) => {
-                info!(
+                debug!(
                     "Server sent init data for {} planets to me, client {}",
                     init_data.planets.len(),
                     client.client_id()
                 );
-                info!("  spawning planets...");
+                debug!("  spawning planets...");
                 for (&planet_id, &planet_init_data) in init_data.planets.iter() {
                     spawn_planet(
                         planet_id,
@@ -34,23 +34,23 @@ pub fn handle_client_events(
                     );
                 }
                 let message = ClientMessages::Ready;
-                info!("  sending message to server `{message:?}`");
+                debug!("  sending message to server `{message:?}`");
                 client_messages.send(message);
             }
             ServerMessages::SetGameState(game_state) => {
-                info!("Server says set state to {game_state:?}. Setting state now.");
+                debug!("Server says set state to {game_state:?}. Setting state now.");
                 let _ = app_state.overwrite_set(game_state);
             }
             ServerMessages::ClientConnected {
                 id,
                 client_preferences,
             } => {
-                info!(
+                debug!(
                     "Server says ({}, {:?}) connected. Updating my lobby.",
                     id, client_preferences
                 );
                 if let Some(old) = lobby.clients.insert(id, client_preferences) {
-                    info!("  the value {old:?} was replaced for client {id}");
+                    debug!("  the value {old:?} was replaced for client {id}");
                 }
             }
         }

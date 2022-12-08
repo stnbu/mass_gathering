@@ -74,7 +74,7 @@ impl Plugin for Core {
         {
             debug!("DEBUG LEVEL LOGGING ! !");
             app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
-                filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug".into(),
+                filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
                 level: bevy::log::Level::DEBUG,
             }));
         }

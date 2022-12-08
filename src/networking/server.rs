@@ -31,9 +31,9 @@ pub fn handle_server_events(
         match event {
             ServerEvent::ClientConnected(id, user_data) => {
                 let id = *id;
-                info!("Server got connect from client {id}");
+                debug!("Server got connect from client {id}");
                 let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
-                info!("Server sending initial data to client {id}");
+                debug!("Server sending initial data to client {id}");
                 server.send_message(id, ServerChannel::ServerMessages, message.clone());
                 let client_preferences = ClientPreferences::from_user_data(user_data);
                 lobby.clients.insert(id, client_preferences);
@@ -43,21 +43,21 @@ pub fn handle_server_events(
                     client_preferences,
                 };
                 for &id in lobby.clients.keys() {
-                    info!("  sending {message:?} to client {id}");
+                    debug!("  sending {message:?} to client {id}");
                     server.send_message(
                         id,
                         DefaultChannel::Reliable,
                         bincode::serialize(&message).unwrap(),
                     );
                 }
-                info!("  broadcasting {message:?}");
+                debug!("  broadcasting {message:?}");
                 server.broadcast_message(
                     DefaultChannel::Reliable,
                     bincode::serialize(&message).unwrap(),
                 );
             }
             ServerEvent::ClientDisconnected(id) => {
-                info!("Server got disconnect from client {id}");
+                debug!("Server got disconnect from client {id}");
             }
         }
     }
@@ -70,9 +70,9 @@ pub fn handle_server_events(
                     let state = GameState::Running;
                     let set_state = ServerMessages::SetGameState(state);
                     let message = bincode::serialize(&set_state).unwrap();
-                    info!("Broadcasting {set_state:?}");
+                    debug!("Broadcasting {set_state:?}");
                     server.broadcast_message(ServerChannel::ServerMessages, message);
-                    info!("  and setting my state to {state:?}");
+                    debug!("  and setting my state to {state:?}");
                     let _ = app_state.overwrite_set(state);
                 }
             }
