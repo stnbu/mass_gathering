@@ -1,6 +1,6 @@
 use crate::{
-    server_connection_config, spawn_arena_view_camera, systems::spawn_planet, systems::*,
-    ClientChannel, ClientMessages, FullGame, GameState, InitData, PhysicsConfig, ServerChannel,
+    server_connection_config, systems::spawn_planet,
+    ClientChannel, ClientMessages, GameState, InitData, ServerChannel,
     ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 use bevy::prelude::*;
