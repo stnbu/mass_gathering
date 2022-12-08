@@ -19,13 +19,13 @@ fn main() {
         .add_plugin(RenetClientPlugin::default())
         .add_system(handle_client_events.with_run_criteria(run_if_client_connected))
         .add_system(send_client_messages.with_run_criteria(run_if_client_connected))
-        .add_system(panic_on_error_system)
+        .add_system(panic_on_renet_error)
         .add_system_set(SystemSet::on_update(GameState::Stopped).with_system(client_menu))
         //
         .run();
 }
 
-fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
+fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
         panic!("{}", e);
     }
