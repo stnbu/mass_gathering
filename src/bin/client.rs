@@ -1,12 +1,11 @@
 use bevy::prelude::*;
 use bevy_renet::{
-    renet::{RenetClient, RenetError},
     run_if_client_connected, RenetClientPlugin,
 };
 
 use mass_gathering::{
-    client_menu, networking::*, spawn_arena_view_camera, systems::spawn_planet, ClientChannel,
-    ClientMessages, FullGame, GameState, PhysicsConfig, ServerChannel, ServerMessages,
+    client_menu, networking::*, spawn_arena_view_camera,
+    ClientMessages, FullGame, GameState, PhysicsConfig,
 };
 
 fn main() {
