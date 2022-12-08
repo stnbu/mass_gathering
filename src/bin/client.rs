@@ -17,7 +17,7 @@ fn main() {
         .add_plugin(FullGame::Client)
         //
         .add_plugin(RenetClientPlugin::default())
-        .add_system(client_sync_players.with_run_criteria(run_if_client_connected))
+        .add_system(handle_client_events.with_run_criteria(run_if_client_connected))
         .add_system(send_client_messages.with_run_criteria(run_if_client_connected))
         .add_system(panic_on_error_system)
         .add_system_set(SystemSet::on_update(GameState::Stopped).with_system(client_menu))
@@ -31,7 +31,7 @@ fn panic_on_error_system(mut renet_error: EventReader<RenetError>) {
     }
 }
 
-fn client_sync_players(
+fn handle_client_events(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
