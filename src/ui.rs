@@ -61,7 +61,7 @@ pub fn client_menu(
                 ui.horizontal(|ui| {
                     ui.label("Click the button to connect: ");
                     if ui.button("CONNECT NOW").clicked() {
-                        commands.insert_resource(new_renet_client(from_nick(&game_config.nick), ClientPreferences { autostart: true }));
+                        commands.insert_resource(client::new_renet_client(from_nick(&game_config.nick), ClientPreferences { autostart: true }));
                         game_config.connected = true;
                     }
                 });

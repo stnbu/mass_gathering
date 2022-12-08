@@ -11,8 +11,8 @@ fn main() {
         //
         .add_startup_system(cubic)
         .add_plugin(RenetServerPlugin::default())
-        .insert_resource(new_renet_server())
-        .add_system(handle_server_events)
+        .insert_resource(server::new_renet_server())
+        .add_system(server::handle_server_events)
         //
         .run();
 }
