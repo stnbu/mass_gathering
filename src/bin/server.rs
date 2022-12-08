@@ -1,16 +1,14 @@
 use bevy::prelude::*;
 use bevy_renet::{
-    renet::{RenetServer, ServerAuthentication, ServerConfig, ServerEvent},
     RenetServerPlugin,
 };
 use mass_gathering::{
-    networking::*, server_connection_config, spawn_arena_view_camera, systems::*, ClientChannel,
-    FullGame, GameState, InitData, PhysicsConfig, ServerChannel, ServerMessages, PORT_NUMBER,
-    PROTOCOL_ID, SERVER_ADDR,
+    networking::*, spawn_arena_view_camera, systems::*,
+    FullGame, InitData, PhysicsConfig,
 };
 
-use std::net::UdpSocket;
-use std::time::SystemTime;
+
+
 
 fn main() {
     App::new()
