@@ -1,7 +1,6 @@
 use crate::{
-    server_connection_config, systems::spawn_planet,
-    ClientChannel, ClientMessages, GameState, InitData, ServerChannel,
-    ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
+    server_connection_config, systems::spawn_planet, ClientChannel, ClientMessages, GameState,
+    InitData, ServerChannel, ServerMessages, PORT_NUMBER, PROTOCOL_ID, SERVER_ADDR,
 };
 use bevy::prelude::*;
 use bevy_renet::renet::{RenetClient, RenetError};

@@ -1,15 +1,22 @@
 use bevy::prelude::*;
+use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use bevy_renet::renet::ClientAuthentication;
+use bevy_renet::renet::{
+    ChannelConfig, ReliableChannelConfig, RenetClient, RenetConnectionConfig, NETCODE_KEY_BYTES,
+};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::f32::consts::PI;
+use std::time::Duration;
 use std::{net::UdpSocket, time::SystemTime};
 
+pub mod ui;
+pub use ui::*;
 pub mod physics;
 pub use physics::*;
-
-pub mod systems;
-
 pub mod networking;
+pub mod systems;
 
 pub enum FullGame {
     Client,
@@ -73,11 +80,6 @@ impl Plugin for Spacetime {
 
 pub struct Core;
 
-mod ui;
-pub use ui::*;
-
-use bevy_egui::EguiPlugin;
-
 #[derive(Resource, Default)]
 pub struct GameConfig {
     pub nick: String,
@@ -134,7 +136,6 @@ pub fn mass_to_radius(mass: f32) -> f32 {
 
 // Additions while _trying to use_ renet for an actual "mass gathering"
 // ====
-use std::collections::HashMap;
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct PlanetInitData {
     pub position: Vec3,
@@ -161,13 +162,6 @@ impl Clone for InitData {
         self.planets = planets;
     }
 }
-
-//
-use bevy_renet::renet::{
-    ChannelConfig, ReliableChannelConfig, RenetClient, RenetConnectionConfig, NETCODE_KEY_BYTES,
-};
-use serde::{Deserialize, Serialize};
-use std::time::Duration;
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx29e0)cs2@66#vxo0s5np{_";
 pub const PROTOCOL_ID: u64 = 17;

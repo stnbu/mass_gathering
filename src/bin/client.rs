@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 use bevy_renet::{run_if_client_connected, RenetClientPlugin};
 use mass_gathering::{
-    client_menu, networking::*, spawn_arena_view_camera, ClientMessages, FullGame, GameState,
-    PhysicsConfig,
+    client_menu, networking::*, spawn_arena_view_camera, ui::*, ClientMessages, FullGame,
+    GameState, PhysicsConfig,
 };
 
 fn main() {
@@ -15,6 +15,7 @@ fn main() {
         .add_plugin(RenetClientPlugin::default())
         .add_system(handle_client_events.with_run_criteria(run_if_client_connected))
         .add_system(send_client_messages.with_run_criteria(run_if_client_connected))
+        .add_system(client_hud.with_run_criteria(run_if_client_connected))
         .add_system(panic_on_renet_error)
         .add_system_set(SystemSet::on_update(GameState::Stopped).with_system(client_menu))
         //

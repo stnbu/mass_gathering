@@ -1,6 +1,11 @@
 use bevy::prelude::*;
-use bevy_egui::egui::*;
-use bevy_egui::*;
+use bevy_egui::{
+    egui::{
+        style::Margin, CentralPanel, Color32, FontFamily::Monospace, FontId, Frame, RichText,
+        SidePanel, TopBottomPanel,
+    },
+    EguiContext,
+};
 
 use crate::{from_nick, new_renet_client, GameConfig};
 
@@ -59,5 +64,21 @@ pub fn client_menu(
                     }
                 });
             }
+        });
+}
+
+pub fn client_hud(mut ctx: ResMut<EguiContext>) {
+    let hud_text = "lorem ipsomething ... text";
+    TopBottomPanel::top("hud")
+        .frame(Frame {
+            outer_margin: Margin::symmetric(10.0, 20.0),
+            fill: Color32::TRANSPARENT,
+            ..Default::default()
+        })
+        .show(ctx.ctx_mut(), |ui| {
+            ui.label(RichText::new(hud_text).color(Color32::GREEN).font(FontId {
+                size: 18.0,
+                family: Monospace,
+            }));
         });
 }
