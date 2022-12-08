@@ -64,8 +64,8 @@ pub struct Core;
 #[derive(Resource, Default)]
 pub struct GameConfig {
     pub nick: String,
-    pub menu_page: u8,
     pub connected: bool,
+    pub autostart: bool,
 }
 
 impl Plugin for Core {

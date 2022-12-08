@@ -57,11 +57,16 @@ pub fn client_menu(
                 ui.label("Enter a nickname: ");
                 ui.text_edit_singleline(&mut game_config.nick);
             });
+            ui.horizontal(|ui| {
+                ui.label("Autostart: ");
+                ui.checkbox(&mut game_config.autostart, "autostart");
+            });
             if !game_config.connected {
                 ui.horizontal(|ui| {
                     ui.label("Click the button to connect: ");
+		    let autostart = game_config.autostart;
                     if ui.button("CONNECT NOW").clicked() {
-                        commands.insert_resource(client::new_renet_client(from_nick(&game_config.nick), ClientPreferences { autostart: true }));
+                        commands.insert_resource(client::new_renet_client(from_nick(&game_config.nick), ClientPreferences { autostart }));
                         game_config.connected = true;
                     }
                 });
