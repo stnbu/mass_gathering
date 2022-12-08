@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::time::Duration;
 use std::{net::UdpSocket, time::SystemTime};
 
-use crate::{systems::spawn_planet, GameState};
+use crate::{systems::spawn_planet, Core, GameState, Spacetime};
 use bevy::prelude::*;
 use bevy_renet::renet::RenetError;
 use bevy_renet::renet::{RenetServer, ServerAuthentication, ServerConfig, ServerEvent};
@@ -120,6 +120,7 @@ pub fn handle_server_events(
                 let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
                 info!("sending initial data to client {id}");
                 server.send_message(*id, ServerChannel::ServerMessages, message);
+                //lobby.players.insert(*id, client_preferences);
             }
             ServerEvent::ClientDisconnected(id) => {
                 info!("client {id} disconnected");
@@ -263,4 +264,30 @@ pub fn from_nick(nick: &str) -> u64 {
         nick_vec[i] = *c;
     }
     u64::from_ne_bytes(nick_vec)
+}
+
+pub struct ClientPreferences {
+    pub autostart: bool,
+}
+
+#[derive(Default, Resource)]
+pub struct Lobby {
+    pub players: HashMap<u64, ClientPreferences>,
+}
+
+pub enum FullGame {
+    Client,
+    Server,
+}
+
+impl Plugin for FullGame {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(Core);
+        app.add_plugin(Spacetime);
+        app.insert_resource(Lobby::default());
+        match self {
+            Self::Client => {}
+            Self::Server => {}
+        }
+    }
 }

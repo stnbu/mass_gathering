@@ -16,18 +16,6 @@ pub use physics::*;
 pub mod networking;
 pub mod systems;
 
-pub enum FullGame {
-    Client,
-    Server,
-}
-
-impl Plugin for FullGame {
-    fn build(&self, app: &mut App) {
-        app.add_plugin(Core);
-        app.add_plugin(Spacetime);
-    }
-}
-
 pub fn let_light(mut commands: Commands) {
     // TODO: These are to be messed with.
     const NORMAL_BIAS: f32 = 0.61;

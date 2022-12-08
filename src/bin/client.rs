@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use bevy_renet::{run_if_client_connected, RenetClientPlugin};
-use mass_gathering::{client_menu, networking::*, ui::*, FullGame, GameState, PhysicsConfig};
+use mass_gathering::{client_menu, networking::*, ui::*, GameState, PhysicsConfig};
 
 fn main() {
     App::new()
