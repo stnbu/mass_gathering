@@ -51,6 +51,8 @@ pub fn client_menu(
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
+	    ui.label("Enter a nickname between 1 and 8 charaters then click the button. You _can_ chose \"\" but don't be a troll.");
+	    ui.separator();
             ui.horizontal(|ui| {
                 ui.label("Enter a nickname: ");
                 ui.text_edit_singleline(&mut game_config.nick);
