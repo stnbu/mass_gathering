@@ -1,4 +1,4 @@
-use crate::{radius_to_mass, InitData, MassID, Momentum, PlanetInitData, PointMassBundle};
+use crate::{networking::*, physics::Momentum, radius_to_mass, PointMassBundle};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::Collider;
 

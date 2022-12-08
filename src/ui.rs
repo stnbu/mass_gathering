@@ -7,7 +7,7 @@ use bevy_egui::{
     EguiContext,
 };
 
-use crate::{from_nick, new_renet_client, GameConfig};
+use crate::{networking::*, GameConfig};
 
 pub fn client_menu(
     mut ctx: ResMut<EguiContext>,
