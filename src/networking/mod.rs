@@ -11,7 +11,7 @@ use std::{collections::HashMap, time::Duration};
 
 pub mod client;
 pub mod server;
-use crate::{ui, Core, GameState, Spacetime};
+use crate::{ui, Core, GameState, PhysicsConfig, Spacetime};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx24,0)cs2@66#vxo0s5np{_";
 pub const PROTOCOL_ID: u64 = 19;
@@ -171,6 +171,7 @@ impl Plugin for FullGame {
         app.add_plugin(Core);
         app.add_plugin(Spacetime);
         app.insert_resource(Lobby::default());
+        app.insert_resource(PhysicsConfig { sims_per_frame: 5 });
         match self {
             Self::Client => {
                 app.add_system(ui::client_hud.with_run_criteria(run_if_client_connected));
