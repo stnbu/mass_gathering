@@ -52,6 +52,7 @@ pub fn handle_client_events(
                 if let Some(old) = lobby.clients.insert(id, client_preferences) {
                     debug!("  the value {old:?} was replaced for client {id}");
                 }
+                debug!("  client {} now has lobby {lobby:?}", client.client_id());
             }
         }
     }

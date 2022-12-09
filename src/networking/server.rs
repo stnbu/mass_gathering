@@ -30,27 +30,36 @@ pub fn handle_server_events(
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, user_data) => {
-                let id = *id;
-                debug!("Server got connect from client {id}");
-                let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
-                debug!("Server sending initial data to client {id}");
-                server.send_message(id, ServerChannel::ServerMessages, message.clone());
+                let new_id = *id;
                 let client_preferences = ClientPreferences::from_user_data(user_data);
-                lobby.clients.insert(id, client_preferences);
-                let client_preferences = client_preferences.clone();
-                let message = ServerMessages::ClientConnected {
-                    id,
-                    client_preferences,
-                };
-                for &id in lobby.clients.keys() {
-                    debug!("  sending {message:?} to client {id}");
-                    server.send_message(
+                debug!("Server got connection from new client {new_id} with preferences {client_preferences:?}");
+
+                debug!("  sending initial data to client {new_id}");
+                let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
+                server.send_message(new_id, ServerChannel::ServerMessages, message.clone());
+
+                debug!("  replaying existing lobby back to new client {new_id:?}");
+                for (&id, &client_preferences) in lobby.clients.iter() {
+                    let message = ServerMessages::ClientConnected {
                         id,
+                        client_preferences,
+                    };
+                    server.send_message(
+                        new_id,
                         DefaultChannel::Reliable,
                         bincode::serialize(&message).unwrap(),
                     );
                 }
-                debug!("  broadcasting {message:?}");
+
+                debug!("  now updating my lobby with client {new_id} preferences {client_preferences:?}");
+                lobby.clients.insert(new_id, client_preferences);
+                debug!("  the server now has lobby {lobby:?}");
+
+                let message = ServerMessages::ClientConnected {
+                    id: new_id,
+                    client_preferences,
+                };
+                debug!("  broadcasting about new client: {message:?}");
                 server.broadcast_message(
                     DefaultChannel::Reliable,
                     bincode::serialize(&message).unwrap(),
@@ -64,16 +73,30 @@ pub fn handle_server_events(
 
     for client_id in server.clients_id().into_iter() {
         while let Some(message) = server.receive_message(client_id, ClientChannel::ClientMessages) {
+            let message = bincode::deserialize(&message).unwrap();
+            const SLOTS: usize = 3;
+            debug!("Received message from client: {message:?}");
             match message {
-                _ => {
-                    // FIXME: we need to do this "when everybody is ready"
-                    let state = GameState::Running;
-                    let set_state = ServerMessages::SetGameState(state);
-                    let message = bincode::serialize(&set_state).unwrap();
-                    debug!("Broadcasting {set_state:?}");
-                    server.broadcast_message(ServerChannel::ServerMessages, message);
-                    debug!("  and setting my state to {state:?}");
-                    let _ = app_state.overwrite_set(state);
+                ClientMessages::Ready => {
+                    let unanimous_autostart = lobby.clients.len() > 1
+                        && lobby.clients.iter().all(|(_, prefs)| prefs.autostart);
+                    if unanimous_autostart {
+                        debug!("  two or more clients connected and all want to autostart.");
+                    }
+                    let game_full = lobby.clients.len() == SLOTS;
+                    if game_full {
+                        debug!("  game has now reached max capacity.");
+                    }
+                    let start = unanimous_autostart || game_full;
+                    if start {
+                        let state = GameState::Running;
+                        let set_state = ServerMessages::SetGameState(state);
+                        let message = bincode::serialize(&set_state).unwrap();
+                        debug!("Broadcasting {set_state:?}");
+                        server.broadcast_message(ServerChannel::ServerMessages, message);
+                        debug!("  and setting my state to {state:?}");
+                        let _ = app_state.overwrite_set(state);
+                    }
                 }
             }
         }

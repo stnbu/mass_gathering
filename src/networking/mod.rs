@@ -156,7 +156,7 @@ impl ClientPreferences {
     }
 }
 
-#[derive(Default, Resource)]
+#[derive(Default, Resource, Debug)]
 pub struct Lobby {
     pub clients: HashMap<u64, ClientPreferences>,
 }

@@ -51,8 +51,8 @@ pub fn client_menu(
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-	    ui.label("Enter a nickname between 1 and 8 charaters then click the button. You _can_ chose \"\" but don't be a troll.");
-	    ui.separator();
+            ui.label("Enter a nickname between 1 and 8 charaters then click the button.");
+            ui.separator();
             ui.horizontal(|ui| {
                 ui.label("Enter a nickname: ");
                 ui.text_edit_singleline(&mut game_config.nick);
@@ -64,9 +64,12 @@ pub fn client_menu(
             if !game_config.connected {
                 ui.horizontal(|ui| {
                     ui.label("Click the button to connect: ");
-		    let autostart = game_config.autostart;
+                    let autostart = game_config.autostart;
                     if ui.button("CONNECT NOW").clicked() {
-                        commands.insert_resource(client::new_renet_client(from_nick(&game_config.nick), ClientPreferences { autostart }));
+                        commands.insert_resource(client::new_renet_client(
+                            from_nick(&game_config.nick),
+                            ClientPreferences { autostart },
+                        ));
                         game_config.connected = true;
                     }
                 });
@@ -74,8 +77,7 @@ pub fn client_menu(
         });
 }
 
-pub fn client_hud(mut ctx: ResMut<EguiContext>) {
-    let hud_text = "lorem ipsomething ... text";
+pub fn client_hud(mut ctx: ResMut<EguiContext>, lobby: Res<Lobby>) {
     TopBottomPanel::top("hud")
         .frame(Frame {
             outer_margin: Margin::symmetric(10.0, 20.0),
@@ -83,9 +85,18 @@ pub fn client_hud(mut ctx: ResMut<EguiContext>) {
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
-            ui.label(RichText::new(hud_text).color(Color32::GREEN).font(FontId {
-                size: 18.0,
-                family: Monospace,
-            }));
+            for (&id, &client_preferences) in lobby.clients.iter() {
+                let nick = to_nick(id);
+                let autostart = if client_preferences.autostart {
+                    "y"
+                } else {
+                    "n"
+                };
+                let text = format!("{nick} -> ({autostart})");
+                ui.label(RichText::new(text).color(Color32::GREEN).font(FontId {
+                    size: 18.0,
+                    family: Monospace,
+                }));
+            }
         });
 }
