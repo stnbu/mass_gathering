@@ -83,6 +83,8 @@ pub fn handle_server_events(
                     let message = bincode::serialize(&set_state).unwrap();
                     debug!("Replying to client {client_id} with {set_state:?}");
                     server.send_message(client_id, DefaultChannel::Reliable, message);
+                    debug!("  and setting my state to {state:?}");
+                    let _ = app_state.overwrite_set(state);
 
                     let unanimous_autostart = lobby.clients.len() > 1
                         && lobby.clients.iter().all(|(_, prefs)| prefs.autostart);
@@ -114,4 +116,9 @@ pub fn server_connection_config() -> RenetConnectionConfig {
         send_channels_config: ServerChannel::channels_config(),
         ..Default::default()
     }
+}
+
+pub fn set_window_title(game_state: Res<State<GameState>>, mut windows: ResMut<Windows>) {
+    let window = windows.primary_mut();
+    window.set_title(format!("Server[{:?}]", game_state.current()));
 }

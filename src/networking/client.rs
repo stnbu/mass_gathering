@@ -1,4 +1,4 @@
-use crate::{systems::spawn_planet, GameState};
+use crate::{systems::spawn_planet, GameConfig, GameState};
 use bevy::prelude::*;
 use bevy_renet::renet::{ClientAuthentication, RenetClient, RenetConnectionConfig};
 use std::{net::UdpSocket, time::SystemTime};
@@ -89,4 +89,18 @@ pub fn new_renet_client(client_id: u64, client_preferences: ClientPreferences) -
         user_data: Some(client_preferences.to_netcode_user_data()),
     };
     RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
+}
+
+pub fn set_window_title(
+    game_state: Res<State<GameState>>,
+    mut windows: ResMut<Windows>,
+    game_config: Res<GameConfig>,
+) {
+    let nick = if game_config.nick.is_empty() {
+        "<unset>"
+    } else {
+        &game_config.nick
+    };
+    let window = windows.primary_mut();
+    window.set_title(format!("Client[{:?}] : nick={nick}", game_state.current()));
 }

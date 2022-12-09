@@ -189,11 +189,13 @@ impl Plugin for FullGame {
                     client::send_client_messages.with_run_criteria(run_if_client_connected),
                 );
                 app.add_system(panic_on_renet_error);
+                app.add_system(client::set_window_title);
             }
             Self::Server => {
                 app.add_plugin(RenetServerPlugin::default());
                 app.insert_resource(server::new_renet_server());
                 app.add_system(server::handle_server_events);
+                app.add_system(server::set_window_title);
             }
         }
     }
