@@ -1,17 +1,22 @@
-use bevy_renet::renet::{
-    ChannelConfig, ReliableChannelConfig, NETCODE_KEY_BYTES, NETCODE_USER_DATA_BYTES,
+use bevy::prelude::*;
+use bevy_renet::{
+    renet::{
+        ChannelConfig, ReliableChannelConfig, RenetError, NETCODE_KEY_BYTES,
+        NETCODE_USER_DATA_BYTES,
+    },
+    run_if_client_connected, RenetClientPlugin,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-
-use std::time::Duration;
-
-use crate::{Core, GameState, Spacetime};
-use bevy::prelude::*;
-use bevy_renet::renet::RenetError;
+use std::{collections::HashMap, time::Duration};
 
 pub mod client;
 pub mod server;
+use crate::{ui, Core, GameState, Spacetime};
+
+pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx24,0)cs2@66#vxo0s5np{_";
+pub const PROTOCOL_ID: u64 = 19;
+pub const SERVER_ADDR: &str = "127.0.0.1";
+pub const PORT_NUMBER: u16 = 5736;
 
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct PlanetInitData {
@@ -45,11 +50,6 @@ pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
         panic!("{}", e);
     }
 }
-
-pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx29,0)cs2@66#vxo0s5np{_";
-pub const PROTOCOL_ID: u64 = 19;
-pub const SERVER_ADDR: &str = "127.0.0.1";
-pub const PORT_NUMBER: u16 = 5736;
 
 pub enum ServerChannel {
     ServerMessages,
@@ -166,9 +166,6 @@ pub enum FullGame {
     Server,
 }
 
-use crate::ui;
-use bevy_renet::run_if_client_connected;
-
 impl Plugin for FullGame {
     fn build(&self, app: &mut App) {
         app.add_plugin(Core);
@@ -180,6 +177,14 @@ impl Plugin for FullGame {
                 app.add_system_set(
                     SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu),
                 );
+                app.add_plugin(RenetClientPlugin::default());
+                app.add_system(
+                    client::handle_client_events.with_run_criteria(run_if_client_connected),
+                );
+                app.add_system(
+                    client::send_client_messages.with_run_criteria(run_if_client_connected),
+                );
+                app.add_system(panic_on_renet_error);
             }
             Self::Server => {}
         }
