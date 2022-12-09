@@ -88,13 +88,24 @@ pub fn client_hud(mut ctx: ResMut<EguiContext>, lobby: Res<Lobby>) {
             for (&id, &client_preferences) in lobby.clients.iter() {
                 let nick = to_nick(id);
                 let autostart = if client_preferences.autostart {
-                    "y"
+                    "autostart"
                 } else {
-                    "n"
+                    "wait"
                 };
-                let text = format!("{nick} -> ({autostart})");
+                ui.label(
+                    RichText::new("Waiting for players...")
+                        .color(Color32::GREEN)
+                        .font(FontId {
+                            size: 13.0,
+                            family: Monospace,
+                        }),
+                );
+
+                ui.separator();
+                let pad = String::from_iter((0..(8 - nick.len())).map(|_| ' '));
+                let text = format!("{nick}{pad}>  {autostart}");
                 ui.label(RichText::new(text).color(Color32::GREEN).font(FontId {
-                    size: 18.0,
+                    size: 10.0,
                     family: Monospace,
                 }));
             }

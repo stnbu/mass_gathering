@@ -99,8 +99,9 @@ impl Plugin for Core {
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Serialize, Deserialize)]
 pub enum GameState {
-    Running,
-    Stopped,
+    Running, // full networked game play
+    Waiting, // waiting for clients
+    Stopped, // initial state
 }
 
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {

@@ -166,13 +166,21 @@ pub enum FullGame {
     Server,
 }
 
+use crate::ui;
+use bevy_renet::run_if_client_connected;
+
 impl Plugin for FullGame {
     fn build(&self, app: &mut App) {
         app.add_plugin(Core);
         app.add_plugin(Spacetime);
         app.insert_resource(Lobby::default());
         match self {
-            Self::Client => {}
+            Self::Client => {
+                app.add_system(ui::client_hud.with_run_criteria(run_if_client_connected));
+                app.add_system_set(
+                    SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu),
+                );
+            }
             Self::Server => {}
         }
     }
