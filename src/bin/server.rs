@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use mass_gathering::{networking::*, systems::cubic, PhysicsConfig};
+use mass_gathering::{networking::*, systems::cubic};
 
 fn main() {
     App::new()
