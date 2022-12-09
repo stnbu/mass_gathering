@@ -175,10 +175,10 @@ impl Plugin for FullGame {
         match self {
             Self::Client => {
                 app.add_system_set(
-                    SystemSet::on_update(GameState::Waiting).with_system(ui::client_hud),
+                    SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
                 );
                 app.add_system_set(
-                    SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu),
+                    SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu_screen),
                 );
 
                 app.add_plugin(RenetClientPlugin::default());

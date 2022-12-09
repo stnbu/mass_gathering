@@ -9,7 +9,10 @@ use bevy_egui::{
 
 use crate::{networking::*, GameConfig};
 
-pub fn client_menu(
+const FRAME_FILL: Color32 = Color32::TRANSPARENT;
+const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 230);
+
+pub fn client_menu_screen(
     mut ctx: ResMut<EguiContext>,
     mut game_config: ResMut<GameConfig>,
     mut commands: Commands,
@@ -17,33 +20,25 @@ pub fn client_menu(
     TopBottomPanel::top("top_panel")
         .resizable(false)
         .min_height(200.0)
-        .frame(Frame {
-            ..Default::default()
-        })
+        .frame(Frame::default())
         .show(ctx.ctx_mut(), |_| ());
 
     SidePanel::left("left_panel")
         .resizable(false)
         .min_width(300.0)
-        .frame(Frame {
-            ..Default::default()
-        })
+        .frame(Frame::default())
         .show(ctx.ctx_mut(), |_| ());
 
     SidePanel::right("right_panel")
         .resizable(false)
         .min_width(100.0)
-        .frame(Frame {
-            ..Default::default()
-        })
+        .frame(Frame::default())
         .show(ctx.ctx_mut(), |_| ());
 
     TopBottomPanel::bottom("bottom_panel")
         .resizable(false)
         .min_height(0.0)
-        .frame(Frame {
-            ..Default::default()
-        })
+        .frame(Frame::default())
         .show(ctx.ctx_mut(), |_| ());
 
     CentralPanel::default()
@@ -77,35 +72,36 @@ pub fn client_menu(
         });
 }
 
-pub fn client_hud(mut ctx: ResMut<EguiContext>, lobby: Res<Lobby>) {
-    TopBottomPanel::top("hud")
+pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<Lobby>) {
+    SidePanel::left("client_waiting_screen")
+        .resizable(false)
+        .min_width(250.0)
         .frame(Frame {
             outer_margin: Margin::symmetric(10.0, 20.0),
-            fill: Color32::TRANSPARENT,
+            fill: FRAME_FILL,
             ..Default::default()
         })
         .show(ctx.ctx_mut(), |ui| {
+            ui.label(
+                RichText::new("Waiting for players...")
+                    .color(TEXT_COLOR)
+                    .font(FontId {
+                        size: 20.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.separator();
             for (&id, &client_preferences) in lobby.clients.iter() {
                 let nick = to_nick(id);
+                let pad = String::from_iter((0..(8 - nick.len())).map(|_| ' '));
                 let autostart = if client_preferences.autostart {
                     "autostart"
                 } else {
                     "wait"
                 };
-                ui.label(
-                    RichText::new("Waiting for players...")
-                        .color(Color32::GREEN)
-                        .font(FontId {
-                            size: 13.0,
-                            family: Monospace,
-                        }),
-                );
-
-                ui.separator();
-                let pad = String::from_iter((0..(8 - nick.len())).map(|_| ' '));
                 let text = format!("{nick}{pad}>  {autostart}");
-                ui.label(RichText::new(text).color(Color32::GREEN).font(FontId {
-                    size: 10.0,
+                ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {
+                    size: 16.0,
                     family: Monospace,
                 }));
             }
