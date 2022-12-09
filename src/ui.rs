@@ -19,13 +19,13 @@ pub fn client_menu_screen(
 ) {
     TopBottomPanel::top("top_panel")
         .resizable(false)
-        .min_height(200.0)
+        .min_height(120.0)
         .frame(Frame::default())
         .show(ctx.ctx_mut(), |_| ());
 
     SidePanel::left("left_panel")
         .resizable(false)
-        .min_width(300.0)
+        .min_width(180.0)
         .frame(Frame::default())
         .show(ctx.ctx_mut(), |_| ());
 
@@ -49,11 +49,15 @@ In 2011, DC changed her background with the retcon that she is the biological da
 
 She possesses an arsenal of magical items, including the Lasso of Truth, a pair of indestructible bracelets, a tiara which serves as a projectile, and, in older stories, a range of devices based on Amazon technology.
 
+. . .
+
 If two or more connected users have select \"Autostart\", the game will begin immediately.
 
 If at least one client has not chosen autostart, the game will wait until all of its player slots have been filled.
 
 Enter a nickname between one and eight characters, choose whether you prefer autostart then click the button to connect and play.
+
+
 ")
             .color(TEXT_COLOR)
             .font(FontId {
