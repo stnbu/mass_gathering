@@ -78,6 +78,12 @@ pub fn handle_server_events(
             debug!("Received message from client: {message:?}");
             match message {
                 ClientMessages::Ready => {
+                    let state = GameState::Waiting;
+                    let set_state = ServerMessages::SetGameState(state);
+                    let message = bincode::serialize(&set_state).unwrap();
+                    debug!("Replying to client {client_id} with {set_state:?}");
+                    server.send_message(client_id, DefaultChannel::Reliable, message);
+
                     let unanimous_autostart = lobby.clients.len() > 1
                         && lobby.clients.iter().all(|(_, prefs)| prefs.autostart);
                     if unanimous_autostart {

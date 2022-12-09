@@ -174,10 +174,13 @@ impl Plugin for FullGame {
         app.insert_resource(PhysicsConfig { sims_per_frame: 5 });
         match self {
             Self::Client => {
-                app.add_system(ui::client_hud.with_run_criteria(run_if_client_connected));
+                app.add_system_set(
+                    SystemSet::on_update(GameState::Waiting).with_system(ui::client_hud),
+                );
                 app.add_system_set(
                     SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu),
                 );
+
                 app.add_plugin(RenetClientPlugin::default());
                 app.add_system(
                     client::handle_client_events.with_run_criteria(run_if_client_connected),
