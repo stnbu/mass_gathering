@@ -78,14 +78,6 @@ pub fn handle_server_events(
             debug!("Received message from client: {message:?}");
             match message {
                 ClientMessages::Ready => {
-                    let state = GameState::Waiting;
-                    let set_state = ServerMessages::SetGameState(state);
-                    let message = bincode::serialize(&set_state).unwrap();
-                    debug!("Replying to client {client_id} with {set_state:?}");
-                    server.send_message(client_id, DefaultChannel::Reliable, message);
-                    debug!("  and setting my state to {state:?}");
-                    let _ = app_state.overwrite_set(state);
-
                     let unanimous_autostart = lobby.clients.len() > 1
                         && lobby.clients.iter().all(|(_, prefs)| prefs.autostart);
                     if unanimous_autostart {
@@ -96,15 +88,22 @@ pub fn handle_server_events(
                         debug!("  game has now reached max capacity.");
                     }
                     let start = unanimous_autostart || game_full;
+                    let state = if start {
+                        GameState::Running
+                    } else {
+                        GameState::Waiting
+                    };
+                    let set_state = ServerMessages::SetGameState(state);
+                    let message = bincode::serialize(&set_state).unwrap();
                     if start {
-                        let state = GameState::Running;
-                        let set_state = ServerMessages::SetGameState(state);
-                        let message = bincode::serialize(&set_state).unwrap();
                         debug!("Broadcasting {set_state:?}");
                         server.broadcast_message(ServerChannel::ServerMessages, message);
-                        debug!("  and setting my state to {state:?}");
-                        let _ = app_state.overwrite_set(state);
+                    } else {
+                        debug!("Replying to client {client_id} with {set_state:?}");
+                        server.send_message(client_id, DefaultChannel::Reliable, message);
                     }
+                    debug!("  and setting my state to {state:?}");
+                    let _ = app_state.overwrite_set(state);
                 }
             }
         }
