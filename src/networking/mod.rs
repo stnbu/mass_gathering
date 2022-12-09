@@ -4,7 +4,7 @@ use bevy_renet::{
         ChannelConfig, ReliableChannelConfig, RenetError, NETCODE_KEY_BYTES,
         NETCODE_USER_DATA_BYTES,
     },
-    run_if_client_connected, RenetClientPlugin,
+    run_if_client_connected, RenetClientPlugin, RenetServerPlugin,
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, time::Duration};
@@ -186,7 +186,11 @@ impl Plugin for FullGame {
                 );
                 app.add_system(panic_on_renet_error);
             }
-            Self::Server => {}
+            Self::Server => {
+                app.add_plugin(RenetServerPlugin::default());
+                app.insert_resource(server::new_renet_server());
+                app.add_system(server::handle_server_events);
+            }
         }
     }
 }
