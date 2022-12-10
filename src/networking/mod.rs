@@ -13,10 +13,10 @@ pub mod client;
 pub mod server;
 use crate::{ui, Core, GameState, PhysicsConfig, Spacetime};
 
-pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxe_SERxx24,0)cs2@66#vxo0s5np{_";
-pub const PROTOCOL_ID: u64 = 19;
+pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,0)cs2@66#vxo0s5np{_";
+pub const PROTOCOL_ID: u64 = 23;
 pub const SERVER_ADDR: &str = "127.0.0.1";
-pub const PORT_NUMBER: u16 = 5736;
+pub const PORT_NUMBER: u16 = 5737;
 
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct PlanetInitData {

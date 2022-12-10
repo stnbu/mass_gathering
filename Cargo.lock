@@ -1781,7 +1781,7 @@ dependencies = [
 
 [[package]]
 name = "mass_gathering"
-version = "0.19.2496"
+version = "0.23.333"
 dependencies = [
  "bevy",
  "bevy_egui",

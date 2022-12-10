@@ -14,6 +14,7 @@ pub fn handle_client_events(
     mut game_state: ResMut<State<GameState>>,
     mut mass_to_entity_map: ResMut<MapMassIDToEntity>,
     mut lobby: ResMut<Lobby>, // maybe "lobby" should store init_data
+    camera: Query<Entity, With<Camera>>, // FIXME. finer tuning.
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
@@ -40,11 +41,10 @@ pub fn handle_client_events(
                 client_messages.send(message);
             }
             ServerMessages::SetGameState(new_game_state) => {
-                // Why in the _whorld_ would we receive this?
-                //
-                // Server says set state to ResMut(
+                // FIXME: Why in the _whorld_ would we receive this? --
+                // "Server says set state to ResMut(
                 //     State { transition: None, stack: [Stopped], scheduled: None, end_next_loop: false }
-                // ). Setting state now.
+                // ). Setting state now."
                 debug!("Server says set state to {game_state:?}. Setting state now.");
                 let _ = game_state.overwrite_set(new_game_state);
             }
@@ -54,6 +54,16 @@ pub fn handle_client_events(
                     id, client_data
                 );
                 if id == client.client_id() {
+                    debug!("  fyi, that's me (I am {id})");
+                    let camera = camera.get_single().expect("Not exaclty one camera?");
+                    debug!("  found exactly one existing camera: {camera:?}");
+                    let inhabited_mass = mass_to_entity_map
+                        .0
+                        .get(&client_data.inhabited_mass_id)
+                        .unwrap();
+                    debug!("  found exactly one mass for me to inhabit: {inhabited_mass:?}");
+                    debug!("  making {camera:?} a child of {inhabited_mass:?}");
+                    commands.entity(*inhabited_mass).add_child(camera);
                     debug!("  fyi, that's me (I am {id})");
                 }
                 if let Some(old) = lobby.clients.insert(id, client_data) {
