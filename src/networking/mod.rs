@@ -89,7 +89,6 @@ pub struct MapMassIDToEntity(HashMap<u64, Entity>);
 
 pub fn spawn_arena_view_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
-        transform: Transform::from_xyz(20.0, 18.0, 23.0).looking_at(-Vec3::Z, Vec3::Y),
         ..Default::default()
     });
 }
