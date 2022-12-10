@@ -74,7 +74,7 @@ pub fn spawn_planet<'a>(
     commands: &'a mut Commands,
     meshes: &'a mut ResMut<Assets<Mesh>>,
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
-) {
+) -> Entity {
     let PlanetInitData {
         position,
         velocity,
@@ -100,5 +100,6 @@ pub fn spawn_planet<'a>(
             collider: Collider::ball(radius),
             ..Default::default()
         })
-        .insert(MassID(planet_id));
+        .insert(MassID(planet_id))
+        .id()
 }

@@ -2,15 +2,23 @@ use bevy::prelude::*;
 use bevy_egui::{
     egui::{
         style::Margin, CentralPanel, Color32, FontFamily::Monospace, FontId, Frame, RichText,
-        SidePanel, TopBottomPanel,
+        SidePanel, TextEdit, TopBottomPanel,
     },
     EguiContext,
 };
+use clap::Parser;
 
 use crate::{networking::*, GameConfig};
 
 const FRAME_FILL: Color32 = Color32::TRANSPARENT;
 const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
+
+// A weird place for this code...
+#[derive(Parser)]
+struct Args {
+    #[arg(short, long, default_value_t = ("NICK").to_string())]
+    nickname: String,
+}
 
 pub fn client_menu_screen(
     mut ctx: ResMut<EguiContext>,
@@ -97,7 +105,10 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                             family: Monospace,
                         }),
                 );
-                ui.text_edit_singleline(&mut game_config.nick);
+                let nickname = Args::parse().nickname;
+                // hint_text is handy, but it also gets us around a weird bug: Why does this
+                // widget not receive input sometimes ...seeingly at random.
+                ui.add(TextEdit::singleline(&mut game_config.nick).hint_text(nickname));
             });
             ui.horizontal(|ui| {
                 ui.label(RichText::new("Autostart: ").color(TEXT_COLOR).font(FontId {
@@ -118,6 +129,7 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                     );
                     let autostart = game_config.autostart;
                     if ui.button("Connect Now!").clicked() {
+                        error!("WATTTT");
                         commands.insert_resource(client::new_renet_client(
                             from_nick(&game_config.nick),
                             ClientPreferences { autostart },
@@ -148,10 +160,10 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<Lobby>) {
                     }),
             );
             ui.separator();
-            for (&id, &client_preferences) in lobby.clients.iter() {
+            for (&id, &client_data) in lobby.clients.iter() {
                 let nick = to_nick(id);
                 let pad = String::from_iter((0..(8 - nick.len())).map(|_| ' '));
-                let autostart = if client_preferences.autostart {
+                let autostart = if client_data.preferences.autostart {
                     "autostart"
                 } else {
                     "wait"

@@ -59,10 +59,7 @@ pub enum ServerChannel {
 pub enum ServerMessages {
     Init(InitData),
     SetGameState(GameState),
-    ClientConnected {
-        id: u64,
-        client_preferences: ClientPreferences,
-    },
+    ClientJoined { id: u64, client_data: ClientData },
 }
 
 impl From<ServerChannel> for u8 {
@@ -86,6 +83,9 @@ impl ServerChannel {
 
 #[derive(Component)]
 pub struct MassID(pub u64);
+
+#[derive(Resource, Default)]
+pub struct MapMassIDToEntity(HashMap<u64, Entity>);
 
 pub fn spawn_arena_view_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
@@ -143,6 +143,12 @@ pub struct ClientPreferences {
     pub autostart: bool,
 }
 
+#[derive(Serialize, Deserialize, Component, Debug, Copy, Clone)]
+pub struct ClientData {
+    pub preferences: ClientPreferences,
+    pub inhabited_mass_id: u64,
+}
+
 impl ClientPreferences {
     fn to_netcode_user_data(&self) -> [u8; NETCODE_USER_DATA_BYTES] {
         let mut user_data = [0u8; NETCODE_USER_DATA_BYTES];
@@ -158,7 +164,7 @@ impl ClientPreferences {
 
 #[derive(Default, Resource, Debug)]
 pub struct Lobby {
-    pub clients: HashMap<u64, ClientPreferences>,
+    pub clients: HashMap<u64, ClientData>,
 }
 
 pub enum FullGame {
@@ -172,6 +178,7 @@ impl Plugin for FullGame {
         app.add_plugin(Spacetime);
         app.insert_resource(Lobby::default());
         app.insert_resource(PhysicsConfig { sims_per_frame: 5 });
+        app.insert_resource(MapMassIDToEntity::default());
         match self {
             Self::Client => {
                 app.add_system_set(

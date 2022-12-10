@@ -26,23 +26,41 @@ pub fn handle_server_events(
     init_data: Res<InitData>,
     mut app_state: ResMut<State<GameState>>,
     mut lobby: ResMut<Lobby>,
+    masses: Query<&MassID>,
 ) {
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, user_data) => {
                 let new_id = *id;
+
                 let client_preferences = ClientPreferences::from_user_data(user_data);
                 debug!("Server got connection from new client {new_id} with preferences {client_preferences:?}");
+
+                // FIXME: Cace Rondition?
+                // Get "random" mass to inhabit
+                let inhabited_ids = lobby
+                    .clients
+                    .values()
+                    .map(|data| data.inhabited_mass_id)
+                    .collect::<Vec<u64>>();
+                let mut mass_id = None;
+                for MassID(id) in masses.iter() {
+                    if inhabited_ids.contains(id) {
+                        continue;
+                    }
+                    mass_id = Some(id);
+                    break;
+                }
 
                 debug!("  sending initial data to client {new_id}");
                 let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
                 server.send_message(new_id, ServerChannel::ServerMessages, message.clone());
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
-                for (&id, &client_preferences) in lobby.clients.iter() {
-                    let message = ServerMessages::ClientConnected {
-                        id,
-                        client_preferences,
+                for (&existing_id, &client_data) in lobby.clients.iter() {
+                    let message = ServerMessages::ClientJoined {
+                        id: existing_id,
+                        client_data,
                     };
                     server.send_message(
                         new_id,
@@ -51,13 +69,17 @@ pub fn handle_server_events(
                     );
                 }
 
-                debug!("  now updating my lobby with client {new_id} preferences {client_preferences:?}");
-                lobby.clients.insert(new_id, client_preferences);
-                debug!("  the server now has lobby {lobby:?}");
+                let client_data = ClientData {
+                    preferences: client_preferences,
+                    inhabited_mass_id: *mass_id.expect("No inhabitable mass found!"),
+                };
 
-                let message = ServerMessages::ClientConnected {
+                debug!("  now updating my lobby with ({new_id}, {client_data:?})");
+                lobby.clients.insert(new_id, client_data);
+                debug!("  the server now has lobby {lobby:?}");
+                let message = ServerMessages::ClientJoined {
                     id: new_id,
-                    client_preferences,
+                    client_data,
                 };
                 debug!("  broadcasting about new client: {message:?}");
                 server.broadcast_message(
@@ -79,7 +101,10 @@ pub fn handle_server_events(
             match message {
                 ClientMessages::Ready => {
                     let unanimous_autostart = lobby.clients.len() > 1
-                        && lobby.clients.iter().all(|(_, prefs)| prefs.autostart);
+                        && lobby
+                            .clients
+                            .iter()
+                            .all(|(_, data)| data.preferences.autostart);
                     if unanimous_autostart {
                         debug!("  two or more clients connected and all want to autostart.");
                     }
@@ -99,6 +124,7 @@ pub fn handle_server_events(
                         debug!("Broadcasting {set_state:?}");
                         server.broadcast_message(ServerChannel::ServerMessages, message);
                     } else {
+                        // FIXME: we have inconsistency/arbitrariness in 2nd arg choice (channel)
                         debug!("Replying to client {client_id} with {set_state:?}");
                         server.send_message(client_id, DefaultChannel::Reliable, message);
                     }

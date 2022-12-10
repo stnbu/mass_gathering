@@ -11,8 +11,9 @@ pub fn handle_client_events(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut client: ResMut<RenetClient>,
     mut client_messages: EventWriter<ClientMessages>,
-    mut app_state: ResMut<State<GameState>>,
-    mut lobby: ResMut<Lobby>,
+    mut game_state: ResMut<State<GameState>>,
+    mut mass_to_entity_map: ResMut<MapMassIDToEntity>,
+    mut lobby: ResMut<Lobby>, // maybe "lobby" should store init_data
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
@@ -25,31 +26,37 @@ pub fn handle_client_events(
                 );
                 debug!("  spawning planets...");
                 for (&planet_id, &planet_init_data) in init_data.planets.iter() {
-                    spawn_planet(
+                    let entity_id = spawn_planet(
                         planet_id,
                         planet_init_data,
                         &mut commands,
                         &mut meshes,
                         &mut materials,
                     );
+                    mass_to_entity_map.0.insert(planet_id, entity_id);
                 }
                 let message = ClientMessages::Ready;
                 debug!("  sending message to server `{message:?}`");
                 client_messages.send(message);
             }
-            ServerMessages::SetGameState(game_state) => {
+            ServerMessages::SetGameState(new_game_state) => {
+                // Why in the _whorld_ would we receive this?
+                //
+                // Server says set state to ResMut(
+                //     State { transition: None, stack: [Stopped], scheduled: None, end_next_loop: false }
+                // ). Setting state now.
                 debug!("Server says set state to {game_state:?}. Setting state now.");
-                let _ = app_state.overwrite_set(game_state);
+                let _ = game_state.overwrite_set(new_game_state);
             }
-            ServerMessages::ClientConnected {
-                id,
-                client_preferences,
-            } => {
+            ServerMessages::ClientJoined { id, client_data } => {
                 debug!(
                     "Server says ({}, {:?}) connected. Updating my lobby.",
-                    id, client_preferences
+                    id, client_data
                 );
-                if let Some(old) = lobby.clients.insert(id, client_preferences) {
+                if id == client.client_id() {
+                    debug!("  fyi, that's me (I am {id})");
+                }
+                if let Some(old) = lobby.clients.insert(id, client_data) {
                     debug!("  the value {old:?} was replaced for client {id}");
                 }
                 debug!("  client {} now has lobby {lobby:?}", client.client_id());
