@@ -96,6 +96,7 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                     }),
             );
             ui.separator();
+            let nickname = Args::parse().nickname;
             ui.horizontal(|ui| {
                 ui.label(
                     RichText::new("Enter a nickname: ")
@@ -105,10 +106,10 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                             family: Monospace,
                         }),
                 );
-                let nickname = Args::parse().nickname;
-                // hint_text is handy, but it also gets us around a weird bug: Why does this
+                // FIXME:
+                // hint_text is handy, but it also gets us around a weird BUG: Why does this
                 // widget not receive input sometimes ...seeingly at random.
-                ui.add(TextEdit::singleline(&mut game_config.nick).hint_text(nickname));
+                ui.add(TextEdit::singleline(&mut game_config.nick).hint_text(&nickname));
             });
             ui.horizontal(|ui| {
                 ui.label(RichText::new("Autostart: ").color(TEXT_COLOR).font(FontId {
@@ -127,13 +128,15 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                                 family: Monospace,
                             }),
                     );
+                    // FIXME: the text box does nothing!!
                     let autostart = game_config.autostart;
                     if ui.button("Connect Now!").clicked() {
-                        error!("WATTTT");
                         commands.insert_resource(client::new_renet_client(
-                            from_nick(&game_config.nick),
+                            from_nick(&nickname),
                             ClientPreferences { autostart },
                         ));
+                        // hmmm
+                        game_config.nick = nickname;
                         game_config.connected = true;
                     }
                 });
