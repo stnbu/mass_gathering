@@ -144,9 +144,10 @@ pub fn spawn_mass<'a>(
         .id()
 }
 
+/// Given a "latitude" and "longitude" on a unit sphere, return x,y,z
 fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     let theta = (lat * 2.0 - 1.0).acos(); // latitude. -1 & 1 are poles. 0 is equator.
-    let phi = lon * TAU; // portion around the mass `[0,1)` (from Greenwich)
+    let phi = lon * TAU; // portion around the sphere `[0,1)` (from Greenwich)
     let x = theta.sin() * phi.cos();
     let y = theta.sin() * phi.sin();
     let z = theta.cos();
