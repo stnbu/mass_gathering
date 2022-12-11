@@ -6,6 +6,7 @@ use bevy_renet::renet::{
 use std::{net::UdpSocket, time::SystemTime};
 
 use crate::networking::*;
+use crate::systems::spawn_mass;
 use crate::GameState;
 
 pub fn new_renet_server() -> RenetServer {
@@ -20,13 +21,57 @@ pub fn new_renet_server() -> RenetServer {
     RenetServer::new(current_time, server_config, connection_config, socket).unwrap()
 }
 
+pub fn spawn_debug_masses(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mass_data: Res<InitData>,
+    mut mass_to_entity_map: ResMut<MapMassIDToEntity>,
+) {
+    for (mass_id, mass_init_data) in mass_data.uninhabitable_masses.iter() {
+        let mass_entity = spawn_mass(
+            false,
+            *mass_id,
+            *mass_init_data,
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+        );
+        mass_to_entity_map.0.insert(*mass_id, mass_entity);
+    }
+    for (mass_id, mass_init_data) in mass_data.inhabitable_masses.iter() {
+        let mass_entity = spawn_mass(
+            false,
+            *mass_id,
+            *mass_init_data,
+            &mut commands,
+            &mut meshes,
+            &mut materials,
+        );
+        mass_to_entity_map.0.insert(*mass_id, mass_entity);
+    }
+}
+
+#[derive(Resource, Default)]
+pub struct UnassignedMasses(Vec<u64>);
+
+// FIXME: oh, so bad.
+pub fn populate_unassigned_masses(
+    mut unassigned_masses: ResMut<UnassignedMasses>,
+    init_data: Res<InitData>,
+) {
+    for (mass_id, _) in init_data.inhabitable_masses.iter() {
+        unassigned_masses.0.push(*mass_id);
+    }
+}
+
 pub fn handle_server_events(
     mut server_events: EventReader<ServerEvent>,
     mut server: ResMut<RenetServer>,
     init_data: Res<InitData>,
     mut app_state: ResMut<State<GameState>>,
     mut lobby: ResMut<Lobby>,
-    masses: Query<&MassID>,
+    mut unassigned_masses: ResMut<UnassignedMasses>,
 ) {
     for event in server_events.iter() {
         match event {
@@ -35,22 +80,6 @@ pub fn handle_server_events(
 
                 let client_preferences = ClientPreferences::from_user_data(user_data);
                 debug!("Server got connection from new client {new_id} with preferences {client_preferences:?}");
-
-                // FIXME: Cace Rondition?
-                // Get "random" mass to inhabit
-                let inhabited_ids = lobby
-                    .clients
-                    .values()
-                    .map(|data| data.inhabited_mass_id)
-                    .collect::<Vec<u64>>();
-                let mut mass_id = None;
-                for MassID(id) in masses.iter() {
-                    if inhabited_ids.contains(id) {
-                        continue;
-                    }
-                    mass_id = Some(id);
-                    break;
-                }
 
                 debug!("  sending initial data to client {new_id}");
                 let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
@@ -71,7 +100,7 @@ pub fn handle_server_events(
 
                 let client_data = ClientData {
                     preferences: client_preferences,
-                    inhabited_mass_id: *mass_id.expect("No inhabitable mass found!"),
+                    inhabited_mass_id: unassigned_masses.0.pop().unwrap(),
                 };
 
                 debug!("  now updating my lobby with ({new_id}, {client_data:?})");
@@ -96,7 +125,6 @@ pub fn handle_server_events(
     for client_id in server.clients_id().into_iter() {
         while let Some(message) = server.receive_message(client_id, ClientChannel::ClientMessages) {
             let message = bincode::deserialize(&message).unwrap();
-            const SLOTS: usize = 3;
             debug!("Received message from client: {message:?}");
             match message {
                 ClientMessages::Ready => {
@@ -108,7 +136,7 @@ pub fn handle_server_events(
                     if unanimous_autostart {
                         debug!("  two or more clients connected and all want to autostart.");
                     }
-                    let game_full = lobby.clients.len() == SLOTS;
+                    let game_full = lobby.clients.len() == init_data.inhabitable_masses.len();
                     if game_full {
                         debug!("  game has now reached max capacity.");
                     }

@@ -1,16 +1,17 @@
-use crate::{networking::*, physics::Momentum, radius_to_mass, PointMassBundle};
+use crate::{
+    networking::{client::Inhabitable, *},
+    physics::Momentum,
+    radius_to_mass, PointMassBundle,
+};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::Collider;
 use rand::Rng;
 use std::f32::consts::TAU;
 
 /// Old rando from way back
-pub fn old_rando(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut mass_data: ResMut<InitData>,
-) {
+pub fn old_rando() -> InitData {
+    let mut init_data = InitData::default();
+
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
     let pair_count = 18;
@@ -29,26 +30,40 @@ pub fn old_rando(
                 color,
                 radius,
             };
-            mass_data.masses.insert(mass_id, mass_init_data);
+            init_data
+                .uninhabitable_masses
+                .insert(mass_id, mass_init_data);
             mass_id += 1;
-            spawn_mass(
-                mass_id,
-                mass_init_data,
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-            );
         }
     }
+    let inhabitable_distance = 70.0;
+    for (x, y, z) in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
+        let velocity = Vec3::ZERO;
+        let color_tweak = match (x, y, z) {
+            (1, 0, 0) => 1.0,
+            (0, 1, 0) => 2.0,
+            (0, 0, 1) => 3.0,
+            _ => panic!("no!"),
+        };
+        let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance;
+        let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
+        let radius = 1.0;
+        let mass_init_data = MassInitData {
+            position,
+            velocity,
+            color,
+            radius,
+        };
+        init_data.inhabitable_masses.insert(mass_id, mass_init_data);
+        mass_id += 1;
+    }
+    init_data
 }
 
 /// Make some interesting masses
-pub fn cubic(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut mass_data: ResMut<InitData>,
-) {
+pub fn cubic() -> InitData {
+    let mut init_data = InitData::default();
+
     let mut mass_id = 2000;
     let radius = 0.5;
     let from_origin = 9.0;
@@ -95,20 +110,41 @@ pub fn cubic(
                 color,
                 radius,
             };
-            mass_data.masses.insert(mass_id, mass_init_data);
+            init_data
+                .uninhabitable_masses
+                .insert(mass_id, mass_init_data);
             mass_id += 1;
-            spawn_mass(
-                mass_id,
-                mass_init_data,
-                &mut commands,
-                &mut meshes,
-                &mut materials,
-            );
         }
     }
+
+    //
+    let inhabitable_distance = 20.0;
+    for (x, y, z) in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
+        let velocity = Vec3::ZERO;
+        let color_tweak = match (x, y, z) {
+            (1, 0, 0) => 1.0,
+            (0, 1, 0) => 2.0,
+            (0, 0, 1) => 3.0,
+            _ => panic!("no!"),
+        };
+        let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance;
+        let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
+        let radius = 1.0;
+        let mass_init_data = MassInitData {
+            position,
+            velocity,
+            color,
+            radius,
+        };
+        init_data.inhabitable_masses.insert(mass_id, mass_init_data);
+        mass_id += 1;
+    }
+    //
+    init_data
 }
 
 pub fn spawn_mass<'a>(
+    inhabitable: bool,
     mass_id: u64,
     mass_init_data: MassInitData,
     commands: &'a mut Commands,
@@ -121,27 +157,29 @@ pub fn spawn_mass<'a>(
         color,
         radius,
     } = mass_init_data;
-    commands
-        .spawn(PointMassBundle {
-            pbr: PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius,
-                    ..Default::default()
-                })),
-                material: materials.add(color.into()),
-                transform: Transform::from_translation(position),
+    let mut mass_commands = commands.spawn(PointMassBundle {
+        pbr: PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                radius,
                 ..Default::default()
-            },
-            momentum: Momentum {
-                velocity,
-                mass: radius_to_mass(radius),
-                ..Default::default()
-            },
-            collider: Collider::ball(radius),
+            })),
+            material: materials.add(color.into()),
+            transform: Transform::from_translation(position),
             ..Default::default()
-        })
-        .insert(MassID(mass_id))
-        .id()
+        },
+        momentum: Momentum {
+            velocity,
+            mass: radius_to_mass(radius),
+            ..Default::default()
+        },
+        collider: Collider::ball(radius),
+        ..Default::default()
+    });
+    mass_commands.insert(MassID(mass_id));
+    if inhabitable {
+        mass_commands.insert(Inhabitable);
+    }
+    mass_commands.id()
 }
 
 /// Given a "latitude" and "longitude" on a unit sphere, return x,y,z

@@ -28,20 +28,29 @@ pub struct MassInitData {
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug)]
 pub struct InitData {
-    pub masses: HashMap<u64, MassInitData>,
+    pub uninhabitable_masses: HashMap<u64, MassInitData>,
+    pub inhabitable_masses: HashMap<u64, MassInitData>,
 }
 
 impl Clone for InitData {
     fn clone(&self) -> Self {
-        let mut masses = HashMap::new();
-        masses.extend(&self.masses);
-        Self { masses }
+        let mut uninhabitable_masses = HashMap::new();
+        uninhabitable_masses.extend(&self.uninhabitable_masses);
+        let mut inhabitable_masses = HashMap::new();
+        inhabitable_masses.extend(&self.inhabitable_masses);
+        Self {
+            uninhabitable_masses,
+            inhabitable_masses,
+        }
     }
 
     fn clone_from(&mut self, source: &Self) {
-        let mut masses = HashMap::new();
-        masses.extend(&source.masses);
-        self.masses = masses;
+        let mut uninhabitable_masses = HashMap::new();
+        uninhabitable_masses.extend(&source.uninhabitable_masses);
+        let mut inhabitable_masses = HashMap::new();
+        inhabitable_masses.extend(&source.inhabitable_masses);
+        self.uninhabitable_masses = uninhabitable_masses;
+        self.inhabitable_masses = inhabitable_masses;
     }
 }
 
@@ -201,10 +210,13 @@ impl Plugin for FullGame {
                 app.add_system(client::set_window_title);
             }
             Self::Server => {
+                app.init_resource::<server::UnassignedMasses>();
+                app.add_startup_system(server::populate_unassigned_masses);
                 app.add_plugin(RenetServerPlugin::default());
                 app.insert_resource(server::new_renet_server());
                 app.add_system(server::handle_server_events);
                 app.add_system(server::set_window_title);
+                app.add_startup_system(server::spawn_debug_masses);
             }
         }
     }
