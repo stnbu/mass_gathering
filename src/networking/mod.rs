@@ -186,6 +186,9 @@ impl Plugin for FullGame {
                 app.add_system_set(
                     SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu_screen),
                 );
+                app.add_system_set(
+                    SystemSet::on_update(GameState::Running).with_system(client::control),
+                );
 
                 app.add_plugin(RenetClientPlugin::default());
                 app.add_system(
