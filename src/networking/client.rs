@@ -140,14 +140,19 @@ pub fn control(
     mut mouse_wheel_events: EventReader<MouseWheel>,
     time: Res<Time>,
 ) {
+    let mut transform = if let Ok(transform) = inhabitant_query.get_single_mut() {
+        transform
+    } else {
+        error!("Inhabitant missing!");
+        return;
+    };
+
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
     let mouse_scaling = 0.0001;
 
     // rotation about local axes
     let mut rotation = Vec3::ZERO;
-
-    let mut transform = inhabitant_query.get_single_mut().unwrap();
 
     for key in keys.get_pressed() {
         match key {
