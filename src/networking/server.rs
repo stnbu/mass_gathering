@@ -96,7 +96,7 @@ pub fn handle_server_events(
     for client_id in server.clients_id().into_iter() {
         while let Some(message) = server.receive_message(client_id, ClientChannel::ClientMessages) {
             let message = bincode::deserialize(&message).unwrap();
-            const SLOTS: usize = 3;
+            const SLOTS: usize = 1;
             debug!("Received message from client: {message:?}");
             match message {
                 ClientMessages::Ready => {

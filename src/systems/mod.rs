@@ -1,6 +1,46 @@
 use crate::{networking::*, physics::Momentum, radius_to_mass, PointMassBundle};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::Collider;
+use rand::Rng;
+use std::f32::consts::TAU;
+
+/// Old rando from way back
+pub fn old_rando(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut planet_data: ResMut<InitData>,
+) {
+    let mut rng = rand::thread_rng();
+    let mut rf = || rng.gen::<f32>();
+    let pair_count = 18;
+    let mut planet_id = 2000;
+    for _ in 0..pair_count {
+        let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
+        let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
+        let radius = rf() + 2.0;
+        for side in [-1.0, 1.0] {
+            let color = Color::rgb(rf(), rf(), rf());
+            let position = position * side;
+            let velocity = velocity * side;
+            let planet_init_data = PlanetInitData {
+                position,
+                velocity,
+                color,
+                radius,
+            };
+            planet_data.planets.insert(planet_id, planet_init_data);
+            planet_id += 1;
+            spawn_planet(
+                planet_id,
+                planet_init_data,
+                &mut commands,
+                &mut meshes,
+                &mut materials,
+            );
+        }
+    }
+}
 
 /// Make some interesting planets
 pub fn cubic(
@@ -102,4 +142,13 @@ pub fn spawn_planet<'a>(
         })
         .insert(MassID(planet_id))
         .id()
+}
+
+fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
+    let theta = (lat * 2.0 - 1.0).acos(); // latitude. -1 & 1 are poles. 0 is equator.
+    let phi = lon * TAU; // portion around the planet `[0,1)` (from Greenwich)
+    let x = theta.sin() * phi.cos();
+    let y = theta.sin() * phi.sin();
+    let z = theta.cos();
+    Vec3::new(x, y, z)
 }

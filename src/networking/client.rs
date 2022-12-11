@@ -5,6 +5,9 @@ use std::{net::UdpSocket, time::SystemTime};
 
 use crate::networking::*;
 
+#[derive(Component)]
+pub struct Inhabited;
+
 pub fn handle_client_events(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -14,7 +17,7 @@ pub fn handle_client_events(
     mut game_state: ResMut<State<GameState>>,
     mut mass_to_entity_map: ResMut<MapMassIDToEntity>,
     mut lobby: ResMut<Lobby>, // maybe "lobby" should store init_data
-    camera: Query<(Entity, &mut Transform), With<Camera>>, // FIXME. finer tuning.
+    camera: Query<Entity, With<Camera>>, // FIXME. finer tuning.
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
@@ -55,18 +58,18 @@ pub fn handle_client_events(
                 );
                 if id == client.client_id() {
                     debug!("  fyi, that's me (I am {id})");
-                    let (camera_id, mut _camera_transform) =
-                        camera.get_single().expect("Not exaclty one camera?");
+                    let camera_id = camera.get_single().expect("Not exaclty one camera?");
                     debug!("  found exactly one existing camera: {camera_id:?}");
-                    debug!("  resetting transform of camera {camera:?}");
-                    _camera_transform = &Transform::default();
                     let inhabited_mass = mass_to_entity_map
                         .0
                         .get(&client_data.inhabited_mass_id)
                         .unwrap();
                     debug!("  found exactly one mass for me to inhabit: {inhabited_mass:?}");
                     debug!("  making {camera_id:?} a child of {inhabited_mass:?}");
-                    commands.entity(*inhabited_mass).add_child(camera_id);
+                    commands
+                        .entity(*inhabited_mass)
+                        .insert(Inhabited)
+                        .add_child(camera_id);
                 }
                 if let Some(old) = lobby.clients.insert(id, client_data) {
                     debug!("  the value {old:?} was replaced for client {id}");
