@@ -48,18 +48,34 @@ pub fn handle_despawn_mass(
     }
 }
 
+use crate::networking::client::Inhabited;
+
 pub fn merge_masses(
     mut mass_query: Query<(&Transform, &mut Momentum, Entity)>,
+    inhabitant_query: Query<Entity, With<Inhabited>>,
     mut mass_events: EventReader<MassCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
     for MassCollisionEvent(e0, e1) in mass_events.iter() {
+        let involved_inhabitant = inhabitant_query.iter_many([*e0, *e1]).collect::<Vec<_>>();
+        if involved_inhabitant.len() == 2 {
+            debug!("Inhabited masses {e0:?} and {e1:?} collided. Ignoring.");
+            continue;
+        }
+        let inhabitant = if involved_inhabitant.len() == 1 {
+            let id = involved_inhabitant[0];
+            debug!("Inhabited mass {id:?} was involved in a collision.");
+            Some(id)
+        } else {
+            None
+        };
+
         // FIXME: We have write access to `Momentum` and yet we update
         // `delta_v` via an event. Just update it here? Should `DeltaEvent`
         // even have a `delta_v` field?
         if let Ok([p0, p1]) = mass_query.get_many_mut([*e0, *e1]) {
-            let (mut major, minor) = if p0.1.mass > p1.1.mass {
+            let (mut major, mut minor) = if p0.1.mass > p1.1.mass {
                 (p0, p1)
             // FIXME: tie-breaker!
             } else {
@@ -70,6 +86,18 @@ pub fn merge_masses(
                 "We have major-mass={:?} and minor-mass={:?}",
                 major.1.mass, minor.1.mass
             );
+
+            if let Some(c) = inhabitant {
+                if c == minor.2 {
+                    debug!("Inhabited mass {c:?} was the 'minor'! Swapping major for minor.");
+                    (major, minor) = (minor, major);
+                } else {
+                    debug!(
+                        "Inhabited mass {c:?} was the 'major', which should be '{:?}'. No swapping.",
+                        major.2
+                    )
+                }
+            }
 
             debug!("Collision of masses:");
             debug!(" Major mass {:?}", major.2);
