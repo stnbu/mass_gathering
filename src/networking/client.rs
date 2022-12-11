@@ -1,4 +1,4 @@
-use crate::{systems::spawn_planet, GameConfig, GameState};
+use crate::{systems::spawn_mass, GameConfig, GameState};
 use bevy::input::{
     mouse::{MouseButton, MouseButtonInput, MouseMotion, MouseWheel},
     ButtonState,
@@ -29,20 +29,20 @@ pub fn handle_client_events(
         match server_message {
             ServerMessages::Init(init_data) => {
                 debug!(
-                    "Server sent init data for {} planets to me, client {}",
-                    init_data.planets.len(),
+                    "Server sent init data for {} masses to me, client {}",
+                    init_data.masses.len(),
                     client.client_id()
                 );
-                debug!("  spawning planets...");
-                for (&planet_id, &planet_init_data) in init_data.planets.iter() {
-                    let entity_id = spawn_planet(
-                        planet_id,
-                        planet_init_data,
+                debug!("  spawning masses...");
+                for (&mass_id, &mass_init_data) in init_data.masses.iter() {
+                    let entity_id = spawn_mass(
+                        mass_id,
+                        mass_init_data,
                         &mut commands,
                         &mut meshes,
                         &mut materials,
                     );
-                    mass_to_entity_map.0.insert(planet_id, entity_id);
+                    mass_to_entity_map.0.insert(mass_id, entity_id);
                 }
                 let message = ClientMessages::Ready;
                 debug!("  sending message to server `{message:?}`");

@@ -9,12 +9,12 @@ pub fn old_rando(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut planet_data: ResMut<InitData>,
+    mut mass_data: ResMut<InitData>,
 ) {
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
     let pair_count = 18;
-    let mut planet_id = 2000;
+    let mut mass_id = 2000;
     for _ in 0..pair_count {
         let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
         let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
@@ -23,17 +23,17 @@ pub fn old_rando(
             let color = Color::rgb(rf(), rf(), rf());
             let position = position * side;
             let velocity = velocity * side;
-            let planet_init_data = PlanetInitData {
+            let mass_init_data = MassInitData {
                 position,
                 velocity,
                 color,
                 radius,
             };
-            planet_data.planets.insert(planet_id, planet_init_data);
-            planet_id += 1;
-            spawn_planet(
-                planet_id,
-                planet_init_data,
+            mass_data.masses.insert(mass_id, mass_init_data);
+            mass_id += 1;
+            spawn_mass(
+                mass_id,
+                mass_init_data,
                 &mut commands,
                 &mut meshes,
                 &mut materials,
@@ -42,19 +42,19 @@ pub fn old_rando(
     }
 }
 
-/// Make some interesting planets
+/// Make some interesting masses
 pub fn cubic(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut planet_data: ResMut<InitData>,
+    mut mass_data: ResMut<InitData>,
 ) {
-    let mut planet_id = 2000;
+    let mut mass_id = 2000;
     let radius = 0.5;
     let from_origin = 9.0;
     for n in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
         for side in [1.0, -1.0] {
-            let fun_factor = 1.0 + (planet_id as f32 - 2000.0) / 20.0;
+            let fun_factor = 1.0 + (mass_id as f32 - 2000.0) / 20.0;
 
             let (a, b, c) = n;
             let speed = 0.15;
@@ -89,17 +89,17 @@ pub fn cubic(
                 position * fun_factor
             };
 
-            let planet_init_data = PlanetInitData {
+            let mass_init_data = MassInitData {
                 position,
                 velocity,
                 color,
                 radius,
             };
-            planet_data.planets.insert(planet_id, planet_init_data);
-            planet_id += 1;
-            spawn_planet(
-                planet_id,
-                planet_init_data,
+            mass_data.masses.insert(mass_id, mass_init_data);
+            mass_id += 1;
+            spawn_mass(
+                mass_id,
+                mass_init_data,
                 &mut commands,
                 &mut meshes,
                 &mut materials,
@@ -108,19 +108,19 @@ pub fn cubic(
     }
 }
 
-pub fn spawn_planet<'a>(
-    planet_id: u64,
-    planet_init_data: PlanetInitData,
+pub fn spawn_mass<'a>(
+    mass_id: u64,
+    mass_init_data: MassInitData,
     commands: &'a mut Commands,
     meshes: &'a mut ResMut<Assets<Mesh>>,
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) -> Entity {
-    let PlanetInitData {
+    let MassInitData {
         position,
         velocity,
         color,
         radius,
-    } = planet_init_data;
+    } = mass_init_data;
     commands
         .spawn(PointMassBundle {
             pbr: PbrBundle {
@@ -140,13 +140,13 @@ pub fn spawn_planet<'a>(
             collider: Collider::ball(radius),
             ..Default::default()
         })
-        .insert(MassID(planet_id))
+        .insert(MassID(mass_id))
         .id()
 }
 
 fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     let theta = (lat * 2.0 - 1.0).acos(); // latitude. -1 & 1 are poles. 0 is equator.
-    let phi = lon * TAU; // portion around the planet `[0,1)` (from Greenwich)
+    let phi = lon * TAU; // portion around the mass `[0,1)` (from Greenwich)
     let x = theta.sin() * phi.cos();
     let y = theta.sin() * phi.sin();
     let z = theta.cos();

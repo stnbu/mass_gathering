@@ -16,9 +16,9 @@ Note that the windows will open on top of each other. "In practice" we aim not t
 
 As of now, watch for:
 
-1. Server starts, arranges its planets.
+1. Server starts, arranges its masses.
 1. Server sends all the physics and PBR info to the client.
-1. Client spawns the planets, based on the above network data.
+1. Client spawns the masses, based on the above network data.
 1. Client notifies server "I am ready" (we would in practice wait for "everyone")
 1. Server sends command to clients instructing them to start their local simulations.
 1. Server starts itself _also_.
@@ -31,7 +31,7 @@ Since the clients need to apply this info immediately (and since we'll be doing 
 What remains:
 
 * Make the server headless, efficient.
-* Have clients inhabit certain distinct-looking planets with their cameras.
+* Have clients inhabit certain distinct-looking masses with their cameras.
 * Would-be-nice: have a small "picture-in-picture" server view making the player positions apparent.
 * All the other stuff. Missile impacts, crosshairs, some simple togglable info-board.
 * A greeting page when we are waiting for a game to begin/enough payers.

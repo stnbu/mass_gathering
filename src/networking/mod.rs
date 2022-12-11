@@ -19,7 +19,7 @@ pub const SERVER_ADDR: &str = "127.0.0.1";
 pub const PORT_NUMBER: u16 = 5737;
 
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
-pub struct PlanetInitData {
+pub struct MassInitData {
     pub position: Vec3,
     pub velocity: Vec3,
     pub color: Color,
@@ -28,20 +28,20 @@ pub struct PlanetInitData {
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug)]
 pub struct InitData {
-    pub planets: HashMap<u64, PlanetInitData>,
+    pub masses: HashMap<u64, MassInitData>,
 }
 
 impl Clone for InitData {
     fn clone(&self) -> Self {
-        let mut planets = HashMap::new();
-        planets.extend(&self.planets);
-        Self { planets }
+        let mut masses = HashMap::new();
+        masses.extend(&self.masses);
+        Self { masses }
     }
 
     fn clone_from(&mut self, source: &Self) {
-        let mut planets = HashMap::new();
-        planets.extend(&source.planets);
-        self.planets = planets;
+        let mut masses = HashMap::new();
+        masses.extend(&source.masses);
+        self.masses = masses;
     }
 }
 
