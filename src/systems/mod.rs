@@ -143,6 +143,32 @@ pub fn cubic() -> InitData {
     init_data
 }
 
+pub fn testing_no_unhinhabited() -> InitData {
+    let mut init_data = InitData::default();
+    let position = Vec3::X * 6.0;
+    let velocity = Vec3::Y * 0.5;
+    let radius = 1.0;
+    init_data.inhabitable_masses.insert(
+        0,
+        MassInitData {
+            position,
+            velocity,
+            color: Color::RED,
+            radius,
+        },
+    );
+    init_data.inhabitable_masses.insert(
+        1,
+        MassInitData {
+            position: position * -1.0,
+            velocity: velocity * -1.0,
+            color: Color::BLUE,
+            radius,
+        },
+    );
+    init_data
+}
+
 pub fn spawn_mass<'a>(
     inhabitable: bool,
     mass_id: u64,
@@ -164,7 +190,7 @@ pub fn spawn_mass<'a>(
                 ..Default::default()
             })),
             material: materials.add(color.into()),
-            transform: Transform::from_translation(position),
+            transform: Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
             ..Default::default()
         },
         momentum: Momentum {

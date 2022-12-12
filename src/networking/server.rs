@@ -74,6 +74,8 @@ pub fn handle_server_events(
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, user_data) => {
+                // FIXME: where? here? somewhere we need to "handle" clients connecting
+                // to an in-progress game (which we do not allow).
                 let new_id = *id;
 
                 let client_preferences = ClientPreferences::from_user_data(user_data);

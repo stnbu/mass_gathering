@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/bin/sh -ue
+
+NICKNAMES="$@"
 
 cargo run &
-cargo run --bin client -- --nickname NICK &
-cargo run --bin client -- --nickname KNOCK &
-cargo run --bin client -- --nickname KNACK &
+for nick in $NICKNAMES ; do
+    cargo run --bin client -- --nickname "$nick" &
+done
 
