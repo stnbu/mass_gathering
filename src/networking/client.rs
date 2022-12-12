@@ -42,8 +42,6 @@ pub fn handle_client_events(
                     client.client_id()
                 );
                 debug!("  spawning masses...");
-
-                //
                 for (mass_id, mass_init_data) in init_data.uninhabitable_masses.iter() {
                     let mass_entity = spawn_mass(
                         false,
@@ -66,9 +64,6 @@ pub fn handle_client_events(
                     );
                     mass_to_entity_map.0.insert(*mass_id, mass_entity);
                 }
-
-                //
-
                 let message = ClientMessages::Ready;
                 debug!("  sending message to server `{message:?}`");
                 client_messages.send(message);
@@ -90,19 +85,16 @@ pub fn handle_client_events(
                     debug!("  fyi, that's me (I am {id})");
                     let camera_id = camera.get_single().expect("Not exaclty one camera?");
                     debug!("  found exactly one existing camera: {camera_id:?}");
-                    //
                     let inhabited_mass = mass_to_entity_map
                         .0
                         .get(&client_data.inhabited_mass_id)
                         .unwrap();
-                    //
                     debug!("  found exactly one mass for me to inhabit: {inhabited_mass:?}");
                     debug!("  making {camera_id:?} a child of {inhabited_mass:?}");
                     commands
                         .entity(*inhabited_mass)
                         .insert(Inhabited)
                         .add_child(camera_id);
-                    //.insert(Transform::default().looking_at(Vec3::ZERO, Vec3::Y));
                 }
                 if let Some(old) = lobby.clients.insert(id, client_data) {
                     debug!("  the value {old:?} was replaced for client {id}");
