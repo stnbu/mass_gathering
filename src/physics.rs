@@ -133,7 +133,12 @@ pub fn merge_masses(
             let delta_p = weighted_midpoint - major.0.translation;
             // How much to scale in the linear (multiply major original
             // radius by this much to achieve a proportionate mass (i.e. volume) increase.
-            let delta_s = major_factor.powf(-1.0 / 3.0);
+            // We do _not_ scale inhabited masses (they just get denser nom nom.)
+            let delta_s = if inhabitant.is_some() {
+                1.0
+            } else {
+                major_factor.powf(-1.0 / 3.0)
+            };
             let event = DeltaEvent {
                 entity,
                 delta_p,
