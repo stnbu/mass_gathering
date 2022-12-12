@@ -61,6 +61,36 @@ pub fn handle_client_events(
                         &mut meshes,
                         &mut materials,
                     );
+                    commands.entity(mass_entity).with_children(|child| {
+                        // barrel
+                        child.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Capsule {
+                                radius: 0.05,
+                                depth: 1.0,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::SILVER.into()),
+                            transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+                                .with_translation(Vec3::Z * -1.5),
+                            ..Default::default()
+                        });
+                        // horizontal stabilizer
+                        child.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Plane { size: 2.0 })),
+                            material: materials.add(Color::SILVER.into()),
+                            transform: Transform::from_translation(Vec3::Z * 1.0),
+                            ..Default::default()
+                        });
+                        // vertical stabilizer
+                        child.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Plane { size: 2.0 })),
+                            material: materials.add(Color::SILVER.into()),
+                            transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+                                .with_translation(Vec3::Z * 1.0),
+                            ..Default::default()
+                        });
+                    });
+                    //
                     mass_to_entity_map.0.insert(*mass_id, mass_entity);
                 }
                 let message = ClientMessages::Ready;
