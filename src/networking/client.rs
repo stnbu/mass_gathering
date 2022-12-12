@@ -1,4 +1,3 @@
-use crate::{systems::spawn_mass, GameConfig, GameState};
 use bevy::input::{
     mouse::{MouseButton, MouseButtonInput, MouseMotion, MouseWheel},
     ButtonState,
@@ -8,7 +7,7 @@ use bevy_renet::renet::{ClientAuthentication, RenetClient, RenetConnectionConfig
 use std::f32::consts::TAU;
 use std::{net::UdpSocket, time::SystemTime};
 
-use crate::networking::*;
+use crate::{networking::*, systems::spawn_mass, GameConfig, GameState};
 
 #[derive(Component)]
 pub struct Inhabited;

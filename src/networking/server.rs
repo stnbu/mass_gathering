@@ -5,9 +5,7 @@ use bevy_renet::renet::{
 };
 use std::{net::UdpSocket, time::SystemTime};
 
-use crate::networking::*;
-use crate::systems::spawn_mass;
-use crate::GameState;
+use crate::{networking::*, systems::spawn_mass, GameState};
 
 pub fn new_renet_server() -> RenetServer {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
