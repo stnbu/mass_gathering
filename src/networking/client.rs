@@ -15,6 +15,9 @@ pub struct Inhabited;
 #[derive(Component)]
 pub struct Inhabitable;
 
+#[derive(Component)]
+pub struct Garb;
+
 use std::collections::HashSet;
 #[derive(Default)]
 struct InhabitableTaken(HashSet<u64>);
@@ -61,37 +64,45 @@ pub fn handle_client_events(
                         &mut meshes,
                         &mut materials,
                     );
-                    // FIXME: need to _not_ do this for _this client_ ("me")
                     commands.entity(mass_entity).with_children(|child| {
                         // barrel
-                        child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Capsule {
-                                radius: 0.05,
-                                depth: 1.0,
-                                ..Default::default()
-                            })),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+                        child
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Capsule {
+                                    radius: 0.05,
+                                    depth: 1.0,
+                                    ..Default::default()
+                                })),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_rotation(Quat::from_rotation_x(
+                                    TAU / 4.0,
+                                ))
                                 .with_translation(Vec3::Z * -1.5),
-                            ..Default::default()
-                        });
+                                ..Default::default()
+                            })
+                            .insert(Garb);
                         // horizontal stabilizer
-                        child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_translation(Vec3::Z * 1.0),
-                            ..Default::default()
-                        });
+                        child
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_translation(Vec3::Z * 1.0),
+                                ..Default::default()
+                            })
+                            .insert(Garb);
                         // vertical stabilizer
-                        child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+                        child
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_rotation(Quat::from_rotation_z(
+                                    TAU / 4.0,
+                                ))
                                 .with_translation(Vec3::Z * 1.0),
-                            ..Default::default()
-                        });
+                                ..Default::default()
+                            })
+                            .insert(Garb);
                     });
-                    //
                     mass_to_entity_map.0.insert(*mass_id, mass_entity);
                 }
                 let message = ClientMessages::Ready;
@@ -121,10 +132,10 @@ pub fn handle_client_events(
                         .unwrap();
                     debug!("  found exactly one mass for me to inhabit: {inhabited_mass:?}");
                     debug!("  making {camera_id:?} a child of {inhabited_mass:?}");
-                    commands
-                        .entity(*inhabited_mass)
-                        .insert(Inhabited)
-                        .add_child(camera_id);
+                    let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
+                    inhabited_mass_commands.insert(Inhabited);
+                    inhabited_mass_commands.despawn_descendants();
+                    inhabited_mass_commands.add_child(camera_id);
                 }
                 if let Some(old) = lobby.clients.insert(id, client_data) {
                     debug!("  the value {old:?} was replaced for client {id}");
