@@ -61,6 +61,7 @@ pub fn handle_client_events(
                         &mut meshes,
                         &mut materials,
                     );
+                    // FIXME: need to _not_ do this for _this client_ ("me")
                     commands.entity(mass_entity).with_children(|child| {
                         // barrel
                         child.spawn(PbrBundle {
@@ -69,22 +70,22 @@ pub fn handle_client_events(
                                 depth: 1.0,
                                 ..Default::default()
                             })),
-                            material: materials.add(Color::SILVER.into()),
+                            material: materials.add(Color::WHITE.into()),
                             transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
                                 .with_translation(Vec3::Z * -1.5),
                             ..Default::default()
                         });
                         // horizontal stabilizer
                         child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Plane { size: 2.0 })),
-                            material: materials.add(Color::SILVER.into()),
+                            mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
                             transform: Transform::from_translation(Vec3::Z * 1.0),
                             ..Default::default()
                         });
                         // vertical stabilizer
                         child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Plane { size: 2.0 })),
-                            material: materials.add(Color::SILVER.into()),
+                            mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
                             transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
                                 .with_translation(Vec3::Z * 1.0),
                             ..Default::default()
