@@ -63,7 +63,7 @@ pub struct Core;
 
 #[derive(Resource, Default)]
 pub struct GameConfig {
-    pub nick: String,
+    pub nickname: String,
     pub connected: bool,
     pub autostart: bool,
 }

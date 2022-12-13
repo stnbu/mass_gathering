@@ -1,3 +1,4 @@
+use crate::{networking::*, GameConfig};
 use bevy::prelude::*;
 use bevy_egui::{
     egui::{
@@ -6,24 +7,15 @@ use bevy_egui::{
     },
     EguiContext,
 };
-use clap::Parser;
-
-use crate::{networking::*, GameConfig};
 
 const FRAME_FILL: Color32 = Color32::TRANSPARENT;
 const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
-
-// A weird place for this code...
-#[derive(Parser)]
-struct Args {
-    #[arg(short, long, default_value_t = ("NICK").to_string())]
-    nickname: String,
-}
 
 pub fn client_menu_screen(
     mut ctx: ResMut<EguiContext>,
     mut game_config: ResMut<GameConfig>,
     mut commands: Commands,
+    cli_args: Res<ClientCliArgs>,
 ) {
     TopBottomPanel::top("top_panel")
         .resizable(false)
@@ -96,7 +88,6 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                     }),
             );
             ui.separator();
-            let nickname = Args::parse().nickname;
             ui.horizontal(|ui| {
                 ui.label(
                     RichText::new("Enter a nickname: ")
@@ -109,7 +100,9 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                 // FIXME:
                 // hint_text is handy, but it also gets us around a weird BUG: Why does this
                 // widget not receive input sometimes ...seeingly at random.
-                ui.add(TextEdit::singleline(&mut game_config.nick).hint_text(&nickname));
+                ui.add(
+                    TextEdit::singleline(&mut game_config.nickname).hint_text(&cli_args.nickname),
+                );
             });
             ui.horizontal(|ui| {
                 ui.label(RichText::new("Autostart: ").color(TEXT_COLOR).font(FontId {
@@ -132,11 +125,11 @@ Enter a nickname between one and eight characters, choose whether you prefer aut
                     let autostart = game_config.autostart;
                     if ui.button("Connect Now!").clicked() {
                         commands.insert_resource(client::new_renet_client(
-                            from_nick(&nickname),
+                            from_nick(&cli_args.nickname),
                             ClientPreferences { autostart },
                         ));
                         // hmmm
-                        game_config.nick = nickname;
+                        game_config.nickname = cli_args.nickname.clone();
                         game_config.connected = true;
                     }
                 });

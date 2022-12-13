@@ -70,6 +70,10 @@ pub fn handle_client_events(
                 debug!("Server says set state to {game_state:?}. Setting state now.");
                 let _ = game_state.overwrite_set(new_game_state);
             }
+            ServerMessages::SetPhysicsConfig(physics_config) => {
+                debug!("Inserting resource received from server: {physics_config:?}");
+                commands.insert_resource(physics_config);
+            }
             ServerMessages::ClientJoined { id, client_data } => {
                 debug!(
                     "Server says ({}, {:?}) connected. Updating my lobby.",
@@ -137,10 +141,10 @@ pub fn set_window_title(
     mut windows: ResMut<Windows>,
     game_config: Res<GameConfig>,
 ) {
-    let nick = if game_config.nick.is_empty() {
+    let nick = if game_config.nickname.is_empty() {
         "<unset>"
     } else {
-        &game_config.nick
+        &game_config.nickname
     };
     let window = windows.primary_mut();
     window.set_title(format!("Client[{:?}] : nick={nick}", game_state.current()));

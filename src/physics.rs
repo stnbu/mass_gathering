@@ -1,8 +1,9 @@
 use crate::networking::client::Inhabitable;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
+use serde::{Deserialize, Serialize};
 
-#[derive(Resource)]
+#[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
     pub sims_per_frame: u32,
 }

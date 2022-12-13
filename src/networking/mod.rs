@@ -76,6 +76,7 @@ pub enum ServerMessages {
     Init(InitData),
     SetGameState(GameState),
     ClientJoined { id: u64, client_data: ClientData },
+    SetPhysicsConfig(PhysicsConfig),
 }
 
 impl From<ServerChannel> for u8 {
@@ -182,17 +183,28 @@ pub enum FullGame {
     Server,
 }
 
+use clap::Parser;
+
+#[derive(Parser, Resource)]
+pub struct ClientCliArgs {
+    #[arg(short, long, default_value_t = ("NICK").to_string())]
+    pub nickname: String,
+}
+#[derive(Parser, Resource)]
+pub struct ServerCliArgs {
+    #[arg(short, long, default_value_t = 10)]
+    pub speed: u32,
+}
+
 impl Plugin for FullGame {
     fn build(&self, app: &mut App) {
         app.add_plugin(Core);
         app.add_plugin(Spacetime);
         app.insert_resource(Lobby::default());
-        app.insert_resource(PhysicsConfig {
-            sims_per_frame: 100,
-        });
         app.insert_resource(MapMassIDToEntity::default());
         match self {
             Self::Client => {
+                app.insert_resource(ClientCliArgs::parse());
                 app.add_system_set(
                     SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
                 );
@@ -214,8 +226,10 @@ impl Plugin for FullGame {
                 app.add_system(client::set_window_title);
             }
             Self::Server => {
+                app.insert_resource(ServerCliArgs::parse());
                 app.init_resource::<server::UnassignedMasses>();
                 app.add_startup_system(server::populate_unassigned_masses);
+                app.add_startup_system(server::setup_physics);
                 app.add_plugin(RenetServerPlugin::default());
                 app.insert_resource(server::new_renet_server());
                 app.add_system(server::handle_server_events);

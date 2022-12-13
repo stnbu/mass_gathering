@@ -19,6 +19,13 @@ pub fn new_renet_server() -> RenetServer {
     RenetServer::new(current_time, server_config, connection_config, socket).unwrap()
 }
 
+pub fn setup_physics(mut commands: Commands, cli_args: Res<ServerCliArgs>) {
+    let speed = cli_args.speed;
+    commands.insert_resource(PhysicsConfig {
+        sims_per_frame: speed,
+    });
+}
+
 pub fn spawn_debug_masses(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -71,6 +78,7 @@ pub fn handle_server_events(
     mut app_state: ResMut<State<GameState>>,
     mut lobby: ResMut<Lobby>,
     mut unassigned_masses: ResMut<UnassignedMasses>,
+    physics_config: Res<PhysicsConfig>,
 ) {
     for event in server_events.iter() {
         match event {
@@ -84,7 +92,13 @@ pub fn handle_server_events(
 
                 debug!("  sending initial data to client {new_id}");
                 let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
-                server.send_message(new_id, ServerChannel::ServerMessages, message.clone());
+                server.send_message(new_id, ServerChannel::ServerMessages, message);
+
+                debug!("  sending physics config to {new_id}");
+                let message =
+                    bincode::serialize(&ServerMessages::SetPhysicsConfig(physics_config.clone()))
+                        .unwrap();
+                server.send_message(new_id, ServerChannel::ServerMessages, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
                 for (&existing_id, &client_data) in lobby.clients.iter() {
