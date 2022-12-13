@@ -253,19 +253,19 @@ pub fn don_inhabitant_garb<'a>(
         // horizontal stabilizer
         child
             .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
                 material: materials.add(Color::WHITE.into()),
-                transform: Transform::from_translation(Vec3::Z * 1.0),
+                transform: Transform::from_translation(Vec3::Z * 0.5),
                 ..Default::default()
             })
             .insert(Garb);
         // vertical stabilizer
         child
             .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
                 material: materials.add(Color::WHITE.into()),
                 transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
-                    .with_translation(Vec3::Z * 1.0),
+                    .with_translation(Vec3::Z * 0.5),
                 ..Default::default()
             })
             .insert(Garb);
