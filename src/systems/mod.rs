@@ -145,13 +145,13 @@ pub fn cubic() -> InitData {
 
 pub fn testing_no_unhinhabited() -> InitData {
     let mut init_data = InitData::default();
-    let position = Vec3::X * 3.0;
-    let velocity = Vec3::X * 0.5;
+    let position = Vec3::X * 10.0;
+    let velocity = Vec3::Y * 0.035;
     let radius = 1.0;
     init_data.inhabitable_masses.insert(
         0,
         MassInitData {
-            position,
+            position: position * 1.0,
             velocity: velocity * -1.0,
             color: Color::RED,
             radius,
