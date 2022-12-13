@@ -1,3 +1,4 @@
+use crate::networking::client::Inhabitable;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
@@ -47,8 +48,6 @@ pub fn handle_despawn_mass(
         commands.entity(entity).despawn_recursive();
     }
 }
-
-use crate::networking::client::Inhabitable;
 
 pub fn merge_masses(
     mut mass_query: Query<(&Transform, &mut Momentum, Entity)>,
