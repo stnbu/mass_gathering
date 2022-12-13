@@ -39,13 +39,14 @@ pub fn spawn_debug_masses(
     }
     for (mass_id, mass_init_data) in mass_data.inhabitable_masses.iter() {
         let mass_entity = spawn_mass(
-            false,
+            true,
             *mass_id,
             *mass_init_data,
             &mut commands,
             &mut meshes,
             &mut materials,
         );
+        don_inhabitant_garb(mass_entity, &mut commands, &mut meshes, &mut materials);
         mass_to_entity_map.0.insert(*mass_id, mass_entity);
     }
 }

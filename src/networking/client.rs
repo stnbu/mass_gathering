@@ -1,10 +1,6 @@
-use bevy::input::{
-    mouse::{MouseButton, MouseButtonInput, MouseMotion, MouseWheel},
-    ButtonState,
-};
 use bevy::prelude::*;
 use bevy_renet::renet::{ClientAuthentication, RenetClient, RenetConnectionConfig};
-use std::f32::consts::TAU;
+use std::collections::HashSet;
 use std::{net::UdpSocket, time::SystemTime};
 
 use crate::{networking::*, systems::spawn_mass, GameConfig, GameState};
@@ -15,10 +11,6 @@ pub struct Inhabited;
 #[derive(Component)]
 pub struct Inhabitable;
 
-#[derive(Component)]
-pub struct Garb;
-
-use std::collections::HashSet;
 #[derive(Default)]
 struct InhabitableTaken(HashSet<u64>);
 
@@ -30,8 +22,7 @@ pub fn handle_client_events(
     mut client_messages: EventWriter<ClientMessages>,
     mut game_state: ResMut<State<GameState>>,
     mut mass_to_entity_map: ResMut<MapMassIDToEntity>,
-    mut lobby: ResMut<Lobby>, // maybe "lobby" should store init_data
-    camera: Query<Entity, With<Camera>>, // FIXME. finer tuning.
+    mut lobby: ResMut<Lobby>,
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
@@ -64,45 +55,7 @@ pub fn handle_client_events(
                         &mut meshes,
                         &mut materials,
                     );
-                    commands.entity(mass_entity).with_children(|child| {
-                        // barrel
-                        child
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Capsule {
-                                    radius: 0.05,
-                                    depth: 1.0,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_rotation(Quat::from_rotation_x(
-                                    TAU / 4.0,
-                                ))
-                                .with_translation(Vec3::Z * -1.5),
-                                ..Default::default()
-                            })
-                            .insert(Garb);
-                        // horizontal stabilizer
-                        child
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_translation(Vec3::Z * 1.0),
-                                ..Default::default()
-                            })
-                            .insert(Garb);
-                        // vertical stabilizer
-                        child
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_rotation(Quat::from_rotation_z(
-                                    TAU / 4.0,
-                                ))
-                                .with_translation(Vec3::Z * 1.0),
-                                ..Default::default()
-                            })
-                            .insert(Garb);
-                    });
+                    don_inhabitant_garb(mass_entity, &mut commands, &mut meshes, &mut materials);
                     mass_to_entity_map.0.insert(*mass_id, mass_entity);
                 }
                 let message = ClientMessages::Ready;
@@ -124,18 +77,18 @@ pub fn handle_client_events(
                 );
                 if id == client.client_id() {
                     debug!("  fyi, that's me (I am {id})");
-                    let camera_id = camera.get_single().expect("Not exaclty one camera?");
-                    debug!("  found exactly one existing camera: {camera_id:?}");
                     let inhabited_mass = mass_to_entity_map
                         .0
                         .get(&client_data.inhabited_mass_id)
                         .unwrap();
                     debug!("  found exactly one mass for me to inhabit: {inhabited_mass:?}");
-                    debug!("  making {camera_id:?} a child of {inhabited_mass:?}");
                     let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
                     inhabited_mass_commands.insert(Inhabited);
                     inhabited_mass_commands.despawn_descendants();
-                    inhabited_mass_commands.add_child(camera_id);
+                    debug!("Appending camera to inhabited mass {inhabited_mass:?}");
+                    inhabited_mass_commands.with_children(|child| {
+                        child.spawn(Camera3dBundle::default());
+                    });
                 }
                 if let Some(old) = lobby.clients.insert(id, client_data) {
                     debug!("  the value {old:?} was replaced for client {id}");
@@ -196,9 +149,6 @@ pub fn set_window_title(
 pub fn control(
     keys: Res<Input<KeyCode>>,
     mut inhabitant_query: Query<&mut Transform, With<Inhabited>>,
-    mut mouse_motion_events: EventReader<MouseMotion>,
-    mut mouse_button_input_events: EventReader<MouseButtonInput>,
-    mut mouse_wheel_events: EventReader<MouseWheel>,
     time: Res<Time>,
 ) {
     let mut transform = if let Ok(transform) = inhabitant_query.get_single_mut() {
@@ -210,7 +160,6 @@ pub fn control(
 
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
-    let mouse_scaling = 0.0001;
 
     // rotation about local axes
     let mut rotation = Vec3::ZERO;
@@ -237,25 +186,6 @@ pub fn control(
             }
             _ => (),
         }
-    }
-
-    for event in mouse_motion_events.iter() {
-        rotation.x -= event.delta.y * mouse_scaling;
-        rotation.y -= event.delta.x * mouse_scaling;
-    }
-    for MouseButtonInput { button, state } in mouse_button_input_events.iter() {
-        if *state == ButtonState::Pressed {
-            if *button == MouseButton::Left {
-                println!("LEFT CLICK!");
-            }
-            if *button == MouseButton::Right {
-                println!("RIGHT CLICK!");
-            }
-        }
-    }
-    let mouse_wheel_scaling = mouse_scaling * 15.0;
-    for event in mouse_wheel_events.iter() {
-        rotation.z += event.y * mouse_wheel_scaling;
     }
 
     let frame_time = time.delta_seconds() * 60.0;

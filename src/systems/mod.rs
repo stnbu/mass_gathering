@@ -145,14 +145,14 @@ pub fn cubic() -> InitData {
 
 pub fn testing_no_unhinhabited() -> InitData {
     let mut init_data = InitData::default();
-    let position = Vec3::X * 6.0;
-    let velocity = Vec3::Y * 0.5;
+    let position = Vec3::X * 3.0;
+    let velocity = Vec3::X * 0.5;
     let radius = 1.0;
     init_data.inhabitable_masses.insert(
         0,
         MassInitData {
             position,
-            velocity,
+            velocity: velocity * -1.0,
             color: Color::RED,
             radius,
         },
@@ -161,7 +161,7 @@ pub fn testing_no_unhinhabited() -> InitData {
         1,
         MassInitData {
             position: position * -1.0,
-            velocity: velocity * -1.0,
+            velocity: velocity * 1.0,
             color: Color::BLUE,
             radius,
         },
@@ -183,6 +183,16 @@ pub fn spawn_mass<'a>(
         color,
         radius,
     } = mass_init_data;
+    // FIXME: this needs to be "enforced" or at least not allowed to be any ol' value.
+    // the rule could be: all "inhabitable masses must be equal in mass".
+    assert!(
+        if inhabitable {
+            (radius - 1.0).abs() < 0.0000000001
+        } else {
+            true
+        },
+        "Inhabitable mass must be radius=1.0, not {radius}"
+    );
     let mut mass_commands = commands.spawn(PointMassBundle {
         pbr: PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -205,7 +215,16 @@ pub fn spawn_mass<'a>(
     if inhabitable {
         mass_commands.insert(Inhabitable);
     }
-    mass_commands.id()
+    let id = mass_commands.id();
+    debug!(
+        "Spawned {} mass: mass_id={mass_id} entity={id:?}",
+        if inhabitable {
+            "inhabitable"
+        } else {
+            "uninhabitable"
+        }
+    );
+    id
 }
 
 /// Given a "latitude" and "longitude" on a unit sphere, return x,y,z

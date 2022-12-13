@@ -48,11 +48,11 @@ pub fn handle_despawn_mass(
     }
 }
 
-use crate::networking::client::Inhabited;
+use crate::networking::client::Inhabitable;
 
 pub fn merge_masses(
     mut mass_query: Query<(&Transform, &mut Momentum, Entity)>,
-    inhabitant_query: Query<Entity, With<Inhabited>>,
+    inhabitant_query: Query<Entity, With<Inhabitable>>,
     mut mass_events: EventReader<MassCollisionEvent>,
     mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,

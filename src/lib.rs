@@ -23,7 +23,7 @@ pub fn let_light(mut commands: Commands) {
             ..default()
         },
         // TODO: figure out what _translation_ means for directional
-        transform: Transform::from_xyz(-500000.0, -500000.0, 0.0),
+        transform: Transform::from_xyz(-500000.0, -500000.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
     commands.spawn(DirectionalLightBundle {
@@ -34,7 +34,7 @@ pub fn let_light(mut commands: Commands) {
             ..default()
         },
         // TODO: figure out what _translation_ means for directional
-        transform: Transform::from_xyz(500000.0, 500000.0, 0.0),
+        transform: Transform::from_xyz(500000.0, 500000.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 }

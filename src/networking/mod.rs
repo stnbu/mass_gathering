@@ -7,6 +7,7 @@ use bevy_renet::{
     run_if_client_connected, RenetClientPlugin, RenetServerPlugin,
 };
 use serde::{Deserialize, Serialize};
+use std::f32::consts::TAU;
 use std::{collections::HashMap, time::Duration};
 
 pub mod client;
@@ -98,6 +99,7 @@ pub struct MapMassIDToEntity(HashMap<u64, Entity>);
 
 pub fn spawn_arena_view_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
+        transform: Transform::from_translation(Vec3::Z * 15.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..Default::default()
     });
 }
@@ -220,4 +222,50 @@ impl Plugin for FullGame {
             }
         }
     }
+}
+
+#[derive(Component)]
+pub struct Garb;
+
+pub fn don_inhabitant_garb<'a>(
+    inhabitable_entity: Entity,
+    commands: &'a mut Commands,
+    meshes: &'a mut ResMut<Assets<Mesh>>,
+    materials: &'a mut ResMut<Assets<StandardMaterial>>,
+) {
+    commands.entity(inhabitable_entity).with_children(|child| {
+        // barrel
+        child
+            .spawn(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Capsule {
+                    radius: 0.05,
+                    depth: 1.0,
+                    ..Default::default()
+                })),
+                material: materials.add(Color::WHITE.into()),
+                transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+                    .with_translation(Vec3::Z * -1.5),
+                ..Default::default()
+            })
+            .insert(Garb);
+        // horizontal stabilizer
+        child
+            .spawn(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                material: materials.add(Color::WHITE.into()),
+                transform: Transform::from_translation(Vec3::Z * 1.0),
+                ..Default::default()
+            })
+            .insert(Garb);
+        // vertical stabilizer
+        child
+            .spawn(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Box::new(1.0, 0.025, 1.0))),
+                material: materials.add(Color::WHITE.into()),
+                transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+                    .with_translation(Vec3::Z * 1.0),
+                ..Default::default()
+            })
+            .insert(Garb);
+    });
 }
