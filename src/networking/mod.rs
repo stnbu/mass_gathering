@@ -27,6 +27,12 @@ pub struct MassInitData {
     pub radius: f32,
 }
 
+#[derive(Component)]
+pub struct MassID(pub u64);
+
+#[derive(Resource, Default)]
+pub struct MapMassIDToEntity(HashMap<u64, Entity>);
+
 #[derive(Default, Serialize, Deserialize, Resource, Debug)]
 pub struct InitData {
     pub uninhabitable_masses: HashMap<u64, MassInitData>,
@@ -90,12 +96,6 @@ impl ServerChannel {
         .into()]
     }
 }
-
-#[derive(Component)]
-pub struct MassID(pub u64);
-
-#[derive(Resource, Default)]
-pub struct MapMassIDToEntity(HashMap<u64, Entity>);
 
 pub fn spawn_arena_view_camera(mut commands: Commands) {
     commands.spawn(Camera3dBundle {
