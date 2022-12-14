@@ -11,6 +11,15 @@ pub use physics::*;
 pub mod networking;
 pub mod systems;
 
+#[derive(Resource, Default)]
+pub struct GameConfig {
+    pub nickname: String,
+    pub connected: bool,
+    pub autostart: bool,
+}
+
+pub struct Spacetime;
+
 pub fn let_light(mut commands: Commands) {
     // TODO: These are to be messed with.
     const NORMAL_BIAS: f32 = 0.61;
@@ -39,8 +48,6 @@ pub fn let_light(mut commands: Commands) {
     });
 }
 
-pub struct Spacetime;
-
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::BLACK))
@@ -61,14 +68,16 @@ impl Plugin for Spacetime {
 
 pub struct Core;
 
-#[derive(Resource, Default)]
-pub struct GameConfig {
-    pub nickname: String,
-    pub connected: bool,
-    pub autostart: bool,
+impl Plugin for Core {
+    fn build(&self, app: &mut App) {
+        app.init_resource::<GameConfig>();
+        app.add_state(GameState::Stopped);
+    }
 }
 
-impl Plugin for Core {
+pub struct ClientCore;
+
+impl Plugin for ClientCore {
     fn build(&self, app: &mut App) {
         #[cfg(debug_assertions)]
         {
@@ -86,10 +95,7 @@ impl Plugin for Core {
             app.insert_resource(Msaa { samples: 4 });
             app.add_plugins(DefaultPlugins);
         }
-
-        app.init_resource::<GameConfig>();
         app.add_plugin(EguiPlugin);
-        app.add_state(GameState::Stopped);
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
         app.add_startup_system(disable_rapier_gravity);

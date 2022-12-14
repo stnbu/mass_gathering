@@ -207,17 +207,18 @@ pub fn control(
         }
     }
 
-    let frame_time = time.delta_seconds() * 60.0;
-    rotation *= keys_scaling * frame_time;
+    if rotation.length() > 0.0000001 {
+        let frame_time = time.delta_seconds() * 60.0;
+        rotation *= keys_scaling * frame_time;
+        let local_x = transform.local_x();
+        let local_y = transform.local_y();
+        let local_z = transform.local_z();
+        transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
+        transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
+        transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
 
-    let local_x = transform.local_x();
-    let local_y = transform.local_y();
-    let local_z = transform.local_z();
-    transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
-    transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
-    transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
-
-    let message = ClientMessages::Rotation(transform.rotation);
-    debug!("  sending message to server `{message:?}`");
-    client_messages.send(message);
+        let message = ClientMessages::Rotation(transform.rotation);
+        debug!("  sending message to server `{message:?}`");
+        client_messages.send(message);
+    }
 }

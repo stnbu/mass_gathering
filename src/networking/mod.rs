@@ -1,4 +1,4 @@
-use bevy::prelude::*;
+use bevy::{app::ScheduleRunnerPlugin, prelude::*, time::TimePlugin};
 use bevy_renet::{
     renet::{
         ChannelConfig, ReliableChannelConfig, RenetError, NETCODE_KEY_BYTES,
@@ -12,7 +12,7 @@ use std::{collections::HashMap, time::Duration};
 
 pub mod client;
 pub mod server;
-use crate::{ui, Core, GameState, PhysicsConfig, Spacetime};
+use crate::{ui, ClientCore, Core, GameState, PhysicsConfig, Spacetime};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,0)cs2@66#vxo0s5np{_";
 pub const PROTOCOL_ID: u64 = 23;
@@ -97,13 +97,6 @@ impl ServerChannel {
         }
         .into()]
     }
-}
-
-pub fn spawn_arena_view_camera(mut commands: Commands) {
-    commands.spawn(Camera3dBundle {
-        transform: Transform::from_translation(Vec3::Z * 25.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..Default::default()
-    });
 }
 
 #[derive(Debug, Serialize, Deserialize, Component)]
@@ -201,11 +194,12 @@ pub struct ServerCliArgs {
 impl Plugin for FullGame {
     fn build(&self, app: &mut App) {
         app.add_plugin(Core);
-        app.add_plugin(Spacetime);
         app.insert_resource(Lobby::default());
         app.insert_resource(MapMassIDToEntity::default());
         match self {
             Self::Client => {
+                app.add_plugin(ClientCore);
+                app.add_plugin(Spacetime);
                 app.insert_resource(ClientCliArgs::parse());
                 app.add_system_set(
                     SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
@@ -228,6 +222,9 @@ impl Plugin for FullGame {
                 app.add_system(client::set_window_title);
             }
             Self::Server => {
+                app.add_plugin(CorePlugin::default());
+                app.add_plugin(TimePlugin::default());
+                app.add_plugin(ScheduleRunnerPlugin::default());
                 app.insert_resource(ServerCliArgs::parse());
                 app.init_resource::<server::UnassignedMasses>();
                 app.add_startup_system(server::populate_unassigned_masses);
@@ -235,8 +232,6 @@ impl Plugin for FullGame {
                 app.add_plugin(RenetServerPlugin::default());
                 app.insert_resource(server::new_renet_server());
                 app.add_system(server::handle_server_events);
-                app.add_system(server::set_window_title);
-                app.add_startup_system(server::spawn_debug_masses);
             }
         }
     }

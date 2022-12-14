@@ -5,7 +5,7 @@ use bevy_renet::renet::{
 };
 use std::{net::UdpSocket, time::SystemTime};
 
-use crate::{networking::*, systems::spawn_mass, GameState};
+use crate::{networking::*, GameState};
 
 pub fn new_renet_server() -> RenetServer {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
@@ -24,38 +24,6 @@ pub fn setup_physics(mut commands: Commands, cli_args: Res<ServerCliArgs>) {
     commands.insert_resource(PhysicsConfig {
         sims_per_frame: speed,
     });
-}
-
-pub fn spawn_debug_masses(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mass_data: Res<InitData>,
-    mut mass_to_entity_map: ResMut<MapMassIDToEntity>,
-) {
-    for (mass_id, mass_init_data) in mass_data.uninhabitable_masses.iter() {
-        let mass_entity = spawn_mass(
-            false,
-            *mass_id,
-            *mass_init_data,
-            &mut commands,
-            &mut meshes,
-            &mut materials,
-        );
-        mass_to_entity_map.0.insert(*mass_id, mass_entity);
-    }
-    for (mass_id, mass_init_data) in mass_data.inhabitable_masses.iter() {
-        let mass_entity = spawn_mass(
-            true,
-            *mass_id,
-            *mass_init_data,
-            &mut commands,
-            &mut meshes,
-            &mut materials,
-        );
-        don_inhabitant_garb(mass_entity, &mut commands, &mut meshes, &mut materials);
-        mass_to_entity_map.0.insert(*mass_id, mass_entity);
-    }
 }
 
 #[derive(Resource, Default)]
@@ -180,8 +148,12 @@ pub fn handle_server_events(
                         rotation,
                     };
                     let message = bincode::serialize(&client_rotation).unwrap();
-                    debug!("Broadcasting {client_rotation:?}");
-                    server.broadcast_message(ServerChannel::ServerMessages, message);
+                    debug!("Broadcasting except to {client_id}: {client_rotation:?}");
+                    server.broadcast_message_except(
+                        client_id,
+                        ServerChannel::ServerMessages,
+                        message,
+                    );
                 }
             }
         }
@@ -193,9 +165,4 @@ pub fn server_connection_config() -> RenetConnectionConfig {
         send_channels_config: ServerChannel::channels_config(),
         ..Default::default()
     }
-}
-
-pub fn set_window_title(game_state: Res<State<GameState>>, mut windows: ResMut<Windows>) {
-    let window = windows.primary_mut();
-    window.set_title(format!("Server[{:?}]", game_state.current()));
 }
