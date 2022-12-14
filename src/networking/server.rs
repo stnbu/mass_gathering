@@ -174,6 +174,15 @@ pub fn handle_server_events(
                     debug!("  and setting my state to {state:?}");
                     let _ = app_state.overwrite_set(state);
                 }
+                ClientMessages::Rotation(rotation) => {
+                    let client_rotation = ServerMessages::ClientRotation {
+                        id: client_id,
+                        rotation,
+                    };
+                    let message = bincode::serialize(&client_rotation).unwrap();
+                    debug!("Broadcasting {client_rotation:?}");
+                    server.broadcast_message(ServerChannel::ServerMessages, message);
+                }
             }
         }
     }

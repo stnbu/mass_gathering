@@ -22,6 +22,7 @@ pub fn handle_client_events(
     mut client_messages: EventWriter<ClientMessages>,
     mut game_state: ResMut<State<GameState>>,
     mut mass_to_entity_map: ResMut<MapMassIDToEntity>,
+    mut inhabitable_masses: Query<&mut Transform, With<Inhabitable>>,
     mut lobby: ResMut<Lobby>,
 ) {
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
@@ -73,6 +74,22 @@ pub fn handle_client_events(
             ServerMessages::SetPhysicsConfig(physics_config) => {
                 debug!("Inserting resource received from server: {physics_config:?}");
                 commands.insert_resource(physics_config);
+            }
+            ServerMessages::ClientRotation { id, rotation } => {
+                let mass_id = lobby.clients.get(&id).unwrap().inhabited_mass_id;
+                if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
+                    if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
+                        debug!("Rotating inhabitable mass {id} to {rotation}");
+                        mass_transform.rotation = rotation;
+                    } else {
+                        println!("query no!");
+                    }
+                } else {
+                    panic!(
+                        "Unable to find client {id} in entity mapping {:?}",
+                        mass_to_entity_map.0
+                    )
+                }
             }
             ServerMessages::ClientJoined { id, client_data } => {
                 debug!(
@@ -154,13 +171,11 @@ pub fn control(
     keys: Res<Input<KeyCode>>,
     mut inhabitant_query: Query<&mut Transform, With<Inhabited>>,
     time: Res<Time>,
+    mut client_messages: EventWriter<ClientMessages>,
 ) {
-    let mut transform = if let Ok(transform) = inhabitant_query.get_single_mut() {
-        transform
-    } else {
-        error!("Inhabitant missing!");
-        return;
-    };
+    let mut transform = inhabitant_query
+        .get_single_mut()
+        .expect("Could not get transform of `Inhabited` entity");
 
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -201,4 +216,8 @@ pub fn control(
     transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
     transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
     transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
+
+    let message = ClientMessages::Rotation(transform.rotation);
+    debug!("  sending message to server `{message:?}`");
+    client_messages.send(message);
 }

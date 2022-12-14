@@ -77,6 +77,7 @@ pub enum ServerMessages {
     SetGameState(GameState),
     ClientJoined { id: u64, client_data: ClientData },
     SetPhysicsConfig(PhysicsConfig),
+    ClientRotation { id: u64, rotation: Quat },
 }
 
 impl From<ServerChannel> for u8 {
@@ -108,6 +109,7 @@ pub fn spawn_arena_view_camera(mut commands: Commands) {
 #[derive(Debug, Serialize, Deserialize, Component)]
 pub enum ClientMessages {
     Ready,
+    Rotation(Quat),
 }
 
 pub enum ClientChannel {
