@@ -1,4 +1,4 @@
-use crate::networking::client::Inhabitable;
+use crate::inhabitant::Inhabitable;
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use serde::{Deserialize, Serialize};

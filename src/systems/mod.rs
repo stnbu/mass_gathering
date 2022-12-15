@@ -1,10 +1,7 @@
-use crate::{
-    networking::{client::Inhabitable, *},
-    physics::Momentum,
-    radius_to_mass, PointMassBundle,
-};
+use crate::{InitData, MassInitData};
+
 use bevy::prelude::*;
-use bevy_rapier3d::prelude::Collider;
+
 use rand::Rng;
 use std::f32::consts::TAU;
 
@@ -25,14 +22,13 @@ pub fn old_rando() -> InitData {
             let position = position * side;
             let velocity = velocity * side;
             let mass_init_data = MassInitData {
+                inhabitable: false,
                 position,
                 velocity,
                 color,
                 radius,
             };
-            init_data
-                .uninhabitable_masses
-                .insert(mass_id, mass_init_data);
+            init_data.masses.insert(mass_id, mass_init_data);
             mass_id += 1;
         }
     }
@@ -49,12 +45,13 @@ pub fn old_rando() -> InitData {
         let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
         let radius = 1.0;
         let mass_init_data = MassInitData {
+            inhabitable: true,
             position,
             velocity,
             color,
             radius,
         };
-        init_data.inhabitable_masses.insert(mass_id, mass_init_data);
+        init_data.masses.insert(mass_id, mass_init_data);
         mass_id += 1;
     }
     init_data
@@ -105,14 +102,13 @@ pub fn cubic() -> InitData {
             };
 
             let mass_init_data = MassInitData {
+                inhabitable: false,
                 position,
                 velocity,
                 color,
                 radius,
             };
-            init_data
-                .uninhabitable_masses
-                .insert(mass_id, mass_init_data);
+            init_data.masses.insert(mass_id, mass_init_data);
             mass_id += 1;
         }
     }
@@ -131,12 +127,13 @@ pub fn cubic() -> InitData {
         let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
         let radius = 1.0;
         let mass_init_data = MassInitData {
+            inhabitable: true,
             position,
             velocity,
             color,
             radius,
         };
-        init_data.inhabitable_masses.insert(mass_id, mass_init_data);
+        init_data.masses.insert(mass_id, mass_init_data);
         mass_id += 1;
     }
     //
@@ -148,18 +145,20 @@ pub fn testing_no_unhinhabited() -> InitData {
     let position = Vec3::X * 10.0;
     let velocity = Vec3::Y * 0.035;
     let radius = 1.0;
-    init_data.inhabitable_masses.insert(
+    init_data.masses.insert(
         0,
         MassInitData {
+            inhabitable: true,
             position: position * 1.0,
             velocity: velocity * -1.0,
             color: Color::RED,
             radius,
         },
     );
-    init_data.inhabitable_masses.insert(
+    init_data.masses.insert(
         1,
         MassInitData {
+            inhabitable: true,
             position: position * -1.0,
             velocity: velocity * 1.0,
             color: Color::BLUE,
@@ -167,64 +166,6 @@ pub fn testing_no_unhinhabited() -> InitData {
         },
     );
     init_data
-}
-
-pub fn spawn_mass<'a>(
-    inhabitable: bool,
-    mass_id: u64,
-    mass_init_data: MassInitData,
-    commands: &'a mut Commands,
-    meshes: &'a mut ResMut<Assets<Mesh>>,
-    materials: &'a mut ResMut<Assets<StandardMaterial>>,
-) -> Entity {
-    let MassInitData {
-        position,
-        velocity,
-        color,
-        radius,
-    } = mass_init_data;
-    // FIXME: this needs to be "enforced" or at least not allowed to be any ol' value.
-    // the rule could be: all "inhabitable masses must be equal in mass".
-    assert!(
-        if inhabitable {
-            (radius - 1.0).abs() < 0.0000000001
-        } else {
-            true
-        },
-        "Inhabitable mass must be radius=1.0, not {radius}"
-    );
-    let mut mass_commands = commands.spawn(PointMassBundle {
-        pbr: PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius,
-                ..Default::default()
-            })),
-            material: materials.add(color.into()),
-            transform: Transform::from_translation(position).looking_at(Vec3::ZERO, Vec3::Y),
-            ..Default::default()
-        },
-        momentum: Momentum {
-            velocity,
-            mass: radius_to_mass(radius),
-            ..Default::default()
-        },
-        collider: Collider::ball(radius),
-        ..Default::default()
-    });
-    mass_commands.insert(MassID(mass_id));
-    if inhabitable {
-        mass_commands.insert(Inhabitable);
-    }
-    let id = mass_commands.id();
-    debug!(
-        "Spawned {} mass: mass_id={mass_id} entity={id:?}",
-        if inhabitable {
-            "inhabitable"
-        } else {
-            "uninhabitable"
-        }
-    );
-    id
 }
 
 /// Given a "latitude" and "longitude" on a unit sphere, return x,y,z

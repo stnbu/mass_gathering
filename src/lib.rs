@@ -1,13 +1,15 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
-use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_rapier3d::prelude::{Collider, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::f32::consts::PI;
 
 pub mod ui;
 pub use ui::*;
 pub mod physics;
 pub use physics::*;
+pub mod inhabitant;
 pub mod networking;
 pub mod systems;
 
@@ -16,6 +18,7 @@ pub struct GameConfig {
     pub nickname: String,
     pub connected: bool,
     pub autostart: bool,
+    pub standalone: bool,
 }
 
 pub struct Spacetime;
@@ -70,8 +73,14 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
+        app.add_event::<inhabitant::ClientRotation>();
         app.init_resource::<GameConfig>();
         app.add_state(GameState::Stopped);
+        app.add_system_set(
+            SystemSet::on_update(GameState::Running)
+                .with_system(inhabitant::control)
+                .with_system(inhabitant::rotate_client_inhabited_mass),
+        );
     }
 }
 
@@ -120,4 +129,108 @@ pub fn radius_to_mass(radius: f32) -> f32 {
 
 pub fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
+}
+
+pub fn set_window_title(
+    game_state: Res<State<GameState>>,
+    mut windows: ResMut<Windows>,
+    game_config: Res<GameConfig>,
+) {
+    let title = if game_config.standalone {
+        "Mass Gathering".to_string()
+    } else {
+        let nickname = if game_config.nickname.is_empty() {
+            "<unset>"
+        } else {
+            &game_config.nickname
+        };
+        format!("Client[{:?}] : nick={nickname}", game_state.current())
+    };
+    windows.primary_mut().set_title(title);
+}
+
+#[derive(Component)]
+pub struct MassID(pub u64);
+
+#[derive(Resource, Default, Clone)]
+pub struct MassIDToEntity(HashMap<u64, Entity>);
+
+#[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct MassInitData {
+    pub inhabitable: bool,
+    pub position: Vec3,
+    pub velocity: Vec3,
+    pub color: Color,
+    pub radius: f32,
+}
+
+#[derive(Default, Serialize, Deserialize, Resource, Debug)]
+pub struct InitData {
+    pub masses: HashMap<u64, MassInitData>,
+}
+
+impl Clone for InitData {
+    fn clone(&self) -> Self {
+        let mut masses = HashMap::new();
+        masses.extend(&self.masses);
+        Self { masses }
+    }
+
+    fn clone_from(&mut self, source: &Self) {
+        let mut masses = HashMap::new();
+        masses.extend(&source.masses);
+        self.masses = masses;
+    }
+}
+
+impl InitData {
+    fn init<'a>(
+        &mut self,
+        commands: &'a mut Commands,
+        meshes: &'a mut ResMut<Assets<Mesh>>,
+        materials: &'a mut ResMut<Assets<StandardMaterial>>,
+    ) -> MassIDToEntity {
+        let mut mass_to_entity_map = MassIDToEntity::default();
+        for (
+            &mass_id,
+            &MassInitData {
+                inhabitable,
+                position,
+                velocity,
+                color,
+                radius,
+            },
+        ) in self.masses.iter()
+        {
+            let mut mass_commands = commands.spawn(PointMassBundle {
+                pbr: PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius,
+                        ..Default::default()
+                    })),
+                    material: materials.add(color.into()),
+                    transform: Transform::from_translation(position)
+                        .looking_at(Vec3::ZERO, Vec3::Y),
+                    ..Default::default()
+                },
+                momentum: Momentum {
+                    velocity,
+                    mass: radius_to_mass(radius),
+                    ..Default::default()
+                },
+                collider: Collider::ball(radius),
+                ..Default::default()
+            });
+            mass_commands.insert(MassID(mass_id));
+            if inhabitable {
+                mass_commands.insert(inhabitant::Inhabitable);
+                //
+                // FIXME
+                //
+                //don_inhabitant_garb(mass_entity, &mut commands, &mut meshes, &mut materials);
+            }
+            mass_to_entity_map.0.insert(mass_id, mass_commands.id());
+        }
+        mass_to_entity_map
+    }
 }

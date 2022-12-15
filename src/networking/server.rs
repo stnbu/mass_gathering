@@ -5,7 +5,7 @@ use bevy_renet::renet::{
 };
 use std::{net::UdpSocket, time::SystemTime};
 
-use crate::{networking::*, GameState};
+use crate::{networking::*, GameState, InitData};
 
 pub fn new_renet_server() -> RenetServer {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
@@ -34,8 +34,10 @@ pub fn populate_unassigned_masses(
     mut unassigned_masses: ResMut<UnassignedMasses>,
     init_data: Res<InitData>,
 ) {
-    for (mass_id, _) in init_data.inhabitable_masses.iter() {
-        unassigned_masses.0.push(*mass_id);
+    for (mass_id, mass_init_data) in init_data.masses.iter() {
+        if mass_init_data.inhabitable {
+            unassigned_masses.0.push(*mass_id);
+        }
     }
 }
 
@@ -119,7 +121,12 @@ pub fn handle_server_events(
                     if unanimous_autostart {
                         debug!("  two or more clients connected and all want to autostart.");
                     }
-                    let game_full = lobby.clients.len() == init_data.inhabitable_masses.len();
+                    let game_full = lobby.clients.len()
+                        == init_data
+                            .masses
+                            .iter()
+                            .filter(|(_, data)| data.inhabitable)
+                            .count();
                     if game_full {
                         debug!("  game has now reached max capacity.");
                     }

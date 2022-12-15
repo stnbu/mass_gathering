@@ -12,54 +12,15 @@ use std::{collections::HashMap, time::Duration};
 
 pub mod client;
 pub mod server;
-use crate::{systems, ui, ClientCore, Core, GameState, PhysicsConfig, Spacetime};
+use crate::{
+    set_window_title, systems, ui, ClientCore, Core, GameState, InitData, MassIDToEntity,
+    PhysicsConfig, Spacetime,
+};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,0)cs2@66#vxo0s5np{_";
 pub const PROTOCOL_ID: u64 = 23;
 pub const SERVER_ADDR: &str = "127.0.0.1";
 pub const PORT_NUMBER: u16 = 5737;
-
-#[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
-pub struct MassInitData {
-    pub position: Vec3,
-    pub velocity: Vec3,
-    pub color: Color,
-    pub radius: f32,
-}
-
-#[derive(Component)]
-pub struct MassID(pub u64);
-
-#[derive(Resource, Default)]
-pub struct MapMassIDToEntity(HashMap<u64, Entity>);
-
-#[derive(Default, Serialize, Deserialize, Resource, Debug)]
-pub struct InitData {
-    pub uninhabitable_masses: HashMap<u64, MassInitData>,
-    pub inhabitable_masses: HashMap<u64, MassInitData>,
-}
-
-impl Clone for InitData {
-    fn clone(&self) -> Self {
-        let mut uninhabitable_masses = HashMap::new();
-        uninhabitable_masses.extend(&self.uninhabitable_masses);
-        let mut inhabitable_masses = HashMap::new();
-        inhabitable_masses.extend(&self.inhabitable_masses);
-        Self {
-            uninhabitable_masses,
-            inhabitable_masses,
-        }
-    }
-
-    fn clone_from(&mut self, source: &Self) {
-        let mut uninhabitable_masses = HashMap::new();
-        uninhabitable_masses.extend(&source.uninhabitable_masses);
-        let mut inhabitable_masses = HashMap::new();
-        inhabitable_masses.extend(&source.inhabitable_masses);
-        self.uninhabitable_masses = uninhabitable_masses;
-        self.inhabitable_masses = inhabitable_masses;
-    }
-}
 
 pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
@@ -196,7 +157,7 @@ impl Plugin for FullGame {
     fn build(&self, app: &mut App) {
         app.add_plugin(Core);
         app.insert_resource(Lobby::default());
-        app.insert_resource(MapMassIDToEntity::default());
+        app.insert_resource(MassIDToEntity::default());
         match self {
             Self::Client => {
                 app.add_plugin(ClientCore);
@@ -205,11 +166,13 @@ impl Plugin for FullGame {
                 app.add_system_set(
                     SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
                 );
+
                 app.add_system_set(
                     SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu_screen),
                 );
                 app.add_system_set(
-                    SystemSet::on_update(GameState::Running).with_system(client::control),
+                    SystemSet::on_update(GameState::Running)
+                        .with_system(client::send_rotation_to_server),
                 );
 
                 app.add_plugin(RenetClientPlugin::default());
@@ -220,7 +183,7 @@ impl Plugin for FullGame {
                     client::send_client_messages.with_run_criteria(run_if_client_connected),
                 );
                 app.add_system(panic_on_renet_error);
-                app.add_system(client::set_window_title);
+                app.add_system(set_window_title);
             }
             Self::Server => {
                 app.add_plugin(CorePlugin::default());
@@ -238,11 +201,6 @@ impl Plugin for FullGame {
                 app.add_plugin(ClientCore);
                 app.add_plugin(Spacetime);
                 app.insert_resource(systems::testing_no_unhinhabited());
-                //app.add_startup_system(draw_the_masses);
-                //app.add_startup_system(create_camera_and_attach);
-                app.add_system_set(
-                    SystemSet::on_update(GameState::Running).with_system(client::control), // relocate `control`
-                );
             }
         }
     }
@@ -251,6 +209,14 @@ impl Plugin for FullGame {
 #[derive(Component)]
 pub struct Garb;
 
+//
+// FIXME
+//
+fn setup_standalone(_commands: Commands) {}
+
+//
+// FIXME
+//
 pub fn don_inhabitant_garb<'a>(
     inhabitable_entity: Entity,
     commands: &'a mut Commands,
