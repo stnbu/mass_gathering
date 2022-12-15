@@ -3,7 +3,7 @@ use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{Collider, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::f32::consts::PI;
+use std::f32::consts::TAU;
 
 pub mod ui;
 pub use ui::*;
@@ -124,11 +124,11 @@ fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
 }
 
 pub fn radius_to_mass(radius: f32) -> f32 {
-    (4.0 / 3.0) * PI * radius.powf(3.0)
+    (2.0 / 3.0) * TAU * radius.powf(3.0)
 }
 
 pub fn mass_to_radius(mass: f32) -> f32 {
-    ((mass * (3.0 / 4.0)) / PI).powf(1.0 / 3.0)
+    ((mass * (3.0 / 2.0)) / TAU).powf(1.0 / 3.0)
 }
 
 pub fn set_window_title(
@@ -183,6 +183,9 @@ impl Clone for InitData {
     }
 }
 
+#[derive(Component)]
+pub struct Garb;
+
 impl InitData {
     fn init<'a>(
         &mut self,
@@ -223,11 +226,47 @@ impl InitData {
             });
             mass_commands.insert(MassID(mass_id));
             if inhabitable {
-                mass_commands.insert(inhabitant::Inhabitable);
-                //
-                // FIXME
-                //
-                //don_inhabitant_garb(mass_entity, &mut commands, &mut meshes, &mut materials);
+                mass_commands
+                    .insert(inhabitant::Inhabitable)
+                    .with_children(|child| {
+                        // barrel
+                        child
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Capsule {
+                                    radius: 0.05,
+                                    depth: 1.0,
+                                    ..Default::default()
+                                })),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_rotation(Quat::from_rotation_x(
+                                    TAU / 4.0,
+                                ))
+                                .with_translation(Vec3::Z * -1.5),
+                                ..Default::default()
+                            })
+                            .insert(Garb);
+                        // horizontal stabilizer
+                        child
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_translation(Vec3::Z * 0.5),
+                                ..Default::default()
+                            })
+                            .insert(Garb);
+                        // vertical stabilizer
+                        child
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_rotation(Quat::from_rotation_z(
+                                    TAU / 4.0,
+                                ))
+                                .with_translation(Vec3::Z * 0.5),
+                                ..Default::default()
+                            })
+                            .insert(Garb);
+                    });
             }
             mass_to_entity_map.0.insert(mass_id, mass_commands.id());
         }

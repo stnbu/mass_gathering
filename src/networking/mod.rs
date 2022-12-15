@@ -7,14 +7,13 @@ use bevy_renet::{
     run_if_client_connected, RenetClientPlugin, RenetServerPlugin,
 };
 use serde::{Deserialize, Serialize};
-use std::f32::consts::TAU;
 use std::{collections::HashMap, time::Duration};
 
 pub mod client;
 pub mod server;
 use crate::{
-    set_window_title, systems, ui, ClientCore, Core, GameState, InitData, MassIDToEntity,
-    PhysicsConfig, Spacetime,
+    inhabitant, set_window_title, systems, ui, ClientCore, Core, GameState, InitData,
+    MassIDToEntity, PhysicsConfig, Spacetime,
 };
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,0)cs2@66#vxo0s5np{_";
@@ -201,61 +200,43 @@ impl Plugin for FullGame {
                 app.add_plugin(ClientCore);
                 app.add_plugin(Spacetime);
                 app.insert_resource(systems::testing_no_unhinhabited());
+                app.add_startup_system(setup_standalone);
             }
         }
     }
 }
 
-#[derive(Component)]
-pub struct Garb;
-
 //
 // FIXME
 //
-fn setup_standalone(_commands: Commands) {}
-
-//
-// FIXME
-//
-pub fn don_inhabitant_garb<'a>(
-    inhabitable_entity: Entity,
-    commands: &'a mut Commands,
-    meshes: &'a mut ResMut<Assets<Mesh>>,
-    materials: &'a mut ResMut<Assets<StandardMaterial>>,
+fn setup_standalone(
+    init_data: Res<InitData>,
+    mut mass_to_entity_map: ResMut<MassIDToEntity>,
+    mut game_state: ResMut<State<GameState>>,
+    mut commands: Commands,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
 ) {
-    commands.entity(inhabitable_entity).with_children(|child| {
-        // barrel
-        child
-            .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Capsule {
-                    radius: 0.05,
-                    depth: 1.0,
-                    ..Default::default()
-                })),
-                material: materials.add(Color::WHITE.into()),
-                transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
-                    .with_translation(Vec3::Z * -1.5),
-                ..Default::default()
-            })
-            .insert(Garb);
-        // horizontal stabilizer
-        child
-            .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                material: materials.add(Color::WHITE.into()),
-                transform: Transform::from_translation(Vec3::Z * 0.5),
-                ..Default::default()
-            })
-            .insert(Garb);
-        // vertical stabilizer
-        child
-            .spawn(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                material: materials.add(Color::WHITE.into()),
-                transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
-                    .with_translation(Vec3::Z * 0.5),
-                ..Default::default()
-            })
-            .insert(Garb);
+    // FIXME: some logic overlap with ClientJoined handler
+    *mass_to_entity_map = init_data
+        .clone()
+        .init(&mut commands, &mut meshes, &mut materials);
+
+    let mut mass_id_ = None;
+    for (mass_id, mass_init_data) in init_data.masses.iter() {
+        if mass_init_data.inhabitable {
+            mass_id_ = Some(mass_id);
+            break;
+        }
+    }
+    let mass_id = mass_id_.unwrap();
+    let inhabited_mass = mass_to_entity_map.0.get(mass_id).unwrap();
+    let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
+    inhabited_mass_commands.insert(inhabitant::ClientInhabited);
+    inhabited_mass_commands.despawn_descendants();
+    debug!("Appending camera to inhabited mass {inhabited_mass:?}");
+    inhabited_mass_commands.with_children(|child| {
+        child.spawn(Camera3dBundle::default());
     });
+    let _ = game_state.overwrite_set(GameState::Running);
 }

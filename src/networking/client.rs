@@ -71,6 +71,7 @@ pub fn handle_client_events(
                     id, client_data
                 );
                 if id == client.client_id() {
+                    // FIXME: some logic overlap with setup_standalone
                     debug!("  fyi, that's me (I am {id})");
                     let inhabited_mass = mass_to_entity_map
                         .0
