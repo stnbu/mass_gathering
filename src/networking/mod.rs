@@ -12,7 +12,7 @@ use std::{collections::HashMap, time::Duration};
 
 pub mod client;
 pub mod server;
-use crate::{ui, ClientCore, Core, GameState, PhysicsConfig, Spacetime};
+use crate::{systems, ui, ClientCore, Core, GameState, PhysicsConfig, Spacetime};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,0)cs2@66#vxo0s5np{_";
 pub const PROTOCOL_ID: u64 = 23;
@@ -176,6 +176,7 @@ pub struct Lobby {
 pub enum FullGame {
     Client,
     Server,
+    Standalone,
 }
 
 use clap::Parser;
@@ -232,6 +233,16 @@ impl Plugin for FullGame {
                 app.add_plugin(RenetServerPlugin::default());
                 app.insert_resource(server::new_renet_server());
                 app.add_system(server::handle_server_events);
+            }
+            Self::Standalone => {
+                app.add_plugin(ClientCore);
+                app.add_plugin(Spacetime);
+                app.insert_resource(systems::testing_no_unhinhabited());
+                //app.add_startup_system(draw_the_masses);
+                //app.add_startup_system(create_camera_and_attach);
+                app.add_system_set(
+                    SystemSet::on_update(GameState::Running).with_system(client::control), // relocate `control`
+                );
             }
         }
     }
