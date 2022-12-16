@@ -1,4 +1,4 @@
-use bevy::{prelude::*};
+use bevy::prelude::*;
 use bevy_renet::{
     renet::{
         ChannelConfig, ReliableChannelConfig, RenetError, NETCODE_KEY_BYTES,
@@ -11,10 +11,7 @@ use std::{collections::HashMap, time::Duration};
 
 pub mod client;
 pub mod server;
-use crate::{
-    set_window_title, ui, Core, GameState, InitData,
-    PhysicsConfig, Spacetime,
-};
+use crate::{set_window_title, ui, Core, GameState, InitData, PhysicsConfig, Spacetime};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,3)cs2@66#vxo0s5np{_";
 pub const PROTOCOL_ID: u64 = 24;

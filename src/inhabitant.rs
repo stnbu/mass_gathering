@@ -51,16 +51,16 @@ pub fn control(
                 rotation.y -= nudge;
             }
             KeyCode::W => {
-                rotation.x += nudge;
+                rotation.z -= nudge;
             }
             KeyCode::S => {
-                rotation.x -= nudge;
-            }
-            KeyCode::Z => {
                 rotation.z += nudge;
             }
+            KeyCode::Z => {
+                rotation.x += nudge;
+            }
             KeyCode::X => {
-                rotation.z -= nudge;
+                rotation.x -= nudge;
             }
             _ => (),
         }

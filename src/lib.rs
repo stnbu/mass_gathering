@@ -111,6 +111,7 @@ pub struct FullGameStandalone;
 impl Plugin for FullGameStandalone {
     fn build(&self, app: &mut App) {
         app.add_plugin(Core);
+        app.insert_resource(PhysicsConfig { sims_per_frame: 1 });
         app.add_plugin(Spacetime);
         app.insert_resource(systems::testing_no_unhinhabited());
         app.add_startup_system(setup_standalone);
