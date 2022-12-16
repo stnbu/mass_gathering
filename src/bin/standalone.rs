@@ -1,7 +1,6 @@
 use bevy::prelude::*;
-
-use mass_gathering::networking::*;
+use mass_gathering::FullGameStandalone;
 
 fn main() {
-    App::new().add_plugin(FullGame::Standalone).run();
+    App::new().add_plugin(FullGameStandalone).run();
 }

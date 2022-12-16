@@ -73,21 +73,6 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
-        app.add_event::<inhabitant::ClientRotation>();
-        app.init_resource::<GameConfig>();
-        app.add_state(GameState::Stopped);
-        app.add_system_set(
-            SystemSet::on_update(GameState::Running)
-                .with_system(inhabitant::control)
-                .with_system(inhabitant::rotate_client_inhabited_mass),
-        );
-    }
-}
-
-pub struct ClientCore;
-
-impl Plugin for ClientCore {
-    fn build(&self, app: &mut App) {
         #[cfg(debug_assertions)]
         {
             debug!("DEBUG LEVEL LOGGING ! !");
@@ -104,11 +89,31 @@ impl Plugin for ClientCore {
             app.insert_resource(Msaa { samples: 4 });
             app.add_plugins(DefaultPlugins);
         }
+        app.insert_resource(MassIDToEntity::default());
+        app.add_event::<inhabitant::ClientRotation>();
+        app.init_resource::<GameConfig>();
+        app.add_state(GameState::Stopped);
+        app.add_system_set(
+            SystemSet::on_update(GameState::Running)
+                .with_system(inhabitant::control)
+                .with_system(inhabitant::rotate_client_inhabited_mass),
+        );
         app.add_plugin(EguiPlugin);
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
         app.add_startup_system(disable_rapier_gravity);
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+    }
+}
+
+pub struct FullGameStandalone;
+
+impl Plugin for FullGameStandalone {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(Core);
+        app.add_plugin(Spacetime);
+        app.insert_resource(systems::testing_no_unhinhabited());
+        app.add_startup_system(setup_standalone);
     }
 }
 
@@ -129,6 +134,38 @@ pub fn radius_to_mass(radius: f32) -> f32 {
 
 pub fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (3.0 / 2.0)) / TAU).powf(1.0 / 3.0)
+}
+
+fn setup_standalone(
+    init_data: Res<InitData>,
+    mut mass_to_entity_map: ResMut<MassIDToEntity>,
+    mut game_state: ResMut<State<GameState>>,
+    mut commands: Commands,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    // FIXME: some logic overlap with ClientJoined handler
+    *mass_to_entity_map = init_data
+        .clone()
+        .init(&mut commands, &mut meshes, &mut materials);
+
+    let mut mass_id_ = None;
+    for (mass_id, mass_init_data) in init_data.masses.iter() {
+        if mass_init_data.inhabitable {
+            mass_id_ = Some(mass_id);
+            break;
+        }
+    }
+    let mass_id = mass_id_.unwrap();
+    let inhabited_mass = mass_to_entity_map.0.get(mass_id).unwrap();
+    let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
+    inhabited_mass_commands.insert(inhabitant::ClientInhabited);
+    inhabited_mass_commands.despawn_descendants();
+    debug!("Appending camera to inhabited mass {inhabited_mass:?}");
+    inhabited_mass_commands.with_children(|child| {
+        child.spawn(Camera3dBundle::default());
+    });
+    let _ = game_state.overwrite_set(GameState::Running);
 }
 
 pub fn set_window_title(

@@ -1,10 +1,9 @@
-use bevy::prelude::*;
-
-use mass_gathering::networking::*;
+use bevy::prelude::App;
+use mass_gathering::networking::{ClientMessages, FullGameClient};
 
 fn main() {
     App::new()
         .add_event::<ClientMessages>()
-        .add_plugin(FullGame::Client)
+        .add_plugin(FullGameClient)
         .run();
 }

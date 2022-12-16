@@ -1,6 +1,6 @@
 [package]
 name = "mass_gathering"
-version = "0.23.333" # cameras now stick to mass!
+version = "0.24.0"
 edition = "2021"
 default-run = "server"
 
