@@ -60,6 +60,14 @@ pub fn handle_server_events(
                 let client_preferences = ClientPreferences::from_user_data(user_data);
                 debug!("Server got connection from new client {new_id} with preferences {client_preferences:?}");
 
+                let inhabited_mass_id = if let Some(id) = unassigned_masses.0.pop() {
+                    id
+                } else {
+                    warn!("Got connection from client {new_id} but we have no more uninhabited masses");
+                    // FIXME: send "error" back to client?
+                    return;
+                };
+
                 debug!("  sending initial data to client {new_id}");
                 let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
                 server.send_message(new_id, ServerChannel::ServerMessages, message);
@@ -85,7 +93,7 @@ pub fn handle_server_events(
 
                 let client_data = ClientData {
                     preferences: client_preferences,
-                    inhabited_mass_id: unassigned_masses.0.pop().unwrap(),
+                    inhabited_mass_id,
                 };
 
                 debug!("  now updating my lobby with ({new_id}, {client_data:?})");
