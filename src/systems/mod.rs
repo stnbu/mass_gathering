@@ -1,4 +1,4 @@
-use crate::{InitData, MassInitData};
+use crate::{InitData, MassInitData, MassMotion};
 
 use bevy::prelude::*;
 
@@ -28,8 +28,7 @@ pub fn old_rando() -> InitData {
             let velocity = velocity * side + tiny_vec_d;
             let mass_init_data = MassInitData {
                 inhabitable: false,
-                position,
-                velocity,
+                motion: MassMotion { position, velocity },
                 color,
                 radius,
             };
@@ -51,8 +50,7 @@ pub fn old_rando() -> InitData {
         let radius = 1.0;
         let mass_init_data = MassInitData {
             inhabitable: true,
-            position,
-            velocity,
+            motion: MassMotion { position, velocity },
             color,
             radius,
         };
@@ -108,8 +106,7 @@ pub fn cubic() -> InitData {
 
             let mass_init_data = MassInitData {
                 inhabitable: false,
-                position,
-                velocity,
+                motion: MassMotion { position, velocity },
                 color,
                 radius,
             };
@@ -133,8 +130,7 @@ pub fn cubic() -> InitData {
         let radius = 1.0;
         let mass_init_data = MassInitData {
             inhabitable: true,
-            position,
-            velocity,
+            motion: MassMotion { position, velocity },
             color,
             radius,
         };
@@ -154,8 +150,10 @@ pub fn testing_no_unhinhabited() -> InitData {
         0,
         MassInitData {
             inhabitable: true,
-            position: position * 1.0,
-            velocity: velocity * -1.0,
+            motion: MassMotion {
+                position: position * 1.0,
+                velocity: velocity * -1.0,
+            },
             color: Color::RED,
             radius,
         },
@@ -164,8 +162,10 @@ pub fn testing_no_unhinhabited() -> InitData {
         1,
         MassInitData {
             inhabitable: true,
-            position: position * -1.0,
-            velocity: velocity * 1.0,
+            motion: MassMotion {
+                position: position * -1.0,
+                velocity: velocity * 1.0,
+            },
             color: Color::BLUE,
             radius,
         },

@@ -10,6 +10,7 @@ pub mod ui;
 pub use ui::*;
 pub mod physics;
 pub use physics::*;
+pub mod events;
 pub mod inhabitant;
 pub mod networking;
 pub mod systems;
@@ -207,10 +208,15 @@ pub struct MassID(pub u64);
 pub struct MassIDToEntity(HashMap<u64, Entity>);
 
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
-pub struct MassInitData {
-    pub inhabitable: bool,
+pub struct MassMotion {
     pub position: Vec3,
     pub velocity: Vec3,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct MassInitData {
+    pub inhabitable: bool,
+    pub motion: MassMotion,
     pub color: Color,
     pub radius: f32,
 }
@@ -249,8 +255,7 @@ impl InitData {
             &mass_id,
             &MassInitData {
                 inhabitable,
-                position,
-                velocity,
+                motion: MassMotion { position, velocity },
                 color,
                 radius,
             },
