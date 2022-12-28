@@ -182,3 +182,12 @@ fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     let z = theta.cos();
     Vec3::new(x, y, z)
 }
+
+pub fn get_system(name: &str) -> impl (Fn() -> InitData) {
+    match name {
+        "old_rando" => old_rando,
+        "cubic" => cubic,
+        "testing_no_unhinhabited" => testing_no_unhinhabited,
+        _ => testing_no_unhinhabited,
+    }
+}

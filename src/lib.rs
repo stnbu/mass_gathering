@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{Collider, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32::consts::TAU;
@@ -106,14 +107,26 @@ impl Plugin for Core {
     }
 }
 
+#[derive(Parser, Resource)]
+pub struct StandaloneCliArgs {
+    #[arg(long, default_value_t = 1)]
+    pub speed: u32,
+    #[arg(long, default_value_t = ("").to_string())]
+    pub system: String,
+}
+
 pub struct FullGameStandalone;
 
 impl Plugin for FullGameStandalone {
     fn build(&self, app: &mut App) {
+        let StandaloneCliArgs { speed, system } = StandaloneCliArgs::parse();
+
         app.add_plugin(Core);
-        app.insert_resource(PhysicsConfig { sims_per_frame: 1 });
+        app.insert_resource(PhysicsConfig {
+            sims_per_frame: speed,
+        });
         app.add_plugin(Spacetime);
-        app.insert_resource(systems::old_rando());
+        app.insert_resource(systems::get_system(&system)());
         app.add_startup_system(setup_standalone);
     }
 }

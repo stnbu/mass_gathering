@@ -134,13 +134,15 @@ use clap::Parser;
 
 #[derive(Parser, Resource)]
 pub struct ClientCliArgs {
-    #[arg(short, long, default_value_t = ("NICK").to_string())]
+    #[arg(long, default_value_t = ("NICK").to_string())]
     pub nickname: String,
 }
 #[derive(Parser, Resource)]
 pub struct ServerCliArgs {
-    #[arg(short, long, default_value_t = 10)]
+    #[arg(long, default_value_t = 1)]
     pub speed: u32,
+    #[arg(long, default_value_t = ("").to_string())]
+    pub system: String,
 }
 
 pub struct FullGameClient;
