@@ -113,7 +113,7 @@ pub struct ClientData {
 }
 
 impl ClientPreferences {
-    fn to_netcode_user_data(&self) -> [u8; NETCODE_USER_DATA_BYTES] {
+    fn to_netcode_user_data(self) -> [u8; NETCODE_USER_DATA_BYTES] {
         let mut user_data = [0u8; NETCODE_USER_DATA_BYTES];
         user_data[0] = self.autostart as u8;
         user_data
