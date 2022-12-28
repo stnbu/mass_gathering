@@ -29,7 +29,7 @@ pub enum ServerChannel {
 }
 
 #[derive(Serialize, Deserialize, Component, Debug)]
-pub enum ServerMessages {
+pub enum ServerMessage {
     Init(InitData),
     SetGameState(GameState),
     ClientJoined { id: u64, client_data: ClientData },

@@ -26,7 +26,7 @@ pub fn handle_client_events(
     while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
-            ServerMessages::Init(init_data) => {
+            ServerMessage::Init(init_data) => {
                 debug!("Initializing with data receveid from server: {init_data:?}");
                 // FIXME: so much clone
                 *mass_to_entity_map = init_data
@@ -37,15 +37,15 @@ pub fn handle_client_events(
                 debug!("  sending message to server `{message:?}`");
                 client_messages.send(message);
             }
-            ServerMessages::SetGameState(new_game_state) => {
+            ServerMessage::SetGameState(new_game_state) => {
                 debug!("Server says set state to {game_state:?}. Setting state now.");
                 let _ = game_state.overwrite_set(new_game_state);
             }
-            ServerMessages::SetPhysicsConfig(physics_config) => {
+            ServerMessage::SetPhysicsConfig(physics_config) => {
                 debug!("Inserting resource received from server: {physics_config:?}");
                 commands.insert_resource(physics_config);
             }
-            ServerMessages::ClientRotation { id, rotation } => {
+            ServerMessage::ClientRotation { id, rotation } => {
                 assert!(
                     id != client.client_id(),
                     "Server sent me my own rotation event."
@@ -65,7 +65,7 @@ pub fn handle_client_events(
                     )
                 }
             }
-            ServerMessages::ClientJoined { id, client_data } => {
+            ServerMessage::ClientJoined { id, client_data } => {
                 debug!(
                     "Server says ({}, {:?}) connected. Updating my lobby.",
                     id, client_data

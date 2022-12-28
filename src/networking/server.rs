@@ -69,17 +69,17 @@ pub fn handle_server_events(
                 };
 
                 debug!("  sending initial data to client {new_id}");
-                let message = bincode::serialize(&ServerMessages::Init(init_data.clone())).unwrap();
+                let message = bincode::serialize(&ServerMessage::Init(init_data.clone())).unwrap();
                 server.send_message(new_id, ServerChannel::ServerMessages, message);
 
                 debug!("  sending physics config to {new_id}");
                 let message =
-                    bincode::serialize(&ServerMessages::SetPhysicsConfig(*physics_config)).unwrap();
+                    bincode::serialize(&ServerMessage::SetPhysicsConfig(*physics_config)).unwrap();
                 server.send_message(new_id, ServerChannel::ServerMessages, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
                 for (&existing_id, &client_data) in lobby.clients.iter() {
-                    let message = ServerMessages::ClientJoined {
+                    let message = ServerMessage::ClientJoined {
                         id: existing_id,
                         client_data,
                     };
@@ -98,7 +98,7 @@ pub fn handle_server_events(
                 debug!("  now updating my lobby with ({new_id}, {client_data:?})");
                 lobby.clients.insert(new_id, client_data);
                 debug!("  the server now has lobby {lobby:?}");
-                let message = ServerMessages::ClientJoined {
+                let message = ServerMessage::ClientJoined {
                     id: new_id,
                     client_data,
                 };
@@ -143,7 +143,7 @@ pub fn handle_server_events(
                     } else {
                         GameState::Waiting
                     };
-                    let set_state = ServerMessages::SetGameState(state);
+                    let set_state = ServerMessage::SetGameState(state);
                     let message = bincode::serialize(&set_state).unwrap();
                     if start {
                         debug!("Broadcasting {set_state:?}");
@@ -157,7 +157,7 @@ pub fn handle_server_events(
                     let _ = app_state.overwrite_set(state);
                 }
                 ClientMessages::Rotation(rotation) => {
-                    let client_rotation = ServerMessages::ClientRotation {
+                    let client_rotation = ServerMessage::ClientRotation {
                         id: client_id,
                         rotation,
                     };
