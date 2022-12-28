@@ -74,8 +74,7 @@ pub fn handle_server_events(
 
                 debug!("  sending physics config to {new_id}");
                 let message =
-                    bincode::serialize(&ServerMessages::SetPhysicsConfig(physics_config.clone()))
-                        .unwrap();
+                    bincode::serialize(&ServerMessages::SetPhysicsConfig(*physics_config)).unwrap();
                 server.send_message(new_id, ServerChannel::ServerMessages, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
