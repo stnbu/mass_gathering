@@ -39,16 +39,55 @@ pub struct FireProjectile {
 }
 
 use crate::MassMotion;
-use std::collections::HashMap;
-
-pub struct NewUniverse {
-    pub deadline: u64,
-    pub physics: HashMap<u64, MassMotion>,
-}
+use std::collections::{HashMap, HashSet};
 
 // * Not sent to server
 // * Eminates from server for all collisions
 pub struct ProjectileCollision {
     pub mass_id: u64,
     pub local_direction: Vec3,
+}
+
+pub struct UniverseReset {
+    pub id: u64,
+    pub deadline: u64,
+    pub physics: HashMap<u64, MassMotion>,
+    pub unacknowledged_clients: HashSet<u64>,
+}
+
+pub struct OpenUniverseResets {
+    pub resets: HashMap<u64, UniverseReset>,
+}
+
+use bevy::prelude::error;
+
+impl OpenUniverseResets {
+    pub fn acknowledge(&mut self, client_id: u64, reset_id: u64) {
+        if let Some(reset) = self.resets.get_mut(&reset_id) {
+            if !reset.unacknowledged_clients.remove(&client_id) {
+                error!(
+                    "Client {client_id} not among unacknowledged: {:?}; re-acknowledgement?",
+                    reset.unacknowledged_clients
+                );
+            }
+            if reset.unacknowledged_clients.is_empty() {
+                let msg = format!(
+                    "Tried to remove reset id {reset_id} from {:?} (non-existant key)",
+                    self.resets.keys()
+                );
+                self.resets.remove(&reset_id).expect(&msg);
+            }
+        } else {
+            panic!("{reset_id}: unknown reset id");
+        }
+    }
+    pub fn abort_on_overdue(&self) {
+        for (_, reset) in self.resets.iter() {
+            let now = 0_u64; // FIXME FIXME
+            let grace: u64 = 1_000_000_000;
+            if now - reset.deadline > grace {
+                panic!("Reset {} was more than {}ns overdue!", reset.id, grace);
+            }
+        }
+    }
 }
