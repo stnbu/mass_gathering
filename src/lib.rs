@@ -113,7 +113,7 @@ impl Plugin for FullGameStandalone {
         app.add_plugin(Core);
         app.insert_resource(PhysicsConfig { sims_per_frame: 1 });
         app.add_plugin(Spacetime);
-        app.insert_resource(systems::testing_no_unhinhabited());
+        app.insert_resource(systems::old_rando());
         app.add_startup_system(setup_standalone);
     }
 }

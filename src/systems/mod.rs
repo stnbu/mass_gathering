@@ -7,6 +7,11 @@ use std::f32::consts::TAU;
 
 /// Old rando from way back
 pub fn old_rando() -> InitData {
+    // FIXME: This a baad one: If we have a starting position or velocity of
+    // 0,0,0 we end up with NaN,NaN,NaN after a few frames. WHY?? -- we do not
+    // know. Tack this on to be sure :-/
+    let tiny_vec_d = Vec3::ONE * 0.000001;
+
     let mut init_data = InitData::default();
 
     let mut rng = rand::thread_rng();
@@ -19,8 +24,8 @@ pub fn old_rando() -> InitData {
         let radius = rf() + 2.0;
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
-            let position = position * side;
-            let velocity = velocity * side;
+            let position = position * side + tiny_vec_d;
+            let velocity = velocity * side + tiny_vec_d;
             let mass_init_data = MassInitData {
                 inhabitable: false,
                 position,
@@ -34,14 +39,14 @@ pub fn old_rando() -> InitData {
     }
     let inhabitable_distance = 70.0;
     for (x, y, z) in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
-        let velocity = Vec3::ZERO;
+        let velocity = Vec3::ZERO + tiny_vec_d;
         let color_tweak = match (x, y, z) {
             (1, 0, 0) => 1.0,
             (0, 1, 0) => 2.0,
             (0, 0, 1) => 3.0,
             _ => panic!("no!"),
         };
-        let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance;
+        let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance + tiny_vec_d;
         let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
         let radius = 1.0;
         let mass_init_data = MassInitData {
