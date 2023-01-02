@@ -1,5 +1,39 @@
 /// Hello there. I'm just getting started. These are not used; I'm knocking around ideas.
-use bevy::prelude::Vec3;
+use bevy::prelude::{App, EventReader, Plugin, SystemSet, Vec3};
+
+pub trait NetworkableSystemSet {
+    fn is_networked_game() -> bool;
+}
+
+#[derive(Hash, Eq, PartialEq, Clone, Debug)]
+enum NetworkState {
+    Waiting,
+    Connected,
+}
+
+#[derive(Hash, Eq, PartialEq, Clone, Debug)]
+enum GameType {
+    Standalone,
+    Networked(NetworkState),
+}
+
+pub struct GamePlugin;
+
+impl Plugin for GamePlugin {
+    fn build(&self, app: &mut App) {
+        app.add_system_set(
+            SystemSet::on_update(GameType::Networked(NetworkState::Connected)), // build
+        );
+    }
+}
+
+/*
+       app.add_system_set(
+           SystemSet::on_update(GameState::Running)
+               .with_system(inhabitant::control)
+               .with_system(inhabitant::rotate_client_inhabited_mass),
+       );
+*/
 
 // * Comes from user input
 // * I am updated immedately via bevy events.
@@ -91,3 +125,11 @@ impl OpenUniverseResets {
         }
     }
 }
+
+// use bevy::ecs::schedule::ShouldRun;
+// pub fn pending_universe_resets(resets: Option<EventReader<UniverseReset>>) -> ShouldRun {
+//     match resets {
+//         Some(reset) if !reset.is_empty() => ShouldRun::Yes,
+//         _ => ShouldRun::No,
+//     }
+// }
