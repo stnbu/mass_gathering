@@ -10,13 +10,17 @@ use crate::{networking::*, GameState, InitData};
 pub fn new_renet_server() -> RenetServer {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind(server_addr).unwrap();
-    let connection_config = server_connection_config();
     let server_config =
         ServerConfig::new(64, PROTOCOL_ID, server_addr, ServerAuthentication::Unsecure);
-    let current_time = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
-    RenetServer::new(current_time, server_config, connection_config, socket).unwrap()
+    RenetServer::new(
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap(),
+        server_config,
+        RenetConnectionConfig::default(),
+        socket,
+    )
+    .unwrap()
 }
 
 pub fn setup_physics(mut commands: Commands, cli_args: Res<ServerCliArgs>) {
@@ -70,12 +74,12 @@ pub fn handle_server_events(
 
                 debug!("  sending initial data to client {new_id}");
                 let message = bincode::serialize(&ServerMessage::Init(init_data.clone())).unwrap();
-                server.send_message(new_id, ServerChannel::ServerMessages, message);
+                server.send_message(new_id, CHANNEL, message);
 
                 debug!("  sending physics config to {new_id}");
                 let message =
                     bincode::serialize(&ServerMessage::SetPhysicsConfig(*physics_config)).unwrap();
-                server.send_message(new_id, ServerChannel::ServerMessages, message);
+                server.send_message(new_id, CHANNEL, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
                 for (&existing_id, &client_data) in lobby.clients.iter() {
@@ -115,7 +119,7 @@ pub fn handle_server_events(
     }
 
     for client_id in server.clients_id().into_iter() {
-        while let Some(message) = server.receive_message(client_id, ClientChannel::ClientMessages) {
+        while let Some(message) = server.receive_message(client_id, CHANNEL) {
             let message = bincode::deserialize(&message).unwrap();
             debug!("Received message from client: {message:?}");
             match message {
@@ -147,7 +151,7 @@ pub fn handle_server_events(
                     let message = bincode::serialize(&set_state).unwrap();
                     if start {
                         debug!("Broadcasting {set_state:?}");
-                        server.broadcast_message(ServerChannel::ServerMessages, message);
+                        server.broadcast_message(CHANNEL, message);
                     } else {
                         // FIXME: we have inconsistency/arbitrariness in 2nd arg choice (channel)
                         debug!("Replying to client {client_id} with {set_state:?}");
@@ -163,20 +167,9 @@ pub fn handle_server_events(
                     };
                     let message = bincode::serialize(&client_rotation).unwrap();
                     debug!("Broadcasting except to {client_id}: {client_rotation:?}");
-                    server.broadcast_message_except(
-                        client_id,
-                        ServerChannel::ServerMessages,
-                        message,
-                    );
+                    server.broadcast_message_except(client_id, CHANNEL, message);
                 }
             }
         }
-    }
-}
-
-pub fn server_connection_config() -> RenetConnectionConfig {
-    RenetConnectionConfig {
-        send_channels_config: ServerChannel::channels_config(),
-        ..Default::default()
     }
 }

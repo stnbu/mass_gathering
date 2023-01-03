@@ -23,7 +23,7 @@ pub fn handle_client_events(
     mut inhabitable_masses: Query<&mut Transform, With<Inhabitable>>,
     mut lobby: ResMut<Lobby>,
 ) {
-    while let Some(message) = client.receive_message(ServerChannel::ServerMessages) {
+    while let Some(message) = client.receive_message(CHANNEL) {
         let server_message = bincode::deserialize(&message).unwrap();
         match server_message {
             ServerMessage::Init(init_data) => {
@@ -112,29 +112,26 @@ pub fn send_client_messages(
 ) {
     for command in client_messages.iter() {
         let message = bincode::serialize(command).unwrap();
-        client.send_message(ClientChannel::ClientMessages, message);
-    }
-}
-
-pub fn client_connection_config() -> RenetConnectionConfig {
-    RenetConnectionConfig {
-        receive_channels_config: ServerChannel::channels_config(),
-        ..Default::default()
+        client.send_message(CHANNEL, message);
     }
 }
 
 pub fn new_renet_client(client_id: u64, client_preferences: ClientPreferences) -> RenetClient {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
-    let connection_config = client_connection_config();
-    let current_time = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .unwrap();
     let authentication = ClientAuthentication::Unsecure {
         client_id,
         protocol_id: PROTOCOL_ID,
         server_addr,
         user_data: Some(client_preferences.to_netcode_user_data()),
     };
-    RenetClient::new(current_time, socket, connection_config, authentication).unwrap()
+    RenetClient::new(
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap(),
+        socket,
+        RenetConnectionConfig::default(),
+        authentication,
+    )
+    .unwrap()
 }

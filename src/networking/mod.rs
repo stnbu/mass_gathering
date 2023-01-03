@@ -17,15 +17,12 @@ pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,3)cs2@66#vxo0s5
 pub const PROTOCOL_ID: u64 = 24;
 pub const SERVER_ADDR: &str = "127.0.0.1";
 pub const PORT_NUMBER: u16 = 5738;
+pub const CHANNEL: u8 = 0;
 
 pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
         panic!("{}", e);
     }
-}
-
-pub enum ServerChannel {
-    ServerMessages,
 }
 
 #[derive(Serialize, Deserialize, Component, Debug)]
@@ -37,52 +34,10 @@ pub enum ServerMessage {
     ClientRotation { id: u64, rotation: Quat },
 }
 
-impl From<ServerChannel> for u8 {
-    fn from(channel_id: ServerChannel) -> Self {
-        match channel_id {
-            ServerChannel::ServerMessages => 0,
-        }
-    }
-}
-
-impl ServerChannel {
-    pub fn channels_config() -> Vec<ChannelConfig> {
-        vec![ReliableChannelConfig {
-            channel_id: Self::ServerMessages.into(),
-            message_resend_time: Duration::from_millis(200),
-            ..Default::default()
-        }
-        .into()]
-    }
-}
-
 #[derive(Debug, Serialize, Deserialize, Component)]
 pub enum ClientMessages {
     Ready,
     Rotation(Quat),
-}
-
-pub enum ClientChannel {
-    ClientMessages,
-}
-
-impl From<ClientChannel> for u8 {
-    fn from(channel_id: ClientChannel) -> Self {
-        match channel_id {
-            ClientChannel::ClientMessages => 0,
-        }
-    }
-}
-
-impl ClientChannel {
-    pub fn channels_config() -> Vec<ChannelConfig> {
-        vec![ReliableChannelConfig {
-            channel_id: Self::ClientMessages.into(),
-            message_resend_time: Duration::ZERO,
-            ..Default::default()
-        }
-        .into()]
-    }
 }
 
 pub fn to_nick(id: u64) -> String {
