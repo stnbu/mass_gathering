@@ -1,13 +1,10 @@
 use bevy::prelude::*;
 use bevy_renet::{
-    renet::{
-        ChannelConfig, ReliableChannelConfig, RenetError, NETCODE_KEY_BYTES,
-        NETCODE_USER_DATA_BYTES,
-    },
+    renet::{RenetError, NETCODE_KEY_BYTES, NETCODE_USER_DATA_BYTES},
     run_if_client_connected, RenetClientPlugin,
 };
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, time::Duration};
+use std::collections::HashMap;
 
 pub mod client;
 pub mod server;
