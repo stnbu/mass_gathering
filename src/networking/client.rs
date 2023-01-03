@@ -95,17 +95,6 @@ pub fn handle_client_events(
     }
 }
 
-pub fn send_rotation_to_server(
-    mut rotation_events: EventReader<ClientRotation>,
-    mut client_messages: EventWriter<ClientMessages>,
-) {
-    for ClientRotation(rotation) in rotation_events.iter() {
-        let message = ClientMessages::Rotation(*rotation);
-        debug!("  sending message to server `{message:?}`");
-        client_messages.send(message);
-    }
-}
-
 pub fn send_client_messages(
     mut client_messages: EventReader<ClientMessages>,
     mut client: ResMut<RenetClient>,

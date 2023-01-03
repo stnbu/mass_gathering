@@ -1,8 +1,9 @@
+use crate::networking::ClientMessages;
 use bevy::{
     math::EulerRot,
     prelude::{
-        Component, EventReader, EventWriter, Input, KeyCode, Quat, Query, Res, Time, Transform,
-        Vec3, With,
+        debug, Component, EventReader, EventWriter, Input, KeyCode, Quat, Query, Res, Time,
+        Transform, Vec3, With,
     },
 };
 use std::f32::consts::TAU;
@@ -31,6 +32,7 @@ pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut rotation_events: EventWriter<ClientRotation>,
+    mut client_messages: EventWriter<ClientMessages>,
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -71,5 +73,9 @@ pub fn control(
         let [x, y, z] = (rotation * keys_scaling * frame_time).to_array();
         let rotation = Quat::from_euler(EulerRot::XYZ, x, y, z);
         rotation_events.send(ClientRotation(rotation));
+
+        let message = ClientMessages::Rotation(rotation);
+        debug!("  sending message to server `{message:?}`");
+        client_messages.send(message);
     }
 }
