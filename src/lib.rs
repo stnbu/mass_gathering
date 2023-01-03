@@ -10,7 +10,6 @@ pub mod ui;
 pub use ui::*;
 pub mod physics;
 pub use physics::*;
-pub mod events;
 pub mod inhabitant;
 pub mod networking;
 pub mod systems;
