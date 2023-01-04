@@ -1,5 +1,11 @@
 # Mass Gathering [WIP]
 
+A 3D gravity-based game where you (a planet) try to bring about collisions with other planets with momentum-altering missiles.
+
+Here is a pretty looking video of three clients and one server (top-right window, camera at the origin). The clients are each represented by one of the "planets" you can see and they can gimbal and roll with keyboard input, hence the view of the universe reflects this. Log output to the far left...
+
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/f4SgXuvTqWI/0.jpg)](https://www.youtube.com/watch?v=f4SgXuvTqWI)
+
 _A WASM-capable, 3D, n-body simulation game written in [Rust](https://www.rust-lang.org/) using [Bevy](https://bevyengine.org/)._
 
 ## Gameplay
@@ -35,33 +41,3 @@ No special toolchain or manual setup is required. Just...
 1. `cd` to the root directory of the repository and execute the command `cargo run`.
 
 Please file a [GitHub Issue](https://github.com/stnbu/mass_gathering/issues/new/choose) if you have difficulty compiling the project.
-
-### Notes
-
-> `*`   - Masses combine, radius grows in proportion.
->
-> `**`  - Oops. According to the above gameplay, _some particular player_ will own the largest planet,
->         meaning that the winner is pre-determined long before the game ends over.
-
-
----
-
-## Ideas/Misc
-
-* Firmament, with a few stars at least
-* Snow: render some fuzzy tiny specs only in-view, de-allocate when they disappear. Maybe give a bit of Brownian motion.
-* The game:
-  * ✅ They merge when they touch
-  * ✅ You have infinite thrust, infinite fuel and can thrust fore and aft
-  * You can _nudge_ anything with one unit. You have a 10 nudge capacity that is replenished one nudge every 3 seconds
-  * If you strike a ball, you reflect
-  * You get "ownership" of anything you nudge
-  * Ownership is contagious:
-    * If a thing you own contacts an unowned thing, you get ownership of unowned thing
-    * if a thing you own contacts a thing owned by ANOTHER PLAYER, ownership is determined by mass (more massive body gets total ownership.)
-
-* Time:
-  * Since you and the other players don't _directly_ interact, you might be able to have different perceptions of time. You go slow,
-  they go fast. [actually...not the case? weird. Depends on whether/when planets are fired upon.]
-  * If sharing a common "rate" for the passage of time, player 1 could set a min/max and player 2 could have a separate min/max, and the
-  "speed" at which time passes could stay where its bounded by both. For example `[....m1.m2.....[T]..M1....M2.....]` (obvious, yes?)
