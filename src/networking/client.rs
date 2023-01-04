@@ -4,7 +4,7 @@ use std::collections::HashSet;
 use std::{net::UdpSocket, time::SystemTime};
 
 use crate::{
-    inhabitant::{ClientInhabited, ClientRotation, Inhabitable},
+    inhabitant::{ClientInhabited, Inhabitable},
     networking::*,
     GameState, MassIDToEntity,
 };
