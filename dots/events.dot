@@ -1,0 +1,26 @@
+digraph Q {
+
+  node [shape=record];
+
+
+  nd_1   [label = "User Input"];
+  nd_2   [label = "Fire Event"];
+  nd_3_a [label = "Rotate Event"];
+  nd_3_l [label = "Simulation Reset"];
+  nd_3   [label = "Route Fire Event"];
+  nd_3_r [label = "Route Rotate Event"];
+  nd_4   [label = "Simulation"];
+
+
+  nd_3_a -> nd_3_r;
+  nd_1 -> nd_2 -> nd_3 -> nd_4;
+
+  subgraph cluster_R {
+
+    {rank=same nd_3_l nd_3 nd_3_r}
+
+    nd_3_l -> nd_3 -> nd_3_r [color=grey arrowhead=none];
+
+  }
+
+}
