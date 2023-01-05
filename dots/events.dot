@@ -1,7 +1,5 @@
 digraph Q {
-
   node [shape=record];
-
 
   user_input   [label = "User Input"];
   fire_event   [label = "Fire Event"];
@@ -11,6 +9,14 @@ digraph Q {
   route_rotate [label = "Route Rotate Event"];
   my_simulation   [label = "My Simulation"];
   their_simulation   [label = "Their Simulation"];
+
+  my_physics [label = "Physics"];
+  their_physics [label = "Physics"];
+
+  my_physics -> my_simulation;
+  my_simulation -> my_physics;
+  their_physics -> their_simulation;
+  their_simulation -> their_physics;
 
   user_input -> fire_event -> route_fire -> my_simulation;
   user_input -> rotate_event -> route_rotate;
