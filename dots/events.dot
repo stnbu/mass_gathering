@@ -3,23 +3,23 @@ digraph Q {
   node [shape=record];
 
 
-  nd_1   [label = "User Input"];
-  nd_2   [label = "Fire Event"];
-  nd_3_a [label = "Rotate Event"];
-  nd_3_l [label = "Simulation Reset"];
-  nd_3   [label = "Route Fire Event"];
-  nd_3_r [label = "Route Rotate Event"];
-  nd_4   [label = "Simulation"];
+  user_input   [label = "User Input"];
+  fire_event   [label = "Fire Event"];
+  rotate_event [label = "Rotate Event"];
+  simulation_reset [label = "Simulation Reset"];
+  route_fire   [label = "Route Fire Event"];
+  route_rotate [label = "Route Rotate Event"];
+  simulation   [label = "Simulation"];
 
 
-  nd_3_a -> nd_3_r;
-  nd_1 -> nd_2 -> nd_3 -> nd_4;
+  rotate_event -> route_rotate;
+  user_input -> fire_event -> route_fire -> simulation;
 
-  subgraph cluster_R {
+  subgraph server {
 
-    {rank=same nd_3_l nd_3 nd_3_r}
+    {rank=same simulation_reset route_fire route_rotate}
 
-    nd_3_l -> nd_3 -> nd_3_r [color=grey arrowhead=none];
+    simulation_reset -> route_fire -> route_rotate [color=grey arrowhead=none];
 
   }
 
