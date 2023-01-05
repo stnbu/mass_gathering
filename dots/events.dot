@@ -17,11 +17,7 @@ digraph Q {
   rotate_event -> simulation;
 
   subgraph cluster_server {
-
     {rank=same simulation_reset route_fire route_rotate}
-
-    simulation_reset -> route_fire -> route_rotate [color=grey arrowhead=none];
-
   }
 
 }
