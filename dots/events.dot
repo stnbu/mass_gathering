@@ -11,9 +11,10 @@ digraph Q {
   route_rotate [label = "Route Rotate Event"];
   simulation   [label = "Simulation"];
 
-
   user_input -> fire_event -> route_fire -> simulation;
   user_input -> rotate_event -> route_rotate -> simulation;
+
+  rotate_event -> simulation;
 
   subgraph cluster_server {
 
