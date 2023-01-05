@@ -9,12 +9,12 @@ digraph Q {
   simulation_reset [label = "Simulation Reset"];
   route_fire   [label = "Route Fire Event"];
   route_rotate [label = "Route Rotate Event"];
-  simulation   [label = "Simulation"];
+  my_simulation   [label = "My Simulation"];
 
-  user_input -> fire_event -> route_fire -> simulation;
-  user_input -> rotate_event -> route_rotate -> simulation;
+  user_input -> fire_event -> route_fire -> my_simulation;
+  user_input -> rotate_event -> route_rotate -> my_simulation;
 
-  rotate_event -> simulation;
+  rotate_event -> my_simulation;
 
   subgraph cluster_server {
     {rank=same simulation_reset route_fire route_rotate}
