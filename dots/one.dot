@@ -2,18 +2,29 @@ digraph Q {
   node [shape=record];
 
   user_input   [label = "User Input"];
-  nd_2   [label = "Node 2"];
-  nd_3_a [label = "Above Right Node 3"];
-  nd_3_l [label = "Left of Node 3"];
-  nd_3   [label = "Node 3"];
-  nd_3_r [label = "Right of Node 3"];
-  nd_4   [label = "Node 4"];
+  rotate   [label = "Rotate"];
+  hot   [label = "Hot"];
+  fire [label = "Fire"];
+  simulation [label = "Simulation"]
 
-  nd_3_a -> nd_3_r;
-  user_input -> nd_2 -> nd_3 -> nd_4;
+  user_input -> rotate;
+  user_input -> hot;
+  user_input -> fire;
 
-  subgraph cluster_R {
-    {rank=same nd_3_l nd_3 nd_3_r}
-    nd_3_l -> nd_3 -> nd_3_r [color=grey arrowhead=none];
+  rotate -> user_input;
+  hot -> user_input;
+  
+  route_rotate [label = "rot"];
+  route_fire [label = "fir"];
+
+  rotate -> route_rotate;
+  fire -> route_fire;
+
+  route_rotate -> simulation;
+  route_fire -> simulation;
+
+  subgraph server {
+    //{rank=same route_rotate route_fire}
+    route_rotate -> route_fire [color=grey arrowhead=none];
   }
 }
