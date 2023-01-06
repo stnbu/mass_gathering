@@ -9,18 +9,20 @@ digraph events {
   route_rotate [label = "Route Rotate Event"];
   simulation   [label = "Simulation"];
   broadcast    [label = "Broadcast"];
-
+  broadcast_except    [label = "Broadcast Except Self"];
   collision_event [label = "Collision Event"];
 
   physics [label = "Physics"];
 
   physics -> simulation [dir=both];
 
-  user_input -> fire_event -> route_fire -> simulation;
   user_input -> rotate_event -> route_rotate;
-
+  user_input -> fire_event -> route_fire -> broadcast;
   rotate_event -> simulation;
-  simulation_reset -> simulation;
+  simulation_reset -> broadcast;
+  broadcast -> simulation;
+
+  route_rotate -> broadcast_except;
 
   subgraph cluster_server {
 	  subgraph cluster_server_o {
