@@ -1,14 +1,13 @@
 use bevy::{app::ScheduleRunnerPlugin, prelude::*, time::TimePlugin};
 use bevy_renet::RenetServerPlugin;
 use clap::Parser;
-use mass_gathering::{inhabitant, networking::*, systems::get_system, GameConfig, GameState};
+use mass_gathering::{networking::*, systems::get_system, GameConfig, GameState};
 
 fn main() {
     let args = ServerCliArgs::parse();
     let system = args.system.clone();
     App::new()
         .insert_resource(Lobby::default())
-        .add_event::<inhabitant::ClientRotation>()
         .init_resource::<GameConfig>()
         .add_state(GameState::Stopped)
         .add_plugin(CorePlugin::default())
