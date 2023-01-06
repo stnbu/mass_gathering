@@ -20,6 +20,7 @@ digraph events {
   user_input -> fire_event -> route_fire -> broadcast;
   rotate_event -> simulation;
   simulation_reset -> broadcast;
+  collision_event -> broadcast;
   broadcast -> simulation;
 
   route_rotate -> broadcast_except;
