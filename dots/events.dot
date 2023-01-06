@@ -8,8 +8,7 @@ digraph events {
   route_fire   [label = "Route Fire Event"];
   route_rotate [label = "Route Rotate Event"];
   simulation   [label = "Simulation"];
-  broadcast    [label = "Broadcast"];
-  broadcast_except    [label = "Broadcast Except Self"];
+  broadcast_except    [label = "Broadcast Others"];
   collision_event [label = "Collision Event"];
   hot_event [label = "Hot Event"];
 
@@ -18,11 +17,10 @@ digraph events {
   physics -> simulation [dir=both];
 
   user_input -> rotate_event -> route_rotate;
-  user_input -> fire_event -> route_fire -> broadcast;
+  user_input -> fire_event -> route_fire -> simulation;
   rotate_event -> simulation;
-  simulation_reset -> broadcast;
-  collision_event -> broadcast;
-  broadcast -> simulation;
+  simulation_reset -> simulation;
+  collision_event -> simulation;
 
   route_rotate -> broadcast_except;
 
