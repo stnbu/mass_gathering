@@ -7,28 +7,28 @@ digraph events {
   simulation_reset [label = "Simulation Reset"];
   route_fire   [label = "Route Fire Event"];
   route_rotate [label = "Route Rotate Event"];
-  my_simulation   [label = "My Simulation"];
-  their_simulation   [label = "Their Simulation"];
+  simulation   [label = "Simulation"];
+  broadcast    [label = "Broadcast"];
 
-  my_physics [label = "Physics"];
-  their_physics [label = "Physics"];
+  collision_event [label = "Collision Event"];
 
-  my_physics -> my_simulation [dir=both];
-  their_physics -> their_simulation [dir=both];
-  {rank=same my_physics their_physics }
+  physics [label = "Physics"];
 
-  user_input -> fire_event -> route_fire -> my_simulation;
-  route_fire -> their_simulation;
+  physics -> simulation [dir=both];
+
+  user_input -> fire_event -> route_fire -> simulation;
   user_input -> rotate_event -> route_rotate;
 
-  rotate_event -> my_simulation;
-  simulation_reset -> my_simulation;
-  simulation_reset -> their_simulation;
-
-  route_rotate -> their_simulation;
+  rotate_event -> simulation;
+  simulation_reset -> simulation;
 
   subgraph cluster_server {
-    {rank=same simulation_reset route_fire route_rotate}
+	  subgraph cluster_server_o {
+		  {rank=same simulation_reset collision_event}
+	  }
+	  subgraph cluster_server_r {
+		  {rank=same route_fire route_rotate}
+	  }
   }
 
 }
