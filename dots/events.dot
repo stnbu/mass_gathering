@@ -1,4 +1,4 @@
-digraph Q {
+digraph events {
   node [shape=record];
 
   user_input   [label = "User Input"];
@@ -13,12 +13,12 @@ digraph Q {
   my_physics [label = "Physics"];
   their_physics [label = "Physics"];
 
-  my_physics -> my_simulation;
-  my_simulation -> my_physics;
-  their_physics -> their_simulation;
-  their_simulation -> their_physics;
+  my_physics -> my_simulation [dir=both];
+  their_physics -> their_simulation [dir=both];
+  {rank=same my_physics their_physics }
 
   user_input -> fire_event -> route_fire -> my_simulation;
+  route_fire -> their_simulation;
   user_input -> rotate_event -> route_rotate;
 
   rotate_event -> my_simulation;
