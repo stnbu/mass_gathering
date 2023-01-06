@@ -11,6 +11,7 @@ digraph events {
   broadcast    [label = "Broadcast"];
   broadcast_except    [label = "Broadcast Except Self"];
   collision_event [label = "Collision Event"];
+  hot_event [label = "Hot Event"];
 
   physics [label = "Physics"];
 
@@ -25,11 +26,28 @@ digraph events {
 
   route_rotate -> broadcast_except;
 
+  subgraph cluster_client {
+	  label = "Client";
+	  user_input;
+	  physics;
+	  simulation;
+	  subgraph cluster_events {
+		  label = "Events";
+		  fire_event;
+		  rotate_event;
+		  hot_event;
+	  }
+	  hot_event -> simulation;
+  }
+
   subgraph cluster_server {
+	  label = "Server";
 	  subgraph cluster_server_o {
+		  label = "originating";
 		  {rank=same simulation_reset collision_event}
 	  }
 	  subgraph cluster_server_r {
+		  label = "routed";
 		  {rank=same route_fire route_rotate}
 	  }
   }
