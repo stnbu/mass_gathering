@@ -51,10 +51,9 @@ pub fn handle_despawn_mass(
 }
 
 pub fn merge_masses(
-    mut mass_query: Query<(&Transform, &mut Momentum, Entity)>,
+    mut mass_query: Query<(&mut Transform, &mut Momentum, Entity)>,
     inhabitant_query: Query<Entity, With<Inhabitable>>,
     mut mass_events: EventReader<MassCollisionEvent>,
-    mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
     for MassCollisionEvent(e0, e1) in mass_events.iter() {
@@ -71,9 +70,6 @@ pub fn merge_masses(
             None
         };
 
-        // FIXME: We have write access to `Momentum` and yet we update
-        // `delta_v` via an event. Just update it here? Should `DeltaEvent`
-        // even have a `delta_v` field?
         if let Ok([p0, p1]) = mass_query.get_many_mut([*e0, *e1]) {
             let (mut major, mut minor) = if p0.1.mass > p1.1.mass {
                 (p0, p1)
@@ -120,9 +116,6 @@ pub fn merge_masses(
                 "Directly setting mass of major mass {:?} to {combined_mass:?}",
                 major.2
             );
-            // Maybe increment mass via an event to?
-            major.1.mass = combined_mass;
-            let entity = major.2;
 
             let weighted_midpoint =
                 ((major_factor * major.0.translation) + (minor_factor * minor.0.translation)) / 2.0;
@@ -139,14 +132,13 @@ pub fn merge_masses(
             } else {
                 major_factor.powf(-1.0 / 3.0)
             };
-            let event = DeltaEvent {
-                entity,
-                delta_p,
-                delta_v,
-                delta_s,
-            };
-            debug!("Sending event: {event:?}");
-            delta_events.send(event);
+
+            debug!("Updating major mass {:?}", major.2);
+            major.1.velocity += delta_v;
+            major.1.mass = combined_mass;
+            major.0.translation += delta_p;
+            major.0.scale *= delta_s;
+
             debug!("Signaling despawn request for minor mass {:?}", minor.2);
             despawn_mass_events.send(DespawnMassEvent(minor.2));
         }
@@ -183,22 +175,13 @@ pub struct Momentum {
     pub mass: f32,
 }
 
-#[derive(Debug)]
-pub struct DeltaEvent {
-    pub entity: Entity,
-    pub delta_p: Vec3,
-    pub delta_v: Vec3,
-    pub delta_s: f32,
-}
-
-pub fn signal_freefall_delta(
-    mass_query: Query<(Entity, &Transform, &Momentum)>,
-    time: Res<Time>,
+pub fn freefall(
+    mut masses_query: Query<(Entity, &mut Transform, &mut Momentum)>,
     physics_config: Res<PhysicsConfig>,
-    mut delta_events: EventWriter<DeltaEvent>,
+    time: Res<Time>,
 ) {
     let dt = time.delta_seconds();
-    let mut masses = mass_query
+    let mut masses = masses_query
         .iter()
         .map(|t| (t.0, t.1.translation, t.2.mass, t.2.velocity))
         .collect::<Vec<_>>();
@@ -215,40 +198,25 @@ pub fn signal_freefall_delta(
                 acceleration + grav_acc * 0.001
             })
         });
-        // What would happen if each pass re-re-randomized the order of masses? Good?
-        // Actually, ordering by mass might be a thing too.
         masses = masses
             .iter()
             .zip(accelerations)
-            .map(|((entity, translation, mass, velocity), acceleration)| {
-                let delta_p = *velocity * dt;
-                let delta_v = if *mass == 0.0 {
-                    Vec3::ZERO
-                } else {
-                    acceleration * dt / *mass
-                };
-                let delta_s = 1.0;
-                delta_events.send(DeltaEvent {
-                    entity: *entity,
-                    delta_p,
-                    delta_v,
-                    delta_s,
-                });
-                (*entity, *translation + delta_p, *mass, *velocity + delta_v)
+            .map(|((entity, translation, mass, velocity), force)| {
+                (
+                    *entity,
+                    *translation + *velocity * dt,
+                    *mass,
+                    *velocity + (force * dt) / *mass,
+                )
             })
             .collect::<Vec<_>>();
     }
-}
 
-pub fn handle_freefall(
-    mut mass_query: Query<(&mut Transform, &mut Momentum)>,
-    mut delta_events: EventReader<DeltaEvent>,
-) {
-    for event in delta_events.iter() {
-        if let Ok((mut transform, mut momentum)) = mass_query.get_mut(event.entity) {
-            transform.translation += event.delta_p;
-            momentum.velocity += event.delta_v;
-            transform.scale *= event.delta_s;
+    for (entity, translation, mass, velocity) in masses.iter() {
+        if let Ok((_, mut transform, mut momentum)) = masses_query.get_mut(*entity) {
+            transform.translation = *translation;
+            momentum.velocity = *velocity;
+            momentum.mass = *mass;
         }
     }
 }

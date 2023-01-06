@@ -56,14 +56,12 @@ impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::BLACK))
             .init_resource::<PhysicsConfig>()
-            .add_event::<DeltaEvent>()
             .add_event::<MassCollisionEvent>()
             .add_event::<DespawnMassEvent>()
             .add_system_set(
                 SystemSet::on_update(GameState::Running)
                     .with_system(handle_despawn_mass)
-                    .with_system(signal_freefall_delta.before(handle_despawn_mass))
-                    .with_system(handle_freefall.before(handle_despawn_mass))
+                    .with_system(freefall.before(handle_despawn_mass))
                     .with_system(handle_mass_collisions.before(handle_despawn_mass))
                     .with_system(merge_masses.before(handle_despawn_mass)),
             );
