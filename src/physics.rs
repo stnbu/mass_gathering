@@ -144,7 +144,6 @@ pub fn merge_masses(
                 delta_p,
                 delta_v,
                 delta_s,
-                force_ro: Vec3::ZERO,
             };
             debug!("Sending event: {event:?}");
             delta_events.send(event);
@@ -182,7 +181,6 @@ impl Default for PointMassBundle {
 pub struct Momentum {
     pub velocity: Vec3,
     pub mass: f32,
-    pub force_ro: Vec3,
 }
 
 #[derive(Debug)]
@@ -191,7 +189,6 @@ pub struct DeltaEvent {
     pub delta_p: Vec3,
     pub delta_v: Vec3,
     pub delta_s: f32,
-    pub force_ro: Vec3,
 }
 
 pub fn signal_freefall_delta(
@@ -224,12 +221,11 @@ pub fn signal_freefall_delta(
             .iter()
             .zip(accelerations)
             .map(|((entity, translation, mass, velocity), acceleration)| {
-                let force = acceleration * dt;
                 let delta_p = *velocity * dt;
                 let delta_v = if *mass == 0.0 {
                     Vec3::ZERO
                 } else {
-                    force / *mass
+                    acceleration * dt / *mass
                 };
                 let delta_s = 1.0;
                 delta_events.send(DeltaEvent {
@@ -237,7 +233,6 @@ pub fn signal_freefall_delta(
                     delta_p,
                     delta_v,
                     delta_s,
-                    force_ro: force,
                 });
                 (*entity, *translation + delta_p, *mass, *velocity + delta_v)
             })
@@ -253,7 +248,6 @@ pub fn handle_freefall(
         if let Ok((mut transform, mut momentum)) = mass_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;
-            momentum.force_ro = event.force_ro * momentum.mass;
             transform.scale *= event.delta_s;
         }
     }
