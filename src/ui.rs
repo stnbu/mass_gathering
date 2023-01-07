@@ -1,10 +1,7 @@
-use crate::{networking::*};
+use crate::networking::*;
 use bevy::prelude::*;
 use bevy_egui::{
-    egui::{
-        style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText,
-        SidePanel,
-    },
+    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
     EguiContext,
 };
 
