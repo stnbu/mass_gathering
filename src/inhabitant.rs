@@ -1,9 +1,7 @@
 use crate::networking::{ClientMessages, CHANNEL};
 use bevy::{
     math::EulerRot,
-    prelude::{
-        Component, Input, KeyCode, Quat, Query, Res, ResMut, Time, Transform, Vec3, With,
-    },
+    prelude::{Component, Input, KeyCode, Quat, Query, Res, ResMut, Time, Transform, Vec3, With},
 };
 use bevy_renet::renet::RenetClient;
 use std::f32::consts::TAU;
