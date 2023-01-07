@@ -1,9 +1,9 @@
-use crate::{networking::*, GameConfig};
+use crate::{networking::*};
 use bevy::prelude::*;
 use bevy_egui::{
     egui::{
-        style::Margin, CentralPanel, Color32, FontFamily::Monospace, FontId, Frame, RichText,
-        SidePanel, TextEdit, TopBottomPanel,
+        style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText,
+        SidePanel,
     },
     EguiContext,
 };
