@@ -1,11 +1,11 @@
-use crate::networking::ClientMessages;
+use crate::networking::{ClientMessages, CHANNEL};
 use bevy::{
     math::EulerRot,
     prelude::{
-        debug, Component, EventWriter, Input, KeyCode, Quat, Query, Res, Time, Transform, Vec3,
-        With,
+        Component, Input, KeyCode, Quat, Query, Res, ResMut, Time, Transform, Vec3, With,
     },
 };
+use bevy_renet::renet::RenetClient;
 use std::f32::consts::TAU;
 
 #[derive(Component)]
@@ -18,7 +18,7 @@ pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut inhabitant_query: Query<&mut Transform, With<ClientInhabited>>,
-    mut client_messages: EventWriter<ClientMessages>,
+    mut client: ResMut<RenetClient>,
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -65,7 +65,6 @@ pub fn control(
         transform.rotate(rotation);
 
         let message = ClientMessages::Rotation(rotation);
-        debug!("  sending message to server `{message:?}`");
-        client_messages.send(message);
+        client.send_message(CHANNEL, bincode::serialize(&message).unwrap());
     }
 }

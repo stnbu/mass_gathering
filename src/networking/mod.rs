@@ -111,7 +111,6 @@ impl Plugin for FullGameClient {
         );
         app.add_plugin(RenetClientPlugin::default());
         app.add_system(client::handle_client_events.with_run_criteria(run_if_client_connected));
-        app.add_system(client::send_client_messages.with_run_criteria(run_if_client_connected));
         app.add_system(panic_on_renet_error);
     }
 }

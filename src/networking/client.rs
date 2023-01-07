@@ -17,7 +17,6 @@ pub fn handle_client_events(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut client: ResMut<RenetClient>,
-    mut client_messages: EventWriter<ClientMessages>,
     mut game_state: ResMut<State<GameState>>,
     mut mass_to_entity_map: ResMut<MassIDToEntity>,
     mut inhabitable_masses: Query<&mut Transform, With<Inhabitable>>,
@@ -35,7 +34,7 @@ pub fn handle_client_events(
                     .clone();
                 let message = ClientMessages::Ready;
                 debug!("  sending message to server `{message:?}`");
-                client_messages.send(message);
+                client.send_message(CHANNEL, bincode::serialize(&message).unwrap());
             }
             ServerMessage::SetGameState(new_game_state) => {
                 debug!("Server says set state to {game_state:?}. Setting state now.");
@@ -53,7 +52,6 @@ pub fn handle_client_events(
                 let mass_id = lobby.clients.get(&id).unwrap().inhabited_mass_id;
                 if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
                     if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
-                        debug!("Rotating inhabitable mass {id} by {rotation}");
                         mass_transform.rotate(rotation);
                     } else {
                         println!("query no!");
@@ -92,16 +90,6 @@ pub fn handle_client_events(
                 debug!("  client {} now has lobby {lobby:?}", client.client_id());
             }
         }
-    }
-}
-
-pub fn send_client_messages(
-    mut client_messages: EventReader<ClientMessages>,
-    mut client: ResMut<RenetClient>,
-) {
-    for command in client_messages.iter() {
-        let message = bincode::serialize(command).unwrap();
-        client.send_message(CHANNEL, message);
     }
 }
 
