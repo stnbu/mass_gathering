@@ -110,7 +110,12 @@ impl Plugin for FullGameClient {
             SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
         );
         app.add_plugin(RenetClientPlugin::default());
-        app.add_system(client::handle_client_events.with_run_criteria(run_if_client_connected));
+
+        app.add_system(client::send_messages_to_server.with_run_criteria(run_if_client_connected));
+        app.add_system(client::process_server_messages.with_run_criteria(run_if_client_connected));
+        app.add_system(
+            client::receive_messages_from_server.with_run_criteria(run_if_client_connected),
+        );
         app.add_system(panic_on_renet_error);
     }
 }

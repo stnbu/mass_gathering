@@ -89,6 +89,7 @@ impl Plugin for Core {
         }
         app.insert_resource(MassIDToEntity::default());
         app.add_event::<networking::ClientMessages>();
+        app.add_event::<networking::ServerMessage>();
         app.init_resource::<GameConfig>();
         app.add_state(GameState::Stopped);
         app.add_system_set(
