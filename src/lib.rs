@@ -98,7 +98,10 @@ impl Plugin for Core {
         app.add_plugin(EguiPlugin);
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
-        app.add_startup_system(disable_rapier_gravity);
+        app.insert_resource(RapierConfiguration {
+            gravity: Vec3::ZERO,
+            ..Default::default()
+        });
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
@@ -132,10 +135,6 @@ pub enum GameState {
     Running, // full networked game play
     Waiting, // waiting for clients
     Stopped, // initial state
-}
-
-fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
-    rapier_config.gravity = Vec3::ZERO;
 }
 
 pub fn radius_to_mass(radius: f32) -> f32 {
