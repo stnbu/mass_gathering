@@ -215,9 +215,6 @@ impl Clone for InitData {
     }
 }
 
-#[derive(Component)]
-pub struct Garb;
-
 impl InitData {
     fn init<'a>(
         &mut self,
@@ -261,42 +258,32 @@ impl InitData {
                     .insert(inhabitant::Inhabitable)
                     .with_children(|child| {
                         // barrel
-                        child
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Capsule {
-                                    radius: 0.05,
-                                    depth: 1.0,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_rotation(Quat::from_rotation_x(
-                                    TAU / 4.0,
-                                ))
+                        child.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Capsule {
+                                radius: 0.05,
+                                depth: 1.0,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
                                 .with_translation(Vec3::Z * -1.5),
-                                ..Default::default()
-                            })
-                            .insert(Garb);
+                            ..Default::default()
+                        });
                         // horizontal stabilizer
-                        child
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_translation(Vec3::Z * 0.5),
-                                ..Default::default()
-                            })
-                            .insert(Garb);
+                        child.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_translation(Vec3::Z * 0.5),
+                            ..Default::default()
+                        });
                         // vertical stabilizer
-                        child
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_rotation(Quat::from_rotation_z(
-                                    TAU / 4.0,
-                                ))
+                        child.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
                                 .with_translation(Vec3::Z * 0.5),
-                                ..Default::default()
-                            })
-                            .insert(Garb);
+                            ..Default::default()
+                        });
                     });
             }
             mass_to_entity_map.0.insert(mass_id, mass_commands.id());
