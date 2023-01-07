@@ -6,9 +6,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32::consts::TAU;
 
-pub mod ui;
-pub use ui::*;
 pub mod physics;
+pub mod ui;
 pub use physics::*;
 pub mod inhabitant;
 pub mod networking;
@@ -175,24 +174,6 @@ fn setup_standalone(
         child.spawn(Camera3dBundle::default());
     });
     let _ = game_state.overwrite_set(GameState::Running);
-}
-
-pub fn set_window_title(
-    game_state: Res<State<GameState>>,
-    mut windows: ResMut<Windows>,
-    game_config: Res<GameConfig>,
-) {
-    let title = if game_config.standalone {
-        "Mass Gathering".to_string()
-    } else {
-        let nickname = if game_config.nickname.is_empty() {
-            "<unset>"
-        } else {
-            &game_config.nickname
-        };
-        format!("Client[{:?}] : nick={nickname}", game_state.current())
-    };
-    windows.primary_mut().set_title(title);
 }
 
 #[derive(Component)]

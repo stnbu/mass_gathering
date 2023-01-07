@@ -3,12 +3,13 @@ use bevy_renet::{
     renet::{RenetError, NETCODE_KEY_BYTES, NETCODE_USER_DATA_BYTES},
     run_if_client_connected, RenetClientPlugin,
 };
+use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub mod client;
 pub mod server;
-use crate::{set_window_title, ui, Core, GameState, InitData, PhysicsConfig, Spacetime};
+use crate::{ui, Core, GameState, InitData, PhysicsConfig, Spacetime};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,3)cs2@66#vyo0s5np{x";
 pub const PROTOCOL_ID: u64 = 26;
@@ -83,12 +84,12 @@ pub struct Lobby {
     pub clients: HashMap<u64, ClientData>,
 }
 
-use clap::Parser;
-
 #[derive(Parser, Resource)]
 pub struct ClientCliArgs {
-    #[arg(long, default_value_t = ("NICK").to_string())]
+    #[arg(long)]
     pub nickname: String,
+    #[arg(long, default_value_t = true)]
+    pub autostart: bool,
 }
 #[derive(Parser, Resource)]
 pub struct ServerCliArgs {
@@ -105,19 +106,12 @@ impl Plugin for FullGameClient {
         app.add_plugin(Core);
         app.insert_resource(Lobby::default());
         app.add_plugin(Spacetime);
-        app.insert_resource(ClientCliArgs::parse());
         app.add_system_set(
             SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
         );
-
-        app.add_system_set(
-            SystemSet::on_update(GameState::Stopped).with_system(ui::client_menu_screen),
-        );
-
         app.add_plugin(RenetClientPlugin::default());
         app.add_system(client::handle_client_events.with_run_criteria(run_if_client_connected));
         app.add_system(client::send_client_messages.with_run_criteria(run_if_client_connected));
         app.add_system(panic_on_renet_error);
-        app.add_system(set_window_title);
     }
 }
