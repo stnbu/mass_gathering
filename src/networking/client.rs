@@ -31,11 +31,14 @@ pub fn process_server_messages(
     mut server_messages: EventReader<ServerMessage>,
     mut client_messages: EventWriter<ClientMessages>,
     mut lobby: ResMut<Lobby>,
+    client: Res<RenetClient>,
 ) {
+    let my_id = client.client_id();
     for message in server_messages.iter() {
+        debug!("Message for {my_id}");
         match message {
             ServerMessage::Init(init_data) => {
-                debug!("Initializing with data receveid from server: {init_data:?}");
+                debug!("  got `Init`. Initializing with data receveid from server: {init_data:?}");
                 // FIXME: so much clone
                 *mass_to_entity_map = init_data
                     .clone()
@@ -46,18 +49,19 @@ pub fn process_server_messages(
                 client_messages.send(message);
             }
             ServerMessage::SetGameState(new_game_state) => {
-                debug!("Server says set state to {game_state:?}. Setting state now.");
+                debug!("  got `SetGameState`. Setting state to {new_game_state:?}");
                 let _ = game_state.overwrite_set(*new_game_state);
             }
             ServerMessage::SetPhysicsConfig(physics_config) => {
-                debug!("Inserting resource received from server: {physics_config:?}");
+                debug!("  got `SetPhysicsConfig`. Inserting resource received from server: {physics_config:?}");
                 commands.insert_resource(*physics_config);
             }
             ServerMessage::ClientRotation { id, rotation } => {
+                debug!("  got `ClientRotation`. Rotating mass {id}");
                 let mass_id = lobby.clients.get(id).unwrap().inhabited_mass_id;
                 if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
                     if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
-                        debug!("Got rotate event for {id} corresponding to entity {entity:?}");
+                        debug!("    found corresponding entity {entity:?}");
                         mass_transform.rotate(*rotation);
                     } else {
                         error!("Entity map for mass ID {id} as entity {entity:?} which does not exist.");
@@ -70,28 +74,27 @@ pub fn process_server_messages(
                 }
             }
             ServerMessage::ClientJoined { id, client_data } => {
-                debug!(
-                    "Server says ({}, {:?}) connected. Updating my lobby.",
-                    id, client_data
-                );
-                // FIXME: some logic overlap with setup_standalone
-                debug!("  fyi, that's me (I am {id})");
-                let inhabited_mass = mass_to_entity_map
-                    .0
-                    .get(&client_data.inhabited_mass_id)
-                    .unwrap();
-                debug!("  found exactly one mass for me to inhabit: {inhabited_mass:?}");
-                let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
-                inhabited_mass_commands.insert(ClientInhabited);
-                inhabited_mass_commands.despawn_descendants();
-                debug!("Appending camera to inhabited mass {inhabited_mass:?}");
-                inhabited_mass_commands.with_children(|child| {
-                    child.spawn(Camera3dBundle::default());
-                });
+                debug!("  got `ClientJoined`. Inserting entry for client {id}");
                 if let Some(old) = lobby.clients.insert(*id, *client_data) {
-                    debug!("  the value {old:?} was replaced for client {id}");
+                    warn!("  the value {old:?} was replaced for client {id}");
                 }
-                debug!("  we now has lobby {lobby:?}");
+                if *id == client.client_id() {
+                    let inhabited_mass = mass_to_entity_map
+                        .0
+                        .get(&client_data.inhabited_mass_id)
+                        .unwrap();
+                    debug!("    server has assigned to me mass id {} which I map to entity {inhabited_mass:?}",
+			   client_data.inhabited_mass_id);
+                    let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
+                    debug!("    inserting `ClientInhabited` component into this mass entity (meaing 'this is mine')");
+                    inhabited_mass_commands.insert(ClientInhabited);
+                    inhabited_mass_commands.despawn_descendants();
+                    debug!("    appending camera to inhabited mass to this entity");
+                    inhabited_mass_commands.with_children(|child| {
+                        child.spawn(Camera3dBundle::default());
+                    });
+                }
+                debug!("    we now have lobby {lobby:?}");
             }
         }
     }

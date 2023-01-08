@@ -2,7 +2,7 @@ use crate::networking::ClientMessages;
 use bevy::{
     math::EulerRot,
     prelude::{
-        Component, EventReader, EventWriter, Input, KeyCode, Quat, Query, Res, ResMut, Time,
+        debug, Component, EventReader, EventWriter, Input, KeyCode, Quat, Query, Res, ResMut, Time,
         Transform, Vec3, With,
     },
 };
@@ -71,12 +71,13 @@ pub fn rotate_client_inhabited_mass(
     mut client_messages: EventReader<ClientMessages>,
     mut inhabitant_query: Query<&mut Transform, With<ClientInhabited>>,
 ) {
-    let mut transform = inhabitant_query
-        .get_single_mut()
-        .expect("Could not get transform of client-inhabited entity");
-    for message in client_messages.iter() {
-        if let ClientMessages::Rotation(rotation) = message {
-            transform.rotate(*rotation);
+    if let Ok(mut transform) = inhabitant_query.get_single_mut() {
+        for message in client_messages.iter() {
+            if let ClientMessages::Rotation(rotation) = message {
+                transform.rotate(*rotation);
+            }
         }
+    } else {
+        debug!("ClientInhabited entity not present");
     }
 }

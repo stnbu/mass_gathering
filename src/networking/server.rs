@@ -107,8 +107,7 @@ pub fn handle_server_events(
                     client_data,
                 };
                 debug!("  broadcasting about new client (except to {new_id}): {message:?}");
-                server.broadcast_message_except(
-                    new_id,
+                server.broadcast_message(
                     DefaultChannel::Reliable,
                     bincode::serialize(&message).unwrap(),
                 );
