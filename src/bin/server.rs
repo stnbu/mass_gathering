@@ -6,8 +6,8 @@ use mass_gathering::{networking::*, systems::get_system, GameConfig, GameState};
 fn main() {
     let args = ServerCliArgs::parse();
     let system = args.system.clone();
-    App::new()
-        .insert_resource(Lobby::default())
+    let mut app = App::new();
+    app.insert_resource(Lobby::default())
         .init_resource::<GameConfig>()
         .add_state(GameState::Stopped)
         .add_plugin(CorePlugin::default())
@@ -20,6 +20,16 @@ fn main() {
         .add_plugin(RenetServerPlugin::default())
         .insert_resource(server::new_renet_server())
         .add_system(server::handle_server_events)
-        .insert_resource(get_system(&system)())
-        .run();
+        .insert_resource(get_system(&system)());
+
+    #[cfg(debug_assertions)]
+    {
+        debug!("DEBUG LEVEL LOGGING ! !");
+        app.add_plugin(bevy::log::LogPlugin {
+                filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
+                level: bevy::log::Level::DEBUG,
+            });
+    }
+
+    app.run();
 }

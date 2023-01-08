@@ -57,6 +57,7 @@ pub fn process_server_messages(
                 let mass_id = lobby.clients.get(id).unwrap().inhabited_mass_id;
                 if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
                     if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
+                        debug!("Got rotate event for {id} corresponding to entity {entity:?}");
                         mass_transform.rotate(*rotation);
                     } else {
                         error!("Entity map for mass ID {id} as entity {entity:?} which does not exist.");

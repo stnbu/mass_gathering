@@ -162,6 +162,7 @@ pub fn handle_server_events(
                     let _ = app_state.overwrite_set(state);
                 }
                 ClientMessages::Rotation(rotation) => {
+                    debug!("Sending rotation event for client {client_id}");
                     let client_rotation = ServerMessage::ClientRotation {
                         id: client_id,
                         rotation,

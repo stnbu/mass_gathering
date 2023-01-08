@@ -93,7 +93,9 @@ impl Plugin for Core {
         app.init_resource::<GameConfig>();
         app.add_state(GameState::Stopped);
         app.add_system_set(
-            SystemSet::on_update(GameState::Running).with_system(inhabitant::control),
+            SystemSet::on_update(GameState::Running)
+                .with_system(inhabitant::control)
+                .with_system(inhabitant::rotate_client_inhabited_mass),
         );
         app.add_plugin(EguiPlugin);
         app.add_startup_system(let_light);
