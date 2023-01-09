@@ -50,6 +50,7 @@ pub struct MassInitData {
 pub struct InitData {
     pub masses: HashMap<u64, MassInitData>,
 }
+
 impl Clone for InitData {
     fn clone(&self) -> Self {
         let mut masses = HashMap::new();
