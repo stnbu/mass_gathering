@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 pub mod client;
 pub mod server;
-use crate::{ui, Core, GameState, InitData, PhysicsConfig, Spacetime};
+use crate::{physics::PhysicsConfig, ui, Core, GameState, InitData, Spacetime};
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,3)cs2@66#vyo0s5np{x";
 pub const PROTOCOL_ID: u64 = 26;

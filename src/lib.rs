@@ -6,12 +6,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32::consts::TAU;
 
-pub mod physics;
-pub mod ui;
-pub use physics::*;
 pub mod inhabitant;
 pub mod networking;
+pub mod physics;
 pub mod systems;
+pub mod ui;
 
 #[derive(Resource, Default)]
 pub struct GameConfig {
@@ -54,15 +53,17 @@ pub fn let_light(mut commands: Commands) {
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::BLACK))
-            .init_resource::<PhysicsConfig>()
-            .add_event::<MassCollisionEvent>()
-            .add_event::<DespawnMassEvent>()
+            .init_resource::<physics::PhysicsConfig>()
+            .add_event::<physics::MassCollisionEvent>()
+            .add_event::<physics::DespawnMassEvent>()
             .add_system_set(
                 SystemSet::on_update(GameState::Running)
-                    .with_system(handle_despawn_mass)
-                    .with_system(freefall.before(handle_despawn_mass))
-                    .with_system(handle_mass_collisions.before(handle_despawn_mass))
-                    .with_system(merge_masses.before(handle_despawn_mass)),
+                    .with_system(physics::handle_despawn_mass)
+                    .with_system(physics::freefall.before(physics::handle_despawn_mass))
+                    .with_system(
+                        physics::handle_mass_collisions.before(physics::handle_despawn_mass),
+                    )
+                    .with_system(physics::merge_masses.before(physics::handle_despawn_mass)),
             );
     }
 }
@@ -123,7 +124,7 @@ impl Plugin for FullGameStandalone {
         let StandaloneCliArgs { speed, system } = StandaloneCliArgs::parse();
 
         app.add_plugin(Core);
-        app.insert_resource(PhysicsConfig {
+        app.insert_resource(physics::PhysicsConfig {
             sims_per_frame: speed,
         });
         app.add_plugin(Spacetime);
@@ -236,7 +237,7 @@ impl InitData {
             },
         ) in self.masses.iter()
         {
-            let mut mass_commands = commands.spawn(PointMassBundle {
+            let mut mass_commands = commands.spawn(physics::PointMassBundle {
                 pbr: PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius,
@@ -247,7 +248,7 @@ impl InitData {
                         .looking_at(Vec3::ZERO, Vec3::Y),
                     ..Default::default()
                 },
-                momentum: Momentum {
+                momentum: physics::Momentum {
                     velocity,
                     mass: radius_to_mass(radius),
                     ..Default::default()
