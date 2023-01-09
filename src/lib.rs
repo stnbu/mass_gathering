@@ -17,7 +17,6 @@ pub struct GameConfig {
     pub nickname: String,
     pub connected: bool,
     pub autostart: bool,
-    pub standalone: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Serialize, Deserialize)]
@@ -45,14 +44,6 @@ pub struct MassInitData {
     pub motion: MassMotion,
     pub color: Color,
     pub radius: f32,
-}
-
-#[derive(Parser, Resource)]
-pub struct StandaloneCliArgs {
-    #[arg(long, default_value_t = 1)]
-    pub speed: u32,
-    #[arg(long, default_value_t = ("").to_string())]
-    pub system: String,
 }
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug)]
@@ -208,21 +199,6 @@ impl Plugin for Spacetime {
     }
 }
 
-pub struct FullGameStandalone;
-impl Plugin for FullGameStandalone {
-    fn build(&self, app: &mut App) {
-        let StandaloneCliArgs { speed, system } = StandaloneCliArgs::parse();
-
-        app.add_plugin(Core);
-        app.insert_resource(physics::PhysicsConfig {
-            sims_per_frame: speed,
-        });
-        app.add_plugin(Spacetime);
-        app.insert_resource(systems::get_system(&system)());
-        app.add_startup_system(setup_standalone);
-    }
-}
-
 pub fn radius_to_mass(radius: f32) -> f32 {
     (2.0 / 3.0) * TAU * radius.powf(3.0)
 }
@@ -250,36 +226,4 @@ pub fn let_light(mut commands: Commands) {
         transform: Transform::from_xyz(1.0, -2.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
-}
-
-fn setup_standalone(
-    init_data: Res<InitData>,
-    mut mass_to_entity_map: ResMut<MassIDToEntity>,
-    mut game_state: ResMut<State<GameState>>,
-    mut commands: Commands,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-) {
-    // FIXME: some logic overlap with ClientJoined handler
-    *mass_to_entity_map = init_data
-        .clone()
-        .init(&mut commands, &mut meshes, &mut materials);
-
-    let mut mass_id_ = None;
-    for (mass_id, mass_init_data) in init_data.masses.iter() {
-        if mass_init_data.inhabitable {
-            mass_id_ = Some(mass_id);
-            break;
-        }
-    }
-    let mass_id = mass_id_.unwrap();
-    let inhabited_mass = mass_to_entity_map.0.get(mass_id).unwrap();
-    let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
-    inhabited_mass_commands.insert(inhabitant::ClientInhabited);
-    inhabited_mass_commands.despawn_descendants();
-    debug!("Appending camera to inhabited mass {inhabited_mass:?}");
-    inhabited_mass_commands.with_children(|child| {
-        child.spawn(Camera3dBundle::default());
-    });
-    let _ = game_state.overwrite_set(GameState::Running);
 }
