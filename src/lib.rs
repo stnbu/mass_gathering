@@ -23,29 +23,22 @@ pub struct GameConfig {
 pub struct Spacetime;
 
 pub fn let_light(mut commands: Commands) {
-    // TODO: These are to be messed with.
-    const NORMAL_BIAS: f32 = 0.61;
-    const SHADOW_BIAS: f32 = 0.063;
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
+            illuminance: 10_000.0,
             shadows_enabled: true,
-            shadow_normal_bias: NORMAL_BIAS,
-            shadow_depth_bias: SHADOW_BIAS,
             ..default()
         },
-        // TODO: figure out what _translation_ means for directional
-        transform: Transform::from_xyz(-500000.0, -500000.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(-0.5, -0.3, -1.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
+            illuminance: 20_000.0,
             shadows_enabled: true,
-            shadow_normal_bias: NORMAL_BIAS,
-            shadow_depth_bias: SHADOW_BIAS,
             ..default()
         },
-        // TODO: figure out what _translation_ means for directional
-        transform: Transform::from_xyz(500000.0, 500000.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(1.0, -2.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
         ..default()
     });
 }
