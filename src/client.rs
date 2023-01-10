@@ -128,3 +128,25 @@ pub fn new_renet_client(client_id: u64, client_preferences: ClientPreferences) -
     )
     .unwrap()
 }
+
+//
+
+pub struct ClientPlugin;
+impl Plugin for ClientPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_plugin(Core);
+        app.insert_resource(Lobby::default());
+        app.add_plugin(Spacetime);
+        app.add_system_set(
+            SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
+        );
+        app.add_plugin(RenetClientPlugin::default());
+
+        app.add_system(client::send_messages_to_server.with_run_criteria(run_if_client_connected));
+        app.add_system(client::process_server_messages.with_run_criteria(run_if_client_connected));
+        app.add_system(
+            client::receive_messages_from_server.with_run_criteria(run_if_client_connected),
+        );
+        app.add_system(panic_on_renet_error);
+    }
+}

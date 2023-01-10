@@ -7,22 +7,7 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub mod client;
-pub mod server;
 use crate::{physics::PhysicsConfig, ui, Core, GameState, InitData, Spacetime};
-
-pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxx_SERxx24,3)cs2@66#vyo0s5np{x";
-pub const PROTOCOL_ID: u64 = 26;
-//pub const SERVER_ADDR: &str = "50.116.38.133";
-pub const SERVER_ADDR: &str = "127.0.0.1";
-pub const PORT_NUMBER: u16 = 5740;
-pub const CHANNEL: u8 = 0;
-
-pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
-    for e in renet_error.iter() {
-        panic!("{}", e);
-    }
-}
 
 #[derive(Serialize, Deserialize, Component, Debug)]
 pub enum ServerMessage {
@@ -97,25 +82,4 @@ pub struct ServerCliArgs {
     pub speed: u32,
     #[arg(long, default_value_t = ("").to_string())]
     pub system: String,
-}
-
-pub struct FullGameClient;
-
-impl Plugin for FullGameClient {
-    fn build(&self, app: &mut App) {
-        app.add_plugin(Core);
-        app.insert_resource(Lobby::default());
-        app.add_plugin(Spacetime);
-        app.add_system_set(
-            SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
-        );
-        app.add_plugin(RenetClientPlugin::default());
-
-        app.add_system(client::send_messages_to_server.with_run_criteria(run_if_client_connected));
-        app.add_system(client::process_server_messages.with_run_criteria(run_if_client_connected));
-        app.add_system(
-            client::receive_messages_from_server.with_run_criteria(run_if_client_connected),
-        );
-        app.add_system(panic_on_renet_error);
-    }
 }
