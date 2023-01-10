@@ -1,9 +1,5 @@
-use crate::{InitData, MassInitData, MassMotion};
-
-use bevy::prelude::*;
-
-use rand::Rng;
-use std::f32::consts::TAU;
+use crate::resources::InitData;
+use crate::*;
 
 /// Old rando from way back
 pub fn old_rando() -> InitData {

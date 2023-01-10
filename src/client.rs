@@ -1,13 +1,4 @@
-use bevy::prelude::*;
-use bevy_renet::renet::{ClientAuthentication, RenetClient, RenetConnectionConfig};
-use std::collections::HashSet;
-use std::{net::UdpSocket, time::SystemTime};
-
-use crate::{
-    inhabitant::{ClientInhabited, Inhabitable},
-    networking::*,
-    GameState, MassIDToEntity,
-};
+use crate::*;
 
 #[derive(Default)]
 struct InhabitableTaken(HashSet<u64>);
@@ -28,7 +19,7 @@ pub fn process_server_messages(
     mut game_state: ResMut<State<GameState>>,
     mut mass_to_entity_map: ResMut<MassIDToEntity>,
     mut inhabitable_masses: Query<&mut Transform, With<Inhabitable>>,
-    mut server_messages: EventReader<ServerMessage>,
+    mut server_messages: EventReader<events::ServerMessage>,
     mut client_messages: EventWriter<ClientMessage>,
     mut lobby: ResMut<Lobby>,
     client: Res<RenetClient>,
@@ -37,7 +28,7 @@ pub fn process_server_messages(
     for message in server_messages.iter() {
         debug!("Message for {my_id}");
         match message {
-            ServerMessage::Init(init_data) => {
+            events::ServerMessage::Init(init_data) => {
                 debug!("  got `Init`. Initializing with data receveid from server: {init_data:?}");
                 // FIXME: so much clone
                 *mass_to_entity_map = init_data
@@ -48,15 +39,15 @@ pub fn process_server_messages(
                 debug!("  enqueuing message for server `{message:?}`");
                 client_messages.send(message);
             }
-            ServerMessage::SetGameState(new_game_state) => {
+            events::ServerMessage::SetGameState(new_game_state) => {
                 debug!("  got `SetGameState`. Setting state to {new_game_state:?}");
                 let _ = game_state.overwrite_set(*new_game_state);
             }
-            ServerMessage::SetPhysicsConfig(physics_config) => {
+            events::ServerMessage::SetPhysicsConfig(physics_config) => {
                 debug!("  got `SetPhysicsConfig`. Inserting resource received from server: {physics_config:?}");
                 commands.insert_resource(*physics_config);
             }
-            ServerMessage::ClientRotation { id, rotation } => {
+            events::ServerMessage::ClientRotation { id, rotation } => {
                 debug!("  got `ClientRotation`. Rotating mass {id}");
                 let mass_id = lobby.clients.get(id).unwrap().inhabited_mass_id;
                 if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
@@ -73,7 +64,7 @@ pub fn process_server_messages(
                     )
                 }
             }
-            ServerMessage::ClientJoined { id, client_data } => {
+            events::ServerMessage::ClientJoined { id, client_data } => {
                 debug!("  got `ClientJoined`. Inserting entry for client {id}");
                 if let Some(old) = lobby.clients.insert(*id, *client_data) {
                     warn!("  the value {old:?} was replaced for client {id}");
@@ -102,7 +93,7 @@ pub fn process_server_messages(
 
 pub fn receive_messages_from_server(
     mut client: ResMut<RenetClient>,
-    mut server_messages: EventWriter<ServerMessage>,
+    mut server_messages: EventWriter<events::ServerMessage>,
 ) {
     while let Some(message) = client.receive_message(CHANNEL) {
         server_messages.send(bincode::deserialize(&message).unwrap());
@@ -154,16 +145,6 @@ impl Plugin for ClientPlugin {
 //
 
 // was inhabitant.rs
-
-use crate::networking::ClientMessage;
-use bevy::{
-    math::EulerRot,
-    prelude::{
-        debug, Component, EventReader, EventWriter, Input, KeyCode, Quat, Query, Res, Time,
-        Transform, Vec3, With,
-    },
-};
-use std::f32::consts::TAU;
 
 // Note that "client inhabited" means "me", as in, the mass inhabited
 // by _this_ client, the one that has your camera attached to it.
@@ -244,13 +225,6 @@ pub fn rotate_client_inhabited_mass(
 // was ui
 
 // ---
-
-use crate::networking::*;
-use bevy::prelude::*;
-use bevy_egui::{
-    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
-    EguiContext,
-};
 
 const FRAME_FILL: Color32 = Color32::TRANSPARENT;
 const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);

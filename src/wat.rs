@@ -1,4 +1,4 @@
-//
+use crate::*;
 
 #[derive(Serialize, Deserialize, Component, Debug, Copy, Clone)]
 pub struct ClientPreferences {

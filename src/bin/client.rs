@@ -1,8 +1,5 @@
-use bevy::prelude::App;
-use clap::Parser;
-use mass_gathering::networking::{
-    client::new_renet_client, from_nick, ClientCliArgs, ClientPreferences, FullGameClient,
-};
+use crate::*;
+
 fn main() {
     let args = ClientCliArgs::parse();
     let renet_client = new_renet_client(

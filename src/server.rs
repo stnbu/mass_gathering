@@ -1,11 +1,4 @@
-use bevy::prelude::*;
-use bevy_renet::renet::RenetConnectionConfig;
-use bevy_renet::renet::{
-    DefaultChannel, RenetServer, ServerAuthentication, ServerConfig, ServerEvent,
-};
-use std::{net::UdpSocket, time::SystemTime};
-
-use crate::{networking::*, GameState, InitData};
+use crate::*;
 
 pub fn new_renet_server() -> RenetServer {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
@@ -73,17 +66,17 @@ pub fn handle_server_events(
                 };
 
                 debug!("  sending initial data to client {new_id}");
-                let message = bincode::serialize(&ServerMessage::Init(init_data.clone())).unwrap();
+                let message = bincode::serialize(&events::ServerMessage::Init(init_data.clone())).unwrap();
                 server.send_message(new_id, CHANNEL, message);
 
                 debug!("  sending physics config to {new_id}");
                 let message =
-                    bincode::serialize(&ServerMessage::SetPhysicsConfig(*physics_config)).unwrap();
+                    bincode::serialize(&events::ServerMessage::SetPhysicsConfig(*physics_config)).unwrap();
                 server.send_message(new_id, CHANNEL, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
                 for (&existing_id, &client_data) in lobby.clients.iter() {
-                    let message = ServerMessage::ClientJoined {
+                    let message = events::ServerMessage::ClientJoined {
                         id: existing_id,
                         client_data,
                     };
@@ -102,7 +95,7 @@ pub fn handle_server_events(
                 debug!("  now updating my lobby with ({new_id}, {client_data:?})");
                 lobby.clients.insert(new_id, client_data);
                 debug!("  the server now has lobby {lobby:?}");
-                let message = ServerMessage::ClientJoined {
+                let message = events::ServerMessage::ClientJoined {
                     id: new_id,
                     client_data,
                 };
@@ -147,7 +140,7 @@ pub fn handle_server_events(
                     } else {
                         GameState::Waiting
                     };
-                    let set_state = ServerMessage::SetGameState(state);
+                    let set_state = events::ServerMessage::SetGameState(state);
                     let message = bincode::serialize(&set_state).unwrap();
                     if start {
                         debug!("Broadcasting {set_state:?}");
@@ -162,7 +155,7 @@ pub fn handle_server_events(
                 }
                 ClientMessage::Rotation(rotation) => {
                     debug!("Sending rotation event for client {client_id}");
-                    let client_rotation = ServerMessage::ClientRotation {
+                    let client_rotation = events::ServerMessage::ClientRotation {
                         id: client_id,
                         rotation,
                     };

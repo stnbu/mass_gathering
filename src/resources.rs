@@ -1,3 +1,7 @@
+use crate::*;
+use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
+use clap::Parser;
+
 #[derive(Default, Resource, Debug)]
 pub struct Lobby {
     pub clients: HashMap<u64, ClientData>,
@@ -109,7 +113,7 @@ impl InitData {
             mass_commands.insert(MassID(mass_id));
             if inhabitable {
                 mass_commands
-                    .insert(inhabitant::Inhabitable)
+                    .insert(client::Inhabitable)
                     .with_children(|child| {
                         // barrel
                         child.spawn(PbrBundle {

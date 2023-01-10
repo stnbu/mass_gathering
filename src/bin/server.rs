@@ -1,7 +1,4 @@
-use bevy::{app::ScheduleRunnerPlugin, prelude::*, time::TimePlugin};
-use bevy_renet::RenetServerPlugin;
-use clap::Parser;
-use mass_gathering::{networking, systems, GameConfig, GameState};
+use crate::*;
 
 fn main() {
     let args = networking::ServerCliArgs::parse();

@@ -1,14 +1,20 @@
-use bevy::prelude::*;
-use bevy_egui::EguiPlugin;
-use bevy_rapier3d::prelude::{Collider, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+pub use bevy::prelude::*;
+pub use bevy_egui::EguiPlugin;
+pub use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+pub use serde::{Deserialize, Serialize};
+pub use std::f32::consts::TAU;
+
+/*
+use bevy_rapier3d::prelude::{Collider};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::f32::consts::TAU;
+*/
 
-pub mod inhabitant;
+pub mod client;
 pub mod physics;
+pub mod resources;
 pub mod systems;
-pub mod ui;
+pub mod events;
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxy.SERxx24,3)cs2@66#vyo0s5np{x";
 pub const PROTOCOL_ID: u64 = 27;
@@ -37,13 +43,13 @@ impl Plugin for Core {
         }
         app.insert_resource(MassIDToEntity::default());
         app.add_event::<networking::ClientMessage>();
-        app.add_event::<networking::ServerMessage>();
+        app.add_event::<networking::events::ServerMessage>();
         app.init_resource::<GameConfig>();
         app.add_state(GameState::Stopped);
         app.add_system_set(
             SystemSet::on_update(GameState::Running)
-                .with_system(inhabitant::control)
-                .with_system(inhabitant::rotate_client_inhabited_mass),
+                .with_system(client::control)
+                .with_system(client::rotate_client_inhabited_mass),
         );
         app.add_plugin(EguiPlugin);
         app.add_startup_system(let_light);
