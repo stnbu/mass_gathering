@@ -24,22 +24,6 @@ pub enum ClientMessage {
     Rotation(Quat),
 }
 
-pub fn to_nick(id: u64) -> String {
-    let nic_vec: Vec<u8> = id.to_ne_bytes().to_vec();
-    String::from_utf8(nic_vec).unwrap().trim_end().to_string()
-}
-
-pub fn from_nick(nick: &str) -> u64 {
-    let mut nick_vec = [b' '; 8];
-    if nick.len() > 8 {
-        panic!()
-    }
-    for (i, c) in nick.as_bytes().iter().enumerate() {
-        nick_vec[i] = *c;
-    }
-    u64::from_ne_bytes(nick_vec)
-}
-
 #[derive(Serialize, Deserialize, Component, Debug, Copy, Clone)]
 pub struct ClientPreferences {
     pub autostart: bool,
