@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{Collider, NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::f32::consts::TAU;
