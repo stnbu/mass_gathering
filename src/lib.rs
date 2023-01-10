@@ -66,7 +66,7 @@ impl Clone for InitData {
 
 impl InitData {
     fn init<'a>(
-        &mut self,
+        &self,
         commands: &'a mut Commands,
         meshes: &'a mut ResMut<Assets<Mesh>>,
         materials: &'a mut ResMut<Assets<StandardMaterial>>,
