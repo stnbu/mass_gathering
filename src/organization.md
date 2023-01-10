@@ -6,26 +6,28 @@ Heading depth represents directory depth.
 
 Obviously it all starts here.
 
-### lib.rs
+### src/lib.rs
 
-This is the whole Mass Gathering crate. We may consider keeping this file as simple as possible (roughly: `pub use` and `pub mod` declarations.)
+This is the whole Mass Gathering crate. We may consider keeping this file as simple as
+possible (roughly: `pub use` and `pub mod` declarations.)
 
-### events.rs
+### src/events.rs
 
 Event type-code. The types and code related to their behavior.
 
-### server.rs
+### src/server.rs
 
 Strictly server library code.
 
-### client.rs
+### src/client.rs
 
 Strictly client library code.
 
-### bin/
+### src/bin/
 
-The two binaries. Maybe `/mod.rs` style, if that's possible and the contents get complicated (but why would they?)
+The two binaries. Maybe `/mod.rs` style, if that's possible and the contents get
+complicated (but why would they?)
 
-#### client.rs
+#### src/bin/client.rs
 
-#### server.rs
+#### src/bin/server.rs
