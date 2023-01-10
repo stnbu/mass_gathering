@@ -1,4 +1,4 @@
-use crate::networking::ClientMessages;
+use crate::networking::ClientMessage;
 use bevy::{
     math::EulerRot,
     prelude::{
@@ -20,7 +20,7 @@ pub struct Inhabitable;
 pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut client_messages: EventWriter<ClientMessages>,
+    mut client_messages: EventWriter<ClientMessage>,
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -61,19 +61,19 @@ pub fn control(
         let [x, y, z] = (rotation * keys_scaling * frame_time).to_array();
         let rotation = Quat::from_euler(EulerRot::XYZ, x, y, z);
 
-        let message = ClientMessages::Rotation(rotation);
+        let message = ClientMessage::Rotation(rotation);
         client_messages.send(message);
     }
 }
 
 // Rotate ME by reading local Rotation events, independant of client/server.
 pub fn rotate_client_inhabited_mass(
-    mut client_messages: EventReader<ClientMessages>,
+    mut client_messages: EventReader<ClientMessage>,
     mut inhabitant_query: Query<&mut Transform, With<ClientInhabited>>,
 ) {
     if let Ok(mut transform) = inhabitant_query.get_single_mut() {
         for message in client_messages.iter() {
-            if let ClientMessages::Rotation(rotation) = message {
+            if let ClientMessage::Rotation(rotation) = message {
                 transform.rotate(*rotation);
             }
         }

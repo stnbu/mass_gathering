@@ -13,7 +13,7 @@ use crate::{
 struct InhabitableTaken(HashSet<u64>);
 
 pub fn send_messages_to_server(
-    mut client_messages: EventReader<ClientMessages>,
+    mut client_messages: EventReader<ClientMessage>,
     mut client: ResMut<RenetClient>,
 ) {
     for message in client_messages.iter() {
@@ -29,7 +29,7 @@ pub fn process_server_messages(
     mut mass_to_entity_map: ResMut<MassIDToEntity>,
     mut inhabitable_masses: Query<&mut Transform, With<Inhabitable>>,
     mut server_messages: EventReader<ServerMessage>,
-    mut client_messages: EventWriter<ClientMessages>,
+    mut client_messages: EventWriter<ClientMessage>,
     mut lobby: ResMut<Lobby>,
     client: Res<RenetClient>,
 ) {
@@ -44,7 +44,7 @@ pub fn process_server_messages(
                     .clone()
                     .init(&mut commands, &mut meshes, &mut materials)
                     .clone();
-                let message = ClientMessages::Ready;
+                let message = ClientMessage::Ready;
                 debug!("  enqueuing message for server `{message:?}`");
                 client_messages.send(message);
             }

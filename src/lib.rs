@@ -165,7 +165,7 @@ impl Plugin for Core {
             app.add_plugins(DefaultPlugins);
         }
         app.insert_resource(MassIDToEntity::default());
-        app.add_event::<networking::ClientMessages>();
+        app.add_event::<networking::ClientMessage>();
         app.add_event::<networking::ServerMessage>();
         app.init_resource::<GameConfig>();
         app.add_state(GameState::Stopped);

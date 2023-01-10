@@ -19,7 +19,7 @@ pub enum ServerMessage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Component)]
-pub enum ClientMessages {
+pub enum ClientMessage {
     Ready,
     Rotation(Quat),
 }

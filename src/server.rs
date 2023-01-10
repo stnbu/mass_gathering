@@ -123,7 +123,7 @@ pub fn handle_server_events(
             let message = bincode::deserialize(&message).unwrap();
             debug!("Received message from client: {message:?}");
             match message {
-                ClientMessages::Ready => {
+                ClientMessage::Ready => {
                     let unanimous_autostart = lobby.clients.len() > 1
                         && lobby
                             .clients
@@ -160,7 +160,7 @@ pub fn handle_server_events(
                     debug!("  and setting my state to {state:?}");
                     let _ = app_state.overwrite_set(state);
                 }
-                ClientMessages::Rotation(rotation) => {
+                ClientMessage::Rotation(rotation) => {
                     debug!("Sending rotation event for client {client_id}");
                     let client_rotation = ServerMessage::ClientRotation {
                         id: client_id,
