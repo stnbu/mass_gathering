@@ -150,3 +150,143 @@ impl Plugin for ClientPlugin {
         app.add_system(panic_on_renet_error);
     }
 }
+
+//
+
+// was inhabitant.rs
+
+use crate::networking::ClientMessage;
+use bevy::{
+    math::EulerRot,
+    prelude::{
+        debug, Component, EventReader, EventWriter, Input, KeyCode, Quat, Query, Res, Time,
+        Transform, Vec3, With,
+    },
+};
+use std::f32::consts::TAU;
+
+// Note that "client inhabited" means "me", as in, the mass inhabited
+// by _this_ client, the one that has your camera attached to it.
+
+#[derive(Component)]
+pub struct ClientInhabited;
+
+#[derive(Component)]
+pub struct Inhabitable;
+
+pub fn control(
+    keys: Res<Input<KeyCode>>,
+    time: Res<Time>,
+    mut client_messages: EventWriter<ClientMessage>,
+) {
+    let nudge = TAU / 10000.0;
+    let keys_scaling = 10.0;
+
+    // rotation about local axes
+    let mut rotation = Vec3::ZERO;
+
+    // IDEAR: we could just get key counts as f32 and multiply by nudge.
+    //   A -> [0, 0, 1]
+    //   D -> [0, 0, -1]
+    // ...etc
+    for key in keys.get_pressed() {
+        match key {
+            KeyCode::A => {
+                rotation.y += nudge;
+            }
+            KeyCode::D => {
+                rotation.y -= nudge;
+            }
+            KeyCode::W => {
+                rotation.z -= nudge;
+            }
+            KeyCode::S => {
+                rotation.z += nudge;
+            }
+            KeyCode::Z => {
+                rotation.x += nudge;
+            }
+            KeyCode::X => {
+                rotation.x -= nudge;
+            }
+            _ => (),
+        }
+    }
+
+    if rotation.length() > 0.0000001 {
+        let frame_time = time.delta_seconds() * 60.0;
+        let [x, y, z] = (rotation * keys_scaling * frame_time).to_array();
+        let rotation = Quat::from_euler(EulerRot::XYZ, x, y, z);
+
+        let message = ClientMessage::Rotation(rotation);
+        client_messages.send(message);
+    }
+}
+
+// Rotate ME by reading local Rotation events, independant of client/server.
+pub fn rotate_client_inhabited_mass(
+    mut client_messages: EventReader<ClientMessage>,
+    mut inhabitant_query: Query<&mut Transform, With<ClientInhabited>>,
+) {
+    if let Ok(mut transform) = inhabitant_query.get_single_mut() {
+        for message in client_messages.iter() {
+            if let ClientMessage::Rotation(rotation) = message {
+                transform.rotate(*rotation);
+            }
+        }
+    } else {
+        debug!("ClientInhabited entity not present");
+    }
+}
+
+//
+
+// was ui
+
+// ---
+
+use crate::networking::*;
+use bevy::prelude::*;
+use bevy_egui::{
+    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
+    EguiContext,
+};
+
+const FRAME_FILL: Color32 = Color32::TRANSPARENT;
+const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
+
+pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<Lobby>) {
+    SidePanel::left("client_waiting_screen")
+        .resizable(false)
+        .min_width(250.0)
+        .frame(Frame {
+            outer_margin: Margin::symmetric(10.0, 20.0),
+            fill: FRAME_FILL,
+            ..Default::default()
+        })
+        .show(ctx.ctx_mut(), |ui| {
+            ui.label(
+                RichText::new("Waiting for players...")
+                    .color(TEXT_COLOR)
+                    .font(FontId {
+                        size: 20.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.separator();
+            for (&id, &client_data) in lobby.clients.iter() {
+                let nick = to_nick(id);
+                let pad = String::from_iter((0..(8 - nick.len())).map(|_| ' '));
+                let autostart = if client_data.preferences.autostart {
+                    "autostart"
+                } else {
+                    "wait"
+                };
+                let text = format!("{nick}{pad}>  {autostart}");
+                ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {
+                    size: 16.0,
+                    family: Monospace,
+                }));
+            }
+        });
+}
