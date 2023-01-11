@@ -109,7 +109,7 @@ pub fn receive_messages_from_server(
     }
 }
 
-pub fn new_renet_client(client_id: u64, client_preferences: wat::ClientPreferences) -> RenetClient {
+pub fn new_renet_client(client_id: u64, client_preferences: resources::ClientPreferences) -> RenetClient {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let authentication = ClientAuthentication::Unsecure {

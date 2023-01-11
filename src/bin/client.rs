@@ -5,7 +5,7 @@ fn main() {
     let args = resources::ClientCliArgs::parse();
     let renet_client = client::new_renet_client(
         from_nick(&args.nickname),
-        wat::ClientPreferences {
+        resources::ClientPreferences {
             autostart: args.autostart,
         },
     );

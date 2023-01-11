@@ -8,7 +8,7 @@ pub enum ServerMessage {
     SetGameState(resources::GameState),
     ClientJoined {
         id: u64,
-        client_data: wat::ClientData,
+        client_data: resources::ClientData,
     },
     SetPhysicsConfig(physics::PhysicsConfig),
     ClientRotation {

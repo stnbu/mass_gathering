@@ -58,7 +58,7 @@ pub fn handle_server_events(
                 // to an in-progress game (which we do not allow).
                 let new_id = *id;
 
-                let client_preferences = wat::ClientPreferences::from_user_data(user_data);
+                let client_preferences = resources::ClientPreferences::from_user_data(user_data);
                 debug!("Server got connection from new client {new_id} with preferences {client_preferences:?}");
 
                 let inhabited_mass_id = if let Some(id) = unassigned_masses.0.pop() {
@@ -93,7 +93,7 @@ pub fn handle_server_events(
                     );
                 }
 
-                let client_data = wat::ClientData {
+                let client_data = resources::ClientData {
                     preferences: client_preferences,
                     inhabited_mass_id,
                 };
