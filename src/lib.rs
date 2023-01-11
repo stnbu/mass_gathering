@@ -1,20 +1,18 @@
 pub use bevy::prelude::*;
 pub use bevy_egui::EguiPlugin;
 pub use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
-pub use serde::{Deserialize, Serialize};
 pub use std::f32::consts::TAU;
 
-/*
-use bevy_rapier3d::prelude::{Collider};
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-*/
+use bevy_renet::renet::{RenetError, NETCODE_KEY_BYTES};
 
 pub mod client;
+pub mod components;
+pub mod events;
 pub mod physics;
 pub mod resources;
+pub mod server;
 pub mod systems;
-pub mod events;
+pub mod wat;
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxy.SERxx24,3)cs2@66#vyo0s5np{x";
 pub const PROTOCOL_ID: u64 = 27;
@@ -33,7 +31,6 @@ impl Plugin for Core {
                 level: bevy::log::Level::DEBUG,
             }));
         }
-
         #[cfg(not(debug_assertions))]
         {
             error!("We have no logging, and yet you SEE this message...?");
@@ -41,13 +38,13 @@ impl Plugin for Core {
             app.insert_resource(Msaa { samples: 4 });
             app.add_plugins(DefaultPlugins);
         }
-        app.insert_resource(MassIDToEntity::default());
-        app.add_event::<networking::ClientMessage>();
-        app.add_event::<networking::events::ServerMessage>();
-        app.init_resource::<GameConfig>();
-        app.add_state(GameState::Stopped);
+        app.insert_resource(resources::MassIDToEntity::default());
+        app.add_event::<events::ClientMessage>();
+        app.add_event::<events::ServerMessage>();
+        app.init_resource::<resources::GameConfig>();
+        app.add_state(resources::GameState::Stopped);
         app.add_system_set(
-            SystemSet::on_update(GameState::Running)
+            SystemSet::on_update(resources::GameState::Running)
                 .with_system(client::control)
                 .with_system(client::rotate_client_inhabited_mass),
         );
@@ -70,7 +67,7 @@ impl Plugin for Spacetime {
             .add_event::<physics::MassCollisionEvent>()
             .add_event::<physics::DespawnMassEvent>()
             .add_system_set(
-                SystemSet::on_update(GameState::Running)
+                SystemSet::on_update(resources::GameState::Running)
                     .with_system(physics::handle_despawn_mass)
                     .with_system(physics::freefall.before(physics::handle_despawn_mass))
                     .with_system(

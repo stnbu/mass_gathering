@@ -1,4 +1,11 @@
 use crate::*;
+use bevy_renet::renet::{
+    DefaultChannel, RenetConnectionConfig, RenetServer, ServerAuthentication, ServerConfig,
+    ServerEvent,
+};
+use std::{net::UdpSocket, time::SystemTime};
+
+//use crate::{networking::*, GameState, InitData};
 
 pub fn new_renet_server() -> RenetServer {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
@@ -16,9 +23,9 @@ pub fn new_renet_server() -> RenetServer {
     .unwrap()
 }
 
-pub fn setup_physics(mut commands: Commands, cli_args: Res<ServerCliArgs>) {
+pub fn setup_physics(mut commands: Commands, cli_args: Res<resources::ServerCliArgs>) {
     let speed = cli_args.speed;
-    commands.insert_resource(PhysicsConfig {
+    commands.insert_resource(physics::PhysicsConfig {
         sims_per_frame: speed,
     });
 }
@@ -29,7 +36,7 @@ pub struct UnassignedMasses(Vec<u64>);
 // FIXME: oh, so bad.
 pub fn populate_unassigned_masses(
     mut unassigned_masses: ResMut<UnassignedMasses>,
-    init_data: Res<InitData>,
+    init_data: Res<resources::InitData>,
 ) {
     for (mass_id, mass_init_data) in init_data.masses.iter() {
         if mass_init_data.inhabitable {
@@ -39,13 +46,13 @@ pub fn populate_unassigned_masses(
 }
 
 pub fn handle_server_events(
-    mut server_events: EventReader<ServerEvent>,
+    mut server_events: EventReader<ServerEvent>, // wait what
     mut server: ResMut<RenetServer>,
-    init_data: Res<InitData>,
-    mut app_state: ResMut<State<GameState>>,
-    mut lobby: ResMut<Lobby>,
+    init_data: Res<resources::InitData>,
+    mut app_state: ResMut<State<resources::GameState>>,
+    mut lobby: ResMut<resources::Lobby>,
     mut unassigned_masses: ResMut<UnassignedMasses>,
-    physics_config: Res<PhysicsConfig>,
+    physics_config: Res<physics::PhysicsConfig>,
 ) {
     for event in server_events.iter() {
         match event {
@@ -54,7 +61,7 @@ pub fn handle_server_events(
                 // to an in-progress game (which we do not allow).
                 let new_id = *id;
 
-                let client_preferences = ClientPreferences::from_user_data(user_data);
+                let client_preferences = wat::ClientPreferences::from_user_data(user_data);
                 debug!("Server got connection from new client {new_id} with preferences {client_preferences:?}");
 
                 let inhabited_mass_id = if let Some(id) = unassigned_masses.0.pop() {
@@ -66,12 +73,14 @@ pub fn handle_server_events(
                 };
 
                 debug!("  sending initial data to client {new_id}");
-                let message = bincode::serialize(&events::ServerMessage::Init(init_data.clone())).unwrap();
+                let message =
+                    bincode::serialize(&events::ServerMessage::Init(init_data.clone())).unwrap();
                 server.send_message(new_id, CHANNEL, message);
 
                 debug!("  sending physics config to {new_id}");
                 let message =
-                    bincode::serialize(&events::ServerMessage::SetPhysicsConfig(*physics_config)).unwrap();
+                    bincode::serialize(&events::ServerMessage::SetPhysicsConfig(*physics_config))
+                        .unwrap();
                 server.send_message(new_id, CHANNEL, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
@@ -87,7 +96,7 @@ pub fn handle_server_events(
                     );
                 }
 
-                let client_data = ClientData {
+                let client_data = wat::ClientData {
                     preferences: client_preferences,
                     inhabited_mass_id,
                 };
@@ -116,7 +125,7 @@ pub fn handle_server_events(
             let message = bincode::deserialize(&message).unwrap();
             debug!("Received message from client: {message:?}");
             match message {
-                ClientMessage::Ready => {
+                events::ClientMessage::Ready => {
                     let unanimous_autostart = lobby.clients.len() > 1
                         && lobby
                             .clients
@@ -136,9 +145,9 @@ pub fn handle_server_events(
                     }
                     let start = unanimous_autostart || game_full;
                     let state = if start {
-                        GameState::Running
+                        resources::GameState::Running
                     } else {
-                        GameState::Waiting
+                        resources::GameState::Waiting
                     };
                     let set_state = events::ServerMessage::SetGameState(state);
                     let message = bincode::serialize(&set_state).unwrap();
@@ -153,7 +162,7 @@ pub fn handle_server_events(
                     debug!("  and setting my state to {state:?}");
                     let _ = app_state.overwrite_set(state);
                 }
-                ClientMessage::Rotation(rotation) => {
+                events::ClientMessage::Rotation(rotation) => {
                     debug!("Sending rotation event for client {client_id}");
                     let client_rotation = events::ServerMessage::ClientRotation {
                         id: client_id,

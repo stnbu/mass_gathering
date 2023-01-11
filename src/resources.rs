@@ -1,10 +1,12 @@
 use crate::*;
-use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
+use bevy_rapier3d::prelude::Collider;
 use clap::Parser;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Default, Resource, Debug)]
 pub struct Lobby {
-    pub clients: HashMap<u64, ClientData>,
+    pub clients: HashMap<u64, wat::ClientData>,
 }
 
 #[derive(Parser, Resource)]
@@ -38,7 +40,7 @@ pub enum GameState {
 }
 
 #[derive(Resource, Default, Clone)]
-pub struct MassIDToEntity(HashMap<u64, Entity>);
+pub struct MassIDToEntity(pub HashMap<u64, Entity>);
 
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct MassMotion {
@@ -75,7 +77,7 @@ impl Clone for InitData {
 
 // FIXME: maybe wrong place?
 impl InitData {
-    fn init<'a>(
+    pub fn init<'a>(
         &self,
         commands: &'a mut Commands,
         meshes: &'a mut ResMut<Assets<Mesh>>,
@@ -110,10 +112,10 @@ impl InitData {
                 collider: Collider::ball(radius),
                 ..Default::default()
             });
-            mass_commands.insert(MassID(mass_id));
+            mass_commands.insert(components::MassID(mass_id));
             if inhabitable {
                 mass_commands
-                    .insert(client::Inhabitable)
+                    .insert(components::Inhabitable)
                     .with_children(|child| {
                         // barrel
                         child.spawn(PbrBundle {

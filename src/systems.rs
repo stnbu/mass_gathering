@@ -1,14 +1,14 @@
-use crate::resources::InitData;
 use crate::*;
+use rand::Rng;
 
 /// Old rando from way back
-pub fn old_rando() -> InitData {
+pub fn old_rando() -> resources::InitData {
     // FIXME: This a baad one: If we have a starting position or velocity of
     // 0,0,0 we end up with NaN,NaN,NaN after a few frames. WHY?? -- we do not
     // know. Tack this on to be sure :-/
     let tiny_vec_d = Vec3::ONE * 0.000001;
 
-    let mut init_data = InitData::default();
+    let mut init_data = resources::InitData::default();
 
     let mut rng = rand::thread_rng();
     let mut rf = || rng.gen::<f32>();
@@ -22,9 +22,9 @@ pub fn old_rando() -> InitData {
             let color = Color::rgb(rf(), rf(), rf());
             let position = position * side + tiny_vec_d;
             let velocity = velocity * side + tiny_vec_d;
-            let mass_init_data = MassInitData {
+            let mass_init_data = resources::MassInitData {
                 inhabitable: false,
-                motion: MassMotion { position, velocity },
+                motion: resources::MassMotion { position, velocity },
                 color,
                 radius,
             };
@@ -44,9 +44,9 @@ pub fn old_rando() -> InitData {
         let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance + tiny_vec_d;
         let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
         let radius = 1.0;
-        let mass_init_data = MassInitData {
+        let mass_init_data = resources::MassInitData {
             inhabitable: true,
-            motion: MassMotion { position, velocity },
+            motion: resources::MassMotion { position, velocity },
             color,
             radius,
         };
@@ -57,8 +57,8 @@ pub fn old_rando() -> InitData {
 }
 
 /// Make some interesting masses
-pub fn cubic() -> InitData {
-    let mut init_data = InitData::default();
+pub fn cubic() -> resources::InitData {
+    let mut init_data = resources::InitData::default();
 
     let mut mass_id = 2000;
     let radius = 0.5;
@@ -100,9 +100,9 @@ pub fn cubic() -> InitData {
                 position * fun_factor
             };
 
-            let mass_init_data = MassInitData {
+            let mass_init_data = resources::MassInitData {
                 inhabitable: false,
-                motion: MassMotion { position, velocity },
+                motion: resources::MassMotion { position, velocity },
                 color,
                 radius,
             };
@@ -124,9 +124,9 @@ pub fn cubic() -> InitData {
         let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance;
         let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
         let radius = 1.0;
-        let mass_init_data = MassInitData {
+        let mass_init_data = resources::MassInitData {
             inhabitable: true,
-            motion: MassMotion { position, velocity },
+            motion: resources::MassMotion { position, velocity },
             color,
             radius,
         };
@@ -137,16 +137,16 @@ pub fn cubic() -> InitData {
     init_data
 }
 
-pub fn testing_no_unhinhabited() -> InitData {
-    let mut init_data = InitData::default();
+pub fn testing_no_unhinhabited() -> resources::InitData {
+    let mut init_data = resources::InitData::default();
     let position = Vec3::X * 10.0;
     let velocity = Vec3::Y * 0.035;
     let radius = 1.0;
     init_data.masses.insert(
         0,
-        MassInitData {
+        resources::MassInitData {
             inhabitable: true,
-            motion: MassMotion {
+            motion: resources::MassMotion {
                 position: position * 1.0,
                 velocity: velocity * -1.0,
             },
@@ -156,9 +156,9 @@ pub fn testing_no_unhinhabited() -> InitData {
     );
     init_data.masses.insert(
         1,
-        MassInitData {
+        resources::MassInitData {
             inhabitable: true,
-            motion: MassMotion {
+            motion: resources::MassMotion {
                 position: position * -1.0,
                 velocity: velocity * 1.0,
             },
@@ -179,7 +179,7 @@ fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     Vec3::new(x, y, z)
 }
 
-pub fn get_system(name: &str) -> impl (Fn() -> InitData) {
+pub fn get_system(name: &str) -> impl (Fn() -> resources::InitData) {
     match name {
         "old_rando" => old_rando,
         "cubic" => cubic,

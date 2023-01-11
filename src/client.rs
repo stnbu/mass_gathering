@@ -1,10 +1,12 @@
 use crate::*;
-
-#[derive(Default)]
-struct InhabitableTaken(HashSet<u64>);
+use bevy_renet::{
+    renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
+    run_if_client_connected, RenetClientPlugin,
+};
+use std::{net::UdpSocket, time::SystemTime};
 
 pub fn send_messages_to_server(
-    mut client_messages: EventReader<ClientMessage>,
+    mut client_messages: EventReader<events::ClientMessage>,
     mut client: ResMut<RenetClient>,
 ) {
     for message in client_messages.iter() {
@@ -16,12 +18,12 @@ pub fn process_server_messages(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut game_state: ResMut<State<GameState>>,
-    mut mass_to_entity_map: ResMut<MassIDToEntity>,
-    mut inhabitable_masses: Query<&mut Transform, With<Inhabitable>>,
+    mut game_state: ResMut<State<resources::GameState>>,
+    mut mass_to_entity_map: ResMut<resources::MassIDToEntity>,
+    mut inhabitable_masses: Query<&mut Transform, With<components::Inhabitable>>,
     mut server_messages: EventReader<events::ServerMessage>,
-    mut client_messages: EventWriter<ClientMessage>,
-    mut lobby: ResMut<Lobby>,
+    mut client_messages: EventWriter<events::ClientMessage>,
+    mut lobby: ResMut<resources::Lobby>,
     client: Res<RenetClient>,
 ) {
     let my_id = client.client_id();
@@ -35,7 +37,7 @@ pub fn process_server_messages(
                     .clone()
                     .init(&mut commands, &mut meshes, &mut materials)
                     .clone();
-                let message = ClientMessage::Ready;
+                let message = events::ClientMessage::Ready;
                 debug!("  enqueuing message for server `{message:?}`");
                 client_messages.send(message);
             }
@@ -78,7 +80,7 @@ pub fn process_server_messages(
 			   client_data.inhabited_mass_id);
                     let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
                     debug!("    inserting `ClientInhabited` component into this mass entity (meaing 'this is mine')");
-                    inhabited_mass_commands.insert(ClientInhabited);
+                    inhabited_mass_commands.insert(components::ClientInhabited);
                     inhabited_mass_commands.despawn_descendants();
                     debug!("    appending camera to inhabited mass to this entity");
                     inhabited_mass_commands.with_children(|child| {
@@ -100,7 +102,7 @@ pub fn receive_messages_from_server(
     }
 }
 
-pub fn new_renet_client(client_id: u64, client_preferences: ClientPreferences) -> RenetClient {
+pub fn new_renet_client(client_id: u64, client_preferences: wat::ClientPreferences) -> RenetClient {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let authentication = ClientAuthentication::Unsecure {
@@ -126,10 +128,11 @@ pub struct ClientPlugin;
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(Core);
-        app.insert_resource(Lobby::default());
+        app.insert_resource(resources::Lobby::default());
         app.add_plugin(Spacetime);
         app.add_system_set(
-            SystemSet::on_update(GameState::Waiting).with_system(ui::client_waiting_screen),
+            SystemSet::on_update(resources::GameState::Waiting)
+                .with_system(client::client_waiting_screen),
         );
         app.add_plugin(RenetClientPlugin::default());
 
@@ -149,16 +152,10 @@ impl Plugin for ClientPlugin {
 // Note that "client inhabited" means "me", as in, the mass inhabited
 // by _this_ client, the one that has your camera attached to it.
 
-#[derive(Component)]
-pub struct ClientInhabited;
-
-#[derive(Component)]
-pub struct Inhabitable;
-
 pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut client_messages: EventWriter<ClientMessage>,
+    mut client_messages: EventWriter<events::ClientMessage>,
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -199,19 +196,19 @@ pub fn control(
         let [x, y, z] = (rotation * keys_scaling * frame_time).to_array();
         let rotation = Quat::from_euler(EulerRot::XYZ, x, y, z);
 
-        let message = ClientMessage::Rotation(rotation);
+        let message = events::ClientMessage::Rotation(rotation);
         client_messages.send(message);
     }
 }
 
 // Rotate ME by reading local Rotation events, independant of client/server.
 pub fn rotate_client_inhabited_mass(
-    mut client_messages: EventReader<ClientMessage>,
-    mut inhabitant_query: Query<&mut Transform, With<ClientInhabited>>,
+    mut client_messages: EventReader<events::ClientMessage>,
+    mut inhabitant_query: Query<&mut Transform, With<components::ClientInhabited>>,
 ) {
     if let Ok(mut transform) = inhabitant_query.get_single_mut() {
         for message in client_messages.iter() {
-            if let ClientMessage::Rotation(rotation) = message {
+            if let events::ClientMessage::Rotation(rotation) = message {
                 transform.rotate(*rotation);
             }
         }
@@ -226,10 +223,15 @@ pub fn rotate_client_inhabited_mass(
 
 // ---
 
+use bevy_egui::{
+    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
+    EguiContext,
+};
+
 const FRAME_FILL: Color32 = Color32::TRANSPARENT;
 const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
 
-pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<Lobby>) {
+pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources::Lobby>) {
     SidePanel::left("client_waiting_screen")
         .resizable(false)
         .min_width(250.0)

@@ -1,22 +1,25 @@
-use crate::*;
+use bevy::{app::ScheduleRunnerPlugin, time::TimePlugin};
+use bevy_renet::RenetServerPlugin;
+use clap::Parser;
+use mass_gathering::*;
 
 fn main() {
-    let args = networking::ServerCliArgs::parse();
+    let args = resources::ServerCliArgs::parse();
     let system = args.system.clone();
     let mut app = App::new();
-    app.insert_resource(networking::Lobby::default())
-        .init_resource::<GameConfig>()
-        .add_state(GameState::Stopped)
+    app.insert_resource(resources::Lobby::default())
+        .init_resource::<resources::GameConfig>()
+        .add_state(resources::GameState::Stopped)
         .add_plugin(CorePlugin::default())
         .add_plugin(TimePlugin::default())
         .add_plugin(ScheduleRunnerPlugin::default())
         .insert_resource(args)
-        .init_resource::<networking::server::UnassignedMasses>()
-        .add_startup_system(networking::server::populate_unassigned_masses)
-        .add_startup_system(networking::server::setup_physics)
+        .init_resource::<server::UnassignedMasses>()
+        .add_startup_system(server::populate_unassigned_masses)
+        .add_startup_system(server::setup_physics)
         .add_plugin(RenetServerPlugin::default())
-        .insert_resource(networking::server::new_renet_server())
-        .add_system(networking::server::handle_server_events)
+        .insert_resource(server::new_renet_server())
+        .add_system(server::handle_server_events)
         .insert_resource(systems::get_system(&system)());
 
     #[cfg(debug_assertions)]

@@ -1,5 +1,6 @@
 use crate::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
@@ -50,7 +51,7 @@ pub fn handle_despawn_mass(
 
 pub fn merge_masses(
     mut mass_query: Query<(&mut Transform, &mut Momentum, Entity)>,
-    inhabitant_query: Query<Entity, With<Inhabitable>>,
+    inhabitant_query: Query<Entity, With<components::Inhabitable>>,
     mut mass_events: EventReader<MassCollisionEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
