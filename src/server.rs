@@ -5,8 +5,20 @@ use bevy_renet::renet::{
 };
 use std::{net::UdpSocket, time::SystemTime};
 
-//use crate::{networking::*, GameState, InitData};
+#[derive(Resource, Default)]
+pub struct UnassignedMasses(Vec<u64>);
 
+// Only used by server, kinda hacky
+pub fn populate_unassigned_masses(
+    mut unassigned_masses: ResMut<UnassignedMasses>,
+    init_data: Res<resources::InitData>,
+) {
+    for (mass_id, mass_init_data) in init_data.masses.iter() {
+        if mass_init_data.inhabitable {
+            unassigned_masses.0.push(*mass_id);
+        }
+    }
+}
 pub fn new_renet_server() -> RenetServer {
     let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
     let socket = UdpSocket::bind(server_addr).unwrap();
@@ -28,21 +40,6 @@ pub fn setup_physics(mut commands: Commands, cli_args: Res<resources::ServerCliA
     commands.insert_resource(physics::PhysicsConfig {
         sims_per_frame: speed,
     });
-}
-
-#[derive(Resource, Default)]
-pub struct UnassignedMasses(Vec<u64>);
-
-// FIXME: oh, so bad.
-pub fn populate_unassigned_masses(
-    mut unassigned_masses: ResMut<UnassignedMasses>,
-    init_data: Res<resources::InitData>,
-) {
-    for (mass_id, mass_init_data) in init_data.masses.iter() {
-        if mass_init_data.inhabitable {
-            unassigned_masses.0.push(*mass_id);
-        }
-    }
 }
 
 pub fn handle_server_events(

@@ -111,7 +111,6 @@ pub fn cubic() -> resources::InitData {
         }
     }
 
-    //
     let inhabitable_distance = 20.0;
     for (x, y, z) in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
         let velocity = Vec3::ZERO;
@@ -133,7 +132,6 @@ pub fn cubic() -> resources::InitData {
         init_data.masses.insert(mass_id, mass_init_data);
         mass_id += 1;
     }
-    //
     init_data
 }
 

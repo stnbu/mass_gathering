@@ -1,9 +1,16 @@
 use crate::*;
+use bevy_egui::{
+    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
+    EguiContext,
+};
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
 };
 use std::{net::UdpSocket, time::SystemTime};
+
+const FRAME_FILL: Color32 = Color32::TRANSPARENT;
+const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
 
 pub fn send_messages_to_server(
     mut client_messages: EventReader<events::ClientMessage>,
@@ -122,8 +129,6 @@ pub fn new_renet_client(client_id: u64, client_preferences: wat::ClientPreferenc
     .unwrap()
 }
 
-//
-
 pub struct ClientPlugin;
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
@@ -144,13 +149,6 @@ impl Plugin for ClientPlugin {
         app.add_system(panic_on_renet_error);
     }
 }
-
-//
-
-// was inhabitant.rs
-
-// Note that "client inhabited" means "me", as in, the mass inhabited
-// by _this_ client, the one that has your camera attached to it.
 
 pub fn control(
     keys: Res<Input<KeyCode>>,
@@ -216,20 +214,6 @@ pub fn rotate_client_inhabited_mass(
         debug!("ClientInhabited entity not present");
     }
 }
-
-//
-
-// was ui
-
-// ---
-
-use bevy_egui::{
-    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
-    EguiContext,
-};
-
-const FRAME_FILL: Color32 = Color32::TRANSPARENT;
-const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
 
 pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources::Lobby>) {
     SidePanel::left("client_waiting_screen")
