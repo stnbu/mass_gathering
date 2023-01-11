@@ -16,7 +16,7 @@ pub mod wat;
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxy.SERxx24,3)cx2@66#vyo0s5np{x";
 pub const PROTOCOL_ID: u64 = 28;
-pub const SERVER_ADDR: &str = "127.0.0.1";
+pub const SERVER_ADDR: &str = "50.116.38.133";
 pub const PORT_NUMBER: u16 = 5743;
 pub const CHANNEL: u8 = 0;
 
