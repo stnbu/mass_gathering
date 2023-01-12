@@ -319,12 +319,14 @@ pub fn handle_fire_projectile(
 
 pub fn send_hot_mass_event(
     mass_query: Query<(&Transform, &components::MassID), Without<components::Inhabitable>>,
-    inhabited_mass_query: Query<&Transform, With<components::ClientInhabited>>,
+    inhabited_mass_query: Query<
+        (&Transform, &components::MassID),
+        With<components::ClientInhabited>,
+    >,
     rapier_context: Res<RapierContext>,
     mut hot_mass_events: EventWriter<events::HotMass>,
-    mass_to_entity_map: Res<resources::MassIDToEntity>,
 ) {
-    for client_pov in inhabited_mass_query.iter() {
+    for (client_pov, &components::MassID(origin_mass_id)) in inhabited_mass_query.iter() {
         let ray_origin = client_pov.translation;
         let ray_direction = -1.0 * client_pov.local_z();
         let intersection = rapier_context.cast_ray(
@@ -335,15 +337,8 @@ pub fn send_hot_mass_event(
             QueryFilter::only_dynamic(),
         );
         if let Some((mass, distance)) = intersection {
-            if let Ok((mass_transform, &components::MassID(origin_mass_id))) = mass_query.get(mass)
+            if let Ok((mass_transform, &components::MassID(target_mass_id))) = mass_query.get(mass)
             {
-                // FIXME: This is not great. Maybe make mapping bidrectional.
-                let mut target_mass_id = 0;
-                for (id, entity) in mass_to_entity_map.0.iter() {
-                    if *entity == mass {
-                        target_mass_id = *id;
-                    }
-                }
                 let global_impact_site = ray_origin + (ray_direction * distance);
                 let local_impact_direction =
                     (global_impact_site - mass_transform.translation).normalize();
