@@ -98,22 +98,28 @@ pub fn process_server_messages(
                         child.spawn(Camera3dBundle::default());
                         debug!("    adding \"sights\"");
                         // FIXME -- this is so klunky
-                        child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.0005,
+                        child
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                    radius: 0.0005,
+                                    ..Default::default()
+                                })),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_xyz(0.0, 0.0, -0.2),
+                                visibility: Visibility::INVISIBLE,
                                 ..Default::default()
-                            })),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_xyz(0.0, 0.0, -0.2),
-                            ..Default::default()
-                        });
-                        child.spawn(PointLightBundle {
-                            transform: Transform::from_xyz(0.0, 0.0, -0.15),
-                            point_light: PointLight {
+                            })
+                            .insert(components::Sights);
+                        child
+                            .spawn(PointLightBundle {
+                                transform: Transform::from_xyz(0.0, 0.0, -0.15),
+                                visibility: Visibility::INVISIBLE,
+                                point_light: PointLight {
+                                    ..Default::default()
+                                },
                                 ..Default::default()
-                            },
-                            ..Default::default()
-                        });
+                            })
+                            .insert(components::Sights);
                     });
                 }
                 debug!("    we now have lobby {lobby:?}");
@@ -285,17 +291,27 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
 
 pub fn handle_fire_projectile(
     mut hot_mass_events: EventReader<events::HotMass>,
+    mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
 ) {
-    for _event in hot_mass_events.iter() {
-        warn!("hot");
-        for key in keys.get_pressed() {
-            match key {
-                KeyCode::Space => {
-                    warn!("BANG");
-                    return;
+    if hot_mass_events.is_empty() {
+        for mut visibility in sights_query.iter_mut() {
+            visibility.is_visible = false;
+        }
+    } else {
+        for mut visibility in sights_query.iter_mut() {
+            visibility.is_visible = true;
+        }
+        for _event in hot_mass_events.iter() {
+            warn!("hot");
+            for key in keys.get_pressed() {
+                match key {
+                    KeyCode::Space => {
+                        warn!("BANG");
+                        return;
+                    }
+                    _ => (),
                 }
-                _ => (),
             }
         }
     }

@@ -8,3 +8,7 @@ pub struct ClientInhabited;
 
 #[derive(Component)]
 pub struct Inhabitable;
+
+/// Sights as in "gun sights"
+#[derive(Component)]
+pub struct Sights;
