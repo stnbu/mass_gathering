@@ -89,6 +89,9 @@ pub fn process_server_messages(
                     let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
                     debug!("    inserting `ClientInhabited` component into this mass entity (meaing 'this is mine')");
                     inhabited_mass_commands.insert(components::ClientInhabited);
+                    inhabited_mass_commands.remove::<components::Inhabitable>();
+                    // FIXME -- Figure out rapier `QueryFilter` so we don't need this (or do we?)
+                    inhabited_mass_commands.remove::<RigidBody>();
                     inhabited_mass_commands.despawn_descendants();
                     debug!("    appending camera to inhabited mass to this entity");
                     inhabited_mass_commands.with_children(|child| {
@@ -100,6 +103,8 @@ pub fn process_server_messages(
         }
     }
 }
+
+use bevy_rapier3d::prelude::RigidBody;
 
 pub fn receive_messages_from_server(
     mut client: ResMut<RenetClient>,
@@ -273,7 +278,7 @@ pub fn print_the_hot_mass_events(mut hot_mass_events: EventReader<HotMass>) {
 }
 
 pub fn send_hot_mass_event(
-    mass_query: Query<&Transform, With<components::MassID>>,
+    mass_query: Query<&Transform, (With<components::MassID>, Without<components::Inhabitable>)>,
     inhabited_mass_query: Query<&Transform, With<components::ClientInhabited>>,
     rapier_context: Res<RapierContext>,
     mut hot_mass_events: EventWriter<HotMass>,
@@ -285,10 +290,9 @@ pub fn send_hot_mass_event(
             ray_origin,
             ray_direction,
             150.0,
-            true,
+            false,
             QueryFilter::only_dynamic(),
         );
-
         if let Some((mass, distance)) = intersection {
             if let Ok(mass_transform) = mass_query.get(mass) {
                 let global_impact_site = ray_origin + (ray_direction * distance);
