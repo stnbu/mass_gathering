@@ -291,6 +291,7 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
 
 pub fn handle_fire_projectile(
     mut hot_mass_events: EventReader<events::HotMass>,
+    mut client_messages: EventWriter<events::ClientMessage>,
     mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
 ) {
@@ -302,12 +303,11 @@ pub fn handle_fire_projectile(
         for mut visibility in sights_query.iter_mut() {
             visibility.is_visible = true;
         }
-        for _event in hot_mass_events.iter() {
-            warn!("hot");
+        for event in hot_mass_events.iter() {
             for key in keys.get_pressed() {
                 match key {
                     KeyCode::Space => {
-                        warn!("BANG");
+                        client_messages.send(events::ClientMessage::ProjectileFlight(*event));
                         return;
                     }
                     _ => (),
@@ -318,10 +318,11 @@ pub fn handle_fire_projectile(
 }
 
 pub fn send_hot_mass_event(
-    mass_query: Query<&Transform, (With<components::MassID>, Without<components::Inhabitable>)>,
+    mass_query: Query<(&Transform, &components::MassID), Without<components::Inhabitable>>,
     inhabited_mass_query: Query<&Transform, With<components::ClientInhabited>>,
     rapier_context: Res<RapierContext>,
     mut hot_mass_events: EventWriter<events::HotMass>,
+    mass_to_entity_map: Res<resources::MassIDToEntity>,
 ) {
     for client_pov in inhabited_mass_query.iter() {
         let ray_origin = client_pov.translation;
@@ -334,12 +335,22 @@ pub fn send_hot_mass_event(
             QueryFilter::only_dynamic(),
         );
         if let Some((mass, distance)) = intersection {
-            if let Ok(mass_transform) = mass_query.get(mass) {
+            if let Ok((mass_transform, &components::MassID(origin_mass_id))) = mass_query.get(mass)
+            {
+                // FIXME: This is not great. Maybe make mapping bidrectional.
+                let mut target_mass_id = 0;
+                for (id, entity) in mass_to_entity_map.0.iter() {
+                    if *entity == mass {
+                        target_mass_id = *id;
+                    }
+                }
                 let global_impact_site = ray_origin + (ray_direction * distance);
-                let local_direction = (global_impact_site - mass_transform.translation).normalize();
+                let local_impact_direction =
+                    (global_impact_site - mass_transform.translation).normalize();
                 let event = events::HotMass {
-                    mass,
-                    local_direction,
+                    origin_mass_id,
+                    target_mass_id,
+                    local_impact_direction,
                 };
                 hot_mass_events.send(event);
             }
