@@ -12,7 +12,6 @@ pub mod physics;
 pub mod resources;
 pub mod server;
 pub mod systems;
-pub mod wat;
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxy.SERxx24,3)cx2@66#vyo0s5np{x";
 pub const PROTOCOL_ID: u64 = 28;
