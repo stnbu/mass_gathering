@@ -96,6 +96,16 @@ pub fn process_server_messages(
                     debug!("    appending camera to inhabited mass to this entity");
                     inhabited_mass_commands.with_children(|child| {
                         child.spawn(Camera3dBundle::default());
+                        debug!("    Adding \"sights\"");
+                        child.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 0.01,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_xyz(0.0, 0.0, -2.0),
+                            ..Default::default()
+                        });
                     });
                 }
                 debug!("    we now have lobby {lobby:?}");
