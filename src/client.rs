@@ -113,14 +113,18 @@ pub fn receive_messages_from_server(
 pub fn new_renet_client(
     client_id: u64,
     client_preferences: resources::ClientPreferences,
-    // fix, kay?
+    address: String,
 ) -> RenetClient {
-    let server_addr = format!("{SERVER_IP}:{SERVER_PORT}").parse().unwrap();
+    let address = if let Ok(address) = format!("{address}").parse() {
+        address
+    } else {
+        panic!("Cannot parse address `{address}`");
+    };
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let authentication = ClientAuthentication::Unsecure {
         client_id,
         protocol_id: PROTOCOL_ID,
-        server_addr,
+        server_addr: address,
         user_data: Some(client_preferences.to_netcode_user_data()),
     };
     RenetClient::new(

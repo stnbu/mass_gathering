@@ -40,6 +40,8 @@ pub struct ClientCliArgs {
     pub nickname: String,
     #[arg(long, default_value_t = true)]
     pub autostart: bool,
+    #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
+    pub address: String,
 }
 
 #[derive(Parser, Resource)]
@@ -48,7 +50,7 @@ pub struct ServerCliArgs {
     pub speed: u32,
     #[arg(long, default_value_t = ("").to_string())]
     pub system: String,
-    #[arg(long, default_value_t = format!("{SERVER_IP}{SERVER_PORT}"))]
+    #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
     pub address: String,
 }
 

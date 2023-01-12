@@ -3,7 +3,7 @@ pub use bevy_egui::EguiPlugin;
 pub use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 pub use std::f32::consts::TAU;
 
-use bevy_renet::renet::{RenetError, NETCODE_KEY_BYTES};
+use bevy_renet::renet::RenetError;
 
 pub mod client;
 pub mod components;
@@ -13,10 +13,9 @@ pub mod resources;
 pub mod server;
 pub mod systems;
 
-pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxy.SERxx24,3)cx2@66#vyo0s5np{x";
-pub const PROTOCOL_ID: u64 = 28;
-pub const SERVER_IP: &str = "50.116.38.133";
-pub const SERVER_PORT: u16 = 5743;
+pub const PROTOCOL_ID: u64 = 29;
+pub const SERVER_IP: &str = "127.0.0.1";
+pub const SERVER_PORT: u16 = 5743; // FIXME NOTE -- don't change this anymore
 pub const CHANNEL: u8 = 0;
 
 pub struct Core;
