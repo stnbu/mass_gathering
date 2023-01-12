@@ -27,3 +27,9 @@ pub enum ClientMessage {
         local_impact_direction: Vec3,
     },
 }
+
+#[derive(Debug)]
+pub struct HotMass {
+    pub mass: Entity,
+    pub local_direction: Vec3,
+}

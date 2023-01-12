@@ -283,14 +283,8 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
         });
 }
 
-#[derive(Debug)]
-pub struct HotMass {
-    pub mass: Entity,
-    pub local_direction: Vec3,
-}
-
 pub fn handle_fire_projectile(
-    mut hot_mass_events: EventReader<HotMass>,
+    mut hot_mass_events: EventReader<events::HotMass>,
     keys: Res<Input<KeyCode>>,
 ) {
     for _event in hot_mass_events.iter() {
@@ -311,7 +305,7 @@ pub fn send_hot_mass_event(
     mass_query: Query<&Transform, (With<components::MassID>, Without<components::Inhabitable>)>,
     inhabited_mass_query: Query<&Transform, With<components::ClientInhabited>>,
     rapier_context: Res<RapierContext>,
-    mut hot_mass_events: EventWriter<HotMass>,
+    mut hot_mass_events: EventWriter<events::HotMass>,
 ) {
     for client_pov in inhabited_mass_query.iter() {
         let ray_origin = client_pov.translation;
@@ -327,7 +321,7 @@ pub fn send_hot_mass_event(
             if let Ok(mass_transform) = mass_query.get(mass) {
                 let global_impact_site = ray_origin + (ray_direction * distance);
                 let local_direction = (global_impact_site - mass_transform.translation).normalize();
-                let event = HotMass {
+                let event = events::HotMass {
                     mass,
                     local_direction,
                 };

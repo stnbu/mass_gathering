@@ -39,7 +39,7 @@ impl Plugin for Core {
         app.insert_resource(resources::MassIDToEntity::default());
         app.add_event::<events::ClientMessage>();
         app.add_event::<events::ServerMessage>();
-        app.add_event::<client::HotMass>(); // move to events
+        app.add_event::<events::HotMass>();
         app.init_resource::<resources::GameConfig>();
         app.add_state(resources::GameState::Stopped);
         app.add_system_set(
