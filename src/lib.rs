@@ -46,7 +46,7 @@ impl Plugin for Core {
             SystemSet::on_update(resources::GameState::Running)
                 .with_system(client::control)
                 .with_system(client::send_hot_mass_event)
-                .with_system(client::print_the_hot_mass_events)
+                .with_system(client::handle_fire_projectile)
                 .with_system(client::rotate_client_inhabited_mass),
         );
         app.add_plugin(EguiPlugin);

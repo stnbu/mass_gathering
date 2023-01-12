@@ -96,7 +96,8 @@ pub fn process_server_messages(
                     debug!("    appending camera to inhabited mass to this entity");
                     inhabited_mass_commands.with_children(|child| {
                         child.spawn(Camera3dBundle::default());
-                        debug!("    Adding \"sights\"");
+                        debug!("    adding \"sights\"");
+                        // FIXME -- this is so klunky
                         child.spawn(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
                                 radius: 0.0005,
@@ -106,7 +107,6 @@ pub fn process_server_messages(
                             transform: Transform::from_xyz(0.0, 0.0, -0.2),
                             ..Default::default()
                         });
-
                         child.spawn(PointLightBundle {
                             transform: Transform::from_xyz(0.0, 0.0, -0.15),
                             point_light: PointLight {
@@ -289,9 +289,21 @@ pub struct HotMass {
     pub local_direction: Vec3,
 }
 
-pub fn print_the_hot_mass_events(mut hot_mass_events: EventReader<HotMass>) {
-    for event in hot_mass_events.iter() {
-        warn!("HME: {event:?}");
+pub fn handle_fire_projectile(
+    mut hot_mass_events: EventReader<HotMass>,
+    keys: Res<Input<KeyCode>>,
+) {
+    for _event in hot_mass_events.iter() {
+        warn!("hot");
+        for key in keys.get_pressed() {
+            match key {
+                KeyCode::Space => {
+                    warn!("BANG");
+                    return;
+                }
+                _ => (),
+            }
+        }
     }
 }
 
