@@ -99,11 +99,19 @@ pub fn process_server_messages(
                         debug!("    Adding \"sights\"");
                         child.spawn(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.01,
+                                radius: 0.0005,
                                 ..Default::default()
                             })),
                             material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_xyz(0.0, 0.0, -2.0),
+                            transform: Transform::from_xyz(0.0, 0.0, -0.2),
+                            ..Default::default()
+                        });
+
+                        child.spawn(PointLightBundle {
+                            transform: Transform::from_xyz(0.0, 0.0, -0.15),
+                            point_light: PointLight {
+                                ..Default::default()
+                            },
                             ..Default::default()
                         });
                     });
