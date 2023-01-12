@@ -289,42 +289,16 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
         });
 }
 
-pub fn handle_fire_projectile(
-    mut hot_mass_events: EventReader<events::HotMass>,
-    mut client_messages: EventWriter<events::ClientMessage>,
-    mut sights_query: Query<&mut Visibility, With<components::Sights>>,
-    keys: Res<Input<KeyCode>>,
-) {
-    if hot_mass_events.is_empty() {
-        for mut visibility in sights_query.iter_mut() {
-            visibility.is_visible = false;
-        }
-    } else {
-        for mut visibility in sights_query.iter_mut() {
-            visibility.is_visible = true;
-        }
-        for event in hot_mass_events.iter() {
-            for key in keys.get_pressed() {
-                match key {
-                    KeyCode::Space => {
-                        client_messages.send(events::ClientMessage::ProjectileFlight(*event));
-                        return;
-                    }
-                    _ => (),
-                }
-            }
-        }
-    }
-}
-
-pub fn send_hot_mass_event(
+pub fn handle_projectile_engagement(
     mass_query: Query<(&Transform, &components::MassID), Without<components::Inhabitable>>,
     inhabited_mass_query: Query<
         (&Transform, &components::MassID),
         With<components::ClientInhabited>,
     >,
     rapier_context: Res<RapierContext>,
-    mut hot_mass_events: EventWriter<events::HotMass>,
+    mut hot_mass_events: EventWriter<events::ClientMessage>,
+    mut sights_query: Query<&mut Visibility, With<components::Sights>>,
+    keys: Res<Input<KeyCode>>,
 ) {
     for (client_pov, &components::MassID(origin_mass_id)) in inhabited_mass_query.iter() {
         let ray_origin = client_pov.translation;
@@ -339,15 +313,23 @@ pub fn send_hot_mass_event(
         if let Some((mass, distance)) = intersection {
             if let Ok((mass_transform, &components::MassID(target_mass_id))) = mass_query.get(mass)
             {
-                let global_impact_site = ray_origin + (ray_direction * distance);
-                let local_impact_direction =
-                    (global_impact_site - mass_transform.translation).normalize();
-                let event = events::HotMass {
-                    origin_mass_id,
-                    target_mass_id,
-                    local_impact_direction,
-                };
-                hot_mass_events.send(event);
+                for mut visibility in sights_query.iter_mut() {
+                    visibility.is_visible = true;
+                }
+                if keys.just_pressed(KeyCode::Space) {
+                    let global_impact_site = ray_origin + (ray_direction * distance);
+                    let local_impact_direction =
+                        (global_impact_site - mass_transform.translation).normalize();
+                    hot_mass_events.send(events::ClientMessage::ProjectileFlight {
+                        origin_mass_id,
+                        target_mass_id,
+                        local_impact_direction,
+                    });
+                }
+            } else {
+                for mut visibility in sights_query.iter_mut() {
+                    visibility.is_visible = false;
+                }
             }
         }
     }
