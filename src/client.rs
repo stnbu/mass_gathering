@@ -3,6 +3,7 @@ use bevy_egui::{
     egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
     EguiContext,
 };
+use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
@@ -112,8 +113,9 @@ pub fn receive_messages_from_server(
 pub fn new_renet_client(
     client_id: u64,
     client_preferences: resources::ClientPreferences,
+    // fix, kay?
 ) -> RenetClient {
-    let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
+    let server_addr = format!("{SERVER_IP}:{SERVER_PORT}").parse().unwrap();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let authentication = ClientAuthentication::Unsecure {
         client_id,
@@ -252,4 +254,47 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
                 }));
             }
         });
+}
+
+#[derive(Debug)]
+pub struct HotMass {
+    pub mass: Entity,
+    pub local_direction: Vec3,
+}
+
+pub fn print_the_hot_mass_events(mut hot_mass_events: EventReader<HotMass>) {
+    for event in hot_mass_events.iter() {
+        warn!("HME: {event:?}");
+    }
+}
+
+pub fn send_hot_mass_event(
+    mass_query: Query<&Transform, With<components::MassID>>,
+    inhabited_mass_query: Query<&Transform, With<components::ClientInhabited>>,
+    rapier_context: Res<RapierContext>,
+    mut hot_mass_events: EventWriter<HotMass>,
+) {
+    for client_pov in inhabited_mass_query.iter() {
+        let ray_origin = client_pov.translation;
+        let ray_direction = -1.0 * client_pov.local_z();
+        let intersection = rapier_context.cast_ray(
+            ray_origin,
+            ray_direction,
+            150.0,
+            true,
+            QueryFilter::only_dynamic(),
+        );
+
+        if let Some((mass, distance)) = intersection {
+            if let Ok(mass_transform) = mass_query.get(mass) {
+                let global_impact_site = ray_origin + (ray_direction * distance);
+                let local_direction = (global_impact_site - mass_transform.translation).normalize();
+                let event = HotMass {
+                    mass,
+                    local_direction,
+                };
+                hot_mass_events.send(event);
+            }
+        }
+    }
 }

@@ -15,8 +15,8 @@ pub mod systems;
 
 pub const PRIVATE_KEY: &[u8; NETCODE_KEY_BYTES] = b"dwxy.SERxx24,3)cx2@66#vyo0s5np{x";
 pub const PROTOCOL_ID: u64 = 28;
-pub const SERVER_ADDR: &str = "50.116.38.133";
-pub const PORT_NUMBER: u16 = 5743;
+pub const SERVER_IP: &str = "50.116.38.133";
+pub const SERVER_PORT: u16 = 5743;
 pub const CHANNEL: u8 = 0;
 
 pub struct Core;
@@ -40,11 +40,14 @@ impl Plugin for Core {
         app.insert_resource(resources::MassIDToEntity::default());
         app.add_event::<events::ClientMessage>();
         app.add_event::<events::ServerMessage>();
+        app.add_event::<client::HotMass>(); // move to events
         app.init_resource::<resources::GameConfig>();
         app.add_state(resources::GameState::Stopped);
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_system(client::control)
+                .with_system(client::send_hot_mass_event)
+                .with_system(client::print_the_hot_mass_events)
                 .with_system(client::rotate_client_inhabited_mass),
         );
         app.add_plugin(EguiPlugin);

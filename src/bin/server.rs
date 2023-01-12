@@ -6,6 +6,7 @@ use mass_gathering::*;
 fn main() {
     let args = resources::ServerCliArgs::parse();
     let system = args.system.clone();
+    let address = args.address.clone();
     let mut app = App::new();
     app.insert_resource(resources::Lobby::default())
         .init_resource::<resources::GameConfig>()
@@ -18,7 +19,7 @@ fn main() {
         .add_startup_system(server::populate_unassigned_masses)
         .add_startup_system(server::setup_physics)
         .add_plugin(RenetServerPlugin::default())
-        .insert_resource(server::new_renet_server())
+        .insert_resource(server::new_renet_server(address))
         .add_system(server::handle_server_events)
         .insert_resource(systems::get_system(&system)());
 

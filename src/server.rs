@@ -19,11 +19,14 @@ pub fn populate_unassigned_masses(
         }
     }
 }
-pub fn new_renet_server() -> RenetServer {
-    let server_addr = format!("{SERVER_ADDR}:{PORT_NUMBER}").parse().unwrap();
-    let socket = UdpSocket::bind(server_addr).unwrap();
-    let server_config =
-        ServerConfig::new(64, PROTOCOL_ID, server_addr, ServerAuthentication::Unsecure);
+pub fn new_renet_server(address: String) -> RenetServer {
+    let address = if let Ok(address) = format!("{address}").parse() {
+        address
+    } else {
+        panic!("Cannot parse address `{address}`");
+    };
+    let socket = UdpSocket::bind(address).unwrap();
+    let server_config = ServerConfig::new(64, PROTOCOL_ID, address, ServerAuthentication::Unsecure);
     RenetServer::new(
         SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
@@ -169,6 +172,7 @@ pub fn handle_server_events(
                     debug!("Broadcasting except to {client_id}: {client_rotation:?}");
                     server.broadcast_message_except(client_id, CHANNEL, message);
                 }
+                _ => {}
             }
         }
     }

@@ -21,4 +21,9 @@ pub enum ServerMessage {
 pub enum ClientMessage {
     Ready,
     Rotation(Quat),
+    ProjectileFlight {
+        origin_mass_id: u64,
+        target_mass_id: u64,
+        local_impact_direction: Vec3,
+    },
 }
