@@ -24,9 +24,13 @@ pub enum ClientMessage {
     ProjectileFired(ProjectileFlight),
 }
 
+/// `launch_time` is: unix epoch time in milliseconds (u128) according
+/// to the client.
 #[derive(Debug, Serialize, Deserialize, Resource, Clone, Copy, Component)]
 pub struct ProjectileFlight {
+    pub launch_time: u128,
     pub from_mass_id: u64,
     pub to_mass_id: u64,
     pub local_impact_direction: Vec3,
+    pub current_direction: Option<Vec3>,
 }

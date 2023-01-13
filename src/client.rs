@@ -319,11 +319,18 @@ pub fn handle_projectile_engagement(
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =
                         (global_impact_site - mass_transform.translation).normalize();
+                    let launch_time = SystemTime::now()
+                        .duration_since(SystemTime::UNIX_EPOCH) // tl;dr -- `0`
+                        .unwrap()
+                        .as_millis();
+                    let current_direction = Some(client_pov.local_z() * -1.0);
                     hot_mass_events.send(events::ClientMessage::ProjectileFired(
                         events::ProjectileFlight {
+                            launch_time,
                             from_mass_id,
                             to_mass_id,
                             local_impact_direction,
+                            current_direction,
                         },
                     ));
                 }
@@ -351,10 +358,20 @@ pub fn handle_projectile_fired(
                         ..Default::default()
                     })),
                     material: materials.add(Color::WHITE.into()),
-                    visibility: Visibility::INVISIBLE,
+                    //visibility: Visibility::INVISIBLE,
                     ..Default::default()
                 })
                 .insert(*projectile_flight);
         }
+    }
+}
+
+pub fn move_projectiles(
+    mut projectile_query: Query<(&mut Transform, &events::ProjectileFlight)>,
+    time: Res<Time>,
+) {
+    for (mut transform, projectile_flight) in projectile_query.iter_mut() {
+        transform.translation +=
+            projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
     }
 }
