@@ -21,9 +21,12 @@ pub enum ServerMessage {
 pub enum ClientMessage {
     Ready,
     Rotation(Quat),
-    ProjectileFlight {
-        origin_mass_id: u64,
-        target_mass_id: u64,
-        local_impact_direction: Vec3,
-    },
+    ProjectileFired(ProjectileFlight),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProjectileFlight {
+    pub origin_mass_id: u64,
+    pub target_mass_id: u64,
+    pub local_impact_direction: Vec3,
 }

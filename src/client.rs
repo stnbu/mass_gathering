@@ -320,11 +320,13 @@ pub fn handle_projectile_engagement(
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =
                         (global_impact_site - mass_transform.translation).normalize();
-                    hot_mass_events.send(events::ClientMessage::ProjectileFlight {
-                        origin_mass_id,
-                        target_mass_id,
-                        local_impact_direction,
-                    });
+                    hot_mass_events.send(events::ClientMessage::ProjectileFired(
+                        events::ProjectileFlight {
+                            origin_mass_id,
+                            target_mass_id,
+                            local_impact_direction,
+                        },
+                    ));
                 }
             } else {
                 for mut visibility in sights_query.iter_mut() {

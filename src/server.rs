@@ -174,8 +174,8 @@ pub fn handle_server_events(
                     debug!("Broadcasting except to {client_id}: {client_rotation:?}");
                     server.broadcast_message_except(client_id, CHANNEL, message);
                 }
-                events::ClientMessage::ProjectileFlight { .. } => {
-                    debug!("BANG!")
+                events::ClientMessage::ProjectileFired(projectile_flight) => {
+                    debug!("Client {client_id} fired projectile {projectile_flight:?}");
                 }
             }
         }
