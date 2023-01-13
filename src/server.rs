@@ -1,7 +1,8 @@
 use crate::*;
+// We rename this because it sounds too much like one of _our_ events (confusing).
+use bevy_renet::renet::ServerEvent as RenetServerEvent;
 use bevy_renet::renet::{
     DefaultChannel, RenetConnectionConfig, RenetServer, ServerAuthentication, ServerConfig,
-    ServerEvent,
 };
 use std::{net::UdpSocket, time::SystemTime};
 
@@ -46,7 +47,7 @@ pub fn setup_physics(mut commands: Commands, cli_args: Res<resources::ServerCliA
 }
 
 pub fn handle_server_events(
-    mut server_events: EventReader<ServerEvent>, // wait what
+    mut server_events: EventReader<RenetServerEvent>,
     mut server: ResMut<RenetServer>,
     init_data: Res<resources::InitData>,
     mut app_state: ResMut<State<resources::GameState>>,
@@ -56,7 +57,7 @@ pub fn handle_server_events(
 ) {
     for event in server_events.iter() {
         match event {
-            ServerEvent::ClientConnected(id, user_data) => {
+            RenetServerEvent::ClientConnected(id, user_data) => {
                 // FIXME: where? here? somewhere we need to "handle" clients connecting
                 // to an in-progress game (which we do not allow).
                 let new_id = *id;
@@ -114,7 +115,7 @@ pub fn handle_server_events(
                     bincode::serialize(&message).unwrap(),
                 );
             }
-            ServerEvent::ClientDisconnected(id) => {
+            RenetServerEvent::ClientDisconnected(id) => {
                 debug!("Server got disconnect from client {id}");
             }
         }
