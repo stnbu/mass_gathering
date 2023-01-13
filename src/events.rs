@@ -24,7 +24,7 @@ pub enum ClientMessage {
     ProjectileFired(ProjectileFlight),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Resource, Clone, Copy, Component)]
 pub struct ProjectileFlight {
     pub from_mass_id: u64,
     pub to_mass_id: u64,

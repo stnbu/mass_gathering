@@ -338,25 +338,23 @@ pub fn handle_projectile_engagement(
 
 pub fn handle_projectile_fired(
     mut client_messages: EventReader<events::ClientMessage>, // FIXME -- should be "ServerMessage"
-    mass_query: Query<(&Transform, &components::MassID)>,
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for message in client_messages.iter() {
         if let events::ClientMessage::ProjectileFired(projectile_flight) = message {
-            let mut from_transform = None;
-            let mut to_transform = None;
-            for (transform, &components::MassID(mass_id)) in mass_query.iter() {
-                if mass_id == projectile_flight.from_mass_id {
-                    from_transform = Some(transform);
-                }
-                if mass_id == projectile_flight.to_mass_id {
-                    to_transform = Some(transform);
-                }
-            }
-            if from_transform.is_none() || to_transform.is_none() {
-                panic!("Unable to get transform for a mass in {projectile_flight:?}")
-            } else {
-                info!("Found from/to transforms for projectile flight");
-            }
+            commands
+                .spawn(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.2,
+                        ..Default::default()
+                    })),
+                    material: materials.add(Color::WHITE.into()),
+                    visibility: Visibility::INVISIBLE,
+                    ..Default::default()
+                })
+                .insert(*projectile_flight);
         }
     }
 }

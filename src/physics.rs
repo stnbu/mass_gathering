@@ -51,7 +51,14 @@ pub fn handle_despawn_mass(
 
 pub fn merge_masses(
     mut mass_query: Query<(&mut Transform, &mut Momentum, Entity)>,
-    inhabitant_query: Query<Entity, With<components::Inhabitable>>,
+    inhabitant_query: Query<
+        Entity,
+        Or<(
+            // FIXME -- this screams "enum"
+            With<components::Inhabitable>,
+            With<components::ClientInhabited>,
+        )>,
+    >,
     mut mass_events: EventReader<MassCollisionEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
