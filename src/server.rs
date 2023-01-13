@@ -6,10 +6,10 @@ use bevy_renet::renet::{
 };
 use std::{net::UdpSocket, time::SystemTime};
 
+// Only used by server, kinda hacky
 #[derive(Resource, Default)]
 pub struct UnassignedMasses(Vec<u64>);
 
-// Only used by server, kinda hacky
 pub fn populate_unassigned_masses(
     mut unassigned_masses: ResMut<UnassignedMasses>,
     init_data: Res<resources::InitData>,
@@ -20,6 +20,7 @@ pub fn populate_unassigned_masses(
         }
     }
 }
+
 pub fn new_renet_server(address: String) -> RenetServer {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
