@@ -18,7 +18,7 @@ pub fn send_messages_to_server(
     mut client: ResMut<RenetClient>,
 ) {
     for message in client_messages.iter() {
-        client.send_message(CHANNEL, bincode::serialize(message).unwrap());
+        client.send_message(CHANNEL_RELIABLE, bincode::serialize(message).unwrap());
     }
 }
 
@@ -134,7 +134,7 @@ pub fn receive_messages_from_server(
     mut client: ResMut<RenetClient>,
     mut server_messages: EventWriter<events::ServerMessage>,
 ) {
-    while let Some(message) = client.receive_message(CHANNEL) {
+    while let Some(message) = client.receive_message(CHANNEL_RELIABLE) {
         server_messages.send(bincode::deserialize(&message).unwrap());
     }
 }
