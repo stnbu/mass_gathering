@@ -26,7 +26,7 @@ pub enum ClientMessage {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProjectileFlight {
-    pub origin_mass_id: u64,
-    pub target_mass_id: u64,
+    pub from_mass_id: u64,
+    pub to_mass_id: u64,
     pub local_impact_direction: Vec3,
 }

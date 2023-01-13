@@ -300,7 +300,7 @@ pub fn handle_projectile_engagement(
     mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
 ) {
-    for (client_pov, &components::MassID(origin_mass_id)) in inhabited_mass_query.iter() {
+    for (client_pov, &components::MassID(from_mass_id)) in inhabited_mass_query.iter() {
         let ray_origin = client_pov.translation;
         let ray_direction = -1.0 * client_pov.local_z();
         let intersection = rapier_context.cast_ray(
@@ -311,8 +311,7 @@ pub fn handle_projectile_engagement(
             QueryFilter::only_dynamic(),
         );
         if let Some((mass, distance)) = intersection {
-            if let Ok((mass_transform, &components::MassID(target_mass_id))) = mass_query.get(mass)
-            {
+            if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
                 for mut visibility in sights_query.iter_mut() {
                     visibility.is_visible = true;
                 }
@@ -322,8 +321,8 @@ pub fn handle_projectile_engagement(
                         (global_impact_site - mass_transform.translation).normalize();
                     hot_mass_events.send(events::ClientMessage::ProjectileFired(
                         events::ProjectileFlight {
-                            origin_mass_id,
-                            target_mass_id,
+                            from_mass_id,
+                            to_mass_id,
                             local_impact_direction,
                         },
                     ));
@@ -332,6 +331,31 @@ pub fn handle_projectile_engagement(
                 for mut visibility in sights_query.iter_mut() {
                     visibility.is_visible = false;
                 }
+            }
+        }
+    }
+}
+
+pub fn handle_projectile_fired(
+    mut client_messages: EventReader<events::ClientMessage>, // FIXME -- should be "ServerMessage"
+    mass_query: Query<(&Transform, &components::MassID)>,
+) {
+    for message in client_messages.iter() {
+        if let events::ClientMessage::ProjectileFired(projectile_flight) = message {
+            let mut from_transform = None;
+            let mut to_transform = None;
+            for (transform, &components::MassID(mass_id)) in mass_query.iter() {
+                if mass_id == projectile_flight.from_mass_id {
+                    from_transform = Some(transform);
+                }
+                if mass_id == projectile_flight.to_mass_id {
+                    to_transform = Some(transform);
+                }
+            }
+            if from_transform.is_none() || to_transform.is_none() {
+                panic!("Unable to get transform for a mass in {projectile_flight:?}")
+            } else {
+                info!("Found from/to transforms for projectile flight");
             }
         }
     }

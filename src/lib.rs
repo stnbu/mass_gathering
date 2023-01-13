@@ -45,6 +45,7 @@ impl Plugin for Core {
             SystemSet::on_update(resources::GameState::Running)
                 .with_system(client::control)
                 .with_system(client::handle_projectile_engagement)
+                .with_system(client::handle_projectile_fired)
                 .with_system(client::rotate_client_inhabited_mass),
         );
         app.add_plugin(EguiPlugin);
