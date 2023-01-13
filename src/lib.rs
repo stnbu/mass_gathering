@@ -107,8 +107,6 @@ pub fn let_light(mut commands: Commands) {
     });
 }
 
-//
-
 pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
         error!("{}", e);
