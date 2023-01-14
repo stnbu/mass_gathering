@@ -71,6 +71,17 @@ pub enum GameState {
 #[derive(Resource, Default, Clone)]
 pub struct MassIDToEntity(pub HashMap<u64, Entity>);
 
+impl MassIDToEntity {
+    pub fn get_entities<const N: usize>(&self, mass_ids: [u64; N]) -> [Entity; N] {
+        mass_ids
+            .iter()
+            .map(|id| *self.0.get(id).unwrap())
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap()
+    }
+}
+
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
 pub struct MassMotion {
     pub position: Vec3,
