@@ -15,6 +15,7 @@ pub enum ServerMessage {
         id: u64,
         rotation: Quat,
     },
+    ProjectileFired(ProjectileFlight),
 }
 
 #[derive(Debug, Serialize, Deserialize, Component)]

@@ -124,6 +124,9 @@ pub fn process_server_messages(
                 }
                 debug!("    we now have lobby {lobby:?}");
             }
+            events::ServerMessage::ProjectileFired(_) => {
+                // not handled here
+            }
         }
     }
 }
@@ -342,13 +345,13 @@ pub fn handle_projectile_engagement(
 }
 
 pub fn handle_projectile_fired(
-    mut client_messages: EventReader<events::ClientMessage>, // FIXME -- should be "ServerMessage"
+    mut client_messages: EventReader<events::ServerMessage>, // FIXME -- should be "ServerMessage"
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for message in client_messages.iter() {
-        if let events::ClientMessage::ProjectileFired(projectile_flight) = message {
+        if let events::ServerMessage::ProjectileFired(projectile_flight) = message {
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -383,6 +386,9 @@ pub fn move_projectiles(
         let seconds_elapsed = (now - projectile_flight.launch_time) as f32 / 1_000.0;
         let [from_entity, to_entity] = mass_to_entity_map
             .get_entities([projectile_flight.from_mass_id, projectile_flight.to_mass_id]);
+        // FIXME
+        //
+        // This is where the client had its meltdown upon mass collison
         let [(from_transform, _), (to_transform, &components::Momentum { mass, .. })] =
             masses_query.get_many([from_entity, to_entity]).unwrap();
         // The impact site/taget is the _surface of_ the mass

@@ -174,8 +174,12 @@ pub fn handle_server_events(
                     debug!("Broadcasting except to {client_id}: {client_rotation:?}");
                     server.broadcast_message_except(client_id, CHANNEL_RELIABLE, message);
                 }
-                events::ClientMessage::ProjectileFired(_) => {
-                    //
+                events::ClientMessage::ProjectileFired(projectile_flight) => {
+                    let projectile_fired =
+                        events::ServerMessage::ProjectileFired(projectile_flight);
+                    let message = bincode::serialize(&projectile_fired).unwrap();
+                    debug!("Broadcasting {projectile_fired:?}");
+                    server.broadcast_message(CHANNEL_RELIABLE, message);
                 }
             }
         }
