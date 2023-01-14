@@ -323,7 +323,7 @@ pub fn handle_projectile_engagement(
                         .duration_since(SystemTime::UNIX_EPOCH) // tl;dr -- `0`
                         .unwrap()
                         .as_millis();
-                    let current_direction = Some(client_pov.local_z() * -1.0);
+                    let current_direction = Some(-client_pov.local_z());
                     client_messages.send(events::ClientMessage::ProjectileFired(
                         events::ProjectileFlight {
                             launch_time,
