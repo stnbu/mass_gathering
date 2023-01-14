@@ -145,7 +145,7 @@ impl InitData {
                         .looking_at(Vec3::ZERO, Vec3::Y),
                     ..Default::default()
                 },
-                momentum: physics::Momentum {
+                momentum: components::Momentum {
                     velocity,
                     mass: radius_to_mass(radius),
                 },

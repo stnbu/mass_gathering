@@ -19,7 +19,7 @@ pub struct MassCollisionEvent(pub Entity, pub Entity);
 pub fn handle_mass_collisions(
     mut events: EventReader<CollisionEvent>,
     mut mass_collision_events: EventWriter<MassCollisionEvent>,
-    mass_query: Query<(&Transform, &Momentum)>,
+    mass_query: Query<(&Transform, &components::Momentum)>,
 ) {
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
@@ -50,11 +50,10 @@ pub fn handle_despawn_mass(
 }
 
 pub fn merge_masses(
-    mut mass_query: Query<(&mut Transform, &mut Momentum, Entity)>,
+    mut mass_query: Query<(&mut Transform, &mut components::Momentum, Entity)>,
     inhabitant_query: Query<
         Entity,
         Or<(
-            // FIXME -- this screams "enum"
             With<components::Inhabitable>,
             With<components::ClientInhabited>,
         )>,
@@ -155,7 +154,7 @@ pub fn merge_masses(
 pub struct PointMassBundle {
     #[bundle]
     pub pbr: PbrBundle,
-    pub momentum: Momentum,
+    pub momentum: components::Momentum,
     pub rigid_body: RigidBody,
     pub collider: Collider,
     pub active_events: ActiveEvents,
@@ -175,14 +174,8 @@ impl Default for PointMassBundle {
     }
 }
 
-#[derive(Component, Debug, Default)]
-pub struct Momentum {
-    pub velocity: Vec3,
-    pub mass: f32,
-}
-
 pub fn freefall(
-    mut masses_query: Query<(Entity, &mut Transform, &mut Momentum)>,
+    mut masses_query: Query<(Entity, &mut Transform, &mut components::Momentum)>,
     physics_config: Res<PhysicsConfig>,
     time: Res<Time>,
 ) {

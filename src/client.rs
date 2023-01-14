@@ -3,7 +3,7 @@ use bevy_egui::{
     egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
     EguiContext,
 };
-use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
+use bevy_rapier3d::prelude::{QueryFilter, RapierContext, RigidBody};
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
@@ -127,8 +127,6 @@ pub fn process_server_messages(
         }
     }
 }
-
-use bevy_rapier3d::prelude::RigidBody;
 
 pub fn receive_messages_from_server(
     mut client: ResMut<RenetClient>,
@@ -320,7 +318,7 @@ pub fn handle_projectile_engagement(
                     let local_impact_direction =
                         (global_impact_site - mass_transform.translation).normalize();
                     let launch_time = SystemTime::now()
-                        .duration_since(SystemTime::UNIX_EPOCH) // tl;dr -- `0`
+                        .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap()
                         .as_millis();
                     let current_direction = Some(-client_pov.local_z());
@@ -368,10 +366,65 @@ pub fn handle_projectile_fired(
 
 pub fn move_projectiles(
     mut projectile_query: Query<(&mut Transform, &events::ProjectileFlight)>,
+    masses_query: Query<
+        (&Transform, &components::Momentum),
+        (With<components::MassID>, Without<events::ProjectileFlight>),
+    >,
+    mass_to_entity_map: Res<resources::MassIDToEntity>,
     time: Res<Time>,
 ) {
-    for (mut transform, projectile_flight) in projectile_query.iter_mut() {
-        transform.translation +=
-            projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
+    let proportion_of = 1.0 / 512.0;
+    let portions_per_second = 256.0;
+
+    for (mut projectile_transform, projectile_flight) in projectile_query.iter_mut() {
+        let now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_millis();
+        let seconds_elapsed = (now - projectile_flight.launch_time) as f32 / 1_000.0;
+        let [from_entity, to_entity] = mass_to_entity_map
+            .get_entities([projectile_flight.from_mass_id, projectile_flight.to_mass_id]);
+        let [(from_transform, _), (to_transform, &components::Momentum { mass, .. })] =
+            masses_query.get_many([from_entity, to_entity]).unwrap();
+
+        let target_radius = mass_to_radius(mass);
+
+        let impact_site = to_transform.translation
+            + (projectile_flight.local_impact_direction
+                * target_radius
+                * to_transform.scale.length());
+
+        let flight_vector = impact_site - from_transform.translation;
+        let flight_progress = flight_vector * proportion_of * portions_per_second * seconds_elapsed;
+
+        projectile_transform.translation = from_transform.translation + flight_progress;
+
+        //event.local_impact_site / (planet_transform.scale.length() / SQRT_3);
+
+        // transform.translation +=
+        //     projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
+
+        // for (mut projectile_transform, projectile_flight) in projectile_query.iter_mut() {
+        //     for (mut transform, projectile_flight) in projectile_query.iter_mut() {
+        //         transform.translation +=
+        //             projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
+        //     }
+
+        // // get entity
+        // if let Ok(inhabitable_mass_transform) = inhabitable_query.get(entity) {
+        //     let inhabited_mass_translation = inhabitable_mass_transform.translation;
+        //     let target_mass_translation = target_mass_transform.translation;
+        //     let now = SystemTime::now()
+        //         .duration_since(SystemTime::UNIX_EPOCH)
+        //         .unwrap()
+        //         .as_millis();
+        //     let seconds_elapsed = (now - projectile_flight.launch_time) / 1_000.0;
+
+        //     // calculate new position
+        //     projectile_transform.translation +=
+        //         projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
+        // } else {
+        //     // blah
+        // }
     }
 }
