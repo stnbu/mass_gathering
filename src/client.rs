@@ -296,7 +296,7 @@ pub fn handle_projectile_engagement(
         With<components::ClientInhabited>,
     >,
     rapier_context: Res<RapierContext>,
-    mut hot_mass_events: EventWriter<events::ClientMessage>,
+    mut client_messages: EventWriter<events::ClientMessage>,
     mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
 ) {
@@ -324,7 +324,7 @@ pub fn handle_projectile_engagement(
                         .unwrap()
                         .as_millis();
                     let current_direction = Some(client_pov.local_z() * -1.0);
-                    hot_mass_events.send(events::ClientMessage::ProjectileFired(
+                    client_messages.send(events::ClientMessage::ProjectileFired(
                         events::ProjectileFlight {
                             launch_time,
                             from_mass_id,
