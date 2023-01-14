@@ -371,7 +371,6 @@ pub fn move_projectiles(
         (With<components::MassID>, Without<events::ProjectileFlight>),
     >,
     mass_to_entity_map: Res<resources::MassIDToEntity>,
-    time: Res<Time>,
 ) {
     let proportion_of = 1.0 / 512.0;
     let portions_per_second = 128.0;
@@ -386,46 +385,14 @@ pub fn move_projectiles(
             .get_entities([projectile_flight.from_mass_id, projectile_flight.to_mass_id]);
         let [(from_transform, _), (to_transform, &components::Momentum { mass, .. })] =
             masses_query.get_many([from_entity, to_entity]).unwrap();
-
-        let target_radius = mass_to_radius(mass);
-
+        // The impact site/taget is the _surface of_ the mass
         let impact_site = to_transform.translation
             + (projectile_flight.local_impact_direction
-                * target_radius
+                * mass_to_radius(mass)
                 * to_transform.scale.length()
                 / SQRT_3); // mysterious
-
         let flight_vector = impact_site - from_transform.translation;
         let flight_progress = flight_vector * proportion_of * portions_per_second * seconds_elapsed;
-
         projectile_transform.translation = from_transform.translation + flight_progress;
-
-        //event.local_impact_site / (planet_transform.scale.length() / SQRT_3);
-
-        // transform.translation +=
-        //     projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
-
-        // for (mut projectile_transform, projectile_flight) in projectile_query.iter_mut() {
-        //     for (mut transform, projectile_flight) in projectile_query.iter_mut() {
-        //         transform.translation +=
-        //             projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
-        //     }
-
-        // // get entity
-        // if let Ok(inhabitable_mass_transform) = inhabitable_query.get(entity) {
-        //     let inhabited_mass_translation = inhabitable_mass_transform.translation;
-        //     let target_mass_translation = target_mass_transform.translation;
-        //     let now = SystemTime::now()
-        //         .duration_since(SystemTime::UNIX_EPOCH)
-        //         .unwrap()
-        //         .as_millis();
-        //     let seconds_elapsed = (now - projectile_flight.launch_time) / 1_000.0;
-
-        //     // calculate new position
-        //     projectile_transform.translation +=
-        //         projectile_flight.current_direction.unwrap() * time.delta_seconds() * 15.0;
-        // } else {
-        //     // blah
-        // }
     }
 }
