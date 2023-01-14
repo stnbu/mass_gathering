@@ -374,7 +374,7 @@ pub fn move_projectiles(
     time: Res<Time>,
 ) {
     let proportion_of = 1.0 / 512.0;
-    let portions_per_second = 256.0;
+    let portions_per_second = 128.0;
 
     for (mut projectile_transform, projectile_flight) in projectile_query.iter_mut() {
         let now = SystemTime::now()
@@ -392,7 +392,8 @@ pub fn move_projectiles(
         let impact_site = to_transform.translation
             + (projectile_flight.local_impact_direction
                 * target_radius
-                * to_transform.scale.length());
+                * to_transform.scale.length()
+                / SQRT_3); // mysterious
 
         let flight_vector = impact_site - from_transform.translation;
         let flight_progress = flight_vector * proportion_of * portions_per_second * seconds_elapsed;
