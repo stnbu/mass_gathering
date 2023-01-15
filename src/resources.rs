@@ -38,7 +38,7 @@ pub struct Lobby {
 pub struct ClientCliArgs {
     #[arg(long)]
     pub nickname: String,
-    #[arg(long, default_value_t = true)]
+    #[arg(long)]
     pub autostart: bool,
     #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
     pub address: String,
