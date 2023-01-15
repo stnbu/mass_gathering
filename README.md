@@ -44,6 +44,8 @@ If you click on a client window and bring it into focus, you can control "your p
 
 You should be able to see each player's "missiles" in the other window.
 
+**IMPORTANT** -- The server slam your CPU. Be sure to `ctrl-C` in your console and kill the server when you're done. You can also `killall -9 server`.
+
 Please file a [GitHub Issue](https://github.com/stnbu/mass_gathering/issues/new/choose) if you encounter anything "interesting".
 
 ## WASM
