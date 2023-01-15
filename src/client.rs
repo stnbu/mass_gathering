@@ -359,7 +359,7 @@ pub fn handle_projectile_fired(
                         radius,
                         ..Default::default()
                     })),
-                    //visibility: Visibility::INVISIBLE,
+                    visibility: Visibility::INVISIBLE,
                     material: materials.add(StandardMaterial {
                         base_color: Color::RED + Color::WHITE * 0.2,
                         emissive: Color::rgb_u8(100, 100, 100),
@@ -380,13 +380,18 @@ pub fn handle_projectile_fired(
                         ..default()
                     });
                 });
-            //
         }
     }
 }
 
 pub fn move_projectiles(
-    mut projectile_query: Query<(&mut Transform, &mut Visibility, &events::ProjectileFlight)>,
+    mut commands: Commands,
+    mut projectile_query: Query<(
+        Entity,
+        &mut Transform,
+        &mut Visibility,
+        &events::ProjectileFlight,
+    )>,
     masses_query: Query<
         (&Transform, &components::Momentum),
         (With<components::MassID>, Without<events::ProjectileFlight>),
@@ -396,10 +401,10 @@ pub fn move_projectiles(
     let proportion_of = 1.0 / 512.0;
     let portions_per_second = 128.0 * 3.0;
 
-    for (mut projectile_transform, mut projectile_visibility, projectile_flight) in
+    for (projectile_id, mut projectile_transform, mut projectile_visibility, projectile_flight) in
         projectile_query.iter_mut()
     {
-        //projectile_visibility.is_visible = true; // FIXME -- we need a better "way"
+        projectile_visibility.is_visible = true; // FIXME -- we need a better "way"
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -427,6 +432,8 @@ pub fn move_projectiles(
                     }
                     Err(err) => {
                         error!("While getting projectile to/from: {err}");
+                        debug!("Despawning projectile {projectile_id:?}");
+                        commands.entity(projectile_id).despawn_recursive();
                     }
                 }
             }
