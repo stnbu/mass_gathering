@@ -35,9 +35,10 @@ If you click on a client window and bring it into focus, you can control "your p
 
 `WASD`
 : Pitch and Yaw
+
 `ZX`
 : Roll
-:
+
 `Space`
 : Fire!
 
