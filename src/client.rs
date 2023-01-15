@@ -352,7 +352,7 @@ pub fn handle_projectile_fired(
 ) {
     for message in client_messages.iter() {
         if let events::ServerMessage::ProjectileFired(projectile_flight) = message {
-            let radius = 0.9;
+            let radius = 0.3;
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -361,8 +361,8 @@ pub fn handle_projectile_fired(
                     })),
                     //visibility: Visibility::INVISIBLE,
                     material: materials.add(StandardMaterial {
-                        base_color: Color::WHITE,
-                        emissive: Color::rgb_u8(60, 60, 60),
+                        base_color: Color::RED + Color::WHITE,
+                        emissive: Color::rgb_u8(100, 100, 100),
                         unlit: true,
                         ..default()
                     }),
@@ -373,7 +373,7 @@ pub fn handle_projectile_fired(
                 .with_children(|children| {
                     children.spawn(PointLightBundle {
                         point_light: PointLight {
-                            intensity: 1000.0,
+                            intensity: 100.0,
                             color: Color::RED,
                             ..default()
                         },
@@ -386,7 +386,7 @@ pub fn handle_projectile_fired(
 }
 
 pub fn move_projectiles(
-    mut projectile_query: Query<(&mut Transform, &events::ProjectileFlight)>,
+    mut projectile_query: Query<(&mut Transform, &mut Visibility, &events::ProjectileFlight)>,
     masses_query: Query<
         (&Transform, &components::Momentum),
         (With<components::MassID>, Without<events::ProjectileFlight>),
@@ -394,9 +394,12 @@ pub fn move_projectiles(
     mass_to_entity_map: Res<resources::MassIDToEntity>,
 ) {
     let proportion_of = 1.0 / 512.0;
-    let portions_per_second = 128.0;
+    let portions_per_second = 128.0 * 3.0;
 
-    for (mut projectile_transform, projectile_flight) in projectile_query.iter_mut() {
+    for (mut projectile_transform, mut projectile_visibility, projectile_flight) in
+        projectile_query.iter_mut()
+    {
+        //projectile_visibility.is_visible = true; // FIXME -- we need a better "way"
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -423,12 +426,12 @@ pub fn move_projectiles(
                             from_transform.translation + flight_progress;
                     }
                     Err(err) => {
-                        error!(">>>>> {err}");
+                        error!("While getting projectile to/from: {err}");
                     }
                 }
             }
             Result::Err(err) => {
-                warn!("While trying to move projectile: {err}");
+                error!("While trying to move projectile: {err}");
             }
         }
     }
