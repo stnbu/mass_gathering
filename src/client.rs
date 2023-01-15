@@ -406,18 +406,26 @@ pub fn move_projectiles(
             .get_entities([projectile_flight.from_mass_id, projectile_flight.to_mass_id])
         {
             Result::Ok([from_entity, to_entity]) => {
-                let [(from_transform, _), (to_transform, &components::Momentum { mass, .. })] =
-                    masses_query.get_many([from_entity, to_entity]).unwrap();
-                // The impact site/taget is the _surface of_ the mass
-                let impact_site = to_transform.translation
-                    + (projectile_flight.local_impact_direction
-                        * mass_to_radius(mass)
-                        * to_transform.scale.length()
-                        / SQRT_3); // mysterious
-                let flight_vector = impact_site - from_transform.translation;
-                let flight_progress =
-                    flight_vector * proportion_of * portions_per_second * seconds_elapsed;
-                projectile_transform.translation = from_transform.translation + flight_progress;
+                match masses_query.get_many([from_entity, to_entity]) {
+                    Ok(
+                        [(from_transform, _), (to_transform, &components::Momentum { mass, .. })],
+                    ) => {
+                        // The impact site/taget is the _surface of_ the mass
+                        let impact_site = to_transform.translation
+                            + (projectile_flight.local_impact_direction
+                                * mass_to_radius(mass)
+                                * to_transform.scale.length()
+                                / SQRT_3); // mysterious
+                        let flight_vector = impact_site - from_transform.translation;
+                        let flight_progress =
+                            flight_vector * proportion_of * portions_per_second * seconds_elapsed;
+                        projectile_transform.translation =
+                            from_transform.translation + flight_progress;
+                    }
+                    Err(err) => {
+                        error!(">>>>> {err}");
+                    }
+                }
             }
             Result::Err(err) => {
                 warn!("While trying to move projectile: {err}");

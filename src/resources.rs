@@ -57,7 +57,6 @@ pub struct ServerCliArgs {
 #[derive(Resource, Default)]
 pub struct GameConfig {
     pub nickname: String,
-    pub connected: bool,
     pub autostart: bool,
 }
 
