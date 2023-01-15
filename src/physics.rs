@@ -1,111 +1,111 @@
-use crate::craft::{ProjectileCollisionEvent, ProjectileTarget};
-use crate::{mass_to_radius, radius_to_mass};
-use bevy::prelude::*;
+use crate::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
+use serde::{Deserialize, Serialize};
 
-#[derive(Resource)]
+#[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
-    pub trails: bool,
-    pub sims_per_frame: u8,
-    pub trail_ttl: u64,
+    pub sims_per_frame: u32,
 }
 
 impl Default for PhysicsConfig {
     fn default() -> Self {
-        Self {
-            trails: false,
-            sims_per_frame: 10,
-            trail_ttl: 2500,
-        }
+        Self { sims_per_frame: 10 }
     }
 }
 
 #[derive(Debug)]
-pub struct PlanetCollisionEvent(pub Entity, pub Entity);
+pub struct MassCollisionEvent(pub Entity, pub Entity);
 
-pub fn handle_planet_collisions(
+pub fn handle_mass_collisions(
     mut events: EventReader<CollisionEvent>,
-    mut projectile_collision_events: EventWriter<ProjectileCollisionEvent>,
-    mut planet_collision_events: EventWriter<PlanetCollisionEvent>,
-    planet_query: Query<(&Transform, &Momentum)>,
-    projectile_query: Query<&Transform, With<ProjectileTarget>>,
+    mut mass_collision_events: EventWriter<MassCollisionEvent>,
+    mass_query: Query<(&Transform, &components::Momentum)>,
 ) {
     for collision_event in events.iter() {
         // FIXME: Filter events (for "Sensor")
-        if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            if planet_query.get_many([*e0, *e1]).is_ok() {
-                let event = PlanetCollisionEvent(*e0, *e1);
-                debug!("Sending planet collision event: {event:?}");
-                planet_collision_events.send(event);
-            } else {
-                for (&projectile, &planet) in [(e0, e1), (e1, e0)] {
-                    if let Ok(projectile_transform) = projectile_query.get(projectile) {
-                        if let Ok((planet_transform, planet_momentum)) = planet_query.get(planet) {
-                            let radius = mass_to_radius(planet_momentum.mass);
-                            // unit vector at planet center pointing at projectile
-                            let direction = (projectile_transform.translation
-                                - planet_transform.translation)
-                                .normalize();
-                            let local_impact_site = direction * radius;
-                            let event = ProjectileCollisionEvent {
-                                planet,
-                                projectile,
-                                local_impact_site,
-                            };
-                            debug!("Sending projectile impact event: {event:?}");
-                            projectile_collision_events.send(event);
-                        }
-                    }
-                }
+        if let CollisionEvent::Started(e0, e1, flags) = collision_event {
+            debug!(
+                "CollisionEvent::Started({:?}, {:?}, flags={:?})",
+                e0, e1, flags
+            );
+            if mass_query.get_many([*e0, *e1]).is_ok() {
+                let event = MassCollisionEvent(*e0, *e1);
+                debug!("Sending mass collision event: {event:?}");
+                mass_collision_events.send(event);
             }
         }
     }
 }
 
-pub struct DespawnPlanetEvent(pub Entity);
+pub struct DespawnMassEvent(pub Entity);
 
-pub fn handle_despawn_planet(
+pub fn handle_despawn_mass(
     mut commands: Commands,
-    mut despawn_planet_events: EventReader<DespawnPlanetEvent>,
-    projectile_query: Query<(Entity, &ProjectileTarget)>,
+    mut despawn_mass_events: EventReader<DespawnMassEvent>,
 ) {
-    for &DespawnPlanetEvent(entity) in despawn_planet_events.iter() {
-        debug!("RECURSIVELY despawning planet {entity:?} and all of its in-flight projectiles");
-        for (projectile, &ProjectileTarget { planet, .. }) in projectile_query.iter() {
-            if entity == planet {
-                commands.entity(projectile).despawn_recursive();
-            }
-        }
+    for &DespawnMassEvent(entity) in despawn_mass_events.iter() {
+        debug!("RECURSIVELY despawning mass {entity:?}");
         commands.entity(entity).despawn_recursive();
     }
 }
 
-// FIXME: 1) this should be 'merge_planets' or something, 2) do we need to
-//        "transfer" children? (explosion animation...)
-pub fn transfer_planet_momentum(
-    mut planet_query: Query<(&Transform, &mut Momentum, Entity)>,
-    mut planet_events: EventReader<PlanetCollisionEvent>,
-    mut delta_events: EventWriter<DeltaEvent>,
-    mut despawn_planet_events: EventWriter<DespawnPlanetEvent>,
+pub fn merge_masses(
+    mut mass_query: Query<(&mut Transform, &mut components::Momentum, Entity)>,
+    inhabitant_query: Query<
+        Entity,
+        Or<(
+            With<components::Inhabitable>,
+            With<components::ClientInhabited>,
+        )>,
+    >,
+    mut mass_events: EventReader<MassCollisionEvent>,
+    mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
-    for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
-        // FIXME: We have write access to `Momentum` and yet we update
-        // `delta_v` via an event. Just update it here? Should `DeltaEvent`
-        // even have a `delta_v` field?
-        if let Ok([p0, p1]) = planet_query.get_many_mut([*e0, *e1]) {
-            let (mut major, minor) = if p0.1.mass > p1.1.mass {
+    for MassCollisionEvent(e0, e1) in mass_events.iter() {
+        let involved_inhabitant = inhabitant_query.iter_many([*e0, *e1]).collect::<Vec<_>>();
+        if involved_inhabitant.len() == 2 {
+            debug!("Inhabited masses {e0:?} and {e1:?} collided. Ignoring.");
+            continue;
+        }
+        let inhabitant = if involved_inhabitant.len() == 1 {
+            let id = involved_inhabitant[0];
+            debug!("Inhabited mass {id:?} was involved in a collision.");
+            Some(id)
+        } else {
+            None
+        };
+
+        if let Ok([p0, p1]) = mass_query.get_many_mut([*e0, *e1]) {
+            let (mut major, mut minor) = if p0.1.mass > p1.1.mass {
                 (p0, p1)
             // FIXME: tie-breaker!
             } else {
                 (p1, p0)
             };
 
-            debug!("Collision of planets:");
-            debug!(" Major planet {:?}", major.2);
+            debug!(
+                "We have major-mass={:?} and minor-mass={:?}",
+                major.1.mass, minor.1.mass
+            );
+
+            if let Some(c) = inhabitant {
+                if c == minor.2 {
+                    debug!("Inhabited mass {c:?} was the 'minor'! Swapping major for minor.");
+                    (major, minor) = (minor, major);
+                } else {
+                    debug!(
+                        "Inhabited mass {c:?} was the 'major', which should be '{:?}'. No swapping.",
+                        major.2
+                    )
+                }
+            }
+
+            debug!("Collision of masses:");
+            debug!(" Major mass {:?}", major.2);
             debug!("  position: {:?}", major.0.translation);
             debug!("  velocity: {:?}", major.1.velocity);
             debug!("  mass: {:?}", major.1.mass);
-            debug!(" Minor planet {:?}", minor.2);
+            debug!(" Minor mass {:?}", minor.2);
             debug!("  position: {:?}", minor.0.translation);
             debug!("  velocity: {:?}", minor.1.velocity);
             debug!("  mass: {:?}", minor.1.mass);
@@ -118,50 +118,50 @@ pub fn transfer_planet_momentum(
             let major_factor = major.1.mass / combined_mass;
             let minor_factor = minor.1.mass / combined_mass;
             debug!(
-                "Directly setting mass of major planet {:?} to {combined_mass:?}",
+                "Directly setting mass of major mass {:?} to {combined_mass:?}",
                 major.2
             );
-            // Maybe increment mass via an event to?
-            major.1.mass = combined_mass;
-            let entity = major.2;
 
             let weighted_midpoint =
                 ((major_factor * major.0.translation) + (minor_factor * minor.0.translation)) / 2.0;
             debug!(
-                "The weighted midpoint between planets major={:?} and minor={:?} is {weighted_midpoint:?}",
+                "The weighted midpoint between masses major={:?} and minor={:?} is {weighted_midpoint:?}",
                 major.2, minor.2
             );
             let delta_p = weighted_midpoint - major.0.translation;
             // How much to scale in the linear (multiply major original
             // radius by this much to achieve a proportionate mass (i.e. volume) increase.
-            let delta_s = major_factor.powf(-1.0 / 3.0);
-            let event = DeltaEvent {
-                entity,
-                delta_p,
-                delta_v,
-                delta_s,
-                force_ro: Vec3::ZERO,
+            // We do _not_ scale inhabited masses (they just get denser nom nom.)
+            let delta_s = if inhabitant.is_some() {
+                1.0
+            } else {
+                major_factor.powf(-1.0 / 3.0)
             };
-            debug!("Sending event: {event:?}");
-            delta_events.send(event);
-            debug!("Signaling despawn request for minor planet {:?}", minor.2);
-            despawn_planet_events.send(DespawnPlanetEvent(minor.2));
+
+            debug!("Updating major mass {:?}", major.2);
+            major.1.velocity += delta_v;
+            major.1.mass = combined_mass;
+            major.0.translation += delta_p;
+            major.0.scale *= delta_s;
+
+            debug!("Signaling despawn request for minor mass {:?}", minor.2);
+            despawn_mass_events.send(DespawnMassEvent(minor.2));
         }
     }
 }
 
 #[derive(Bundle)]
-pub struct PlanetBundle {
+pub struct PointMassBundle {
     #[bundle]
-    pbr: PbrBundle,
-    momentum: Momentum,
-    rigid_body: RigidBody,
-    collider: Collider,
-    active_events: ActiveEvents,
-    sensor: Sensor,
+    pub pbr: PbrBundle,
+    pub momentum: components::Momentum,
+    pub rigid_body: RigidBody,
+    pub collider: Collider,
+    pub active_events: ActiveEvents,
+    pub sensor: Sensor,
 }
 
-impl Default for PlanetBundle {
+impl Default for PointMassBundle {
     fn default() -> Self {
         Self {
             pbr: Default::default(),
@@ -174,62 +174,13 @@ impl Default for PlanetBundle {
     }
 }
 
-pub fn spawn_planet<'a>(
-    radius: f32,
-    position: Vec3,
-    velocity: Vec3,
-    color: Color,
-    commands: &'a mut Commands,
-    meshes: &'a mut ResMut<Assets<Mesh>>,
-    materials: &'a mut ResMut<Assets<StandardMaterial>>,
-) {
-    let mass = radius_to_mass(radius);
-    let planet_bundle = PlanetBundle {
-        pbr: PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius,
-                ..default()
-            })),
-            material: materials.add(color.into()),
-            transform: Transform::from_translation(position),
-            ..default()
-        },
-        momentum: Momentum {
-            velocity,
-            mass,
-            ..Default::default()
-        },
-        collider: Collider::ball(radius),
-        ..Default::default()
-    };
-    let planet_id = commands.spawn(planet_bundle).id();
-    debug!("Spawned planet={planet_id:?}");
-}
-
-#[derive(Component, Debug, Default)]
-pub struct Momentum {
-    pub velocity: Vec3,
-    pub mass: f32,
-    pub force_ro: Vec3,
-}
-
-#[derive(Debug)]
-pub struct DeltaEvent {
-    pub entity: Entity,
-    pub delta_p: Vec3,
-    pub delta_v: Vec3,
-    pub delta_s: f32,
-    pub force_ro: Vec3,
-}
-
-pub fn signal_freefall_delta(
-    planet_query: Query<(Entity, &Transform, &Momentum)>,
-    time: Res<Time>,
+pub fn freefall(
+    mut masses_query: Query<(Entity, &mut Transform, &mut components::Momentum)>,
     physics_config: Res<PhysicsConfig>,
-    mut delta_events: EventWriter<DeltaEvent>,
+    time: Res<Time>,
 ) {
     let dt = time.delta_seconds();
-    let mut masses = planet_query
+    let mut masses = masses_query
         .iter()
         .map(|t| (t.0, t.1.translation, t.2.mass, t.2.velocity))
         .collect::<Vec<_>>();
@@ -246,39 +197,25 @@ pub fn signal_freefall_delta(
                 acceleration + grav_acc * 0.001
             })
         });
-        // What would happen if each pass re-re-randomized the order of masses? Good?
-        // Actually, ordering by mass might be a thing too.
         masses = masses
             .iter()
             .zip(accelerations)
-            .map(|((entity, translation, mass, velocity), acceleration)| {
-                let force = acceleration * dt;
-                let delta_p = *velocity * dt;
-                let delta_v = force / *mass;
-                let delta_s = 1.0;
-                delta_events.send(DeltaEvent {
-                    entity: *entity,
-                    delta_p,
-                    delta_v,
-                    delta_s,
-                    force_ro: force,
-                });
-                (*entity, *translation + delta_p, *mass, *velocity + delta_v)
+            .map(|((entity, translation, mass, velocity), force)| {
+                (
+                    *entity,
+                    *translation + *velocity * dt,
+                    *mass,
+                    *velocity + (force * dt) / *mass,
+                )
             })
             .collect::<Vec<_>>();
     }
-}
 
-pub fn handle_freefall(
-    mut planet_query: Query<(&mut Transform, &mut Momentum)>,
-    mut delta_events: EventReader<DeltaEvent>,
-) {
-    for event in delta_events.iter() {
-        if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
-            transform.translation += event.delta_p;
-            momentum.velocity += event.delta_v;
-            momentum.force_ro = event.force_ro * momentum.mass;
-            transform.scale *= event.delta_s;
+    for (entity, translation, mass, velocity) in masses.iter() {
+        if let Ok((_, mut transform, mut momentum)) = masses_query.get_mut(*entity) {
+            transform.translation = *translation;
+            momentum.velocity = *velocity;
+            momentum.mass = *mass;
         }
     }
 }
