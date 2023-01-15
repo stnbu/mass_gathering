@@ -44,7 +44,7 @@ If you click on a client window and bring it into focus, you can control "your p
 
 You should be able to see each player's "missiles" in the other window.
 
-Please file a [GitHub Issue](https://github.com/stnbu/mass_gathering/issues/new/choose) if you have difficulty compiling the project.
+Please file a [GitHub Issue](https://github.com/stnbu/mass_gathering/issues/new/choose) if you encounter anything "interesting".
 
 ## WASM
 
