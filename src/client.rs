@@ -206,23 +206,26 @@ pub fn control(
     // ...etc
     for key in keys.get_pressed() {
         match key {
+            // pitch
+            KeyCode::W => {
+                rotation.x += nudge;
+            }
+            KeyCode::S => {
+                rotation.x -= nudge;
+            }
+            // yaw
             KeyCode::A => {
                 rotation.y += nudge;
             }
             KeyCode::D => {
                 rotation.y -= nudge;
             }
-            KeyCode::W => {
+            // roll
+            KeyCode::Z => {
                 rotation.z -= nudge;
             }
-            KeyCode::S => {
-                rotation.z += nudge;
-            }
-            KeyCode::Z => {
-                rotation.x += nudge;
-            }
             KeyCode::X => {
-                rotation.x -= nudge;
+                rotation.z += nudge;
             }
             _ => (),
         }
@@ -250,7 +253,7 @@ pub fn rotate_client_inhabited_mass(
             }
         }
     } else {
-        debug!("ClientInhabited entity not present");
+        error!("ClientInhabited entity not present");
     }
 }
 
