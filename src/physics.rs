@@ -1,3 +1,8 @@
+// FIXME TODO NOTE WOW: If you start with everything being a radius of 1.0 and then control
+// all else by _scaling_ the sphere, you can
+// 1. Simplify a lot of code.
+// 1. Have the "radius" "stored" in the PBR
+// 1. We might be able to get rid of Momentum::mass too and maybe use rapier's Velocity??
 use crate::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use serde::{Deserialize, Serialize};
