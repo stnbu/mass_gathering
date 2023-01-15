@@ -345,24 +345,42 @@ pub fn handle_projectile_engagement(
 }
 
 pub fn handle_projectile_fired(
-    mut client_messages: EventReader<events::ServerMessage>, // FIXME -- should be "ServerMessage"
+    mut client_messages: EventReader<events::ServerMessage>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for message in client_messages.iter() {
         if let events::ServerMessage::ProjectileFired(projectile_flight) = message {
+            let radius = 0.9;
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.2,
+                        radius,
                         ..Default::default()
                     })),
-                    material: materials.add(Color::WHITE.into()),
                     //visibility: Visibility::INVISIBLE,
-                    ..Default::default()
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::WHITE,
+                        emissive: Color::rgb_u8(60, 60, 60),
+                        unlit: true,
+                        ..default()
+                    }),
+                    transform: Transform::from_scale(Vec3::ONE * radius),
+                    ..default()
                 })
-                .insert(*projectile_flight);
+                .insert(*projectile_flight)
+                .with_children(|children| {
+                    children.spawn(PointLightBundle {
+                        point_light: PointLight {
+                            intensity: 1000.0,
+                            color: Color::RED,
+                            ..default()
+                        },
+                        ..default()
+                    });
+                });
+            //
         }
     }
 }
