@@ -361,7 +361,7 @@ pub fn handle_projectile_fired(
                     })),
                     //visibility: Visibility::INVISIBLE,
                     material: materials.add(StandardMaterial {
-                        base_color: Color::RED + Color::WHITE,
+                        base_color: Color::RED + Color::WHITE * 0.2,
                         emissive: Color::rgb_u8(100, 100, 100),
                         unlit: true,
                         ..default()
