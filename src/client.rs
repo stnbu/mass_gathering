@@ -369,7 +369,7 @@ pub fn handle_projectile_fired(
 ) {
     for message in client_messages.iter() {
         if let events::ServerMessage::ProjectileFired(projectile_flight) = message {
-            let radius = 0.45;
+            let radius = 0.5;
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -379,7 +379,7 @@ pub fn handle_projectile_fired(
                     visibility: Visibility::INVISIBLE,
                     material: materials.add(StandardMaterial {
                         base_color: Color::RED + Color::WHITE * 0.2,
-                        emissive: Color::rgb_u8(100, 100, 100),
+                        emissive: Color::rgb_u8(125, 125, 125),
                         unlit: true,
                         ..default()
                     }),
