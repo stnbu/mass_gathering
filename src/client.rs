@@ -503,10 +503,10 @@ pub fn handle_projectile_collision(
                         child.spawn(PbrBundle {
                             transform: Transform::from_translation(local_impact_site),
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.25,
+                                radius: 0.5,
                                 ..Default::default()
                             })),
-                            material: materials.add(Color::WHITE.into()),
+                            material: materials.add(Color::rgb_u8(255, 255, 255).into()),
                             ..Default::default()
                         });
                     });
