@@ -55,6 +55,7 @@ impl Plugin for Core {
                 .with_system(client::handle_projectile_engagement)
                 .with_system(client::handle_projectile_fired)
                 .with_system(client::move_projectiles)
+                .with_system(client::handle_projectile_collision)
                 .with_system(client::rotate_inhabitable_masses),
         );
         app.add_plugin(EguiPlugin);

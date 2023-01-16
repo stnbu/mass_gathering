@@ -3,7 +3,7 @@ use bevy_egui::{
     egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
     EguiContext,
 };
-use bevy_rapier3d::prelude::{QueryFilter, RapierContext, RigidBody};
+use bevy_rapier3d::prelude::{Collider, CollisionEvent, QueryFilter, RapierContext, RigidBody};
 use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
@@ -379,6 +379,7 @@ pub fn handle_projectile_fired(
                     transform: Transform::from_scale(Vec3::ONE * radius),
                     ..default()
                 })
+                .insert(Collider::default())
                 .insert(*projectile_flight)
                 .with_children(|children| {
                     children.spawn(PointLightBundle {
@@ -460,4 +461,38 @@ pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) 
     let nickname = to_nick(id).trim_end().to_string();
     let title = format!("{title} | nick: \"{nickname}\"");
     windows.primary_mut().set_title(title);
+}
+
+pub fn handle_projectile_collision(
+    mut collision_events: EventReader<CollisionEvent>,
+    projectile_query: Query<Entity, With<events::ProjectileFlight>>,
+    mass_query: Query<
+        &Transform,
+        (
+            With<components::MassID>,
+            Without<components::ClientInhabited>,
+            Without<components::Inhabitable>,
+        ),
+    >,
+) {
+    for collision_event in collision_events.iter() {
+        warn!("event");
+        if let CollisionEvent::Started(e0, e1, flags) = collision_event {
+            warn!("started");
+            let e0_is_projectile = projectile_query.contains(*e0);
+            let e1_is_projectile = projectile_query.contains(*e1);
+            if e0_is_projectile ^ e1_is_projectile {
+                warn!("and one was a projectile");
+                let projectile_id = if e0_is_projectile { e0 } else { e1 };
+                let mass_id = if !e0_is_projectile { e0 } else { e1 };
+                if let Ok(mass_transform) = mass_query.get(*mass_id) {
+                    warn!("yay, other was a mass");
+                }
+            } else {
+                warn!("xor failed");
+            }
+        } else {
+            warn!("not started");
+        }
+    }
 }
