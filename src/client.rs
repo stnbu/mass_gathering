@@ -77,7 +77,7 @@ pub fn process_server_messages(
                     inhabited_mass_commands.remove::<components::Inhabitable>();
                     // FIXME -- Figure out rapier `QueryFilter` so we don't need this (or do we?)
                     inhabited_mass_commands.remove::<RigidBody>();
-                    inhabited_mass_commands.despawn_descendants();
+                    //inhabited_mass_commands.despawn_descendants();
                     debug!("    appending camera to inhabited mass to this entity");
                     inhabited_mass_commands.with_children(|child| {
                         child.spawn(Camera3dBundle::default());
@@ -178,6 +178,7 @@ pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
     mut client_messages: EventWriter<events::ClientMessage>,
+    mut inhabitant_query: Query<&mut Transform, With<components::ClientInhabited>>,
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -216,29 +217,37 @@ pub fn control(
         }
     }
 
+    // 6ac25c5b1328e75c6fb94b41cae5d18fcd9749e7
+    // if rotation.length() > 0.0000001 {
+    //     let frame_time = time.delta_seconds() * 60.0;
+    //     rotation *= keys_scaling * frame_time;
+    //     let local_x = transform.local_x();
+    //     let local_y = transform.local_y();
+    //     let local_z = transform.local_z();
+    //     transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
+    //     transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
+    //     transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
+    //     let message = ClientMessages::Rotation(transform.rotation);
+    //     debug!("  sending message to server `{message:?}`");
+    //     client_messages.send(message);
+    // }
     if rotation.length() > 0.0000001 {
-        let frame_time = time.delta_seconds() * 60.0;
-        let [x, y, z] = (rotation * keys_scaling * frame_time).to_array();
-        let rotation = Quat::from_euler(EulerRot::XYZ, x, y, z);
-
-        let message = events::ClientMessage::Rotation(rotation);
-        client_messages.send(message);
-    }
-}
-
-// Rotate ME by reading local Rotation events, independant of client/server.
-pub fn rotate_client_inhabited_mass(
-    mut client_messages: EventReader<events::ClientMessage>,
-    mut inhabitant_query: Query<&mut Transform, With<components::ClientInhabited>>,
-) {
-    if let Ok(mut transform) = inhabitant_query.get_single_mut() {
-        for message in client_messages.iter() {
-            if let events::ClientMessage::Rotation(rotation) = message {
-                transform.rotate(*rotation);
-            }
+        if let Ok(mut transform) = inhabitant_query.get_single_mut() {
+            //
+            let frame_time = time.delta_seconds() * 60.0;
+            rotation *= keys_scaling * frame_time;
+            let local_x = transform.local_x();
+            let local_y = transform.local_y();
+            let local_z = transform.local_z();
+            transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
+            transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
+            transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
+            //
+            let message = events::ClientMessage::Rotation(transform.rotation);
+            client_messages.send(message);
+        } else {
+            error!("ClientInhabited entity not present");
         }
-    } else {
-        error!("ClientInhabited entity not present");
     }
 }
 
