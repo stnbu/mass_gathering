@@ -13,7 +13,7 @@ pub mod resources;
 pub mod server;
 pub mod systems;
 
-pub const PROTOCOL_ID: u64 = 29;
+pub const PROTOCOL_ID: u64 = 30;
 pub const SERVER_IP: &str = "127.0.0.1";
 pub const SERVER_PORT: u16 = 5743; // FIXME NOTE -- don't change this anymore
 pub const CHANNEL_RELIABLE: u8 = 0;

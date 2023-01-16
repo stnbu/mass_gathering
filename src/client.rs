@@ -369,7 +369,7 @@ pub fn handle_projectile_fired(
 ) {
     for message in client_messages.iter() {
         if let events::ServerMessage::ProjectileFired(projectile_flight) = message {
-            let radius = 0.3;
+            let radius = 0.45;
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
