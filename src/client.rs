@@ -28,7 +28,6 @@ pub fn process_server_messages(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state: ResMut<State<resources::GameState>>,
     mut mass_to_entity_map: ResMut<resources::MassIDToEntity>,
-    mut inhabitable_masses: Query<&mut Transform, With<components::Inhabitable>>,
     mut server_messages: EventReader<events::ServerMessage>,
     mut client_messages: EventWriter<events::ClientMessage>,
     mut lobby: ResMut<resources::Lobby>,
@@ -57,22 +56,8 @@ pub fn process_server_messages(
                 debug!("  got `SetPhysicsConfig`. Inserting resource received from server: {physics_config:?}");
                 commands.insert_resource(*physics_config);
             }
-            events::ServerMessage::ClientRotation { id, rotation } => {
-                debug!("  got `ClientRotation`. Rotating mass {id}");
-                let mass_id = lobby.clients.get(id).unwrap().inhabited_mass_id;
-                if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
-                    if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
-                        debug!("    found corresponding entity {entity:?}");
-                        mass_transform.rotate(*rotation);
-                    } else {
-                        error!("Entity map for mass ID {id} as entity {entity:?} which does not exist.");
-                    }
-                } else {
-                    error!(
-                        "Unable to find client {id} in entity mapping {:?}",
-                        mass_to_entity_map.0
-                    )
-                }
+            events::ServerMessage::ClientRotation { .. } => {
+                // handled by separate system
             }
             events::ServerMessage::ClientJoined { id, client_data } => {
                 debug!("  got `ClientJoined`. Inserting entry for client {id}");
@@ -254,6 +239,35 @@ pub fn rotate_client_inhabited_mass(
         }
     } else {
         error!("ClientInhabited entity not present");
+    }
+}
+
+pub fn rotate_inhabitable_masses(
+    mut server_messages: EventReader<events::ServerMessage>,
+    mut inhabitable_masses: Query<&mut Transform, With<components::Inhabitable>>,
+    mass_to_entity_map: Res<resources::MassIDToEntity>,
+    lobby: Res<resources::Lobby>,
+) {
+    for message in server_messages.iter() {
+        if let events::ServerMessage::ClientRotation { id, rotation } = message {
+            debug!("  got `ClientRotation`. Rotating mass {id}");
+            let mass_id = lobby.clients.get(id).unwrap().inhabited_mass_id;
+            if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
+                if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
+                    debug!("    found corresponding entity {entity:?}");
+                    mass_transform.rotate(*rotation);
+                } else {
+                    error!(
+                        "Entity map for mass ID {id} as entity {entity:?} which does not exist."
+                    );
+                }
+            } else {
+                error!(
+                    "Unable to find client {id} in entity mapping {:?}",
+                    mass_to_entity_map.0
+                )
+            }
+        }
     }
 }
 

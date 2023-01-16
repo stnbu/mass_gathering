@@ -19,6 +19,14 @@ pub const SERVER_PORT: u16 = 5743; // FIXME NOTE -- don't change this anymore
 pub const CHANNEL_RELIABLE: u8 = 0;
 pub const SQRT_3: f32 = 1.7320508;
 
+fn set_resolution(mut windows: ResMut<Windows>) {
+    let window = windows.primary_mut();
+    #[cfg(debug_assertions)]
+    window.set_resolution(1280.0 / 2.0, 720.0 / 2.0);
+    #[cfg(not(debug_assertions))]
+    window.set_resolution(1280.0, 720.0);
+}
+
 pub struct Core;
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
@@ -48,9 +56,11 @@ impl Plugin for Core {
                 .with_system(client::handle_projectile_engagement)
                 .with_system(client::handle_projectile_fired)
                 .with_system(client::move_projectiles)
+                .with_system(client::rotate_inhabitable_masses)
                 .with_system(client::rotate_client_inhabited_mass),
         );
         app.add_plugin(EguiPlugin);
+        app.add_startup_system(set_resolution);
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
         app.insert_resource(RapierConfiguration {
