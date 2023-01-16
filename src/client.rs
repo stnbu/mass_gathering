@@ -464,10 +464,13 @@ pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) 
 }
 
 pub fn handle_projectile_collision(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
     mut collision_events: EventReader<CollisionEvent>,
-    projectile_query: Query<Entity, With<events::ProjectileFlight>>,
+    projectile_query: Query<&events::ProjectileFlight>,
     mass_query: Query<
-        &Transform,
+        (&Transform, &components::Momentum),
         (
             With<components::MassID>,
             Without<components::ClientInhabited>,
@@ -476,23 +479,34 @@ pub fn handle_projectile_collision(
     >,
 ) {
     for collision_event in collision_events.iter() {
-        warn!("event");
-        if let CollisionEvent::Started(e0, e1, flags) = collision_event {
-            warn!("started");
+        if let CollisionEvent::Started(e0, e1, _) = collision_event {
             let e0_is_projectile = projectile_query.contains(*e0);
             let e1_is_projectile = projectile_query.contains(*e1);
             if e0_is_projectile ^ e1_is_projectile {
-                warn!("and one was a projectile");
                 let projectile_id = if e0_is_projectile { e0 } else { e1 };
+                let projectile_flight = projectile_query.get(*projectile_id).unwrap();
                 let mass_id = if !e0_is_projectile { e0 } else { e1 };
-                if let Ok(mass_transform) = mass_query.get(*mass_id) {
-                    warn!("yay, other was a mass");
+                if let Ok((mass_transform, mass_momentum)) = mass_query.get(*mass_id) {
+                    debug!(
+                        "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}"
+                    );
+                    let local_impact_site = projectile_flight.local_impact_direction
+                        * mass_to_radius(mass_momentum.mass)
+                        * mass_transform.scale.length()
+                        / SQRT_3; // mysterious
+                    commands.entity(*mass_id).with_children(|child| {
+                        child.spawn(PbrBundle {
+                            transform: Transform::from_translation(local_impact_site),
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 2.0,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::WHITE.into()),
+                            ..Default::default()
+                        });
+                    });
                 }
-            } else {
-                warn!("xor failed");
             }
-        } else {
-            warn!("not started");
         }
     }
 }
