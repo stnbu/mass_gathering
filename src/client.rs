@@ -77,7 +77,7 @@ pub fn process_server_messages(
                     inhabited_mass_commands.remove::<components::Inhabitable>();
                     // FIXME -- Figure out rapier `QueryFilter` so we don't need this (or do we?)
                     inhabited_mass_commands.remove::<RigidBody>();
-                    //inhabited_mass_commands.despawn_descendants();
+                    inhabited_mass_commands.despawn_descendants();
                     debug!("    appending camera to inhabited mass to this entity");
                     inhabited_mass_commands.with_children(|child| {
                         child.spawn(Camera3dBundle::default());
@@ -217,23 +217,8 @@ pub fn control(
         }
     }
 
-    // 6ac25c5b1328e75c6fb94b41cae5d18fcd9749e7
-    // if rotation.length() > 0.0000001 {
-    //     let frame_time = time.delta_seconds() * 60.0;
-    //     rotation *= keys_scaling * frame_time;
-    //     let local_x = transform.local_x();
-    //     let local_y = transform.local_y();
-    //     let local_z = transform.local_z();
-    //     transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
-    //     transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
-    //     transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
-    //     let message = ClientMessages::Rotation(transform.rotation);
-    //     debug!("  sending message to server `{message:?}`");
-    //     client_messages.send(message);
-    // }
     if rotation.length() > 0.0000001 {
         if let Ok(mut transform) = inhabitant_query.get_single_mut() {
-            //
             let frame_time = time.delta_seconds() * 60.0;
             rotation *= keys_scaling * frame_time;
             let local_x = transform.local_x();
@@ -242,7 +227,6 @@ pub fn control(
             transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
             transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
             transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
-            //
             let message = events::ClientMessage::Rotation(transform.rotation);
             client_messages.send(message);
         } else {
@@ -251,6 +235,7 @@ pub fn control(
     }
 }
 
+/// This does not include the client's mass
 pub fn rotate_inhabitable_masses(
     mut server_messages: EventReader<events::ServerMessage>,
     mut inhabitable_masses: Query<&mut Transform, With<components::Inhabitable>>,
@@ -264,7 +249,7 @@ pub fn rotate_inhabitable_masses(
             if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
                 if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
                     debug!("    found corresponding entity {entity:?}");
-                    mass_transform.rotate(*rotation);
+                    mass_transform.rotation = *rotation;
                 } else {
                     error!(
                         "Entity map for mass ID {id} as entity {entity:?} which does not exist."

@@ -165,14 +165,14 @@ pub fn handle_server_events(
                     let _ = app_state.overwrite_set(state);
                 }
                 events::ClientMessage::Rotation(rotation) => {
-                    // debug!("Sending rotation event for client {client_id}");
-                    // let client_rotation = events::ServerMessage::ClientRotation {
-                    //     id: client_id,
-                    //     rotation,
-                    // };
-                    // let message = bincode::serialize(&client_rotation).unwrap();
-                    // debug!("Broadcasting except to {client_id}: {client_rotation:?}");
-                    // server.broadcast_message_except(client_id, CHANNEL_RELIABLE, message);
+                    debug!("Sending rotation event for client {client_id}");
+                    let client_rotation = events::ServerMessage::ClientRotation {
+                        id: client_id,
+                        rotation,
+                    };
+                    let message = bincode::serialize(&client_rotation).unwrap();
+                    debug!("Broadcasting except to {client_id}: {client_rotation:?}");
+                    server.broadcast_message_except(client_id, CHANNEL_RELIABLE, message);
                 }
                 events::ClientMessage::ProjectileFired(projectile_flight) => {
                     let projectile_fired =
