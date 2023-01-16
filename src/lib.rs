@@ -56,7 +56,7 @@ impl Plugin for Core {
                 .with_system(client::handle_projectile_engagement)
                 .with_system(client::handle_projectile_fired)
                 .with_system(client::move_projectiles)
-                .with_system(client::rotate_inhabitable_masses)
+                //.with_system(client::rotate_inhabitable_masses)
                 .with_system(client::rotate_client_inhabited_mass),
         );
         app.add_plugin(EguiPlugin);
@@ -74,19 +74,20 @@ impl Plugin for Core {
 pub struct Spacetime;
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
-        app.insert_resource(ClearColor(Color::BLACK))
+        app.insert_resource(ClearColor(Color::BEIGE * 0.2))
             .init_resource::<physics::PhysicsConfig>()
             .add_event::<physics::MassCollisionEvent>()
             .add_event::<physics::DespawnMassEvent>()
-            .add_system_set(
-                SystemSet::on_update(resources::GameState::Running)
-                    .with_system(physics::handle_despawn_mass)
-                    .with_system(physics::freefall.before(physics::handle_despawn_mass))
-                    .with_system(
-                        physics::handle_mass_collisions.before(physics::handle_despawn_mass),
-                    )
-                    .with_system(physics::merge_masses.before(physics::handle_despawn_mass)),
-            );
+            // .add_system_set(
+            //     SystemSet::on_update(resources::GameState::Running)
+            //         .with_system(physics::handle_despawn_mass)
+            //         .with_system(physics::freefall.before(physics::handle_despawn_mass))
+            //         .with_system(
+            //             physics::handle_mass_collisions.before(physics::handle_despawn_mass),
+            //         )
+            //         .with_system(physics::merge_masses.before(physics::handle_despawn_mass)),
+            // );
+	    ;
     }
 }
 
