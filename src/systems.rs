@@ -169,9 +169,9 @@ pub fn demo_2m2i() -> resources::InitData {
 
 pub fn demo_2m1i() -> resources::InitData {
     let mut init_data = resources::InitData::default();
-    let position = Vec3::X * 10.0;
+    let position = Vec3::X * 10.0 * 1.0;
     let velocity = Vec3::Y * 0.035;
-    let radius = 1.0;
+    let radius = 1.0 * 3.0;
     init_data.masses.insert(
         0,
         resources::MassInitData {
