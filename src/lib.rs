@@ -48,7 +48,6 @@ impl Plugin for Core {
         app.insert_resource(resources::MassIDToEntity::default());
         app.add_event::<events::ClientMessage>();
         app.add_event::<events::ServerMessage>();
-        app.init_resource::<resources::GameConfig>();
         app.add_state(resources::GameState::Stopped);
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
@@ -63,6 +62,7 @@ impl Plugin for Core {
         app.add_startup_system(set_resolution);
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
+        app.add_system(client::set_window_title);
         app.insert_resource(RapierConfiguration {
             gravity: Vec3::ZERO,
             ..Default::default()
@@ -128,7 +128,7 @@ pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
 
 pub fn to_nick(id: u64) -> String {
     let nic_vec: Vec<u8> = id.to_ne_bytes().to_vec();
-    String::from_utf8(nic_vec).unwrap().trim_end().to_string()
+    String::from_utf8(nic_vec).unwrap() // NOTE includes trailing spaces
 }
 
 pub fn from_nick(nick: &str) -> u64 {

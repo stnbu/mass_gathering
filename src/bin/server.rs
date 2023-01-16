@@ -9,7 +9,6 @@ fn main() {
     let address = args.address.clone();
     let mut app = App::new();
     app.insert_resource(resources::Lobby::default())
-        .init_resource::<resources::GameConfig>()
         .add_state(resources::GameState::Stopped)
         .add_plugin(CorePlugin::default())
         .add_plugin(TimePlugin::default())

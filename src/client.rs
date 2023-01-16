@@ -292,13 +292,12 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
             ui.separator();
             for (&id, &client_data) in lobby.clients.iter() {
                 let nick = to_nick(id);
-                let pad = String::from_iter((0..(8 - nick.len())).map(|_| ' '));
                 let autostart = if client_data.preferences.autostart {
                     "autostart"
                 } else {
                     "wait"
                 };
-                let text = format!("{nick}{pad}>  {autostart}");
+                let text = format!("{nick}>  {autostart}");
                 ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {
                     size: 16.0,
                     family: Monospace,
@@ -459,4 +458,12 @@ pub fn move_projectiles(
             }
         }
     }
+}
+
+pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) {
+    let title = "Mass Gathering";
+    let id = client.client_id();
+    let nickname = to_nick(id).trim_end().to_string();
+    let title = format!("{title} | nick: \"{nickname}\"");
+    windows.primary_mut().set_title(title);
 }

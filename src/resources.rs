@@ -5,6 +5,20 @@ use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+// FIXME
+//
+// There's ClientPreferences, ClientData ... and plenty
+// of other stuff that is a mishmash of hodgepodge. But it's complicated.
+// Some thing are "requested" by the client, some things are "assigned"
+// by the server. Some things only belong on the client/server, some things
+// should never be over-written (write-once, no update)...
+//
+// It's all sixes and sevens
+//
+// It's all higgledy piggledy
+//
+// Can't find its ass in a wet paper barn
+
 #[derive(Serialize, Deserialize, Component, Debug, Copy, Clone)]
 pub struct ClientPreferences {
     pub autostart: bool,
@@ -52,12 +66,6 @@ pub struct ServerCliArgs {
     pub system: String,
     #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
     pub address: String,
-}
-
-#[derive(Resource, Default)]
-pub struct GameConfig {
-    pub nickname: String,
-    pub autostart: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Serialize, Deserialize)]
