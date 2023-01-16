@@ -334,14 +334,12 @@ pub fn handle_projectile_engagement(
                         .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap()
                         .as_millis();
-                    let current_direction = Some(-client_pov.local_z());
                     client_messages.send(events::ClientMessage::ProjectileFired(
                         events::ProjectileFlight {
                             launch_time,
                             from_mass_id,
                             to_mass_id,
                             local_impact_direction,
-                            current_direction,
                         },
                     ));
                 }
@@ -490,15 +488,22 @@ pub fn handle_projectile_collision(
                     debug!(
                         "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}"
                     );
+
                     let local_impact_site = projectile_flight.local_impact_direction
                         * mass_to_radius(mass_momentum.mass)
                         * mass_transform.scale.length()
                         / SQRT_3; // mysterious
+
+                    warn!("projectile_id {:?}", projectile_id);
+                    warn!("mass_id {:?}", mass_id);
+                    warn!("projectile_flight {:?}", projectile_flight);
+                    warn!("local_impact_site {:?}", local_impact_site);
+
                     commands.entity(*mass_id).with_children(|child| {
                         child.spawn(PbrBundle {
                             transform: Transform::from_translation(local_impact_site),
                             mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 2.0,
+                                radius: 0.25,
                                 ..Default::default()
                             })),
                             material: materials.add(Color::WHITE.into()),

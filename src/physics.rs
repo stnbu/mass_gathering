@@ -22,17 +22,12 @@ impl Default for PhysicsConfig {
 pub struct MassCollisionEvent(pub Entity, pub Entity);
 
 pub fn handle_mass_collisions(
-    mut events: EventReader<CollisionEvent>,
+    mut collision_events: EventReader<CollisionEvent>,
     mut mass_collision_events: EventWriter<MassCollisionEvent>,
-    mass_query: Query<(&Transform, &components::Momentum)>,
+    mass_query: Query<With<components::MassID>>,
 ) {
-    for collision_event in events.iter() {
-        // FIXME: Filter events (for "Sensor")
-        if let CollisionEvent::Started(e0, e1, flags) = collision_event {
-            debug!(
-                "CollisionEvent::Started({:?}, {:?}, flags={:?})",
-                e0, e1, flags
-            );
+    for collision_event in collision_events.iter() {
+        if let CollisionEvent::Started(e0, e1, _) = collision_event {
             if mass_query.get_many([*e0, *e1]).is_ok() {
                 let event = MassCollisionEvent(*e0, *e1);
                 debug!("Sending mass collision event: {event:?}");

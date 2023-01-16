@@ -33,5 +33,4 @@ pub struct ProjectileFlight {
     pub from_mass_id: u64,
     pub to_mass_id: u64,
     pub local_impact_direction: Vec3,
-    pub current_direction: Option<Vec3>,
 }
