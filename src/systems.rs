@@ -169,14 +169,9 @@ pub fn demo_2m2i() -> resources::InitData {
 
 pub fn demo_2m1i() -> resources::InitData {
     let mut init_data = resources::InitData::default();
-    let position = Vec3::X * 10.0 * 1.0;
+    let position = Vec3::X * 10.0;
     let velocity = Vec3::Y * 0.035;
-    let radius = 1.0 * 3.0;
-    // I am shooting at RED
-    // If I do not move and just hit `Space`, I expect:
-    //   * RED has orgin `10,0,0`
-    //   * The closest point on RED is `x = 10 - 3 = 7`
-    //   * The explosion happens to my right which is `10,0,3`
+    let radius = 1.0;
     init_data.masses.insert(
         0,
         resources::MassInitData {

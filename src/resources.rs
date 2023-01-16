@@ -144,7 +144,7 @@ impl InitData {
             },
         ) in self.masses.iter()
         {
-            let scale = if inhabitable { 1.0 } else { 1.0 };
+            let scale = if inhabitable { 2.25 } else { 1.0 };
             let transform = Transform::from_translation(position)
                 .with_scale(Vec3::ONE * scale)
                 .looking_at(Vec3::ZERO, Vec3::Y);
