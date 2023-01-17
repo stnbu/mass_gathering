@@ -3,6 +3,7 @@ pub use bevy_egui::EguiPlugin;
 pub use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 pub use std::f32::consts::TAU;
 
+use bevy::ecs::schedule::ShouldRun;
 use bevy_renet::renet::RenetError;
 
 pub mod client;
@@ -80,6 +81,7 @@ impl Plugin for Spacetime {
             .add_event::<physics::DespawnMassEvent>()
             .add_system_set(
                 SystemSet::on_update(resources::GameState::Running)
+                    .with_run_criteria(with_gravity)
                     .with_system(physics::handle_despawn_mass)
                     .with_system(physics::freefall.before(physics::handle_despawn_mass))
                     .with_system(
@@ -139,4 +141,15 @@ pub fn from_nick(nick: &str) -> u64 {
         nick_vec[i] = *c;
     }
     u64::from_ne_bytes(nick_vec)
+}
+
+pub fn with_gravity(
+    physics_config: Res<physics::PhysicsConfig>,
+    game_state: Res<State<resources::GameState>>,
+) -> ShouldRun {
+    if *game_state.current() == resources::GameState::Running && !physics_config.zerog {
+        ShouldRun::Yes
+    } else {
+        ShouldRun::No
+    }
 }

@@ -10,11 +10,15 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
     pub sims_per_frame: u32,
+    pub zerog: bool,
 }
 
 impl Default for PhysicsConfig {
     fn default() -> Self {
-        Self { sims_per_frame: 10 }
+        Self {
+            sims_per_frame: 10,
+            zerog: false,
+        }
     }
 }
 

@@ -42,8 +42,10 @@ pub fn new_renet_server(address: String) -> RenetServer {
 
 pub fn setup_physics(mut commands: Commands, cli_args: Res<resources::ServerCliArgs>) {
     let speed = cli_args.speed;
+    let zerog = cli_args.zerog;
     commands.insert_resource(physics::PhysicsConfig {
         sims_per_frame: speed,
+        zerog,
     });
 }
 

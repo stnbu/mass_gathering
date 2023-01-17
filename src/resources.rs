@@ -18,6 +18,13 @@ use std::collections::HashMap;
 // It's all higgledy piggledy
 //
 // Can't find its ass in a wet paper barn
+//
+// [Update]
+//
+// There is a similar situation with
+//
+//   ClientCliArgs -> ClientPreferences
+//   ServerCliArgs -> PhysicsConfig (and there is also a ServerConfig)
 
 #[derive(Serialize, Deserialize, Component, Debug, Copy, Clone)]
 pub struct ClientPreferences {
@@ -66,6 +73,8 @@ pub struct ServerCliArgs {
     pub system: String,
     #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
     pub address: String,
+    #[arg(long)]
+    pub zerog: bool,
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Serialize, Deserialize)]
