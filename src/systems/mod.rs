@@ -1,6 +1,8 @@
 use crate::*;
 use rand::Rng;
 
+pub mod scratch;
+
 /// Old rando from way back
 pub fn old_rando() -> resources::InitData {
     // FIXME: This a baad one: If we have a starting position or velocity of
@@ -257,6 +259,10 @@ pub fn get_system(name: &str) -> impl (Fn() -> resources::InitData) {
         "demo_2m2i" => demo_2m2i,
         "demo_2m1i" => demo_2m1i,
         "demo_shooting" => demo_shooting,
-        _ => demo_2m1i,
+
+        // 'scratch'
+        "pimples" => scratch::pimples,
+
+        _ => panic!("No such system: {name}"),
     }
 }
