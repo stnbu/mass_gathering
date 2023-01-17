@@ -199,6 +199,47 @@ pub fn demo_2m1i() -> resources::InitData {
     init_data
 }
 
+pub fn demo_shooting() -> resources::InitData {
+    let mut init_data = resources::InitData::default();
+    let id_base = 0;
+
+    let velocity = Vec3::ZERO;
+    let color = Color::PURPLE;
+    let x = 10.0;
+    let y = 0.0;
+    for i in 0..5 {
+        let i = i * 4;
+        let mass_id = id_base + i;
+        let z = (i as f32 - 10.0) * 2.5;
+        let position = Vec3::new(x, y, z);
+        let motion = resources::MassMotion { position, velocity };
+        let inhabitable = false;
+        let radius = i as f32 / 5.0 + 1.0;
+        init_data.masses.insert(
+            mass_id,
+            resources::MassInitData {
+                inhabitable,
+                motion,
+                color,
+                radius,
+            },
+        );
+    }
+    init_data.masses.insert(
+        id_base + 21,
+        resources::MassInitData {
+            inhabitable: true,
+            motion: resources::MassMotion {
+                position: Vec3::new(-10.0, 0.0, 0.0),
+                velocity: Vec3::ZERO,
+            },
+            color: Color::BLUE,
+            radius: 3.0,
+        },
+    );
+    init_data
+}
+
 /// Given a "latitude" and "longitude" on a unit sphere, return x,y,z
 fn latlon_to_cartesian(lat: f32, lon: f32) -> Vec3 {
     let theta = (lat * 2.0 - 1.0).acos(); // latitude. -1 & 1 are poles. 0 is equator.
@@ -215,6 +256,7 @@ pub fn get_system(name: &str) -> impl (Fn() -> resources::InitData) {
         "cubic" => cubic,
         "demo_2m2i" => demo_2m2i,
         "demo_2m1i" => demo_2m1i,
+        "demo_shooting" => demo_shooting,
         _ => demo_2m1i,
     }
 }
