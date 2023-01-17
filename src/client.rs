@@ -163,17 +163,18 @@ impl Plugin for ClientPlugin {
             SystemSet::on_update(resources::GameState::Waiting)
                 .with_system(client::client_waiting_screen),
         );
+        app.add_system_set(
+            SystemSet::on_update(resources::GameState::Running)
+                .with_run_criteria(run_if_client_connected)
+                .with_system(client::send_messages_to_server)
+                .with_system(client::process_server_messages)
+                .with_system(client::receive_messages_from_server)
+                // FIXME -- how to include per-system bevy systems (the former in `src/systems.rs`)
+                // Plugins..?
+                .with_system(systems::scratch::pimples_xz_translate),
+        );
         app.add_plugin(RenetClientPlugin::default());
-
-        app.add_system(client::send_messages_to_server.with_run_criteria(run_if_client_connected));
-        app.add_system(client::process_server_messages.with_run_criteria(run_if_client_connected));
-        app.add_system(
-            client::receive_messages_from_server.with_run_criteria(run_if_client_connected),
-        );
         app.add_system(panic_on_renet_error);
-        app.add_system(
-            systems::scratch::pimples_xz_translate.with_run_criteria(run_if_client_connected),
-        );
     }
 }
 
