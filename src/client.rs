@@ -171,7 +171,8 @@ impl Plugin for ClientPlugin {
                 .with_system(client::receive_messages_from_server)
                 // FIXME -- how to include per-system bevy systems (the former in `src/systems.rs`)
                 // Plugins..?
-                .with_system(systems::scratch::pimples_xz_translate),
+                .with_system(systems::scratch::pimples_xz_translate)
+                .with_system(systems::scratch::pimples_rotate_target),
         );
         app.add_plugin(RenetClientPlugin::default());
         app.add_system(panic_on_renet_error);
@@ -190,34 +191,34 @@ pub fn control(
     // rotation about local axes
     let mut rotation = Vec3::ZERO;
 
-    // IDEAR: we could just get key counts as f32 and multiply by nudge.
-    //   A -> [0, 0, 1]
-    //   D -> [0, 0, -1]
-    // ...etc
-    for key in keys.get_pressed() {
-        match key {
-            // pitch
-            KeyCode::W => {
-                rotation.x += nudge;
+    // FIXME: What's the general way of handling this?
+    // How to generally get "with modifiers"?
+    if !keys.pressed(KeyCode::RShift) {
+        for key in keys.get_pressed() {
+            match key {
+                // pitch
+                KeyCode::W => {
+                    rotation.x += nudge;
+                }
+                KeyCode::S => {
+                    rotation.x -= nudge;
+                }
+                // yaw
+                KeyCode::A => {
+                    rotation.y += nudge;
+                }
+                KeyCode::D => {
+                    rotation.y -= nudge;
+                }
+                // roll
+                KeyCode::Z => {
+                    rotation.z -= nudge;
+                }
+                KeyCode::X => {
+                    rotation.z += nudge;
+                }
+                _ => (),
             }
-            KeyCode::S => {
-                rotation.x -= nudge;
-            }
-            // yaw
-            KeyCode::A => {
-                rotation.y += nudge;
-            }
-            KeyCode::D => {
-                rotation.y -= nudge;
-            }
-            // roll
-            KeyCode::Z => {
-                rotation.z -= nudge;
-            }
-            KeyCode::X => {
-                rotation.z += nudge;
-            }
-            _ => (),
         }
     }
 
