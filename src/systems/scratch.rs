@@ -31,3 +31,33 @@ pub fn pimples() -> resources::InitData {
     );
     init_data
 }
+
+pub fn pimples_xz_translate(
+    mut transform_query: Query<&mut Transform, With<components::ClientInhabited>>,
+    keys: Res<Input<KeyCode>>,
+) {
+    let nudge = 0.05;
+    let mut x = 0.0;
+    let mut z = 0.0;
+
+    for key in keys.get_pressed() {
+        match key {
+            KeyCode::Up => {
+                x += nudge;
+            }
+            KeyCode::Down => {
+                x -= nudge;
+            }
+            KeyCode::Left => {
+                z -= nudge;
+            }
+            KeyCode::Right => {
+                z += nudge;
+            }
+            _ => (),
+        }
+    }
+    if let Ok(mut transform) = transform_query.get_single_mut() {
+        transform.translation += Vec3::new(x, 0.0, z);
+    }
+}

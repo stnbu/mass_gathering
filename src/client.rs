@@ -171,6 +171,9 @@ impl Plugin for ClientPlugin {
             client::receive_messages_from_server.with_run_criteria(run_if_client_connected),
         );
         app.add_system(panic_on_renet_error);
+        app.add_system(
+            systems::scratch::pimples_xz_translate.with_run_criteria(run_if_client_connected),
+        );
     }
 }
 
