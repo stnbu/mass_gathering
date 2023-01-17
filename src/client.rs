@@ -311,9 +311,9 @@ pub fn handle_projectile_engagement(
     mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
 ) {
-    for (client_pov, &components::MassID(from_mass_id)) in inhabited_mass_query.iter() {
+    if let Ok((client_pov, &components::MassID(from_mass_id))) = inhabited_mass_query.get_single() {
         let ray_origin = client_pov.translation;
-        let ray_direction = -1.0 * client_pov.local_z();
+        let ray_direction = -client_pov.local_z();
         let intersection = rapier_context.cast_ray(
             ray_origin,
             ray_direction,
@@ -344,11 +344,15 @@ pub fn handle_projectile_engagement(
                     ));
                 }
             } else {
-                for mut visibility in sights_query.iter_mut() {
-                    visibility.is_visible = false;
-                }
+                warn!("Could not find uninhabited mass ID {mass:?}");
+            }
+        } else {
+            for mut visibility in sights_query.iter_mut() {
+                visibility.is_visible = false;
             }
         }
+    } else {
+        error!("No client-inhabited mass");
     }
 }
 
