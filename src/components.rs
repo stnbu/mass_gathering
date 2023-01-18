@@ -19,3 +19,8 @@ pub struct Momentum {
     pub velocity: Vec3,
     pub mass: f32,
 }
+
+#[derive(Component)]
+pub struct Explosion {
+    pub timer: Timer,
+}

@@ -169,10 +169,7 @@ impl Plugin for ClientPlugin {
                 .with_system(client::send_messages_to_server)
                 .with_system(client::process_server_messages)
                 .with_system(client::receive_messages_from_server)
-                // FIXME -- how to include per-system bevy systems (the former in `src/systems.rs`)
-                // Plugins..?
-                .with_system(systems::scratch::pimples_xz_translate)
-                .with_system(systems::scratch::pimples_rotate_target),
+                .with_system(client::animate_explosions),
         );
         app.add_plugin(RenetClientPlugin::default());
         app.add_system(panic_on_renet_error);
@@ -494,33 +491,50 @@ pub fn handle_projectile_collision(
                 let projectile_flight = projectile_query.get(*projectile_id).unwrap();
                 let mass_id = if !e0_is_projectile { e0 } else { e1 };
                 if let Ok((mass_transform, mass_momentum)) = mass_query.get(*mass_id) {
-                    debug!(
-                        "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}"
-                    );
-
                     let local_impact_site = projectile_flight.local_impact_direction
                         * mass_to_radius(mass_momentum.mass)
                         * mass_transform.scale.length()
-                        / SQRT_3; // mysterious
-
-                    warn!("projectile_id {:?}", projectile_id);
-                    warn!("mass_id {:?}", mass_id);
-                    warn!("projectile_flight {:?}", projectile_flight);
-                    warn!("local_impact_site {:?}", local_impact_site);
-
+                        / SQRT_3;
+                    debug!(
+                        "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}. Spawning explosion animation."
+                    );
                     commands.entity(*mass_id).with_children(|child| {
-                        child.spawn(PbrBundle {
-                            transform: Transform::from_translation(local_impact_site),
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.5,
+                        child
+                            .spawn(PbrBundle {
+                                transform: Transform::from_translation(local_impact_site),
+                                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                    radius: 0.5,
+                                    ..Default::default()
+                                })),
+                                material: materials.add(Color::rgb_u8(255, 255, 255).into()),
                                 ..Default::default()
-                            })),
-                            material: materials.add(Color::rgb_u8(255, 255, 255).into()),
-                            ..Default::default()
-                        });
+                            })
+                            .insert(components::Explosion {
+                                timer: Timer::from_seconds(5.0, TimerMode::Once),
+                            });
                     });
+                    error!("Despawning collided projectile {projectile_id:?}");
+                    commands.entity(*projectile_id).despawn_recursive();
                 }
             }
+        }
+    }
+}
+
+pub fn animate_explosions(
+    mut commands: Commands,
+    time: Res<Time>,
+    mut explosions: Query<(Entity, &mut Transform, &mut components::Explosion)>,
+) {
+    for (explosion_id, mut transform, mut explosion) in explosions.iter_mut() {
+        explosion.timer.tick(time.delta());
+        if explosion.timer.finished() {
+            error!("Despawning completed explosion animation {explosion_id:?}");
+            commands.entity(explosion_id).despawn_recursive();
+        } else {
+            let percent = explosion.timer.percent();
+            let scale = 1.0 - percent;
+            transform.scale = scale * Vec3::ONE;
         }
     }
 }
