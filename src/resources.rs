@@ -154,9 +154,10 @@ impl InitData {
         ) in self.masses.iter()
         {
             let scale = if inhabitable { 2.25 } else { 1.0 };
-            let transform = Transform::from_translation(position)
-                .with_scale(Vec3::ONE * scale)
-                .looking_at(Vec3::ZERO, Vec3::Y);
+            let mut transform = Transform::from_translation(position).with_scale(Vec3::ONE * scale);
+            if inhabitable {
+                transform.look_at(Vec3::ZERO, Vec3::Y);
+            }
             let mut mass_commands = commands.spawn(physics::PointMassBundle {
                 pbr: PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
