@@ -156,9 +156,62 @@ pub fn new_renet_client(
 pub struct ClientPlugin;
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugin(Core);
+        // Was "Core" plugin
+        #[cfg(debug_assertions)]
+        {
+            debug!("DEBUG LEVEL LOGGING ! !");
+            app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
+                filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
+                level: bevy::log::Level::DEBUG,
+            }));
+        }
+        #[cfg(not(debug_assertions))]
+        {
+            error!("We have no logging, and yet you SEE this message...?");
+            // FIXME: num-triangles on a mesh is a different thing
+            app.insert_resource(Msaa { samples: 4 });
+            app.add_plugins(DefaultPlugins);
+        }
+        app.insert_resource(resources::MassIDToEntity::default());
+        app.add_event::<events::ToServer>();
+        app.add_event::<events::ToClient>();
+        app.add_state(resources::GameState::Stopped);
+        app.add_system_set(
+            SystemSet::on_update(resources::GameState::Running)
+                .with_system(control)
+                .with_system(handle_projectile_engagement)
+                .with_system(handle_projectile_fired)
+                .with_system(move_projectiles)
+                .with_system(handle_projectile_collision)
+                .with_system(rotate_inhabitable_masses),
+        );
+        app.add_plugin(EguiPlugin);
+        app.add_startup_system(set_resolution);
+        app.add_startup_system(let_light);
+        app.add_system(bevy::window::close_on_esc);
+        app.insert_resource(RapierConfiguration {
+            gravity: Vec3::ZERO,
+            ..Default::default()
+        });
+        app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        app.add_system(set_window_title);
+        // was "Spacetime" plugin
+        app.insert_resource(ClearColor(Color::BLACK))
+            .init_resource::<physics::PhysicsConfig>()
+            .add_event::<physics::MassCollisionEvent>()
+            .add_event::<physics::DespawnMassEvent>()
+            .add_system_set(
+                SystemSet::on_update(resources::GameState::Running)
+                    .with_run_criteria(with_gravity)
+                    .with_system(physics::handle_despawn_mass)
+                    .with_system(physics::freefall.before(physics::handle_despawn_mass))
+                    .with_system(
+                        physics::handle_mass_collisions.before(physics::handle_despawn_mass),
+                    )
+                    .with_system(physics::merge_masses.before(physics::handle_despawn_mass)),
+            );
+        // Original contents of "ClientPlugin"
         app.insert_resource(resources::Lobby::default());
-        app.add_plugin(Spacetime);
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Waiting).with_system(client_waiting_screen),
         );
