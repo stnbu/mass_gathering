@@ -516,7 +516,7 @@ pub fn handle_projectile_collision(
                                 timer: Timer::from_seconds(5.0, TimerMode::Once),
                             });
                     });
-                    error!("Despawning collided projectile {projectile_id:?}");
+                    debug!("Despawning collided projectile {projectile_id:?}");
                     commands.entity(*projectile_id).despawn_recursive();
                 }
             }
@@ -532,7 +532,7 @@ pub fn animate_explosions(
     for (explosion_id, mut transform, mut explosion) in explosions.iter_mut() {
         explosion.timer.tick(time.delta());
         if explosion.timer.finished() {
-            error!("Despawning completed explosion animation {explosion_id:?}");
+            debug!("Despawning completed explosion animation {explosion_id:?}");
             commands.entity(explosion_id).despawn_recursive();
         } else {
             let percent = explosion.timer.percent();
