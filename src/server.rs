@@ -168,12 +168,12 @@ pub fn handle_server_events(
                 }
                 events::ToServer::Rotation(rotation) => {
                     debug!("Sending rotation event for client {client_id}");
-                    let client_rotation = events::ToClient::InhabitantRotation {
+                    let inhabitant_rotation = events::ToClient::InhabitantRotation {
                         client_id,
                         rotation,
                     };
-                    let message = bincode::serialize(&client_rotation).unwrap();
-                    debug!("Broadcasting except to {client_id}: {client_rotation:?}");
+                    let message = bincode::serialize(&inhabitant_rotation).unwrap();
+                    debug!("Broadcasting except to {client_id}: {inhabitant_rotation:?}");
                     server.broadcast_message_except(client_id, CHANNEL_RELIABLE, message);
                 }
                 events::ToServer::ProjectileFired(projectile_flight) => {
