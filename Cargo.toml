@@ -1,3 +1,13 @@
 [workspace]
 members = ["game", "client"]
 resolver="2"
+
+[profile.release]
+opt-level = "s"
+lto = "thin"
+
+[profile.dev]
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 3
