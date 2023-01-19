@@ -1,4 +1,4 @@
-use crate::*;
+use game::*;
 // We rename this because it sounds too much like one of _our_ events (confusing).
 use bevy_renet::renet::ServerEvent as RenetServerEvent;
 use bevy_renet::renet::{
