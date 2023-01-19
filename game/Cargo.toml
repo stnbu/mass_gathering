@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+client = { path = "../client" }
+server = { path = "../server" }
 bevy = { version = "0.9.1", default-features = false, features = ["bevy_winit", "bevy_core_pipeline", "bevy_pbr"] }
 bevy_rapier3d = { version = "0.19.0", default-features = false, features = ["dim3"] }
 serde = { version = "1.0.152", features = [ "derive" ] }

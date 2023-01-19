@@ -6,13 +6,14 @@ pub use std::f32::consts::TAU;
 use bevy::ecs::schedule::ShouldRun;
 use bevy_renet::renet::RenetError;
 
-// pub mod client;
 pub mod components;
 pub mod events;
 pub mod physics;
 pub mod resources;
-// pub mod server;
 pub mod systems;
+
+// pub use client;
+// pub use server;
 
 pub const PROTOCOL_ID: u64 = 30;
 pub const SERVER_IP: &str = "127.0.0.1";
@@ -50,7 +51,6 @@ impl Plugin for Core {
         app.add_event::<events::ToServer>();
         app.add_event::<events::ToClient>();
         app.add_state(resources::GameState::Stopped);
-        /*
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_system(client::control)
@@ -60,7 +60,6 @@ impl Plugin for Core {
                 .with_system(client::handle_projectile_collision)
                 .with_system(client::rotate_inhabitable_masses),
         );
-        */
         app.add_plugin(EguiPlugin);
         app.add_startup_system(set_resolution);
         app.add_startup_system(let_light);
@@ -70,7 +69,7 @@ impl Plugin for Core {
             ..Default::default()
         });
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-        //app.add_system(client::set_window_title);
+        app.add_system(client::set_window_title);
     }
 }
 
