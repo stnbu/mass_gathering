@@ -56,7 +56,7 @@ pub fn process_to_client_events(
                 debug!("  got `SetPhysicsConfig`. Inserting resource received from server: {physics_config:?}");
                 commands.insert_resource(*physics_config);
             }
-            events::ToClient::ClientRotation { .. } => {
+            events::ToClient::InhabitantRotation { .. } => {
                 // handled by separate system
             }
             events::ToClient::ClientJoined { id, client_data } => {
@@ -245,21 +245,25 @@ pub fn rotate_inhabitable_masses(
     lobby: Res<resources::Lobby>,
 ) {
     for message in to_client_events.iter() {
-        if let events::ToClient::ClientRotation { id, rotation } = message {
-            debug!("  got `ClientRotation`. Rotating mass {id}");
-            let mass_id = lobby.clients.get(id).unwrap().inhabited_mass_id;
+        if let events::ToClient::InhabitantRotation {
+            client_id,
+            rotation,
+        } = message
+        {
+            debug!("  got `InhabitantRotation`. Rotating mass {client_id}");
+            let mass_id = lobby.clients.get(client_id).unwrap().inhabited_mass_id;
             if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
                 if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
                     debug!("    found corresponding entity {entity:?}");
                     mass_transform.rotation = *rotation;
                 } else {
                     error!(
-                        "Entity map for mass ID {id} as entity {entity:?} which does not exist."
+                        "Entity map for mass ID {client_id} as entity {entity:?} which does not exist."
                     );
                 }
             } else {
                 error!(
-                    "Unable to find client {id} in entity mapping {:?}",
+                    "Unable to find client {client_id} in entity mapping {:?}",
                     mass_to_entity_map.0
                 )
             }

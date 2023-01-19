@@ -168,8 +168,8 @@ pub fn handle_server_events(
                 }
                 events::ToServer::Rotation(rotation) => {
                     debug!("Sending rotation event for client {client_id}");
-                    let client_rotation = events::ToClient::ClientRotation {
-                        id: client_id,
+                    let client_rotation = events::ToClient::InhabitantRotation {
+                        client_id,
                         rotation,
                     };
                     let message = bincode::serialize(&client_rotation).unwrap();
@@ -177,8 +177,7 @@ pub fn handle_server_events(
                     server.broadcast_message_except(client_id, CHANNEL_RELIABLE, message);
                 }
                 events::ToServer::ProjectileFired(projectile_flight) => {
-                    let projectile_fired =
-                        events::ToClient::ProjectileFired(projectile_flight);
+                    let projectile_fired = events::ToClient::ProjectileFired(projectile_flight);
                     let message = bincode::serialize(&projectile_fired).unwrap();
                     debug!("Broadcasting {projectile_fired:?}");
                     server.broadcast_message(CHANNEL_RELIABLE, message);

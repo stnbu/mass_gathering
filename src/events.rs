@@ -11,8 +11,8 @@ pub enum ToClient {
         client_data: resources::ClientData,
     },
     SetPhysicsConfig(physics::PhysicsConfig),
-    ClientRotation {
-        id: u64,
+    InhabitantRotation {
+        client_id: u64,
         rotation: Quat,
     },
     ProjectileFired(ProjectileFlight),
