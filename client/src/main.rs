@@ -1,5 +1,3 @@
-use game;
+use game as _;
 
-fn main() {
-    game::fooo();
-}
+fn main() {}

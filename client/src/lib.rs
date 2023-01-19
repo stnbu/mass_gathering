@@ -1,4 +1,3 @@
-use crate::*;
 use bevy_egui::{
     egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
     EguiContext,
@@ -8,6 +7,7 @@ use bevy_renet::{
     renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
 };
+use game::*;
 use std::{net::UdpSocket, time::SystemTime};
 
 const FRAME_FILL: Color32 = Color32::TRANSPARENT;
@@ -160,16 +160,15 @@ impl Plugin for ClientPlugin {
         app.insert_resource(resources::Lobby::default());
         app.add_plugin(Spacetime);
         app.add_system_set(
-            SystemSet::on_update(resources::GameState::Waiting)
-                .with_system(client::client_waiting_screen),
+            SystemSet::on_update(resources::GameState::Waiting).with_system(client_waiting_screen),
         );
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_run_criteria(run_if_client_connected)
-                .with_system(client::send_messages_to_server)
-                .with_system(client::process_to_client_events)
-                .with_system(client::receive_messages_from_server)
-                .with_system(client::animate_explosions),
+                .with_system(send_messages_to_server)
+                .with_system(process_to_client_events)
+                .with_system(receive_messages_from_server)
+                .with_system(animate_explosions),
         );
         app.add_plugin(RenetClientPlugin::default());
         app.add_system(panic_on_renet_error);
