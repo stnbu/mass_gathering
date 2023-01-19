@@ -450,8 +450,7 @@ pub fn move_projectiles(
                             from_transform.translation + flight_progress;
                     }
                     Err(err) => {
-                        error!("While getting projectile to/from: {err}");
-                        debug!("Despawning projectile {projectile_id:?}");
+                        info!("While getting projectile to/from: {err}. Despawning projectile {projectile_id:?}");
                         commands.entity(projectile_id).despawn_recursive();
                     }
                 }
