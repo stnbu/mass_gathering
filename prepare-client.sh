@@ -9,6 +9,6 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ## or update...
 git update -f
 
-time cargo build --bin client --release
+time cargo build -p client --release
 
 echo "Yaay! Next time will be way faster."

@@ -3,7 +3,7 @@
 NICKNAMES="$@"
 
 for nick in $NICKNAMES ; do
-    cargo run --bin client -- --nickname "$nick" &
+    cargo run -p client -- --nickname "$nick" &
 done
-cargo run --bin server -- --speed 1 --system old_rando
+cargo run -p server -- --speed 1 --system old_rando
 
