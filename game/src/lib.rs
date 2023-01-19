@@ -46,11 +46,11 @@ impl Plugin for Core {
             app.insert_resource(Msaa { samples: 4 });
             app.add_plugins(DefaultPlugins);
         }
-        /*
         app.insert_resource(resources::MassIDToEntity::default());
         app.add_event::<events::ToServer>();
         app.add_event::<events::ToClient>();
         app.add_state(resources::GameState::Stopped);
+        /*
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_system(client::control)
@@ -78,7 +78,6 @@ pub struct Spacetime;
 impl Plugin for Spacetime {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::BLACK))
-	    /*
             .init_resource::<physics::PhysicsConfig>()
             .add_event::<physics::MassCollisionEvent>()
             .add_event::<physics::DespawnMassEvent>()
@@ -92,8 +91,6 @@ impl Plugin for Spacetime {
                     )
                     .with_system(physics::merge_masses.before(physics::handle_despawn_mass)),
             );
-            */
-	    ;
     }
 }
 
@@ -148,7 +145,6 @@ pub fn from_nick(nick: &str) -> u64 {
     u64::from_ne_bytes(nick_vec)
 }
 
-/*
 pub fn with_gravity(
     physics_config: Res<physics::PhysicsConfig>,
     game_state: Res<State<resources::GameState>>,
@@ -159,4 +155,3 @@ pub fn with_gravity(
         ShouldRun::No
     }
 }
-*/
