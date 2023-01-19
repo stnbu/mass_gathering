@@ -78,18 +78,18 @@ pub fn handle_server_events(
 
                 debug!("  sending initial data to client {new_id}");
                 let message =
-                    bincode::serialize(&events::ServerMessage::Init(init_data.clone())).unwrap();
+                    bincode::serialize(&events::ToClient::Init(init_data.clone())).unwrap();
                 server.send_message(new_id, CHANNEL_RELIABLE, message);
 
                 debug!("  sending physics config to {new_id}");
                 let message =
-                    bincode::serialize(&events::ServerMessage::SetPhysicsConfig(*physics_config))
+                    bincode::serialize(&events::ToClient::SetPhysicsConfig(*physics_config))
                         .unwrap();
                 server.send_message(new_id, CHANNEL_RELIABLE, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
                 for (&existing_id, &client_data) in lobby.clients.iter() {
-                    let message = events::ServerMessage::ClientJoined {
+                    let message = events::ToClient::ClientJoined {
                         id: existing_id,
                         client_data,
                     };
@@ -108,7 +108,7 @@ pub fn handle_server_events(
                 debug!("  now updating my lobby with ({new_id}, {client_data:?})");
                 lobby.clients.insert(new_id, client_data);
                 debug!("  the server now has lobby {lobby:?}");
-                let message = events::ServerMessage::ClientJoined {
+                let message = events::ToClient::ClientJoined {
                     id: new_id,
                     client_data,
                 };
@@ -129,7 +129,7 @@ pub fn handle_server_events(
             let message = bincode::deserialize(&message).unwrap();
             debug!("Received message from client: {message:?}");
             match message {
-                events::ClientMessage::Ready => {
+                events::ToServer::Ready => {
                     let unanimous_autostart = lobby.clients.len() > 1
                         && lobby
                             .clients
@@ -153,7 +153,7 @@ pub fn handle_server_events(
                     } else {
                         resources::GameState::Waiting
                     };
-                    let set_state = events::ServerMessage::SetGameState(state);
+                    let set_state = events::ToClient::SetGameState(state);
                     let message = bincode::serialize(&set_state).unwrap();
                     if start {
                         debug!("Broadcasting {set_state:?}");
@@ -166,9 +166,9 @@ pub fn handle_server_events(
                     debug!("  and setting my state to {state:?}");
                     let _ = app_state.overwrite_set(state);
                 }
-                events::ClientMessage::Rotation(rotation) => {
+                events::ToServer::Rotation(rotation) => {
                     debug!("Sending rotation event for client {client_id}");
-                    let client_rotation = events::ServerMessage::ClientRotation {
+                    let client_rotation = events::ToClient::ClientRotation {
                         id: client_id,
                         rotation,
                     };
@@ -176,9 +176,9 @@ pub fn handle_server_events(
                     debug!("Broadcasting except to {client_id}: {client_rotation:?}");
                     server.broadcast_message_except(client_id, CHANNEL_RELIABLE, message);
                 }
-                events::ClientMessage::ProjectileFired(projectile_flight) => {
+                events::ToServer::ProjectileFired(projectile_flight) => {
                     let projectile_fired =
-                        events::ServerMessage::ProjectileFired(projectile_flight);
+                        events::ToClient::ProjectileFired(projectile_flight);
                     let message = bincode::serialize(&projectile_fired).unwrap();
                     debug!("Broadcasting {projectile_fired:?}");
                     server.broadcast_message(CHANNEL_RELIABLE, message);

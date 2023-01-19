@@ -47,8 +47,8 @@ impl Plugin for Core {
             app.add_plugins(DefaultPlugins);
         }
         app.insert_resource(resources::MassIDToEntity::default());
-        app.add_event::<events::ClientMessage>();
-        app.add_event::<events::ServerMessage>();
+        app.add_event::<events::ToServer>();
+        app.add_event::<events::ToClient>();
         app.add_state(resources::GameState::Stopped);
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)

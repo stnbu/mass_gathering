@@ -3,7 +3,7 @@ use bevy::prelude::Component;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Component, Debug)]
-pub enum ServerMessage {
+pub enum ToClient {
     Init(resources::InitData),
     SetGameState(resources::GameState),
     ClientJoined {
@@ -19,7 +19,7 @@ pub enum ServerMessage {
 }
 
 #[derive(Debug, Serialize, Deserialize, Component)]
-pub enum ClientMessage {
+pub enum ToServer {
     Ready,
     Rotation(Quat),
     ProjectileFired(ProjectileFlight),

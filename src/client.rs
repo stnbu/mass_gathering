@@ -14,52 +14,52 @@ const FRAME_FILL: Color32 = Color32::TRANSPARENT;
 const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
 
 pub fn send_messages_to_server(
-    mut client_messages: EventReader<events::ClientMessage>,
+    mut to_server_events: EventReader<events::ToServer>,
     mut client: ResMut<RenetClient>,
 ) {
-    for message in client_messages.iter() {
+    for message in to_server_events.iter() {
         client.send_message(CHANNEL_RELIABLE, bincode::serialize(message).unwrap());
     }
 }
 
-pub fn process_server_messages(
+pub fn process_to_client_events(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state: ResMut<State<resources::GameState>>,
     mut mass_to_entity_map: ResMut<resources::MassIDToEntity>,
-    mut server_messages: EventReader<events::ServerMessage>,
-    mut client_messages: EventWriter<events::ClientMessage>,
+    mut to_client_events: EventReader<events::ToClient>,
+    mut to_server_events: EventWriter<events::ToServer>,
     mut lobby: ResMut<resources::Lobby>,
     client: Res<RenetClient>,
 ) {
     let my_id = client.client_id();
-    for message in server_messages.iter() {
+    for message in to_client_events.iter() {
         debug!("Message for {my_id}");
         match message {
-            events::ServerMessage::Init(init_data) => {
+            events::ToClient::Init(init_data) => {
                 debug!("  got `Init`. Initializing with data receveid from server: {init_data:?}");
                 // FIXME: so much clone
                 *mass_to_entity_map = init_data
                     .clone()
                     .init(&mut commands, &mut meshes, &mut materials)
                     .clone();
-                let message = events::ClientMessage::Ready;
+                let message = events::ToServer::Ready;
                 debug!("  enqueuing message for server `{message:?}`");
-                client_messages.send(message);
+                to_server_events.send(message);
             }
-            events::ServerMessage::SetGameState(new_game_state) => {
+            events::ToClient::SetGameState(new_game_state) => {
                 debug!("  got `SetGameState`. Setting state to {new_game_state:?}");
                 let _ = game_state.overwrite_set(*new_game_state);
             }
-            events::ServerMessage::SetPhysicsConfig(physics_config) => {
+            events::ToClient::SetPhysicsConfig(physics_config) => {
                 debug!("  got `SetPhysicsConfig`. Inserting resource received from server: {physics_config:?}");
                 commands.insert_resource(*physics_config);
             }
-            events::ServerMessage::ClientRotation { .. } => {
+            events::ToClient::ClientRotation { .. } => {
                 // handled by separate system
             }
-            events::ServerMessage::ClientJoined { id, client_data } => {
+            events::ToClient::ClientJoined { id, client_data } => {
                 debug!("  got `ClientJoined`. Inserting entry for client {id}");
                 if let Some(old) = lobby.clients.insert(*id, *client_data) {
                     warn!("  the value {old:?} was replaced for client {id}");
@@ -109,7 +109,7 @@ pub fn process_server_messages(
                 }
                 debug!("    we now have lobby {lobby:?}");
             }
-            events::ServerMessage::ProjectileFired(_) => {
+            events::ToClient::ProjectileFired(_) => {
                 // not handled here
             }
         }
@@ -118,10 +118,10 @@ pub fn process_server_messages(
 
 pub fn receive_messages_from_server(
     mut client: ResMut<RenetClient>,
-    mut server_messages: EventWriter<events::ServerMessage>,
+    mut to_client_events: EventWriter<events::ToClient>,
 ) {
     while let Some(message) = client.receive_message(CHANNEL_RELIABLE) {
-        server_messages.send(bincode::deserialize(&message).unwrap());
+        to_client_events.send(bincode::deserialize(&message).unwrap());
     }
 }
 
@@ -167,7 +167,7 @@ impl Plugin for ClientPlugin {
             SystemSet::on_update(resources::GameState::Running)
                 .with_run_criteria(run_if_client_connected)
                 .with_system(client::send_messages_to_server)
-                .with_system(client::process_server_messages)
+                .with_system(client::process_to_client_events)
                 .with_system(client::receive_messages_from_server)
                 .with_system(client::animate_explosions),
         );
@@ -179,7 +179,7 @@ impl Plugin for ClientPlugin {
 pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
-    mut client_messages: EventWriter<events::ClientMessage>,
+    mut to_server_events: EventWriter<events::ToServer>,
     mut inhabitant_query: Query<&mut Transform, With<components::ClientInhabited>>,
 ) {
     let nudge = TAU / 10000.0;
@@ -229,8 +229,8 @@ pub fn control(
             transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
             transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
             transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
-            let message = events::ClientMessage::Rotation(transform.rotation);
-            client_messages.send(message);
+            let message = events::ToServer::Rotation(transform.rotation);
+            to_server_events.send(message);
         } else {
             error!("ClientInhabited entity not present");
         }
@@ -239,13 +239,13 @@ pub fn control(
 
 /// This does not include the client's mass
 pub fn rotate_inhabitable_masses(
-    mut server_messages: EventReader<events::ServerMessage>,
+    mut to_client_events: EventReader<events::ToClient>,
     mut inhabitable_masses: Query<&mut Transform, With<components::Inhabitable>>,
     mass_to_entity_map: Res<resources::MassIDToEntity>,
     lobby: Res<resources::Lobby>,
 ) {
-    for message in server_messages.iter() {
-        if let events::ServerMessage::ClientRotation { id, rotation } = message {
+    for message in to_client_events.iter() {
+        if let events::ToClient::ClientRotation { id, rotation } = message {
             debug!("  got `ClientRotation`. Rotating mass {id}");
             let mass_id = lobby.clients.get(id).unwrap().inhabited_mass_id;
             if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
@@ -309,7 +309,7 @@ pub fn handle_projectile_engagement(
         With<components::ClientInhabited>,
     >,
     rapier_context: Res<RapierContext>,
-    mut client_messages: EventWriter<events::ClientMessage>,
+    mut to_server_events: EventWriter<events::ToServer>,
     mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
 ) {
@@ -336,7 +336,7 @@ pub fn handle_projectile_engagement(
                         .duration_since(SystemTime::UNIX_EPOCH)
                         .unwrap()
                         .as_millis();
-                    client_messages.send(events::ClientMessage::ProjectileFired(
+                    to_server_events.send(events::ToServer::ProjectileFired(
                         events::ProjectileFlight {
                             launch_time,
                             from_mass_id,
@@ -359,13 +359,13 @@ pub fn handle_projectile_engagement(
 }
 
 pub fn handle_projectile_fired(
-    mut client_messages: EventReader<events::ServerMessage>,
+    mut to_server_events: EventReader<events::ToClient>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for message in client_messages.iter() {
-        if let events::ServerMessage::ProjectileFired(projectile_flight) = message {
+    for message in to_server_events.iter() {
+        if let events::ToClient::ProjectileFired(projectile_flight) = message {
             let radius = 0.5;
             commands
                 .spawn(PbrBundle {
