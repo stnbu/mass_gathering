@@ -10,6 +10,8 @@ use bevy_renet::{
 use game::*;
 use std::{net::UdpSocket, time::SystemTime};
 
+pub mod plugins;
+
 const FRAME_FILL: Color32 = Color32::TRANSPARENT;
 const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
 
@@ -150,72 +152,6 @@ pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
         authentication,
     )
     .unwrap()
-}
-
-#[derive(Default)]
-pub struct ClientPlugin {
-    server: bool,
-}
-
-impl Plugin for ClientPlugin {
-    fn build(&self, app: &mut App) {
-        app.insert_resource(resources::MassIDToEntity::default());
-        app.add_event::<events::ToServer>();
-        app.add_event::<events::ToClient>();
-        app.add_state(resources::GameState::Stopped);
-        app.insert_resource(RapierConfiguration {
-            gravity: Vec3::ZERO,
-            ..Default::default()
-        });
-        app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-        app.init_resource::<physics::PhysicsConfig>()
-            .add_event::<physics::MassCollisionEvent>()
-            .add_event::<physics::DespawnMassEvent>()
-            .add_system_set(
-                SystemSet::on_update(resources::GameState::Running)
-                    .with_run_criteria(with_gravity)
-                    .with_system(physics::handle_despawn_mass)
-                    .with_system(physics::freefall.before(physics::handle_despawn_mass))
-                    .with_system(
-                        physics::handle_mass_collisions.before(physics::handle_despawn_mass),
-                    )
-                    .with_system(physics::merge_masses.before(physics::handle_despawn_mass)),
-            );
-        app.insert_resource(resources::Lobby::default());
-        app.add_system(panic_on_renet_error);
-        //
-        if !self.server {
-            app.add_plugins(DefaultPlugins);
-            app.insert_resource(ClearColor(Color::BLACK));
-            app.add_system_set(
-                SystemSet::on_update(resources::GameState::Running)
-                    .with_system(control)
-                    .with_system(handle_projectile_engagement)
-                    .with_system(handle_projectile_fired)
-                    .with_system(move_projectiles)
-                    .with_system(handle_projectile_collision)
-                    .with_system(rotate_inhabitable_masses),
-            );
-            app.add_plugin(EguiPlugin);
-            app.add_startup_system(set_resolution);
-            app.add_startup_system(let_light);
-            app.add_system(bevy::window::close_on_esc);
-            app.add_system(set_window_title);
-            app.add_system_set(
-                SystemSet::on_update(resources::GameState::Waiting)
-                    .with_system(client_waiting_screen),
-            );
-            app.add_system_set(
-                SystemSet::on_update(resources::GameState::Running)
-                    .with_run_criteria(run_if_client_connected)
-                    .with_system(send_messages_to_server)
-                    .with_system(process_to_client_events)
-                    .with_system(receive_messages_from_server)
-                    .with_system(animate_explosions),
-            );
-            app.add_plugin(RenetClientPlugin::default());
-        }
-    }
 }
 
 pub fn control(

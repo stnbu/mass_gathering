@@ -10,6 +10,8 @@ use bevy_renet::renet::{
 };
 use std::{net::UdpSocket, time::SystemTime};
 
+pub mod plugins;
+
 // Only used by server, kinda hacky
 #[derive(Resource, Default)]
 pub struct UnassignedMasses(Vec<u64>);
