@@ -128,6 +128,7 @@ pub fn handle_server_events(
     }
 
     for client_id in server.clients_id().into_iter() {
+        // FIXME: What is the "clean" way to "iterate all channels".
         while let Some(message) = server.receive_message(client_id, DefaultChannel::Reliable) {
             let message = bincode::deserialize(&message).unwrap();
             debug!("Received message from client: {message:?}");
