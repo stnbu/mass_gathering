@@ -79,13 +79,13 @@ pub fn handle_server_events(
                 debug!("  sending initial data to client {new_id}");
                 let message =
                     bincode::serialize(&events::ToClient::Init(init_data.clone())).unwrap();
-                server.send_message(new_id, CHANNEL_RELIABLE, message);
+                server.send_message(new_id, DefaultChannel::Reliable, message);
 
                 debug!("  sending physics config to {new_id}");
                 let message =
                     bincode::serialize(&events::ToClient::SetPhysicsConfig(*physics_config))
                         .unwrap();
-                server.send_message(new_id, CHANNEL_RELIABLE, message);
+                server.send_message(new_id, DefaultChannel::Reliable, message);
 
                 debug!("  replaying existing lobby back to new client {new_id:?}");
                 for (&existing_id, &client_data) in lobby.clients.iter() {
@@ -125,7 +125,7 @@ pub fn handle_server_events(
     }
 
     for client_id in server.clients_id().into_iter() {
-        while let Some(message) = server.receive_message(client_id, CHANNEL_RELIABLE) {
+        while let Some(message) = server.receive_message(client_id, DefaultChannel::Reliable) {
             let message = bincode::deserialize(&message).unwrap();
             debug!("Received message from client: {message:?}");
             match message {
@@ -157,7 +157,7 @@ pub fn handle_server_events(
                     let message = bincode::serialize(&set_state).unwrap();
                     if start {
                         debug!("Broadcasting {set_state:?}");
-                        server.broadcast_message(CHANNEL_RELIABLE, message);
+                        server.broadcast_message(DefaultChannel::Reliable, message);
                     } else {
                         // FIXME: we have inconsistency/arbitrariness in 2nd arg choice (channel)
                         debug!("Replying to client {client_id} with {set_state:?}");
@@ -174,13 +174,13 @@ pub fn handle_server_events(
                     };
                     let message = bincode::serialize(&inhabitant_rotation).unwrap();
                     debug!("Broadcasting except to {client_id}: {inhabitant_rotation:?}");
-                    server.broadcast_message_except(client_id, CHANNEL_RELIABLE, message);
+                    server.broadcast_message_except(client_id, DefaultChannel::Reliable, message);
                 }
                 events::ToServer::ProjectileFired(projectile_flight) => {
                     let projectile_fired = events::ToClient::ProjectileFired(projectile_flight);
                     let message = bincode::serialize(&projectile_fired).unwrap();
                     debug!("Broadcasting {projectile_fired:?}");
-                    server.broadcast_message(CHANNEL_RELIABLE, message);
+                    server.broadcast_message(DefaultChannel::Reliable, message);
                 }
             }
         }
