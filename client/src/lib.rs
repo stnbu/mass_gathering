@@ -4,7 +4,7 @@ use bevy_egui::{
 };
 use bevy_rapier3d::prelude::{Collider, CollisionEvent, QueryFilter, RapierContext, RigidBody};
 use bevy_renet::{
-    renet::{ClientAuthentication, RenetClient, RenetConnectionConfig},
+    renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
 };
 use game::*;
@@ -18,7 +18,11 @@ pub fn send_messages_to_server(
     mut client: ResMut<RenetClient>,
 ) {
     for message in to_server_events.iter() {
-        client.send_message(CHANNEL_RELIABLE, bincode::serialize(message).unwrap());
+        let channel = match message {
+            events::ToServer::Rotation(_) => DefaultChannel::Unreliable,
+            _ => DefaultChannel::Reliable,
+        };
+        client.send_message(channel, bincode::serialize(message).unwrap());
     }
 }
 
@@ -120,8 +124,14 @@ pub fn receive_messages_from_server(
     mut client: ResMut<RenetClient>,
     mut to_client_events: EventWriter<events::ToClient>,
 ) {
-    while let Some(message) = client.receive_message(CHANNEL_RELIABLE) {
-        to_client_events.send(bincode::deserialize(&message).unwrap());
+    for channel in [
+        0, // DefaultChannel::Reliable,
+        1, // DefaultChannel::Chunk,
+        2, // DefaultChannel::Unreliable,
+    ] {
+        while let Some(message) = client.receive_message(channel) {
+            to_client_events.send(bincode::deserialize(&message).unwrap());
+        }
     }
 }
 
