@@ -60,13 +60,10 @@ pub fn handle_server_events(
 ) {
     for event in server_events.iter() {
         match event {
-            RenetServerEvent::ClientConnected(id, user_data) => {
+            RenetServerEvent::ClientConnected(id, _) => {
                 // FIXME: where? here? somewhere we need to "handle" clients connecting
                 // to an in-progress game (which we do not allow).
                 let new_id = *id;
-
-                let client_preferences = resources::ClientPreferences::from_user_data(user_data);
-                debug!("Server got connection from new client {new_id} with preferences {client_preferences:?}");
 
                 let inhabited_mass_id = if let Some(id) = unassigned_masses.0.pop() {
                     id
@@ -100,10 +97,7 @@ pub fn handle_server_events(
                     );
                 }
 
-                let client_data = resources::ClientData {
-                    preferences: client_preferences,
-                    inhabited_mass_id,
-                };
+                let client_data = resources::ClientData { inhabited_mass_id };
 
                 debug!("  now updating my lobby with ({new_id}, {client_data:?})");
                 lobby.clients.insert(new_id, client_data);
@@ -130,24 +124,15 @@ pub fn handle_server_events(
             debug!("Received message from client: {message:?}");
             match message {
                 events::ToServer::Ready => {
-                    let unanimous_autostart = lobby.clients.len() > 1
-                        && lobby
-                            .clients
-                            .iter()
-                            .all(|(_, data)| data.preferences.autostart);
-                    if unanimous_autostart {
-                        debug!("  two or more clients connected and all want to autostart.");
-                    }
-                    let game_full = lobby.clients.len()
+                    let start = lobby.clients.len()
                         == init_data
                             .masses
                             .iter()
                             .filter(|(_, data)| data.inhabitable)
                             .count();
-                    if game_full {
-                        debug!("  game has now reached max capacity.");
+                    if start {
+                        debug!("  game has now reached capacity.");
                     }
-                    let start = unanimous_autostart || game_full;
                     let state = if start {
                         resources::GameState::Running
                     } else {

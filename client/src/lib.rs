@@ -128,11 +128,7 @@ pub fn receive_messages_from_server(
     }
 }
 
-pub fn new_renet_client(
-    client_id: u64,
-    client_preferences: resources::ClientPreferences,
-    address: String,
-) -> RenetClient {
+pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
     } else {
@@ -143,7 +139,7 @@ pub fn new_renet_client(
         client_id,
         protocol_id: PROTOCOL_ID,
         server_addr: address,
-        user_data: Some(client_preferences.to_netcode_user_data()),
+        user_data: None,
     };
     RenetClient::new(
         SystemTime::now()
@@ -336,14 +332,9 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
                     }),
             );
             ui.separator();
-            for (&id, &client_data) in lobby.clients.iter() {
+            for (&id, _) in lobby.clients.iter() {
                 let nick = to_nick(id);
-                let autostart = if client_data.preferences.autostart {
-                    "autostart"
-                } else {
-                    "wait"
-                };
-                let text = format!("{nick}>  {autostart}");
+                let text = format!("{nick}");
                 ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {
                     size: 16.0,
                     family: Monospace,
