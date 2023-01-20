@@ -5,7 +5,6 @@ pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
-        //
         app.insert_resource(resources::MassIDToEntity::default());
         app.add_event::<events::ToServer>();
         app.add_event::<events::ToClient>();
@@ -15,8 +14,6 @@ impl Plugin for CorePlugin {
         app.add_event::<physics::DespawnMassEvent>();
         app.insert_resource(resources::Lobby::default());
         app.add_system(panic_on_renet_error);
-        //
-        // "simulation"
     }
 }
 

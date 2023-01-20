@@ -1,14 +1,10 @@
 use crate::*;
-use bevy::{app::ScheduleRunnerPlugin, pbr::PbrPlugin, time::TimePlugin};
-use bevy_rapier3d::rapier::crossbeam::epoch::Pointable;
+use bevy::{app::ScheduleRunnerPlugin, time::TimePlugin};
 use bevy_renet::RenetServerPlugin;
 use clap::Parser;
 
 #[derive(Default)]
 pub struct ServerPlugin;
-
-//
-//use bevy::render::mesh::Mesh;
 
 impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
