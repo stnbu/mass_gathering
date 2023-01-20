@@ -1,6 +1,10 @@
+// FIXME: Consider disconnecting clients and more upon exit a la
+// https://bevy-cheatbook.github.io/programming/states.html
+
+use bevy::app::AppExit;
 use game::*;
 // We rename this because it sounds too much like one of _our_ events (confusing).
-use bevy_renet::renet::ServerEvent as RenetServerEvent;
+use bevy_renet::renet::ServerEvent;
 use bevy_renet::renet::{
     DefaultChannel, RenetConnectionConfig, RenetServer, ServerAuthentication, ServerConfig,
 };
@@ -50,17 +54,18 @@ pub fn setup_physics(mut commands: Commands, cli_args: Res<resources::ServerCliA
 }
 
 pub fn handle_server_events(
-    mut server_events: EventReader<RenetServerEvent>,
+    mut server_events: EventReader<ServerEvent>,
     mut server: ResMut<RenetServer>,
     init_data: Res<resources::InitData>,
     mut app_state: ResMut<State<resources::GameState>>,
     mut lobby: ResMut<resources::Lobby>,
     mut unassigned_masses: ResMut<UnassignedMasses>,
     physics_config: Res<physics::PhysicsConfig>,
+    mut exit: EventWriter<AppExit>,
 ) {
     for event in server_events.iter() {
         match event {
-            RenetServerEvent::ClientConnected(id, _) => {
+            ServerEvent::ClientConnected(id, _) => {
                 // FIXME: where? here? somewhere we need to "handle" clients connecting
                 // to an in-progress game (which we do not allow).
                 let new_id = *id;
@@ -112,8 +117,12 @@ pub fn handle_server_events(
                     bincode::serialize(&message).unwrap(),
                 );
             }
-            RenetServerEvent::ClientDisconnected(id) => {
-                debug!("Server got disconnect from client {id}");
+            ServerEvent::ClientDisconnected(id) => {
+                debug!(
+                    "Server got disconnect from client {id} ({}). Quiting Bevy app.",
+                    to_nick(*id).trim_end()
+                );
+                exit.send(AppExit);
             }
         }
     }
