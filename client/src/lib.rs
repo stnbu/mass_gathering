@@ -324,7 +324,7 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
         })
         .show(ctx.ctx_mut(), |ui| {
             ui.label(
-                RichText::new("Waiting for players...")
+                RichText::new("Waiting for more players\n\nConnected:")
                     .color(TEXT_COLOR)
                     .font(FontId {
                         size: 20.0,
