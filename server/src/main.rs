@@ -10,9 +10,9 @@ fn main() {
     let mut app = App::new();
 
     app
-	// Ours
+        // Ours
         .add_state(resources::GameState::Stopped)
-	.insert_resource(resources::Lobby::default())
+        .insert_resource(resources::Lobby::default())
         .insert_resource(server::new_renet_server(address))
         .insert_resource(args)
         .init_resource::<server::UnassignedMasses>()
@@ -25,17 +25,5 @@ fn main() {
         .add_plugin(TimePlugin::default())
         .add_plugin(ScheduleRunnerPlugin::default())
         .add_plugin(RenetServerPlugin::default())
-	// _
-	;
-
-    #[cfg(debug_assertions)]
-    {
-        debug!("DEBUG LEVEL LOGGING ! !");
-        app.add_plugin(bevy::log::LogPlugin {
-                filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
-                level: bevy::log::Level::DEBUG,
-            });
-    }
-
-    app.run();
+        .run();
 }

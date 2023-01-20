@@ -163,21 +163,6 @@ pub struct ClientPlugin {
 
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
-        #[cfg(debug_assertions)]
-        {
-            debug!("DEBUG LEVEL LOGGING ! !");
-            app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
-                filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
-                level: bevy::log::Level::DEBUG,
-            }));
-        }
-        #[cfg(not(debug_assertions))]
-        {
-            error!("We have no logging, and yet you SEE this message...?");
-            // FIXME: num-triangles on a mesh is a different thing
-            app.insert_resource(Msaa { samples: 4 });
-            app.add_plugins(DefaultPlugins);
-        }
         app.insert_resource(resources::MassIDToEntity::default());
         app.add_event::<events::ToServer>();
         app.add_event::<events::ToClient>();
@@ -204,6 +189,7 @@ impl Plugin for ClientPlugin {
         app.add_system(panic_on_renet_error);
         //
         if !self.server {
+            app.add_plugins(DefaultPlugins);
             app.insert_resource(ClearColor(Color::BLACK));
             app.add_system_set(
                 SystemSet::on_update(resources::GameState::Running)
