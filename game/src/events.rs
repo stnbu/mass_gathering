@@ -1,3 +1,10 @@
+// FIXME:
+//
+// Maybe make better use of channel characteristics?
+//
+//  - Rotate -> Unreliable
+//  - InitData -> Chunk
+
 use crate::*;
 use bevy::prelude::Component;
 use serde::{Deserialize, Serialize};
