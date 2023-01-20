@@ -12,7 +12,7 @@ fn main() {
         address,
     );
     App::new()
-        .add_plugin(client::ClientPlugin)
+        .add_plugin(client::ClientPlugin::default())
         .insert_resource(renet_client)
         .run();
 }

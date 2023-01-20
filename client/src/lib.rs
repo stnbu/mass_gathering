@@ -153,10 +153,13 @@ pub fn new_renet_client(
     .unwrap()
 }
 
-pub struct ClientPlugin;
+#[derive(Default)]
+pub struct ClientPlugin {
+    server: bool,
+}
+
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
-        // Was "Core" plugin
         #[cfg(debug_assertions)]
         {
             debug!("DEBUG LEVEL LOGGING ! !");
@@ -176,28 +179,12 @@ impl Plugin for ClientPlugin {
         app.add_event::<events::ToServer>();
         app.add_event::<events::ToClient>();
         app.add_state(resources::GameState::Stopped);
-        app.add_system_set(
-            SystemSet::on_update(resources::GameState::Running)
-                .with_system(control)
-                .with_system(handle_projectile_engagement)
-                .with_system(handle_projectile_fired)
-                .with_system(move_projectiles)
-                .with_system(handle_projectile_collision)
-                .with_system(rotate_inhabitable_masses),
-        );
-        app.add_plugin(EguiPlugin);
-        app.add_startup_system(set_resolution);
-        app.add_startup_system(let_light);
-        app.add_system(bevy::window::close_on_esc);
         app.insert_resource(RapierConfiguration {
             gravity: Vec3::ZERO,
             ..Default::default()
         });
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
-        app.add_system(set_window_title);
-        // was "Spacetime" plugin
-        app.insert_resource(ClearColor(Color::BLACK))
-            .init_resource::<physics::PhysicsConfig>()
+        app.init_resource::<physics::PhysicsConfig>()
             .add_event::<physics::MassCollisionEvent>()
             .add_event::<physics::DespawnMassEvent>()
             .add_system_set(
@@ -210,21 +197,39 @@ impl Plugin for ClientPlugin {
                     )
                     .with_system(physics::merge_masses.before(physics::handle_despawn_mass)),
             );
-        // Original contents of "ClientPlugin"
         app.insert_resource(resources::Lobby::default());
-        app.add_system_set(
-            SystemSet::on_update(resources::GameState::Waiting).with_system(client_waiting_screen),
-        );
-        app.add_system_set(
-            SystemSet::on_update(resources::GameState::Running)
-                .with_run_criteria(run_if_client_connected)
-                .with_system(send_messages_to_server)
-                .with_system(process_to_client_events)
-                .with_system(receive_messages_from_server)
-                .with_system(animate_explosions),
-        );
-        app.add_plugin(RenetClientPlugin::default());
         app.add_system(panic_on_renet_error);
+        //
+        if !self.server {
+            app.insert_resource(ClearColor(Color::BLACK));
+            app.add_system_set(
+                SystemSet::on_update(resources::GameState::Running)
+                    .with_system(control)
+                    .with_system(handle_projectile_engagement)
+                    .with_system(handle_projectile_fired)
+                    .with_system(move_projectiles)
+                    .with_system(handle_projectile_collision)
+                    .with_system(rotate_inhabitable_masses),
+            );
+            app.add_plugin(EguiPlugin);
+            app.add_startup_system(set_resolution);
+            app.add_startup_system(let_light);
+            app.add_system(bevy::window::close_on_esc);
+            app.add_system(set_window_title);
+            app.add_system_set(
+                SystemSet::on_update(resources::GameState::Waiting)
+                    .with_system(client_waiting_screen),
+            );
+            app.add_system_set(
+                SystemSet::on_update(resources::GameState::Running)
+                    .with_run_criteria(run_if_client_connected)
+                    .with_system(send_messages_to_server)
+                    .with_system(process_to_client_events)
+                    .with_system(receive_messages_from_server)
+                    .with_system(animate_explosions),
+            );
+            app.add_plugin(RenetClientPlugin::default());
+        }
     }
 }
 
@@ -402,6 +407,7 @@ pub fn handle_projectile_engagement(
                     ));
                 }
             } else {
+                //
                 warn!("Could not find uninhabited mass ID {mass:?}");
             }
         } else {
