@@ -13,7 +13,6 @@ impl Plugin for CorePlugin {
         app.add_event::<physics::MassCollisionEvent>();
         app.add_event::<physics::DespawnMassEvent>();
         app.insert_resource(resources::Lobby::default());
-        app.add_system(panic_on_renet_error);
     }
 }
 

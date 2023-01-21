@@ -56,12 +56,6 @@ pub fn let_light(mut commands: Commands) {
     });
 }
 
-pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
-    for e in renet_error.iter() {
-        error!("{}", e);
-    }
-}
-
 pub fn to_nick(id: u64) -> String {
     let nic_vec: Vec<u8> = id.to_ne_bytes().to_vec();
     String::from_utf8(nic_vec).unwrap() // NOTE includes trailing spaces
