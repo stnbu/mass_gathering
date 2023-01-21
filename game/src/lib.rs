@@ -4,7 +4,7 @@ pub use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsP
 pub use std::f32::consts::TAU;
 
 use bevy::ecs::schedule::ShouldRun;
-use bevy_renet::renet::RenetError;
+
 
 pub mod components;
 pub mod events;
