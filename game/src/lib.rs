@@ -5,7 +5,6 @@ pub use std::f32::consts::TAU;
 
 use bevy::ecs::schedule::ShouldRun;
 
-
 pub mod components;
 pub mod events;
 pub mod physics;
@@ -80,5 +79,18 @@ pub fn with_gravity(
         ShouldRun::Yes
     } else {
         ShouldRun::No
+    }
+}
+
+pub fn get_log_plugin(package: &str) -> bevy::log::LogPlugin {
+    #[cfg(debug_assertions)]
+    {
+        let filter = format!("info,wgpu_core=warn,wgpu_hal=off,{package}=debug");
+        let level = bevy::log::Level::DEBUG;
+        bevy::log::LogPlugin { filter, level }
+    }
+    #[cfg(not(debug_assertions))]
+    {
+        bevy::log::LogPlugin::default()
     }
 }
