@@ -1,5 +1,4 @@
 use crate::*;
-use bevy::{app::ScheduleRunnerPlugin, time::TimePlugin};
 use bevy_renet::RenetServerPlugin;
 use clap::Parser;
 
@@ -20,9 +19,6 @@ impl Plugin for ServerPlugin {
             .add_startup_system(populate_unassigned_masses)
             .add_startup_system(setup_physics)
             .add_system(handle_server_events)
-            // .add_plugin(CorePlugin::default())
-            // .add_plugin(TimePlugin::default())
-            // .add_plugin(ScheduleRunnerPlugin::default())
             .add_plugins(MinimalPlugins)
             .add_plugin(get_log_plugin("server"))
             .add_plugin(RenetServerPlugin::default())

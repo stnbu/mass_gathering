@@ -83,14 +83,11 @@ pub fn with_gravity(
 }
 
 pub fn get_log_plugin(package: &str) -> bevy::log::LogPlugin {
-    #[cfg(debug_assertions)]
-    {
+    if cfg!(debug_assertions) {
         let filter = format!("info,wgpu_core=warn,wgpu_hal=off,{package}=debug");
         let level = bevy::log::Level::DEBUG;
         bevy::log::LogPlugin { filter, level }
-    }
-    #[cfg(not(debug_assertions))]
-    {
+    } else {
         bevy::log::LogPlugin::default()
     }
 }
