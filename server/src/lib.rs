@@ -133,7 +133,7 @@ pub fn handle_server_events(
         // FIXME: What is the "clean" way to "iterate all channels".
         while let Some(message) = server.receive_message(client_id, DefaultChannel::Reliable) {
             let message = bincode::deserialize(&message).unwrap();
-            debug!("Received message from client: {message:?}");
+            trace!("Received message from client {client_id}: {message:?}");
             match message {
                 events::ToServer::Ready => {
                     let start = lobby.clients.len()
@@ -164,13 +164,13 @@ pub fn handle_server_events(
                     let _ = app_state.overwrite_set(state);
                 }
                 events::ToServer::Rotation(rotation) => {
-                    debug!("Sending rotation event for client {client_id}");
+                    trace!("Sending rotation event for client {client_id}");
                     let inhabitant_rotation = events::ToClient::InhabitantRotation {
                         client_id,
                         rotation,
                     };
                     let message = bincode::serialize(&inhabitant_rotation).unwrap();
-                    debug!("Broadcasting except to {client_id}: {inhabitant_rotation:?}");
+                    trace!("Broadcasting except to {client_id}: {inhabitant_rotation:?}");
                     server.broadcast_message_except(client_id, DefaultChannel::Reliable, message);
                 }
                 events::ToServer::ProjectileFired(projectile_flight) => {

@@ -19,8 +19,20 @@ impl Plugin for ServerPlugin {
             .add_startup_system(populate_unassigned_masses)
             .add_startup_system(setup_physics)
             .add_system(handle_server_events)
-            .add_plugins(MinimalPlugins)
-            .add_plugin(get_log_plugin("server"))
+            // // this causes high cpu usage
+            // .add_plugins(MinimalPlugins)
+            // .add_plugin(get_log_plugin("server"))
+            // // this causes immediate exit
+            // .add_plugins(
+            //     DefaultPlugins
+            //         .set(WindowPlugin {
+            //             add_primary_window: false,
+            //             ..Default::default()
+            //         })
+            //         .set(get_log_plugin("server")),
+            // )
+            // this causes a window, but it's better than cpu hogging
+            .add_plugins(DefaultPlugins.set(get_log_plugin("server")))
             .add_plugin(RenetServerPlugin::default())
             .run();
     }

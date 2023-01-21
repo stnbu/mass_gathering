@@ -40,7 +40,7 @@ pub fn process_to_client_events(
 ) {
     let my_id = client.client_id();
     for message in to_client_events.iter() {
-        debug!("Message for {my_id}");
+        trace!("Message for {my_id}: {message:?}");
         match message {
             events::ToClient::Init(init_data) => {
                 debug!("  got `Init`. Initializing with data receveid from server: {init_data:?}");
@@ -228,11 +228,11 @@ pub fn rotate_inhabitable_masses(
             rotation,
         } = message
         {
-            debug!("  got `InhabitantRotation`. Rotating mass {client_id}");
+            trace!("  got `InhabitantRotation`. Rotating mass {client_id}");
             let mass_id = lobby.clients.get(client_id).unwrap().inhabited_mass_id;
             if let Some(entity) = mass_to_entity_map.0.get(&mass_id) {
                 if let Ok(mut mass_transform) = inhabitable_masses.get_mut(*entity) {
-                    debug!("    found corresponding entity {entity:?}");
+                    trace!("    found corresponding entity {entity:?}");
                     mass_transform.rotation = *rotation;
                 } else {
                     error!(
@@ -337,12 +337,12 @@ pub fn handle_projectile_engagement(
 }
 
 pub fn handle_projectile_fired(
-    mut to_server_events: EventReader<events::ToClient>,
+    mut to_client_events: EventReader<events::ToClient>,
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    for message in to_server_events.iter() {
+    for message in to_client_events.iter() {
         if let events::ToClient::ProjectileFired(projectile_flight) = message {
             let radius = 0.5;
             commands
