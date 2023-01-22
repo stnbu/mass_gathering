@@ -280,7 +280,13 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
 }
 
 pub fn handle_projectile_engagement(
-    mass_query: Query<(&Transform, &components::MassID), Without<components::Inhabitable>>,
+    mass_query: Query<
+        (&Transform, &components::MassID),
+        (
+            Without<components::Inhabitable>,
+            Without<components::ClientInhabited>,
+        ),
+    >,
     inhabited_mass_query: Query<
         (&Transform, &components::MassID),
         With<components::ClientInhabited>,
@@ -323,7 +329,8 @@ pub fn handle_projectile_engagement(
                     ));
                 }
             } else {
-                //
+                // FIXME: It seems like this should be impossible or at least
+                // extremely rare (it's not).
                 warn!("Could not find uninhabited mass ID {mass:?}");
             }
         } else {
