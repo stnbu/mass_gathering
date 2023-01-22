@@ -18,6 +18,8 @@ impl Plugin for ServerPlugin {
             .init_resource::<UnassignedMasses>()
             .add_startup_system(populate_unassigned_masses)
             .add_startup_system(setup_physics)
+            //.with_system(panic_on_renet_error)
+            .add_system(panic_on_renet_error)
             .add_system(handle_server_events)
             // // this causes high cpu usage
             // .add_plugins(MinimalPlugins)

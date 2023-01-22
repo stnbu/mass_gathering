@@ -31,7 +31,8 @@ impl Plugin for ClientPlugin {
                 .with_system(send_messages_to_server)
                 .with_system(process_to_client_events)
                 .with_system(receive_messages_from_server)
-                .with_system(animate_explosions),
+                .with_system(animate_explosions)
+                .with_system(panic_on_renet_error),
         );
         app.add_plugin(RenetClientPlugin::default());
 

@@ -1,9 +1,9 @@
+use bevy::ecs::schedule::ShouldRun;
 pub use bevy::prelude::*;
 pub use bevy_egui::EguiPlugin;
 pub use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
+use bevy_renet::renet::RenetError;
 pub use std::f32::consts::TAU;
-
-use bevy::ecs::schedule::ShouldRun;
 
 pub mod components;
 pub mod events;
@@ -89,5 +89,11 @@ pub fn get_log_plugin(package: &str) -> bevy::log::LogPlugin {
         bevy::log::LogPlugin { filter, level }
     } else {
         bevy::log::LogPlugin::default()
+    }
+}
+
+pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
+    for e in renet_error.iter() {
+        error!("{}", e);
     }
 }
