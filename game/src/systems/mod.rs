@@ -64,7 +64,6 @@ pub fn cubic() -> resources::InitData {
     let mut init_data = resources::InitData::default();
 
     let mut mass_id = 2000;
-    let mass = radius_to_mass(0.5);
     let from_origin = 9.0;
     for n in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
         for side in [1.0, -1.0] {
