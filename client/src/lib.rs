@@ -395,10 +395,7 @@ pub fn move_projectiles(
         &mut Visibility,
         &events::ProjectileFlight,
     )>,
-    masses_query: Query<
-        (&Transform, &components::Momentum),
-        (With<components::MassID>, Without<events::ProjectileFlight>),
-    >,
+    masses_query: Query<&Transform, (With<components::MassID>, Without<events::ProjectileFlight>)>,
     mass_to_entity_map: Res<resources::MassIDToEntity>,
 ) {
     let proportion_of = 1.0 / 512.0;
@@ -418,7 +415,7 @@ pub fn move_projectiles(
         {
             Result::Ok([from_entity, to_entity]) => {
                 match masses_query.get_many([from_entity, to_entity]) {
-                    Ok([(from_transform, _), (to_transform, _)]) => {
+                    Ok([from_transform, to_transform]) => {
                         // The impact site/taget is the _surface of_ the mass
                         let impact_site = to_transform.translation
                             + projectile_flight.local_impact_direction
