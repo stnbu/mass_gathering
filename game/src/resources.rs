@@ -90,7 +90,7 @@ pub struct MassInitData {
     pub inhabitable: bool,
     pub motion: MassMotion,
     pub color: Color,
-    pub radius: f32,
+    pub mass: f32, // WIP: no radius!
 }
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug)]
@@ -112,83 +112,80 @@ impl Clone for InitData {
     }
 }
 
-// FIXME: maybe wrong place?
-impl InitData {
-    pub fn init<'a>(
-        &self,
-        commands: &'a mut Commands,
-        meshes: &'a mut ResMut<Assets<Mesh>>,
-        materials: &'a mut ResMut<Assets<StandardMaterial>>,
-    ) -> MassIDToEntity {
-        let mut mass_to_entity_map = MassIDToEntity::default();
-        for (
-            &mass_id,
-            &MassInitData {
-                inhabitable,
-                motion: MassMotion { position, velocity },
-                color,
-                radius,
-            },
-        ) in self.masses.iter()
-        {
-            let scale = if inhabitable { 2.25 } else { 1.0 };
-            let mut transform = Transform::from_translation(position).with_scale(Vec3::ONE * scale);
-            if inhabitable {
-                transform.look_at(Vec3::ZERO, Vec3::Y);
-            }
-            let mut mass_commands = commands.spawn(physics::PointMassBundle {
-                pbr: PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius,
-                        ..Default::default()
-                    })),
-                    material: materials.add(color.into()),
-                    transform,
-                    ..Default::default()
-                },
-                momentum: components::Momentum {
-                    velocity,
-                    mass: radius_to_mass(radius),
-                },
-                collider: Collider::ball(radius),
-                ..Default::default()
-            });
-            mass_commands.insert(components::MassID(mass_id));
-            if inhabitable {
-                mass_commands
-                    .insert(components::Inhabitable)
-                    .with_children(|child| {
-                        // barrel
-                        child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Capsule {
-                                radius: 0.05,
-                                depth: 1.0,
-                                ..Default::default()
-                            })),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
-                                .with_translation(Vec3::Z * -1.5),
-                            ..Default::default()
-                        });
-                        // horizontal stabilizer
-                        child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_translation(Vec3::Z * 0.5),
-                            ..Default::default()
-                        });
-                        // vertical stabilizer
-                        child.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
-                                .with_translation(Vec3::Z * 0.5),
-                            ..Default::default()
-                        });
-                    });
-            }
-            mass_to_entity_map.0.insert(mass_id, mass_commands.id());
+pub fn init_masses<'a>(
+    init_data: InitData,
+    commands: &'a mut Commands,
+    meshes: &'a mut ResMut<Assets<Mesh>>,
+    materials: &'a mut ResMut<Assets<StandardMaterial>>,
+) -> MassIDToEntity {
+    let mut mass_to_entity_map = MassIDToEntity::default();
+    for (
+        &mass_id,
+        &MassInitData {
+            inhabitable,
+            motion: MassMotion { position, velocity },
+            color,
+            mass,
+        },
+    ) in init_data.masses.iter()
+    {
+        let scale = Vec3::splat(mass_to_radius(mass));
+        let mut transform = Transform::from_translation(position).with_scale(scale);
+        if inhabitable {
+            transform.look_at(Vec3::ZERO, Vec3::Y);
+            transform.scale += Vec3::splat(2.5);
         }
-        mass_to_entity_map
+        // NOTE: We use unit radius always. We scale as needed.
+        let radius = 1.0;
+        let mut mass_commands = commands.spawn(physics::PointMassBundle {
+            pbr: PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius,
+                    ..Default::default()
+                })),
+                material: materials.add(color.into()),
+                transform,
+                ..Default::default()
+            },
+            momentum: components::Momentum { velocity, mass },
+            collider: Collider::ball(radius),
+            ..Default::default()
+        });
+        mass_commands.insert(components::MassID(mass_id));
+        if inhabitable {
+            mass_commands
+                .insert(components::Inhabitable)
+                .with_children(|child| {
+                    // barrel
+                    child.spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Capsule {
+                            radius: 0.05,
+                            depth: 1.0,
+                            ..Default::default()
+                        })),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+                            .with_translation(Vec3::Z * -1.5),
+                        ..Default::default()
+                    });
+                    // horizontal stabilizer
+                    child.spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_translation(Vec3::Z * 0.5),
+                        ..Default::default()
+                    });
+                    // vertical stabilizer
+                    child.spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+                            .with_translation(Vec3::Z * 0.5),
+                        ..Default::default()
+                    });
+                });
+        }
+        mass_to_entity_map.0.insert(mass_id, mass_commands.id());
     }
+    mass_to_entity_map
 }

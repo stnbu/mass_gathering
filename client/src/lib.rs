@@ -44,11 +44,12 @@ pub fn process_to_client_events(
         match message {
             events::ToClient::Init(init_data) => {
                 debug!("  got `Init`. Initializing with data receveid from server: {init_data:?}");
-                // FIXME: so much clone
-                *mass_to_entity_map = init_data
-                    .clone()
-                    .init(&mut commands, &mut meshes, &mut materials)
-                    .clone();
+                *mass_to_entity_map = resources::init_masses(
+                    init_data.clone(),
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                );
                 let message = events::ToServer::Ready;
                 debug!("  enqueuing message for server `{message:?}`");
                 to_server_events.send(message);
