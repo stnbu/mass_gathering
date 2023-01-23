@@ -68,52 +68,49 @@ pub fn handle_server_events(
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, _) => {
-                // FIXME: where? here? somewhere we need to "handle" clients connecting
-                // to an in-progress game (which we do not allow).
-                let new_id = *id;
-
-                let inhabited_mass_id = if let Some(id) = unassigned_masses.0.pop() {
-                    id
+                let new_client_id = *id;
+                let inhabited_mass_id = if let Some(mass_id) = unassigned_masses.0.pop() {
+                    mass_id
                 } else {
-                    warn!("Got connection from client {new_id} but we have no more uninhabited masses");
+                    warn!("Got connection from client {new_client_id} but we have no more uninhabited masses");
                     // FIXME: send "error" back to client?
                     return;
                 };
 
-                debug!("  sending initial data to client {new_id}");
+                debug!("  sending initial data to client {new_client_id}");
                 let message =
                     bincode::serialize(&events::ToClient::Init(init_data.clone())).unwrap();
-                server.send_message(new_id, DefaultChannel::Reliable, message);
+                server.send_message(new_client_id, DefaultChannel::Reliable, message);
 
-                debug!("  sending physics config to {new_id}");
+                debug!("  sending physics config to {new_client_id}");
                 let message =
                     bincode::serialize(&events::ToClient::SetPhysicsConfig(*physics_config))
                         .unwrap();
-                server.send_message(new_id, DefaultChannel::Reliable, message);
+                server.send_message(new_client_id, DefaultChannel::Reliable, message);
 
-                debug!("  replaying existing lobby back to new client {new_id:?}");
+                debug!("  replaying existing lobby back to new client {new_client_id:?}");
                 for (&existing_id, &client_data) in lobby.clients.iter() {
                     let message = events::ToClient::ClientJoined {
                         id: existing_id,
                         client_data,
                     };
                     server.send_message(
-                        new_id,
+                        new_client_id,
                         DefaultChannel::Reliable,
                         bincode::serialize(&message).unwrap(),
                     );
                 }
-
+                // FIXME: This probably wants to be under "ToServer::Ready"
                 let client_data = resources::ClientData { inhabited_mass_id };
-
-                debug!("  now updating my lobby with ({new_id}, {client_data:?})");
-                lobby.clients.insert(new_id, client_data);
+                debug!("  now updating my lobby with ({new_client_id}, {client_data:?})");
+                lobby.clients.insert(new_client_id, client_data);
                 debug!("  the server now has lobby {lobby:?}");
                 let message = events::ToClient::ClientJoined {
-                    id: new_id,
+                    id: new_client_id,
                     client_data,
                 };
-                debug!("  broadcasting about new client (except to {new_id}): {message:?}");
+                debug!("  broadcasting about new client: {message:?}");
+                // NOTE: This is how the client gets its own entry in its copy of `Lobby`.
                 server.broadcast_message(
                     DefaultChannel::Reliable,
                     bincode::serialize(&message).unwrap(),
@@ -136,6 +133,7 @@ pub fn handle_server_events(
             trace!("Received message from client {client_id}: {message:?}");
             match message {
                 events::ToServer::Ready => {
+                    debug!("Got 'Ready' from {client_id}");
                     let start = lobby.clients.len()
                         == init_data
                             .masses
@@ -143,25 +141,29 @@ pub fn handle_server_events(
                             .filter(|(_, data)| data.inhabitable)
                             .count();
                     if start {
+                        /* PROBLEM! (this should print only once)
+                        yolo:mass_gathering mburr$ less -R /tmp/logs/1674427249/server.out | grep 'capacity'
+                        2023-01-22T22:40:55.953958Z DEBUG server:   game has now reached capacity.
+                        2023-01-22T22:40:55.973865Z DEBUG server:   game has now reached capacity.
+                        2023-01-22T22:40:56.004610Z DEBUG server:   game has now reached capacity.
+                        */
                         debug!("  game has now reached capacity.");
-                    }
-                    let state = if start {
-                        resources::GameState::Running
-                    } else {
-                        resources::GameState::Waiting
-                    };
-                    let set_state = events::ToClient::SetGameState(state);
-                    let message = bincode::serialize(&set_state).unwrap();
-                    if start {
+                        let state = resources::GameState::Running;
+                        let set_state = events::ToClient::SetGameState(state);
+                        let message = bincode::serialize(&set_state).unwrap();
                         debug!("Broadcasting {set_state:?}");
                         server.broadcast_message(DefaultChannel::Reliable, message);
+                        debug!("  and setting my state to {state:?}");
+                        let _ = app_state.overwrite_set(state);
                     } else {
-                        // FIXME: we have inconsistency/arbitrariness in 2nd arg choice (channel)
-                        debug!("Replying to client {client_id} with {set_state:?}");
+                        let state = resources::GameState::Waiting;
+                        let set_state = events::ToClient::SetGameState(state);
+                        let message = bincode::serialize(&set_state).unwrap();
+                        debug!("Replying to client {client_id} with {state:?}");
                         server.send_message(client_id, DefaultChannel::Reliable, message);
+                        debug!("  and setting my state to {set_state:?}");
+                        let _ = app_state.overwrite_set(state);
                     }
-                    debug!("  and setting my state to {state:?}");
-                    let _ = app_state.overwrite_set(state);
                 }
                 events::ToServer::Rotation(rotation) => {
                     trace!("Sending rotation event for client {client_id}");

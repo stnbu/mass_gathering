@@ -67,15 +67,16 @@ pub fn process_to_client_events(
             events::ToClient::ClientJoined { id, client_data } => {
                 debug!("  got `ClientJoined`. Inserting entry for client {id}");
                 if let Some(old) = lobby.clients.insert(*id, *client_data) {
-                    warn!("  the value {old:?} was replaced for client {id}");
+                    // FIXME: Why does this happen? why are we inserting more than once?
+                    // Hint: "ClientJoined" vs "ToServer::Ready" as they relate to "Lobby" (in server code.)
+                    warn!(" the value {old:?} was replaced by new value {client_data:?} for client {id}");
                 }
                 if *id == client.client_id() {
+                    debug!("  this joined message is about me, {id}");
                     let inhabited_mass = mass_to_entity_map
                         .0
                         .get(&client_data.inhabited_mass_id)
                         .unwrap();
-                    debug!("    server has assigned to me mass id {} which I map to entity {inhabited_mass:?}",
-			   client_data.inhabited_mass_id);
                     let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
                     debug!("    inserting `ClientInhabited` component into this mass entity (meaing 'this is mine')");
                     inhabited_mass_commands.insert(components::ClientInhabited);
@@ -131,6 +132,7 @@ pub fn receive_messages_from_server(
 }
 
 pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
+    debug!("I AM client {client_id:?}");
     let address = if let Ok(address) = format!("{address}").parse() {
         address
     } else {
@@ -329,9 +331,9 @@ pub fn handle_projectile_engagement(
                     ));
                 }
             } else {
-                // FIXME: It seems like this should be impossible or at least
-                // extremely rare (it's not).
-                warn!("Could not find uninhabited mass ID {mass:?}");
+                // NOTE: This happens because `QueryFilter` in `rapier_context.cast_ray` is
+                // `only_dynamic()`, which includes _other_ inhabited masses. Another thing
+                // fixed by a different `QueryFilter` in the above (I think).
             }
         } else {
             for mut visibility in sights_query.iter_mut() {
@@ -479,7 +481,7 @@ pub fn handle_projectile_collision(
                         * mass_to_radius(mass_momentum.mass)
                         * mass_transform.scale.length()
                         / SQRT_3;
-                    debug!(
+                    trace!(
                         "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}. Spawning explosion animation."
                     );
                     commands.entity(*mass_id).with_children(|child| {
@@ -497,7 +499,7 @@ pub fn handle_projectile_collision(
                                 timer: Timer::from_seconds(5.0, TimerMode::Once),
                             });
                     });
-                    debug!("Despawning collided projectile {projectile_id:?}");
+                    trace!("Despawning collided projectile {projectile_id:?}");
                     commands.entity(*projectile_id).despawn_recursive();
                 }
             }
@@ -513,7 +515,7 @@ pub fn animate_explosions(
     for (explosion_id, mut transform, mut explosion) in explosions.iter_mut() {
         explosion.timer.tick(time.delta());
         if explosion.timer.finished() {
-            debug!("Despawning completed explosion animation {explosion_id:?}");
+            trace!("Despawning completed explosion animation {explosion_id:?}");
             commands.entity(explosion_id).despawn_recursive();
         } else {
             let percent = explosion.timer.percent();
