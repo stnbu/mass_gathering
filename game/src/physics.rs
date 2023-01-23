@@ -53,6 +53,14 @@ pub fn handle_despawn_mass(
     }
 }
 
+// FIXME:
+// * Imlement type that can replace the `(Transform, Momentum)` below, so we
+//   don't use stupid names like `p0`.
+// * It should be possible to compare them `T1 > T2` (compare mass and obey
+//   rules about inhabited masses.)
+// * Define and implement an "extension type" so you can `set_mass()` and
+//   `get_mass` on type `Transform` (using `scale`).
+
 pub fn merge_masses(
     mut mass_query: Query<(&mut Transform, &mut components::Momentum, Entity)>,
     inhabitant_query: Query<

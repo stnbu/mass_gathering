@@ -421,8 +421,8 @@ pub fn move_projectiles(
                     Ok([(from_transform, _), (to_transform, _)]) => {
                         // The impact site/taget is the _surface of_ the mass
                         let impact_site = to_transform.translation
-                            + (projectile_flight.local_impact_direction
-                                * scale_to_radius(to_transform.scale));
+                            + projectile_flight.local_impact_direction
+                                * scale_to_radius(to_transform.scale);
                         let flight_vector = impact_site - from_transform.translation;
                         let flight_progress =
                             flight_vector * proportion_of * portions_per_second * seconds_elapsed;
@@ -456,14 +456,11 @@ pub fn handle_projectile_collision(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,
-    mass_query: Query<
-        (&Transform, &components::Momentum),
-        (
-            With<components::MassID>,
-            Without<components::ClientInhabited>,
-            Without<components::Inhabitable>,
-        ),
-    >,
+    mass_query: Query<(
+        With<components::MassID>,
+        Without<components::ClientInhabited>,
+        Without<components::Inhabitable>,
+    )>,
 ) {
     for collision_event in collision_events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
@@ -473,9 +470,10 @@ pub fn handle_projectile_collision(
                 let projectile_id = if e0_is_projectile { e0 } else { e1 };
                 let projectile_flight = projectile_query.get(*projectile_id).unwrap();
                 let mass_id = if !e0_is_projectile { e0 } else { e1 };
-                if let Ok((mass_transform, _)) = mass_query.get(*mass_id) {
-                    let local_impact_site = projectile_flight.local_impact_direction
-                        * scale_to_radius(mass_transform.scale);
+                if mass_query.contains(*mass_id) {
+                    // we always have unit diameter and _scale_, so a "unit vector" will
+                    // exactly end at the "surface" in the mass's transform.
+                    let local_impact_site = projectile_flight.local_impact_direction;
                     trace!(
                         "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}. Spawning explosion animation."
                     );
