@@ -80,7 +80,8 @@ pub fn merge_masses(
         };
 
         if let Ok([p0, p1]) = mass_query.get_many_mut([*e0, *e1]) {
-            let (mut major, mut minor) = if p0.1.mass > p1.1.mass {
+            // scale_to_mass(.0.scale)
+            let (mut major, mut minor) = if scale_to_mass(p0.0.scale) > scale_to_mass(p1.0.scale) {
                 (p0, p1)
             // FIXME: tie-breaker!
             } else {
@@ -89,7 +90,8 @@ pub fn merge_masses(
 
             debug!(
                 "We have major-mass={:?} and minor-mass={:?}",
-                major.1.mass, minor.1.mass
+                scale_to_mass(major.0.scale),
+                scale_to_mass(minor.0.scale)
             );
 
             if let Some(c) = inhabitant {
@@ -108,19 +110,17 @@ pub fn merge_masses(
             debug!(" Major mass {:?}", major.2);
             debug!("  position: {:?}", major.0.translation);
             debug!("  velocity: {:?}", major.1.velocity);
-            debug!("  mass: {:?}", major.1.mass);
             debug!(" Minor mass {:?}", minor.2);
             debug!("  position: {:?}", minor.0.translation);
             debug!("  velocity: {:?}", minor.1.velocity);
-            debug!("  mass: {:?}", minor.1.mass);
 
-            let combined_momentum =
-                (major.1.velocity * major.1.mass) + (minor.1.velocity * minor.1.mass);
-            let combined_mass = major.1.mass + minor.1.mass;
+            let combined_momentum = (major.1.velocity * scale_to_mass(major.0.scale))
+                + (minor.1.velocity * scale_to_mass(minor.0.scale));
+            let combined_mass = scale_to_mass(major.0.scale) + scale_to_mass(minor.0.scale);
             let delta_v = (combined_momentum / combined_mass) - major.1.velocity;
             // Convince yourself that the sum of these must equal 1.0;
-            let major_factor = major.1.mass / combined_mass;
-            let minor_factor = minor.1.mass / combined_mass;
+            let major_factor = scale_to_mass(major.0.scale) / combined_mass;
+            let minor_factor = scale_to_mass(minor.0.scale) / combined_mass;
             debug!(
                 "Directly setting mass of major mass {:?} to {combined_mass:?}",
                 major.2
@@ -144,7 +144,7 @@ pub fn merge_masses(
 
             debug!("Updating major mass {:?}", major.2);
             major.1.velocity += delta_v;
-            major.1.mass = combined_mass;
+            major.0.scale = mass_to_scale(combined_mass);
             major.0.translation += delta_p;
             major.0.scale *= delta_s;
 
@@ -186,7 +186,7 @@ pub fn freefall(
     let dt = time.delta_seconds();
     let mut masses = masses_query
         .iter()
-        .map(|t| (t.0, t.1.translation, t.2.mass, t.2.velocity))
+        .map(|t| (t.0, t.1.translation, scale_to_mass(t.1.scale), t.2.velocity))
         .collect::<Vec<_>>();
     for _ in (0..physics_config.sims_per_frame).rev() {
         let accelerations = masses.iter().map(|particle1| {
@@ -219,7 +219,7 @@ pub fn freefall(
         if let Ok((_, mut transform, mut momentum)) = masses_query.get_mut(*entity) {
             transform.translation = *translation;
             momentum.velocity = *velocity;
-            momentum.mass = *mass;
+            transform.scale = mass_to_scale(*mass);
         }
     }
 }

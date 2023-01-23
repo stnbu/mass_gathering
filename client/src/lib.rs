@@ -418,15 +418,11 @@ pub fn move_projectiles(
         {
             Result::Ok([from_entity, to_entity]) => {
                 match masses_query.get_many([from_entity, to_entity]) {
-                    Ok(
-                        [(from_transform, _), (to_transform, &components::Momentum { mass, .. })],
-                    ) => {
+                    Ok([(from_transform, _), (to_transform, _)]) => {
                         // The impact site/taget is the _surface of_ the mass
                         let impact_site = to_transform.translation
                             + (projectile_flight.local_impact_direction
-                                * mass_to_radius(mass)
-                                * to_transform.scale.length()
-                                / SQRT_3); // mysterious
+                                * scale_to_radius(to_transform.scale));
                         let flight_vector = impact_site - from_transform.translation;
                         let flight_progress =
                             flight_vector * proportion_of * portions_per_second * seconds_elapsed;
@@ -477,11 +473,9 @@ pub fn handle_projectile_collision(
                 let projectile_id = if e0_is_projectile { e0 } else { e1 };
                 let projectile_flight = projectile_query.get(*projectile_id).unwrap();
                 let mass_id = if !e0_is_projectile { e0 } else { e1 };
-                if let Ok((mass_transform, mass_momentum)) = mass_query.get(*mass_id) {
+                if let Ok((mass_transform, _)) = mass_query.get(*mass_id) {
                     let local_impact_site = projectile_flight.local_impact_direction
-                        * mass_to_radius(mass_momentum.mass)
-                        * mass_transform.scale.length()
-                        / SQRT_3;
+                        * scale_to_radius(mass_transform.scale);
                     trace!(
                         "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}. Spawning explosion animation."
                     );

@@ -147,7 +147,7 @@ pub fn init_masses<'a>(
                 transform,
                 ..Default::default()
             },
-            momentum: components::Momentum { velocity, mass },
+            momentum: components::Momentum { velocity },
             collider: Collider::ball(radius),
             ..Default::default()
         });

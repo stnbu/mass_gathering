@@ -26,12 +26,31 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
     window.set_resolution(1280.0, 720.0);
 }
 
+// NOTE: Density is assumed to be 1.0 everywhere, so mass and volume are used interchangably.
+
 pub fn radius_to_mass(radius: f32) -> f32 {
-    (2.0 / 3.0) * TAU * radius.powf(3.0)
+    (3.0 / 4.0) * TAU * radius.powf(3.0)
 }
 
 pub fn mass_to_radius(mass: f32) -> f32 {
-    ((mass * (3.0 / 2.0)) / TAU).powf(1.0 / 3.0)
+    ((mass * (4.0 / 3.0)) / TAU).powf(1.0 / 3.0)
+}
+
+pub fn scale_to_radius(scale: Vec3) -> f32 {
+    // TODO: Should assert that it's a uniform scale.
+    scale.x // arbitrary axis
+}
+
+pub fn radius_to_scale(radius: f32) -> Vec3 {
+    Vec3::splat(radius)
+}
+
+pub fn scale_to_mass(scale: Vec3) -> f32 {
+    radius_to_mass(scale_to_radius(scale))
+}
+
+pub fn mass_to_scale(mass: f32) -> Vec3 {
+    radius_to_scale(mass_to_radius(mass))
 }
 
 pub fn let_light(mut commands: Commands) {

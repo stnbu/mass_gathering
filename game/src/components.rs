@@ -17,7 +17,6 @@ pub struct Sights;
 #[derive(Component, Debug, Default)]
 pub struct Momentum {
     pub velocity: Vec3,
-    pub mass: f32,
 }
 
 #[derive(Component)]
