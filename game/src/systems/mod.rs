@@ -19,7 +19,8 @@ pub fn old_rando() -> resources::InitData {
     for _ in 0..pair_count {
         let position = latlon_to_cartesian(rf(), rf()) * (rf() * 40.0 + 10.0);
         let velocity = latlon_to_cartesian(rf(), rf()) * Vec3::new(10.0, rf() * 0.1, 10.0) * 0.1;
-        let radius = rf() + 2.0;
+        let mass = radius_to_mass(rf() + 2.0);
+
         for side in [-1.0, 1.0] {
             let color = Color::rgb(rf(), rf(), rf());
             let position = position * side + tiny_vec_d;
@@ -28,7 +29,7 @@ pub fn old_rando() -> resources::InitData {
                 inhabitable: false,
                 motion: resources::MassMotion { position, velocity },
                 color,
-                radius,
+                mass,
             };
             init_data.masses.insert(mass_id, mass_init_data);
             mass_id += 1;
@@ -45,12 +46,12 @@ pub fn old_rando() -> resources::InitData {
         };
         let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance + tiny_vec_d;
         let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
-        let radius = 1.0;
+        let mass = radius_to_mass(1.0);
         let mass_init_data = resources::MassInitData {
             inhabitable: true,
             motion: resources::MassMotion { position, velocity },
             color,
-            radius,
+            mass,
         };
         init_data.masses.insert(mass_id, mass_init_data);
         mass_id += 1;
@@ -63,7 +64,7 @@ pub fn cubic() -> resources::InitData {
     let mut init_data = resources::InitData::default();
 
     let mut mass_id = 2000;
-    let radius = 0.5;
+    let mass = radius_to_mass(0.5);
     let from_origin = 9.0;
     for n in [(1, 0, 0), (0, 1, 0), (0, 0, 1)] {
         for side in [1.0, -1.0] {
@@ -94,7 +95,7 @@ pub fn cubic() -> resources::InitData {
             } else {
                 velocity * fun_factor
             };
-            let radius = if a == 1 { radius } else { radius * fun_factor };
+            let mass = radius_to_mass(if a == 1 { 0.5 } else { 0.5 * fun_factor });
 
             let position = if c == 1 {
                 position
@@ -106,7 +107,7 @@ pub fn cubic() -> resources::InitData {
                 inhabitable: false,
                 motion: resources::MassMotion { position, velocity },
                 color,
-                radius,
+                mass,
             };
             init_data.masses.insert(mass_id, mass_init_data);
             mass_id += 1;
@@ -124,12 +125,12 @@ pub fn cubic() -> resources::InitData {
         };
         let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance;
         let color = Color::rgb(17.0, 19.0 / color_tweak, 23.0 * color_tweak);
-        let radius = 1.0;
+        let mass = radius_to_mass(1.0);
         let mass_init_data = resources::MassInitData {
             inhabitable: true,
             motion: resources::MassMotion { position, velocity },
             color,
-            radius,
+            mass,
         };
         init_data.masses.insert(mass_id, mass_init_data);
         mass_id += 1;
@@ -141,7 +142,7 @@ pub fn demo_2m2i() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let position = Vec3::X * 10.0;
     let velocity = Vec3::Y * 0.035;
-    let radius = 1.0;
+    let mass = radius_to_mass(1.0);
     init_data.masses.insert(
         0,
         resources::MassInitData {
@@ -151,7 +152,7 @@ pub fn demo_2m2i() -> resources::InitData {
                 velocity: velocity * -1.0,
             },
             color: Color::RED,
-            radius,
+            mass,
         },
     );
     init_data.masses.insert(
@@ -163,7 +164,7 @@ pub fn demo_2m2i() -> resources::InitData {
                 velocity: velocity * 1.0,
             },
             color: Color::BLUE,
-            radius,
+            mass,
         },
     );
     init_data
@@ -173,7 +174,7 @@ pub fn demo_2m1i() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let position = Vec3::X * 10.0;
     let velocity = Vec3::Y * 0.035;
-    let radius = 1.0;
+    let mass = radius_to_mass(1.0);
     init_data.masses.insert(
         0,
         resources::MassInitData {
@@ -183,7 +184,7 @@ pub fn demo_2m1i() -> resources::InitData {
                 velocity: velocity * -1.0,
             },
             color: Color::RED,
-            radius,
+            mass,
         },
     );
     init_data.masses.insert(
@@ -195,7 +196,7 @@ pub fn demo_2m1i() -> resources::InitData {
                 velocity: velocity * 1.0,
             },
             color: Color::BLUE,
-            radius,
+            mass,
         },
     );
     init_data
@@ -216,17 +217,18 @@ pub fn demo_shooting() -> resources::InitData {
         let position = Vec3::new(x, y, z);
         let motion = resources::MassMotion { position, velocity };
         let inhabitable = false;
-        let radius = i as f32 / 5.0 + 1.0;
+        let mass = radius_to_mass(i as f32 / 5.0 + 1.0);
         init_data.masses.insert(
             mass_id,
             resources::MassInitData {
                 inhabitable,
                 motion,
                 color,
-                radius,
+                mass,
             },
         );
     }
+    let mass = radius_to_mass(3.0);
     init_data.masses.insert(
         id_base + 21,
         resources::MassInitData {
@@ -236,7 +238,7 @@ pub fn demo_shooting() -> resources::InitData {
                 velocity: Vec3::ZERO,
             },
             color: Color::BLUE,
-            radius: 3.0,
+            mass,
         },
     );
     init_data
@@ -262,7 +264,6 @@ pub fn get_system(name: &str) -> impl (Fn() -> resources::InitData) {
 
         // 'scratch'
         "pimples" => scratch::pimples,
-
         _ => panic!("No such system: {name}"),
     }
 }

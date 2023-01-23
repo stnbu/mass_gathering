@@ -5,7 +5,7 @@ pub fn pimples() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let position = Vec3::X * 10.0;
     let velocity = Vec3::Y * 0.035;
-    let radius = 1.0;
+    let mass = radius_to_mass(1.0);
     init_data.masses.insert(
         0,
         resources::MassInitData {
@@ -15,7 +15,7 @@ pub fn pimples() -> resources::InitData {
                 velocity: velocity * -1.0,
             },
             color: Color::RED,
-            radius,
+            mass,
         },
     );
     init_data.masses.insert(
@@ -27,7 +27,7 @@ pub fn pimples() -> resources::InitData {
                 velocity: velocity * 1.0,
             },
             color: Color::BLUE,
-            radius,
+            mass,
         },
     );
     init_data
