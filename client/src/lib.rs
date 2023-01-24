@@ -227,7 +227,6 @@ pub fn rotate_inhabitable_masses(
         (&mut Transform, &components::MassID),
         With<components::Inhabitable>,
     >,
-    mass_to_entity_map: Res<resources::MassIDToEntityMap>,
     lobby: Res<resources::Lobby>,
 ) {
     for message in to_client_events.iter() {
@@ -390,7 +389,6 @@ pub fn handle_projectile_fired(
 }
 
 pub fn move_projectiles(
-    mut commands: Commands,
     mut projectile_query: Query<(
         Entity,
         &mut Transform,
@@ -398,7 +396,6 @@ pub fn move_projectiles(
         &events::ProjectileFlight,
     )>,
     masses_query: Query<(&Transform, &components::MassID), Without<events::ProjectileFlight>>,
-    //mass_to_entity_map: Res<resources::MassIDToEntityMap>,
 ) {
     let proportion_of = 1.0 / 512.0;
     let portions_per_second = 128.0 * 3.0;
@@ -406,7 +403,7 @@ pub fn move_projectiles(
     for (projectile_id, mut projectile_transform, mut projectile_visibility, projectile_flight) in
         projectile_query.iter_mut()
     {
-        projectile_visibility.is_visible = true; // FIXME -- we need a better "way"
+        projectile_visibility.is_visible = true;
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -423,7 +420,6 @@ pub fn move_projectiles(
             if projectile_flight.to_mass_id == mass_id {
                 to_transform = Some(transform);
             }
-            //
         }
         if from_transform.is_none() {
             panic!("The transform FROM which projectile {projectile_id:?} originated (an inhabited mass) has disappeared!");
@@ -443,36 +439,6 @@ pub fn move_projectiles(
         let flight_vector = impact_site - from_transform.translation;
         let flight_progress = flight_vector * proportion_of * portions_per_second * seconds_elapsed;
         projectile_transform.translation = from_transform.translation + flight_progress;
-
-        // --
-        // // xx
-        // match mass_to_entity_map
-        //     .get_entities([projectile_flight.from_mass_id, projectile_flight.to_mass_id])
-        // {
-        //     Result::Ok([from_entity, to_entity]) => {
-        //         match masses_query.get_many([from_entity, to_entity]) {
-        //             Ok([from_transform, to_transform]) => {
-        //                 // The impact site/taget is the _surface of_ the mass
-        //                 let impact_site = to_transform.translation
-        //                     + projectile_flight.local_impact_direction
-        //                         * scale_to_radius(to_transform.scale);
-        //                 let flight_vector = impact_site - from_transform.translation;
-        //                 let flight_progress =
-        //                     flight_vector * proportion_of * portions_per_second * seconds_elapsed;
-        //                 projectile_transform.translation =
-        //                     from_transform.translation + flight_progress;
-        //             }
-        //             Err(err) => {
-        //                 info!("While getting projectile to/from: {err}. Despawning projectile {projectile_id:?}");
-        //                 commands.entity(projectile_id).despawn_recursive();
-        //             }
-        //         }
-        //     }
-        //     Result::Err(err) => {
-        //         error!("While trying to move projectile: {err}");
-        //     }
-        // }
-        // // xx
     }
 }
 
