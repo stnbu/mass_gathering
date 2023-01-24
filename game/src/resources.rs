@@ -178,12 +178,12 @@ pub struct MassInitData {
     pub mass: f32,
 }
 
-#[derive(Default, Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+#[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]
 pub struct InitData {
     pub masses: HashMap<u64, MassInitData>,
 }
 
-#[derive(Default, Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+#[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]
 pub struct GameConfig {
     pub client_mass_map: HashMap<u64, u64>,
     pub physics_config: PhysicsConfig,

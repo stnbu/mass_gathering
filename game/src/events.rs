@@ -11,17 +11,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Component, Debug)]
 pub enum ToClient {
-    Init(resources::InitData),
     SetGameState(resources::GameState),
-    ClientJoined {
-        id: u64,
-        client_data: resources::ClientData,
-    },
-    SetPhysicsConfig(physics::PhysicsConfig),
-    InhabitantRotation {
-        client_id: u64,
-        rotation: Quat,
-    },
+    SetGameConfig(resources::GameConfig),
+    InhabitantRotation { client_id: u64, rotation: Quat },
     ProjectileFired(ProjectileFlight),
 }
 

@@ -15,11 +15,11 @@ impl Plugin for ServerPlugin {
             //
             .insert_resource(new_renet_server(address))
             .insert_resource(args)
-            .insert_resource(resouces::GameConfig {
+            .insert_resource(resources::GameConfig {
                 init_data,
                 ..Default::default()
             })
-            .init_resource::<UnassignedMasses>()
+            .init_resource::<WhatToCallThis>()
             .add_startup_system(populate_unassigned_masses)
             .add_startup_system(setup_physics)
             //.with_system(panic_on_renet_error)
