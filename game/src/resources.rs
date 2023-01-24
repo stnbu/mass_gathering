@@ -68,14 +68,17 @@ impl MassIDToEntityMap {
         Result::Ok(entities.try_into().unwrap()) // omg becky
     }
 }
+use bevy_rapier3d::prelude::RigidBody;
 
 pub fn init_masses<'a>(
+    inhabited_mass_id: u64,
     init_data: InitData,
     commands: &'a mut Commands,
     meshes: &'a mut ResMut<Assets<Mesh>>,
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) -> MassIDToEntityMap {
     let mut mass_to_entity_map = MassIDToEntityMap::default();
+    error!("XXXXXXXX 0");
     for (
         &mass_id,
         &MassInitData {
@@ -86,6 +89,7 @@ pub fn init_masses<'a>(
         },
     ) in init_data.masses.iter()
     {
+        error!("XXXXXXXX 1");
         let scale = Vec3::splat(mass_to_radius(mass));
         let mut transform = Transform::from_translation(position).with_scale(scale);
         if inhabitable {
@@ -109,7 +113,36 @@ pub fn init_masses<'a>(
             ..Default::default()
         });
         mass_commands.insert(components::MassID(mass_id));
-        if inhabitable {
+        error!("XXXX {mass_id} / {inhabited_mass_id}");
+        if mass_id == inhabited_mass_id {
+            mass_commands.insert(components::ClientInhabited);
+            mass_commands.remove::<RigidBody>();
+            mass_commands.with_children(|child| {
+                child.spawn(Camera3dBundle::default());
+                child
+                    .spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                            radius: 0.0005,
+                            ..Default::default()
+                        })),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_xyz(0.0, 0.0, -0.2),
+                        visibility: Visibility::INVISIBLE,
+                        ..Default::default()
+                    })
+                    .insert(components::Sights);
+                child
+                    .spawn(PointLightBundle {
+                        transform: Transform::from_xyz(0.0, 0.0, -0.15),
+                        visibility: Visibility::INVISIBLE,
+                        point_light: PointLight {
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    })
+                    .insert(components::Sights);
+            });
+        } else if inhabitable {
             mass_commands
                 .insert(components::Inhabitable)
                 .with_children(|child| {

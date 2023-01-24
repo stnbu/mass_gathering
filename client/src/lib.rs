@@ -39,84 +39,42 @@ pub fn process_to_client_events(
     mut to_server_events: EventWriter<events::ToServer>,
     mut game_config: ResMut<resources::GameConfig>,
     client: Res<RenetClient>,
+    inhabitable_masses: Query<
+        (Entity, &components::MassID),
+        Or<(
+            With<components::Inhabitable>,
+            With<components::ClientInhabited>,
+        )>,
+    >,
 ) {
     let my_id = client.client_id();
     for message in to_client_events.iter() {
         trace!("Message for {my_id}: {message:?}");
         match message {
-            events::ToClient::Init(init_data) => {
-                debug!("  got `Init`. Initializing with data receveid from server: {init_data:?}");
-                *mass_to_entity_map = resources::init_masses(
-                    init_data.clone(),
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                );
-                let message = events::ToServer::Ready;
-                debug!("  enqueuing message for server `{message:?}`");
-                to_server_events.send(message);
-            }
             events::ToClient::SetGameState(new_game_state) => {
                 debug!("  got `SetGameState`. Setting state to {new_game_state:?}");
                 let _ = game_state.overwrite_set(*new_game_state);
             }
-            events::ToClient::SetPhysicsConfig(physics_config) => {
-                debug!("  got `SetPhysicsConfig`. Inserting resource received from server: {physics_config:?}");
-                commands.insert_resource(*physics_config);
-            }
             events::ToClient::InhabitantRotation { .. } => {
                 // handled by separate system
             }
-            events::ToClient::ClientJoined { id, client_data } => {
-                debug!("  got `ClientJoined`. Inserting entry for client {id}");
-                if let Some(old) = game_config.clients.insert(*id, *client_data) {
-                    // FIXME: Why does this happen? why are we inserting more than once?
-                    // Hint: "ClientJoined" vs "ToServer::Ready" as they relate to "GameConfig" (in server code.)
-                    warn!(" the value {old:?} was replaced by new value {client_data:?} for client {id}");
-                }
-                if *id == client.client_id() {
-                    debug!("  this joined message is about me, {id}");
-                    let inhabited_mass = mass_to_entity_map
-                        .0
-                        .get(&client_data.inhabited_mass_id)
-                        .unwrap();
-                    let mut inhabited_mass_commands = commands.entity(*inhabited_mass);
-                    debug!("    inserting `ClientInhabited` component into this mass entity (meaing 'this is mine')");
-                    inhabited_mass_commands.insert(components::ClientInhabited);
-                    inhabited_mass_commands.remove::<components::Inhabitable>();
-                    // FIXME -- Figure out rapier `QueryFilter` so we don't need this (or do we?)
-                    inhabited_mass_commands.remove::<RigidBody>();
-                    inhabited_mass_commands.despawn_descendants();
-                    debug!("    appending camera to inhabited mass to this entity");
-                    inhabited_mass_commands.with_children(|child| {
-                        child.spawn(Camera3dBundle::default());
-                        debug!("    adding \"sights\"");
-                        // FIXME -- this is so klunky
-                        child
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.0005,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_xyz(0.0, 0.0, -0.2),
-                                visibility: Visibility::INVISIBLE,
-                                ..Default::default()
-                            })
-                            .insert(components::Sights);
-                        child
-                            .spawn(PointLightBundle {
-                                transform: Transform::from_xyz(0.0, 0.0, -0.15),
-                                visibility: Visibility::INVISIBLE,
-                                point_light: PointLight {
-                                    ..Default::default()
-                                },
-                                ..Default::default()
-                            })
-                            .insert(components::Sights);
-                    });
-                }
-                debug!("    we now have game_config {game_config:?}");
+            events::ToClient::SetGameConfig(game_config) => {
+                error!("game_config: {game_config:#?}");
+                panic!();
+                let inhabited_mass_id = *game_config.client_mass_map.get(&my_id).unwrap();
+                error!("about to");
+                resources::init_masses(
+                    inhabited_mass_id,
+                    game_config.init_data.clone(),
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                );
+                error!("did");
+                commands.insert_resource(game_config.clone());
+                let message = events::ToServer::Ready;
+                debug!("  enqueuing message for server `{message:?}`");
+                to_server_events.send(message);
             }
             events::ToClient::ProjectileFired(_) => {
                 // not handled here
@@ -236,7 +194,7 @@ pub fn rotate_inhabitable_masses(
         } = message
         {
             trace!("  got `InhabitantRotation`. Rotating mass {client_id}");
-            let inhabited_mass_id = game_config.clients.get(client_id).unwrap().inhabited_mass_id;
+            let inhabited_mass_id = *game_config.client_mass_map.get(client_id).unwrap();
             for (mut mass_transform, &components::MassID(mass_id)) in inhabitable_masses.iter_mut()
             {
                 // The choices seem to be
@@ -247,13 +205,17 @@ pub fn rotate_inhabitable_masses(
                 // It might be worth swapping the loops (iter masses then messages.)
                 if inhabited_mass_id == mass_id {
                     mass_transform.rotation = *rotation;
+                    break;
                 }
             }
         }
     }
 }
 
-pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, game_config: Res<resources::GameConfig>) {
+pub fn client_waiting_screen(
+    mut ctx: ResMut<EguiContext>,
+    game_config: Res<resources::GameConfig>,
+) {
     SidePanel::left("client_waiting_screen")
         .resizable(false)
         .min_width(250.0)
@@ -272,7 +234,7 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, game_config: Res<reso
                     }),
             );
             ui.separator();
-            for (&id, _) in game_config.clients.iter() {
+            for (&id, _) in game_config.client_mass_map.iter() {
                 let nick = to_nick(id);
                 let text = format!("{nick}");
                 ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {

@@ -7,20 +7,20 @@ use crate::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
-pub struct PhysicsConfig {
-    pub sims_per_frame: u32,
-    pub zerog: bool,
-}
+// #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+// pub struct PhysicsConfig {
+//     pub sims_per_frame: u32,
+//     pub zerog: bool,
+// }
 
-impl Default for PhysicsConfig {
-    fn default() -> Self {
-        Self {
-            sims_per_frame: 10,
-            zerog: false,
-        }
-    }
-}
+// impl Default for PhysicsConfig {
+//     fn default() -> Self {
+//         Self {
+//             sims_per_frame: 10,
+//             zerog: false,
+//         }
+//     }
+// }
 
 #[derive(Debug)]
 pub struct MassCollisionEvent(pub Entity, pub Entity);
@@ -188,7 +188,7 @@ impl Default for PointMassBundle {
 
 pub fn freefall(
     mut masses_query: Query<(Entity, &mut Transform, &mut components::Momentum)>,
-    physics_config: Res<PhysicsConfig>,
+    game_config: Res<resources::GameConfig>,
     time: Res<Time>,
 ) {
     let dt = time.delta_seconds();
@@ -196,7 +196,7 @@ pub fn freefall(
         .iter()
         .map(|t| (t.0, t.1.translation, scale_to_mass(t.1.scale), t.2.velocity))
         .collect::<Vec<_>>();
-    for _ in (0..physics_config.sims_per_frame).rev() {
+    for _ in (0..game_config.physics_config.speed).rev() {
         let accelerations = masses.iter().map(|particle1| {
             masses.iter().fold(Vec3::ZERO, |acceleration, particle2| {
                 let dir = particle2.1 - particle1.1;

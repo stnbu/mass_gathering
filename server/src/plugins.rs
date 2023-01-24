@@ -11,6 +11,7 @@ impl Plugin for ServerPlugin {
         let system = args.system.clone();
         let address = args.address.clone();
         let init_data = systems::get_system(&system)();
+        error!("init_data: {init_data:#?}");
         app
             //
             .insert_resource(new_renet_server(address))

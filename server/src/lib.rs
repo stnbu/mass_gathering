@@ -22,9 +22,9 @@ pub struct WhatToCallThis {
 
 pub fn populate_what_to_call_this(
     mut what_to_call_this: ResMut<WhatToCallThis>,
-    init_data: Res<resources::InitData>,
+    game_config: Res<resources::GameConfig>,
 ) {
-    for (mass_id, mass_init_data) in init_data.masses.iter() {
+    for (mass_id, mass_init_data) in game_config.init_data.masses.iter() {
         if mass_init_data.inhabitable {
             what_to_call_this.unassigned_mass_ids.push(*mass_id);
         }

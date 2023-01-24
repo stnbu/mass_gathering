@@ -5,11 +5,11 @@ pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(resources::MassIDToEntityMap::default());
+        //app.insert_resource(resources::MassIDToEntityMap::default());
         app.add_event::<events::ToServer>();
         app.add_event::<events::ToClient>();
         app.add_state(resources::GameState::Stopped);
-        app.init_resource::<physics::PhysicsConfig>();
+        //app.init_resource::<physics::PhysicsConfig>();
         app.add_event::<physics::MassCollisionEvent>();
         app.add_event::<physics::DespawnMassEvent>();
         app.init_resource::<resources::GameConfig>();

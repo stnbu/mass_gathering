@@ -91,10 +91,10 @@ pub fn from_nick(nick: &str) -> u64 {
 }
 
 pub fn with_gravity(
-    physics_config: Res<physics::PhysicsConfig>,
+    game_config: Res<resources::GameConfig>,
     game_state: Res<State<resources::GameState>>,
 ) -> ShouldRun {
-    if *game_state.current() == resources::GameState::Running && !physics_config.zerog {
+    if *game_state.current() == resources::GameState::Running && !game_config.physics_config.zerog {
         ShouldRun::Yes
     } else {
         ShouldRun::No
