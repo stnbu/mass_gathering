@@ -8,6 +8,7 @@ use bevy_renet::renet::ServerEvent;
 use bevy_renet::renet::{
     DefaultChannel, RenetConnectionConfig, RenetServer, ServerAuthentication, ServerConfig,
 };
+use std::collections::HashSet;
 use std::{net::UdpSocket, time::SystemTime};
 
 pub mod plugins;
@@ -16,16 +17,16 @@ pub mod plugins;
 #[derive(Resource, Default)]
 pub struct WhatToCallThis {
     unassigned_mass_ids: Vec<u64>,
-    unconfirmed: Vec<u64>,
+    unconfirmed: HashSet<u64>,
 }
 
-pub fn populate_unassigned_masses(
-    mut unassigned_masses: ResMut<WhatToCallThis>,
+pub fn populate_what_to_call_this(
+    mut what_to_call_this: ResMut<WhatToCallThis>,
     init_data: Res<resources::InitData>,
 ) {
     for (mass_id, mass_init_data) in init_data.masses.iter() {
         if mass_init_data.inhabitable {
-            unassigned_masses.0.push(*mass_id);
+            what_to_call_this.unassigned_mass_ids.push(*mass_id);
         }
     }
 }
@@ -63,21 +64,27 @@ pub fn handle_server_events(
     mut server: ResMut<RenetServer>,
     mut app_state: ResMut<State<resources::GameState>>,
     mut game_config: ResMut<resources::GameConfig>,
-    mut unassigned_masses: ResMut<WhatToCallThis>,
+    mut what_to_call_this: ResMut<WhatToCallThis>,
     mut exit: EventWriter<AppExit>,
 ) {
     for event in server_events.iter() {
         match event {
             &ServerEvent::ClientConnected(id, _) => {
-                debug!("Client {id} has connected!");
-                if let Some(mass_id) = unassigned_masses.0.pop() {
+                debug!("Client {id} has connected! Nulifying all clients' ready status.");
+                what_to_call_this.unconfirmed.clear();
+                for client_id in server.clients_id().into_iter() {
+                    what_to_call_this.unconfirmed.insert(client_id);
+                }
+                assert!(what_to_call_this.unconfirmed.contains(&id));
+                if let Some(mass_id) = what_to_call_this.unassigned_mass_ids.pop() {
                     game_config.client_mass_map.insert(id, mass_id);
+                    //
                     server.broadcast_message(
                         DefaultChannel::Reliable,
                         bincode::serialize(&events::ToClient::SetGameConfig(game_config.clone()))
                             .unwrap(),
                     );
-                    debug!("Broadcasting current game config. Anticipating a `Ready` response from all.");
+                    debug!("Broadcasting current game config. Anticipating a new `Ready` response from all.");
                 } else {
                     debug!("Client {id} connected but no more assignable masses");
                 };
@@ -97,45 +104,25 @@ pub fn handle_server_events(
             let message = bincode::deserialize(&message).unwrap();
             trace!("Received message from client {client_id}: {message:?}");
             match message {
+                // xxx
                 events::ToServer::Ready => {
-                    let inhabited_mass_id = if let Some(mass_id) = unassigned_masses.0.pop() {
-                        mass_id
+                    if what_to_call_this.unconfirmed.remove(&client_id) {
+                        // everyone now confirmed
+                        if what_to_call_this.unconfirmed.is_empty() {
+                            let state = resources::GameState::Running;
+                            let set_state = events::ToClient::SetGameState(state);
+                            let message = bincode::serialize(&set_state).unwrap();
+                            server.broadcast_message(DefaultChannel::Reliable, message);
+                            let _ = app_state.overwrite_set(state);
+                        } else {
+                            let state = resources::GameState::Waiting;
+                            let set_state = events::ToClient::SetGameState(state);
+                            let message = bincode::serialize(&set_state).unwrap();
+                            server.send_message(client_id, DefaultChannel::Reliable, message);
+                            let _ = app_state.overwrite_set(state);
+                        }
                     } else {
-                        debug!("No more assignable masses");
-                        return;
-                    };
-                    let client_data = resources::ClientData { inhabited_mass_id };
-                    game_config.clients.insert(client_id, client_data);
-
-                    server.broadcast_message(
-                        DefaultChannel::Reliable,
-                        bincode::serialize(&events::ToClient::ClientJoined {
-                            id: client_id,
-                            client_data,
-                        })
-                        .unwrap(),
-                    );
-
-                    let start = game_config.clients.len()
-                        == init_data
-                            .masses
-                            .iter()
-                            .filter(|(_, data)| data.inhabitable)
-                            .count();
-                    if start {
-                        assert!(unassigned_masses.0.is_empty());
-                        let state = resources::GameState::Running;
-                        let set_state = events::ToClient::SetGameState(state);
-                        let message = bincode::serialize(&set_state).unwrap();
-                        server.broadcast_message(DefaultChannel::Reliable, message);
-                        let _ = app_state.overwrite_set(state);
-                    } else {
-                        assert!(!unassigned_masses.0.is_empty());
-                        let state = resources::GameState::Waiting;
-                        let set_state = events::ToClient::SetGameState(state);
-                        let message = bincode::serialize(&set_state).unwrap();
-                        server.send_message(client_id, DefaultChannel::Reliable, message);
-                        let _ = app_state.overwrite_set(state);
+                        warn!("No outstanding ready confirmation for {client_id}");
                     }
                 }
                 events::ToServer::Rotation(rotation) => {
