@@ -63,9 +63,9 @@ pub enum GameState {
 }
 
 #[derive(Resource, Default, Clone)]
-pub struct MassIDToEntity(pub HashMap<u64, Entity>);
+pub struct MassIDToEntityMap(pub HashMap<u64, Entity>);
 
-impl MassIDToEntity {
+impl MassIDToEntityMap {
     pub fn get_entities<const N: usize>(&self, mass_ids: [u64; N]) -> Result<[Entity; N], &str> {
         let mut entities: Vec<Entity> = Vec::new();
         for id in mass_ids.iter() {
@@ -117,8 +117,8 @@ pub fn init_masses<'a>(
     commands: &'a mut Commands,
     meshes: &'a mut ResMut<Assets<Mesh>>,
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
-) -> MassIDToEntity {
-    let mut mass_to_entity_map = MassIDToEntity::default();
+) -> MassIDToEntityMap {
+    let mut mass_to_entity_map = MassIDToEntityMap::default();
     for (
         &mass_id,
         &MassInitData {

@@ -27,12 +27,14 @@ pub fn send_messages_to_server(
     }
 }
 
+/// That is, "process 'to-client' events"
+/// definitely NOT "process to 'client events'"
 pub fn process_to_client_events(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state: ResMut<State<resources::GameState>>,
-    mut mass_to_entity_map: ResMut<resources::MassIDToEntity>,
+    mut mass_to_entity_map: ResMut<resources::MassIDToEntityMap>,
     mut to_client_events: EventReader<events::ToClient>,
     mut to_server_events: EventWriter<events::ToServer>,
     mut lobby: ResMut<resources::Lobby>,
@@ -222,7 +224,7 @@ pub fn control(
 pub fn rotate_inhabitable_masses(
     mut to_client_events: EventReader<events::ToClient>,
     mut inhabitable_masses: Query<&mut Transform, With<components::Inhabitable>>,
-    mass_to_entity_map: Res<resources::MassIDToEntity>,
+    mass_to_entity_map: Res<resources::MassIDToEntityMap>,
     lobby: Res<resources::Lobby>,
 ) {
     for message in to_client_events.iter() {
@@ -396,7 +398,7 @@ pub fn move_projectiles(
         &events::ProjectileFlight,
     )>,
     masses_query: Query<&Transform, (With<components::MassID>, Without<events::ProjectileFlight>)>,
-    mass_to_entity_map: Res<resources::MassIDToEntity>,
+    mass_to_entity_map: Res<resources::MassIDToEntityMap>,
 ) {
     let proportion_of = 1.0 / 512.0;
     let portions_per_second = 128.0 * 3.0;

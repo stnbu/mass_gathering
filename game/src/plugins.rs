@@ -5,7 +5,7 @@ pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(resources::MassIDToEntity::default());
+        app.insert_resource(resources::MassIDToEntityMap::default());
         app.add_event::<events::ToServer>();
         app.add_event::<events::ToClient>();
         app.add_state(resources::GameState::Stopped);
