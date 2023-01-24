@@ -12,7 +12,7 @@ impl Plugin for CorePlugin {
         app.init_resource::<physics::PhysicsConfig>();
         app.add_event::<physics::MassCollisionEvent>();
         app.add_event::<physics::DespawnMassEvent>();
-        app.insert_resource(resources::Lobby::default());
+        app.init_resource::<resources::GameConfig>();
     }
 }
 

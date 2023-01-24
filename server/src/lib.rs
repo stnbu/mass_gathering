@@ -59,9 +59,9 @@ pub fn setup_physics(mut commands: Commands, cli_args: Res<resources::ServerCliA
 Reasoning about client bootstrapping and stuff:
 
 1)   Client connects
-2)   Server handles `ClientConnected`: Client given: init data, physics config and the lobby "so far".
-2.5) [Race condition?] A client might get added to "Lobby" inside of the "Ready" handler while another
-     is getting the "Lobby so far". Maybe Rust magic prevents this? (mut ref vs immut ref).
+2)   Server handles `ClientConnected`: Client given: init data, physics config and the game_config "so far".
+2.5) [Race condition?] A client might get added to "GameConfig" inside of the "Ready" handler while another
+     is getting the "GameConfig so far". Maybe Rust magic prevents this? (mut ref vs immut ref).
 3)   Client sends `Ready`
 4)   Server handles `Ready`: Adds
 */
@@ -71,7 +71,7 @@ pub fn handle_server_events(
     mut server: ResMut<RenetServer>,
     init_data: Res<resources::InitData>,
     mut app_state: ResMut<State<resources::GameState>>,
-    mut lobby: ResMut<resources::Lobby>,
+    mut game_config: ResMut<resources::GameConfig>,
     mut unassigned_masses: ResMut<UnassignedMasses>,
     physics_config: Res<physics::PhysicsConfig>,
     mut exit: EventWriter<AppExit>,
@@ -79,6 +79,8 @@ pub fn handle_server_events(
     for event in server_events.iter() {
         match event {
             ServerEvent::ClientConnected(id, _) => {
+                //
+                //
                 let new_client_id = *id;
                 server.send_message(
                     new_client_id,
@@ -91,7 +93,7 @@ pub fn handle_server_events(
                     bincode::serialize(&events::ToClient::SetPhysicsConfig(*physics_config))
                         .unwrap(),
                 );
-                for (&existing_id, &client_data) in lobby.clients.iter() {
+                for (&existing_id, &client_data) in game_config.clients.iter() {
                     server.send_message(
                         new_client_id,
                         DefaultChannel::Reliable,
@@ -126,7 +128,7 @@ pub fn handle_server_events(
                         return;
                     };
                     let client_data = resources::ClientData { inhabited_mass_id };
-                    lobby.clients.insert(client_id, client_data);
+                    game_config.clients.insert(client_id, client_data);
                     server.broadcast_message(
                         DefaultChannel::Reliable,
                         bincode::serialize(&events::ToClient::ClientJoined {
@@ -136,7 +138,7 @@ pub fn handle_server_events(
                         .unwrap(),
                     );
 
-                    let start = lobby.clients.len()
+                    let start = game_config.clients.len()
                         == init_data
                             .masses
                             .iter()

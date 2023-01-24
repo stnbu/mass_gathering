@@ -37,7 +37,7 @@ pub fn process_to_client_events(
     mut mass_to_entity_map: ResMut<resources::MassIDToEntityMap>,
     mut to_client_events: EventReader<events::ToClient>,
     mut to_server_events: EventWriter<events::ToServer>,
-    mut lobby: ResMut<resources::Lobby>,
+    mut game_config: ResMut<resources::GameConfig>,
     client: Res<RenetClient>,
 ) {
     let my_id = client.client_id();
@@ -69,9 +69,9 @@ pub fn process_to_client_events(
             }
             events::ToClient::ClientJoined { id, client_data } => {
                 debug!("  got `ClientJoined`. Inserting entry for client {id}");
-                if let Some(old) = lobby.clients.insert(*id, *client_data) {
+                if let Some(old) = game_config.clients.insert(*id, *client_data) {
                     // FIXME: Why does this happen? why are we inserting more than once?
-                    // Hint: "ClientJoined" vs "ToServer::Ready" as they relate to "Lobby" (in server code.)
+                    // Hint: "ClientJoined" vs "ToServer::Ready" as they relate to "GameConfig" (in server code.)
                     warn!(" the value {old:?} was replaced by new value {client_data:?} for client {id}");
                 }
                 if *id == client.client_id() {
@@ -116,7 +116,7 @@ pub fn process_to_client_events(
                             .insert(components::Sights);
                     });
                 }
-                debug!("    we now have lobby {lobby:?}");
+                debug!("    we now have game_config {game_config:?}");
             }
             events::ToClient::ProjectileFired(_) => {
                 // not handled here
@@ -227,7 +227,7 @@ pub fn rotate_inhabitable_masses(
         (&mut Transform, &components::MassID),
         With<components::Inhabitable>,
     >,
-    lobby: Res<resources::Lobby>,
+    game_config: Res<resources::GameConfig>,
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::InhabitantRotation {
@@ -236,7 +236,7 @@ pub fn rotate_inhabitable_masses(
         } = message
         {
             trace!("  got `InhabitantRotation`. Rotating mass {client_id}");
-            let inhabited_mass_id = lobby.clients.get(client_id).unwrap().inhabited_mass_id;
+            let inhabited_mass_id = game_config.clients.get(client_id).unwrap().inhabited_mass_id;
             for (mut mass_transform, &components::MassID(mass_id)) in inhabitable_masses.iter_mut()
             {
                 // The choices seem to be
@@ -253,7 +253,7 @@ pub fn rotate_inhabitable_masses(
     }
 }
 
-pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources::Lobby>) {
+pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, game_config: Res<resources::GameConfig>) {
     SidePanel::left("client_waiting_screen")
         .resizable(false)
         .min_width(250.0)
@@ -272,7 +272,7 @@ pub fn client_waiting_screen(mut ctx: ResMut<EguiContext>, lobby: Res<resources:
                     }),
             );
             ui.separator();
-            for (&id, _) in lobby.clients.iter() {
+            for (&id, _) in game_config.clients.iter() {
                 let nick = to_nick(id);
                 let text = format!("{nick}");
                 ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {

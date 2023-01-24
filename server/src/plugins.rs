@@ -10,11 +10,15 @@ impl Plugin for ServerPlugin {
         let args = resources::ServerCliArgs::parse();
         let system = args.system.clone();
         let address = args.address.clone();
+        let init_data = systems::get_system(&system)();
         app
             //
             .insert_resource(new_renet_server(address))
             .insert_resource(args)
-            .insert_resource(systems::get_system(&system)())
+            .insert_resource(resouces::GameConfig {
+                init_data,
+                ..Default::default()
+            })
             .init_resource::<UnassignedMasses>()
             .add_startup_system(populate_unassigned_masses)
             .add_startup_system(setup_physics)

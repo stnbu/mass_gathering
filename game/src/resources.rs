@@ -25,16 +25,6 @@ use std::collections::HashMap;
 //   ClientCliArgs -> ClientPreferences (not anymore)
 //   ServerCliArgs -> PhysicsConfig (and there is also a ServerConfig)
 
-#[derive(Serialize, Deserialize, Component, Debug, Copy, Clone)]
-pub struct ClientData {
-    pub inhabited_mass_id: u64,
-}
-
-#[derive(Default, Resource, Debug)]
-pub struct Lobby {
-    pub clients: HashMap<u64, ClientData>,
-}
-
 #[derive(Parser, Resource)]
 pub struct ClientCliArgs {
     #[arg(long)]
@@ -76,39 +66,6 @@ impl MassIDToEntityMap {
             }
         }
         Result::Ok(entities.try_into().unwrap()) // omg becky
-    }
-}
-
-#[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
-pub struct MassMotion {
-    pub position: Vec3,
-    pub velocity: Vec3,
-}
-
-#[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
-pub struct MassInitData {
-    pub inhabitable: bool,
-    pub motion: MassMotion,
-    pub color: Color,
-    pub mass: f32, // WIP: no radius!
-}
-
-#[derive(Default, Serialize, Deserialize, Resource, Debug)]
-pub struct InitData {
-    pub masses: HashMap<u64, MassInitData>,
-}
-
-impl Clone for InitData {
-    fn clone(&self) -> Self {
-        let mut masses = HashMap::new();
-        masses.extend(&self.masses);
-        Self { masses }
-    }
-
-    fn clone_from(&mut self, source: &Self) {
-        let mut masses = HashMap::new();
-        masses.extend(&source.masses);
-        self.masses = masses;
     }
 }
 
@@ -188,4 +145,47 @@ pub fn init_masses<'a>(
         mass_to_entity_map.0.insert(mass_id, mass_commands.id());
     }
     mass_to_entity_map
+}
+
+//
+
+#[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+pub struct PhysicsConfig {
+    pub speed: u32,
+    pub zerog: bool,
+}
+
+impl Default for PhysicsConfig {
+    fn default() -> Self {
+        Self {
+            speed: 1,
+            zerog: false,
+        }
+    }
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
+pub struct MassMotion {
+    pub position: Vec3,
+    pub velocity: Vec3,
+}
+
+#[derive(Default, Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+pub struct MassInitData {
+    pub inhabitable: bool,
+    pub motion: MassMotion,
+    pub color: Color,
+    pub mass: f32,
+}
+
+#[derive(Default, Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+pub struct InitData {
+    pub masses: HashMap<u64, MassInitData>,
+}
+
+#[derive(Default, Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+pub struct GameConfig {
+    pub client_mass_map: HashMap<u64, u64>,
+    pub physics_config: PhysicsConfig,
+    pub init_data: InitData,
 }
