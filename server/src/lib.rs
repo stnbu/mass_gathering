@@ -20,17 +20,6 @@ pub struct WhatToCallThis {
     unconfirmed: HashSet<u64>,
 }
 
-pub fn populate_what_to_call_this(
-    mut what_to_call_this: ResMut<WhatToCallThis>,
-    game_config: Res<resources::GameConfig>,
-) {
-    for (mass_id, mass_init_data) in game_config.init_data.masses.iter() {
-        if mass_init_data.inhabitable {
-            what_to_call_this.unassigned_mass_ids.push(*mass_id);
-        }
-    }
-}
-
 pub fn new_renet_server(address: String) -> RenetServer {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
@@ -50,13 +39,27 @@ pub fn new_renet_server(address: String) -> RenetServer {
     .unwrap()
 }
 
-pub fn setup_game(mut commands: Commands, cli_args: Res<resources::ServerCliArgs>) {
+pub fn setup_game(
+    mut commands: Commands,
+    cli_args: Res<resources::ServerCliArgs>,
+    mut what_to_call_this: ResMut<WhatToCallThis>,
+    //game_config: Res<resources::GameConfig>,
+) {
     let speed = cli_args.speed;
     let zerog = cli_args.zerog;
+    let init_data = systems::get_system(&cli_args.system)();
+    for (mass_id, mass_init_data) in init_data.masses.iter() {
+        if mass_init_data.inhabitable {
+            what_to_call_this.unassigned_mass_ids.push(*mass_id);
+        }
+    }
     commands.insert_resource(resources::GameConfig {
         physics_config: resources::PhysicsConfig { speed, zerog },
+        init_data,
         ..Default::default()
     });
+
+    //
 }
 
 pub fn handle_server_events(
@@ -86,6 +89,7 @@ pub fn handle_server_events(
                     );
                     debug!("Broadcasting current game config. Anticipating a new `Ready` response from all.");
                 } else {
+                    //
                     debug!("Client {id} connected but no more assignable masses");
                 };
             }

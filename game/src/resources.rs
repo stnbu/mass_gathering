@@ -78,7 +78,6 @@ pub fn init_masses<'a>(
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) -> MassIDToEntityMap {
     let mut mass_to_entity_map = MassIDToEntityMap::default();
-    error!("XXXXXXXX 0");
     for (
         &mass_id,
         &MassInitData {
@@ -89,7 +88,6 @@ pub fn init_masses<'a>(
         },
     ) in init_data.masses.iter()
     {
-        error!("XXXXXXXX 1");
         let scale = Vec3::splat(mass_to_radius(mass));
         let mut transform = Transform::from_translation(position).with_scale(scale);
         if inhabitable {
@@ -113,7 +111,6 @@ pub fn init_masses<'a>(
             ..Default::default()
         });
         mass_commands.insert(components::MassID(mass_id));
-        error!("XXXX {mass_id} / {inhabited_mass_id}");
         if mass_id == inhabited_mass_id {
             mass_commands.insert(components::ClientInhabited);
             mass_commands.remove::<RigidBody>();

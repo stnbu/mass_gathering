@@ -34,18 +34,9 @@ pub fn process_to_client_events(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state: ResMut<State<resources::GameState>>,
-    mut mass_to_entity_map: ResMut<resources::MassIDToEntityMap>,
     mut to_client_events: EventReader<events::ToClient>,
     mut to_server_events: EventWriter<events::ToServer>,
-    mut game_config: ResMut<resources::GameConfig>,
     client: Res<RenetClient>,
-    inhabitable_masses: Query<
-        (Entity, &components::MassID),
-        Or<(
-            With<components::Inhabitable>,
-            With<components::ClientInhabited>,
-        )>,
-    >,
 ) {
     let my_id = client.client_id();
     for message in to_client_events.iter() {
@@ -59,10 +50,7 @@ pub fn process_to_client_events(
                 // handled by separate system
             }
             events::ToClient::SetGameConfig(game_config) => {
-                error!("game_config: {game_config:#?}");
-                panic!();
                 let inhabited_mass_id = *game_config.client_mass_map.get(&my_id).unwrap();
-                error!("about to");
                 resources::init_masses(
                     inhabited_mass_id,
                     game_config.init_data.clone(),
@@ -70,7 +58,6 @@ pub fn process_to_client_events(
                     &mut meshes,
                     &mut materials,
                 );
-                error!("did");
                 commands.insert_resource(game_config.clone());
                 let message = events::ToServer::Ready;
                 debug!("  enqueuing message for server `{message:?}`");
