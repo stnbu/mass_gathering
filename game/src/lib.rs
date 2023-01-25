@@ -112,6 +112,6 @@ pub fn get_log_plugin(package: &str) -> bevy::log::LogPlugin {
 
 pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
-        error!("{}", e);
+        panic!("Renet error: {e:?}");
     }
 }

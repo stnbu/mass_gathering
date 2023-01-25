@@ -69,17 +69,10 @@ pub fn handle_server_events(
                             ))
                             .unwrap(),
                         );
-                        debug!("Broadcasting current game config. Anticipating a new `Ready` response from all.");
                     }
-                } else {
-                    debug!("Client {id} connected but no more assignable masses");
                 };
             }
             &ServerEvent::ClientDisconnected(id) => {
-                debug!(
-                    "Server got disconnect from client {id} ({}). Quiting Bevy app.",
-                    to_nick(id).trim_end()
-                );
                 exit.send(AppExit);
             }
         }
@@ -88,7 +81,6 @@ pub fn handle_server_events(
     for client_id in server.clients_id().into_iter() {
         while let Some(message) = server.receive_message(client_id, DefaultChannel::Reliable) {
             let message = bincode::deserialize(&message).unwrap();
-            trace!("Received message from client {client_id}: {message:?}");
             match message {
                 events::ToServer::Ready => {
                     if game_startup_data.unassigned_mass_ids.is_empty() {
@@ -108,19 +100,16 @@ pub fn handle_server_events(
                     }
                 }
                 events::ToServer::Rotation(rotation) => {
-                    trace!("Sending rotation event for client {client_id}");
                     let inhabitant_rotation = events::ToClient::InhabitantRotation {
                         client_id,
                         rotation,
                     };
                     let message = bincode::serialize(&inhabitant_rotation).unwrap();
-                    trace!("Broadcasting except to {client_id}: {inhabitant_rotation:?}");
                     server.broadcast_message_except(client_id, DefaultChannel::Reliable, message);
                 }
                 events::ToServer::ProjectileFired(projectile_flight) => {
                     let projectile_fired = events::ToClient::ProjectileFired(projectile_flight);
                     let message = bincode::serialize(&projectile_fired).unwrap();
-                    debug!("Broadcasting {projectile_fired:?}");
                     server.broadcast_message(DefaultChannel::Reliable, message);
                 }
             }

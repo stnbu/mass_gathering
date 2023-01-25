@@ -40,10 +40,8 @@ pub fn process_to_client_events(
 ) {
     let my_id = client.client_id();
     for message in to_client_events.iter() {
-        trace!("Message for {my_id}: {message:?}");
         match message {
             events::ToClient::SetGameState(new_game_state) => {
-                debug!("  got `SetGameState`. Setting state to {new_game_state:?}");
                 let _ = game_state.overwrite_set(*new_game_state);
             }
             events::ToClient::InhabitantRotation { .. } => {
@@ -60,7 +58,6 @@ pub fn process_to_client_events(
                 );
                 commands.insert_resource(game_config.clone());
                 let message = events::ToServer::Ready;
-                debug!("  enqueuing message for server `{message:?}`");
                 to_server_events.send(message);
             }
             events::ToClient::ProjectileFired(_) => {
@@ -80,7 +77,6 @@ pub fn receive_messages_from_server(
 }
 
 pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
-    debug!("I AM client {client_id:?}");
     let address = if let Ok(address) = format!("{address}").parse() {
         address
     } else {
@@ -160,7 +156,6 @@ pub fn control(
             let message = events::ToServer::Rotation(transform.rotation);
             to_server_events.send(message);
         } else {
-            error!("ClientInhabited entity not present");
         }
     }
 }
@@ -180,7 +175,6 @@ pub fn rotate_inhabitable_masses(
             rotation,
         } = message
         {
-            trace!("  got `InhabitantRotation`. Rotating mass {client_id}");
             let inhabited_mass_id = *game_config.client_mass_map.get(client_id).unwrap();
             for (mut mass_transform, &components::MassID(mass_id)) in inhabitable_masses.iter_mut()
             {
@@ -292,7 +286,6 @@ pub fn handle_projectile_engagement(
             }
         }
     } else {
-        error!("No client-inhabited mass");
     }
 }
 
@@ -377,7 +370,6 @@ pub fn move_projectiles(
         if to_transform.is_none() {
             // FIXME: When a minor mass gets merged into a major, what should happen to in-flight projectiles
             // that were targeting that mass? What if the major mass is an inhabited mass??
-            warn!("The transform TO which projectile {projectile_id:?} as headed (the target mass) has disappeared. Despawning projectile");
             commands.entity(projectile_id).despawn_recursive();
             continue;
         }
@@ -425,9 +417,6 @@ pub fn handle_projectile_collision(
                     // we always have unit diameter and _scale_, so a "unit vector" will
                     // exactly end at the "surface" in the mass's transform.
                     let local_impact_site = projectile_flight.local_impact_direction;
-                    trace!(
-                        "Collider {projectile_id:?} has collided with uninhabited mass {mass_id:?}. Spawning explosion animation."
-                    );
                     commands.entity(*mass_id).with_children(|child| {
                         child
                             .spawn(PbrBundle {
@@ -443,7 +432,6 @@ pub fn handle_projectile_collision(
                                 timer: Timer::from_seconds(5.0, TimerMode::Once),
                             });
                     });
-                    trace!("Despawning collided projectile {projectile_id:?}");
                     commands.entity(*projectile_id).despawn_recursive();
                 }
             }
@@ -459,7 +447,6 @@ pub fn animate_explosions(
     for (explosion_id, mut transform, mut explosion) in explosions.iter_mut() {
         explosion.timer.tick(time.delta());
         if explosion.timer.finished() {
-            trace!("Despawning completed explosion animation {explosion_id:?}");
             commands.entity(explosion_id).despawn_recursive();
         } else {
             let percent = explosion.timer.percent();
