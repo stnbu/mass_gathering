@@ -338,6 +338,7 @@ pub fn handle_projectile_fired(
 }
 
 pub fn move_projectiles(
+    mut commands: Commands,
     mut projectile_query: Query<(
         Entity,
         &mut Transform,
@@ -376,7 +377,8 @@ pub fn move_projectiles(
         if to_transform.is_none() {
             // FIXME: When a minor mass gets merged into a major, what should happen to in-flight projectiles
             // that were targeting that mass? What if the major mass is an inhabited mass??
-            warn!("The transform TO which projectile {projectile_id:?} originated (the target mass) has disappeared");
+            warn!("The transform TO which projectile {projectile_id:?} as headed (the target mass) has disappeared. Despawning projectile");
+            commands.entity(projectile_id).despawn_recursive();
             continue;
         }
         let from_transform = from_transform.unwrap();
