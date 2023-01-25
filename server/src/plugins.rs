@@ -7,14 +7,19 @@ pub struct ServerPlugin;
 
 impl Plugin for ServerPlugin {
     fn build(&self, app: &mut App) {
-        let args = resources::ServerCliArgs::parse();
+        let args = ServerCliArgs::parse();
         let address = args.address.clone();
+        let zerog = args.zerog;
+        let speed = args.speed;
+
         app
             //
             .insert_resource(new_renet_server(address))
-            .insert_resource(args)
-            .init_resource::<resources::GameStartupData>()
-            .add_startup_system(setup_game)
+            .insert_resource(resources::GameConfig {
+                physics_config: resources::PhysicsConfig { speed, zerog },
+                init_data: systems::get_system(&args.system)(),
+                ..Default::default()
+            })
             .add_system(panic_on_renet_error)
             .add_system(panic_on_renet_error)
             .add_system(handle_server_events)

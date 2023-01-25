@@ -1,49 +1,8 @@
 use crate::*;
 use bevy_rapier3d::prelude::{Collider, RigidBody};
-use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
-// FIXME
-//
-// There's ~~ClientPreferences~~, ClientData ... and plenty
-// of other stuff that is a mishmash of hodgepodge. But it's complicated.
-// Some thing are "requested" by the client, some things are "assigned"
-// by the server. Some things only belong on the client/server, some things
-// should never be over-written (write-once, no update)...
-//
-// It's all sixes and sevens
-//
-// It's all higgledy piggledy
-//
-// Can't find its ass in a wet paper barn
-//
-// [Update]
-//
-// There is a similar situation with
-//
-//   ClientCliArgs -> ClientPreferences (not anymore)
-//   ServerCliArgs -> PhysicsConfig (and there is also a ServerConfig)
-
-#[derive(Parser, Resource)]
-pub struct ClientCliArgs {
-    #[arg(long)]
-    pub nickname: String,
-    #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
-    pub address: String,
-}
-
-#[derive(Parser, Resource)]
-pub struct ServerCliArgs {
-    #[arg(long, default_value_t = 1)]
-    pub speed: u32,
-    #[arg(long, default_value_t = ("").to_string())]
-    pub system: String,
-    #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
-    pub address: String,
-    #[arg(long)]
-    pub zerog: bool,
-}
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Serialize, Deserialize)]
 pub enum GameState {
@@ -197,12 +156,39 @@ pub struct GameConfig {
     pub init_data: InitData,
 }
 
-// Used by the server.
-// This is first populated with inhabitable mass IDs given in the InitData
-// When a mass is assigned to a client, it is removed from here, therefore
-// this same data can and is used to tell when all slots are filled by
-// testing for emptyness.
-#[derive(Resource, Default)]
-pub struct GameStartupData {
-    pub unassigned_mass_ids: Vec<u64>,
+impl GameConfig {
+    pub fn is_capacity(&self) -> bool {
+        let assigned_count = self.client_mass_map.len();
+        let inhabitable_count = self
+            .init_data
+            .masses
+            .iter()
+            .filter(|(_, mass)| mass.inhabitable)
+            // FIXME: shouldn't there just be a single method somewhere?
+            .collect::<Vec<_>>()
+            .len();
+        inhabitable_count == assigned_count
+    }
+
+    pub fn get_assigned_mass_id(&mut self, client_id: u64) -> Result<u64, &str> {
+        let inhabited_mass_ids = self
+            .client_mass_map
+            .iter()
+            .map(|(_, &mass_id)| mass_id)
+            .collect::<HashSet<u64>>();
+        for (&inhabitable_mass_id, _) in self
+            .init_data
+            .masses
+            .iter()
+            .filter(|(_, mass)| mass.inhabitable)
+        {
+            if !inhabited_mass_ids.contains(&inhabitable_mass_id) {
+                if let Some(mass_id) = self.client_mass_map.insert(client_id, inhabitable_mass_id) {
+                    panic!("Client {client_id} already assigned {mass_id}")
+                }
+                return Ok(inhabitable_mass_id);
+            }
+        }
+        Err("No free mass IDs")
+    }
 }

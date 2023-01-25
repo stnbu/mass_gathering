@@ -7,6 +7,7 @@ use bevy_renet::{
     renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
 };
+use clap::Parser;
 use game::*;
 use std::{net::UdpSocket, time::SystemTime};
 
@@ -14,6 +15,14 @@ pub mod plugins;
 
 const FRAME_FILL: Color32 = Color32::TRANSPARENT;
 const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
+
+#[derive(Parser, Resource)]
+pub struct ClientCliArgs {
+    #[arg(long)]
+    pub nickname: String,
+    #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
+    pub address: String,
+}
 
 pub fn send_messages_to_server(
     mut to_server_events: EventReader<events::ToServer>,
@@ -35,7 +44,6 @@ pub fn process_to_client_events(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state: ResMut<State<resources::GameState>>,
     mut to_client_events: EventReader<events::ToClient>,
-    mut to_server_events: EventWriter<events::ToServer>,
     client: Res<RenetClient>,
 ) {
     let my_id = client.client_id();
@@ -57,8 +65,6 @@ pub fn process_to_client_events(
                     &mut materials,
                 );
                 commands.insert_resource(game_config.clone());
-                let message = events::ToServer::Ready;
-                to_server_events.send(message);
             }
             events::ToClient::ProjectileFired(_) => {
                 // not handled here

@@ -19,7 +19,6 @@ pub enum ToClient {
 
 #[derive(Debug, Serialize, Deserialize, Component)]
 pub enum ToServer {
-    Ready,
     Rotation(Quat),
     ProjectileFired(ProjectileFlight),
 }
