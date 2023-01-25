@@ -52,31 +52,13 @@ pub enum GameState {
     Stopped, // initial state
 }
 
-#[derive(Resource, Default, Clone)]
-pub struct MassIDToEntityMap(pub HashMap<u64, Entity>);
-
-impl MassIDToEntityMap {
-    pub fn get_entities<const N: usize>(&self, mass_ids: [u64; N]) -> Result<[Entity; N], &str> {
-        let mut entities: Vec<Entity> = Vec::new();
-        for id in mass_ids.iter() {
-            if let Some(value) = self.0.get(id) {
-                entities.push(*value);
-            } else {
-                return Result::Err("Failed to find mass id {id}");
-            }
-        }
-        Result::Ok(entities.try_into().unwrap()) // omg becky
-    }
-}
-
 pub fn init_masses<'a>(
     inhabited_mass_id: u64,
     init_data: InitData,
     commands: &'a mut Commands,
     meshes: &'a mut ResMut<Assets<Mesh>>,
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
-) -> MassIDToEntityMap {
-    let mut mass_to_entity_map = MassIDToEntityMap::default();
+) {
     for (
         &mass_id,
         &MassInitData {
@@ -171,9 +153,7 @@ pub fn init_masses<'a>(
                     });
                 });
         }
-        mass_to_entity_map.0.insert(mass_id, mass_commands.id());
     }
-    mass_to_entity_map
 }
 
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]

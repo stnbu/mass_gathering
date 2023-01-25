@@ -13,10 +13,9 @@ pub mod systems;
 
 pub mod plugins;
 
-pub const PROTOCOL_ID: u64 = 33;
+pub const PROTOCOL_ID: u64 = 34;
 pub const SERVER_IP: &str = "127.0.0.1";
-pub const SERVER_PORT: u16 = 5743; // FIXME NOTE -- don't change this anymore
-pub const SQRT_3: f32 = 1.7320508;
+pub const SERVER_PORT: u16 = 5743;
 
 pub fn set_resolution(mut windows: ResMut<Windows>) {
     let window = windows.primary_mut();
