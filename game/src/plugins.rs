@@ -29,10 +29,11 @@ impl Plugin for SimulationPlugin {
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_run_criteria(with_gravity)
-                .with_system(physics::handle_despawn_mass)
-                .with_system(physics::handle_mass_collisions.before(physics::handle_despawn_mass))
-                .with_system(physics::merge_masses.before(physics::handle_despawn_mass))
-                .with_system(physics::freefall.before(physics::handle_despawn_mass)),
+                // .with_system(physics::handle_despawn_mass)
+                // .with_system(physics::handle_mass_collisions.before(physics::handle_despawn_mass))
+                // .with_system(physics::merge_masses.before(physics::handle_despawn_mass))
+                // .with_system(physics::freefall.before(physics::handle_despawn_mass)),
+                .with_system(physics::freefall),
         );
     }
 }
