@@ -6,7 +6,7 @@
 _REL="${_REL:=}"
 _NICKS="${_NICKS:=bob}"
 _CARGS="${_CARGS:=}"
-_SARGS="${_SARGS:=--speed 1}"
+_SARGS="${_SARGS:=}"
 _SYS="${_SYS:=demo_2m1i}"
 _CRUN="${_CRUN:=--color always}"
 

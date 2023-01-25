@@ -72,7 +72,7 @@ pub fn handle_server_events(
                     }
                 };
             }
-            &ServerEvent::ClientDisconnected(id) => {
+            &ServerEvent::ClientDisconnected(_) => {
                 exit.send(AppExit);
             }
         }
