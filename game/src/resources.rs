@@ -177,8 +177,6 @@ pub fn init_masses<'a>(
     mass_to_entity_map
 }
 
-//
-
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
     pub speed: u32,
@@ -218,4 +216,14 @@ pub struct GameConfig {
     pub client_mass_map: HashMap<u64, u64>,
     pub physics_config: PhysicsConfig,
     pub init_data: InitData,
+}
+
+// Used by the server.
+// This is first populated with inhabitable mass IDs given in the InitData
+// When a mass is assigned to a client, it is removed from here, therefore
+// this same data can and is used to tell when all slots are filled by
+// testing for emptyness.
+#[derive(Resource, Default)]
+pub struct WhatToCallThis {
+    pub unassigned_mass_ids: Vec<u64>,
 }

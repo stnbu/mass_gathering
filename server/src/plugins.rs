@@ -13,7 +13,7 @@ impl Plugin for ServerPlugin {
             //
             .insert_resource(new_renet_server(address))
             .insert_resource(args)
-            .init_resource::<WhatToCallThis>()
+            .init_resource::<resources::WhatToCallThis>()
             .add_startup_system(setup_game)
             .add_system(panic_on_renet_error)
             .add_system(panic_on_renet_error)

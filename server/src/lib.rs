@@ -1,23 +1,13 @@
-// FIXME: Consider disconnecting clients and more upon exit a la
-// https://bevy-cheatbook.github.io/programming/states.html
-
 use bevy::app::AppExit;
-use game::*;
-// We rename this because it sounds too much like one of _our_ events (confusing).
 use bevy_renet::renet::ServerEvent;
 use bevy_renet::renet::{
     DefaultChannel, RenetConnectionConfig, RenetServer, ServerAuthentication, ServerConfig,
 };
+use game::*;
 
 use std::{net::UdpSocket, time::SystemTime};
 
 pub mod plugins;
-
-// Only used by server, kinda hacky
-#[derive(Resource, Default)]
-pub struct WhatToCallThis {
-    unassigned_mass_ids: Vec<u64>,
-}
 
 pub fn new_renet_server(address: String) -> RenetServer {
     let address = if let Ok(address) = format!("{address}").parse() {
@@ -41,8 +31,7 @@ pub fn new_renet_server(address: String) -> RenetServer {
 pub fn setup_game(
     mut commands: Commands,
     cli_args: Res<resources::ServerCliArgs>,
-    mut what_to_call_this: ResMut<WhatToCallThis>,
-    //game_config: Res<resources::GameConfig>,
+    mut what_to_call_this: ResMut<resources::WhatToCallThis>,
 ) {
     let speed = cli_args.speed;
     let zerog = cli_args.zerog;
@@ -57,8 +46,6 @@ pub fn setup_game(
         init_data,
         ..Default::default()
     });
-
-    //
 }
 
 pub fn handle_server_events(
@@ -66,7 +53,7 @@ pub fn handle_server_events(
     mut server: ResMut<RenetServer>,
     mut app_state: ResMut<State<resources::GameState>>,
     mut game_config: ResMut<resources::GameConfig>,
-    mut what_to_call_this: ResMut<WhatToCallThis>,
+    mut what_to_call_this: ResMut<resources::WhatToCallThis>,
     mut exit: EventWriter<AppExit>,
 ) {
     for event in server_events.iter() {
@@ -85,7 +72,6 @@ pub fn handle_server_events(
                         debug!("Broadcasting current game config. Anticipating a new `Ready` response from all.");
                     }
                 } else {
-                    //
                     debug!("Client {id} connected but no more assignable masses");
                 };
             }
@@ -104,7 +90,6 @@ pub fn handle_server_events(
             let message = bincode::deserialize(&message).unwrap();
             trace!("Received message from client {client_id}: {message:?}");
             match message {
-                // xxx
                 events::ToServer::Ready => {
                     if what_to_call_this.unassigned_mass_ids.is_empty() {
                         let state = resources::GameState::Running;
