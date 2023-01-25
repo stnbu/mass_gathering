@@ -223,6 +223,6 @@ pub struct GameConfig {
 // this same data can and is used to tell when all slots are filled by
 // testing for emptyness.
 #[derive(Resource, Default)]
-pub struct WhatToCallThis {
+pub struct GameStartupData {
     pub unassigned_mass_ids: Vec<u64>,
 }

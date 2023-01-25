@@ -31,14 +31,14 @@ pub fn new_renet_server(address: String) -> RenetServer {
 pub fn setup_game(
     mut commands: Commands,
     cli_args: Res<resources::ServerCliArgs>,
-    mut what_to_call_this: ResMut<resources::WhatToCallThis>,
+    mut game_startup_data: ResMut<resources::GameStartupData>,
 ) {
     let speed = cli_args.speed;
     let zerog = cli_args.zerog;
     let init_data = systems::get_system(&cli_args.system)();
     for (mass_id, mass_init_data) in init_data.masses.iter() {
         if mass_init_data.inhabitable {
-            what_to_call_this.unassigned_mass_ids.push(*mass_id);
+            game_startup_data.unassigned_mass_ids.push(*mass_id);
         }
     }
     commands.insert_resource(resources::GameConfig {
@@ -53,15 +53,15 @@ pub fn handle_server_events(
     mut server: ResMut<RenetServer>,
     mut app_state: ResMut<State<resources::GameState>>,
     mut game_config: ResMut<resources::GameConfig>,
-    mut what_to_call_this: ResMut<resources::WhatToCallThis>,
+    mut game_startup_data: ResMut<resources::GameStartupData>,
     mut exit: EventWriter<AppExit>,
 ) {
     for event in server_events.iter() {
         match event {
             &ServerEvent::ClientConnected(id, _) => {
-                if let Some(mass_id) = what_to_call_this.unassigned_mass_ids.pop() {
+                if let Some(mass_id) = game_startup_data.unassigned_mass_ids.pop() {
                     game_config.client_mass_map.insert(id, mass_id);
-                    if what_to_call_this.unassigned_mass_ids.is_empty() {
+                    if game_startup_data.unassigned_mass_ids.is_empty() {
                         server.broadcast_message(
                             DefaultChannel::Reliable,
                             bincode::serialize(&events::ToClient::SetGameConfig(
@@ -91,7 +91,7 @@ pub fn handle_server_events(
             trace!("Received message from client {client_id}: {message:?}");
             match message {
                 events::ToServer::Ready => {
-                    if what_to_call_this.unassigned_mass_ids.is_empty() {
+                    if game_startup_data.unassigned_mass_ids.is_empty() {
                         let state = resources::GameState::Running;
                         let set_state = events::ToClient::SetGameState(state);
                         let message = bincode::serialize(&set_state).unwrap();
