@@ -17,7 +17,6 @@ pub mod plugins;
 #[derive(Resource, Default)]
 pub struct WhatToCallThis {
     unassigned_mass_ids: Vec<u64>,
-    unconfirmed: HashSet<u64>,
 }
 
 pub fn new_renet_server(address: String) -> RenetServer {
@@ -73,21 +72,18 @@ pub fn handle_server_events(
     for event in server_events.iter() {
         match event {
             &ServerEvent::ClientConnected(id, _) => {
-                debug!("Client {id} has connected! Nulifying all clients' ready status.");
-                what_to_call_this.unconfirmed.clear();
-                for client_id in server.clients_id().into_iter() {
-                    what_to_call_this.unconfirmed.insert(client_id);
-                }
-                assert!(what_to_call_this.unconfirmed.contains(&id));
                 if let Some(mass_id) = what_to_call_this.unassigned_mass_ids.pop() {
                     game_config.client_mass_map.insert(id, mass_id);
-                    //
-                    server.broadcast_message(
-                        DefaultChannel::Reliable,
-                        bincode::serialize(&events::ToClient::SetGameConfig(game_config.clone()))
+                    if what_to_call_this.unassigned_mass_ids.is_empty() {
+                        server.broadcast_message(
+                            DefaultChannel::Reliable,
+                            bincode::serialize(&events::ToClient::SetGameConfig(
+                                game_config.clone(),
+                            ))
                             .unwrap(),
-                    );
-                    debug!("Broadcasting current game config. Anticipating a new `Ready` response from all.");
+                        );
+                        debug!("Broadcasting current game config. Anticipating a new `Ready` response from all.");
+                    }
                 } else {
                     //
                     debug!("Client {id} connected but no more assignable masses");
@@ -110,23 +106,18 @@ pub fn handle_server_events(
             match message {
                 // xxx
                 events::ToServer::Ready => {
-                    if what_to_call_this.unconfirmed.remove(&client_id) {
-                        // everyone now confirmed
-                        if what_to_call_this.unconfirmed.is_empty() {
-                            let state = resources::GameState::Running;
-                            let set_state = events::ToClient::SetGameState(state);
-                            let message = bincode::serialize(&set_state).unwrap();
-                            server.broadcast_message(DefaultChannel::Reliable, message);
-                            let _ = app_state.overwrite_set(state);
-                        } else {
-                            let state = resources::GameState::Waiting;
-                            let set_state = events::ToClient::SetGameState(state);
-                            let message = bincode::serialize(&set_state).unwrap();
-                            server.send_message(client_id, DefaultChannel::Reliable, message);
-                            let _ = app_state.overwrite_set(state);
-                        }
+                    if what_to_call_this.unassigned_mass_ids.is_empty() {
+                        let state = resources::GameState::Running;
+                        let set_state = events::ToClient::SetGameState(state);
+                        let message = bincode::serialize(&set_state).unwrap();
+                        server.broadcast_message(DefaultChannel::Reliable, message);
+                        let _ = app_state.overwrite_set(state);
                     } else {
-                        warn!("No outstanding ready confirmation for {client_id}");
+                        let state = resources::GameState::Waiting;
+                        let set_state = events::ToClient::SetGameState(state);
+                        let message = bincode::serialize(&set_state).unwrap();
+                        server.send_message(client_id, DefaultChannel::Reliable, message);
+                        let _ = app_state.overwrite_set(state);
                     }
                 }
                 events::ToServer::Rotation(rotation) => {
