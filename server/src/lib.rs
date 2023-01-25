@@ -95,6 +95,8 @@ pub fn handle_server_events(
                         let state = resources::GameState::Running;
                         let set_state = events::ToClient::SetGameState(state);
                         let message = bincode::serialize(&set_state).unwrap();
+                        // FIXME: This could occur before we've received all "Ready"s.
+                        // We might have to keep our "Ready count" separately to if it matters.
                         server.broadcast_message(DefaultChannel::Reliable, message);
                         let _ = app_state.overwrite_set(state);
                     } else {

@@ -1,5 +1,5 @@
 use crate::*;
-use bevy_rapier3d::prelude::Collider;
+use bevy_rapier3d::prelude::{Collider, RigidBody};
 use clap::Parser;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -68,7 +68,6 @@ impl MassIDToEntityMap {
         Result::Ok(entities.try_into().unwrap()) // omg becky
     }
 }
-use bevy_rapier3d::prelude::RigidBody;
 
 pub fn init_masses<'a>(
     inhabited_mass_id: u64,
