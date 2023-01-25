@@ -5,7 +5,7 @@
 // 1. We might be able to get rid of Momentum::mass too and maybe use rapier's Velocity??
 use crate::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
-use serde::{Deserialize, Serialize};
+
 
 // #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 // pub struct PhysicsConfig {

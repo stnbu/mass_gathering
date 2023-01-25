@@ -8,7 +8,7 @@ use bevy_renet::renet::ServerEvent;
 use bevy_renet::renet::{
     DefaultChannel, RenetConnectionConfig, RenetServer, ServerAuthentication, ServerConfig,
 };
-use std::collections::HashSet;
+
 use std::{net::UdpSocket, time::SystemTime};
 
 pub mod plugins;

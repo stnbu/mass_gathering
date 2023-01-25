@@ -2,7 +2,7 @@ use bevy_egui::{
     egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
     EguiContext,
 };
-use bevy_rapier3d::prelude::{Collider, CollisionEvent, QueryFilter, RapierContext, RigidBody};
+use bevy_rapier3d::prelude::{Collider, CollisionEvent, QueryFilter, RapierContext};
 use bevy_renet::{
     renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
