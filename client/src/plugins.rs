@@ -1,5 +1,4 @@
 use crate::*;
-use bevy::input::InputPlugin;
 use clap::Parser;
 
 #[derive(Default)]
@@ -9,14 +8,9 @@ impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(MinimalPlugins);
         app.add_plugin(get_log_plugin("client"));
-
-        // FIXME: Are these necessary (for "headless client that listens for keyboard input")?
         app.add_plugin(TransformPlugin::default());
-        app.add_plugin(InputPlugin::default());
-
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
-                .with_system(control)
                 .with_system(handle_projectile_engagement)
                 .with_system(handle_projectile_fired)
                 .with_system(move_projectiles)

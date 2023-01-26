@@ -95,66 +95,6 @@ pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
     .unwrap()
 }
 
-pub fn control(
-    keys: Res<Input<KeyCode>>,
-    time: Res<Time>,
-    mut to_server_events: EventWriter<events::ToServer>,
-    mut inhabitant_query: Query<&mut Transform, With<components::ClientInhabited>>,
-) {
-    let nudge = TAU / 10000.0;
-    let keys_scaling = 10.0;
-
-    // rotation about local axes
-    let mut rotation = Vec3::ZERO;
-
-    // FIXME: What's the general way of handling this?
-    // How to generally get "with modifiers"?
-    if !keys.pressed(KeyCode::RShift) {
-        for key in keys.get_pressed() {
-            match key {
-                // pitch
-                KeyCode::W => {
-                    rotation.x += nudge;
-                }
-                KeyCode::S => {
-                    rotation.x -= nudge;
-                }
-                // yaw
-                KeyCode::A => {
-                    rotation.y += nudge;
-                }
-                KeyCode::D => {
-                    rotation.y -= nudge;
-                }
-                // roll
-                KeyCode::Z => {
-                    rotation.z -= nudge;
-                }
-                KeyCode::X => {
-                    rotation.z += nudge;
-                }
-                _ => (),
-            }
-        }
-    }
-
-    if rotation.length() > 0.0000001 {
-        if let Ok(mut transform) = inhabitant_query.get_single_mut() {
-            let frame_time = time.delta_seconds() * 60.0;
-            rotation *= keys_scaling * frame_time;
-            let local_x = transform.local_x();
-            let local_y = transform.local_y();
-            let local_z = transform.local_z();
-            transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
-            transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
-            transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
-            let message = events::ToServer::Rotation(transform.rotation);
-            to_server_events.send(message);
-        } else {
-        }
-    }
-}
-
 /// This does not include the client's mass
 pub fn rotate_inhabitable_masses(
     mut to_client_events: EventReader<events::ToClient>,
@@ -202,7 +142,6 @@ pub fn handle_projectile_engagement(
     >,
     rapier_context: Res<RapierContext>,
     mut to_server_events: EventWriter<events::ToServer>,
-    keys: Res<Input<KeyCode>>,
 ) {
     if let Ok((client_pov, &components::MassID(from_mass_id))) = inhabited_mass_query.get_single() {
         let ray_origin = client_pov.translation;
@@ -216,7 +155,8 @@ pub fn handle_projectile_engagement(
         );
         if let Some((mass, distance)) = intersection {
             if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
-                if keys.just_pressed(KeyCode::Space) {
+                // If the "fire" button has been pressed...
+                if false {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =
                         (global_impact_site - mass_transform.translation).normalize();

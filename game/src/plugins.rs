@@ -29,7 +29,6 @@ impl Plugin for SimulationPlugin {
         app.add_plugin(AssetPlugin::default());
         app.add_asset::<Mesh>();
         app.add_asset::<Scene>();
-
         app.insert_resource(RapierConfiguration {
             gravity: Vec3::ZERO,
             ..Default::default()
