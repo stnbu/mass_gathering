@@ -311,14 +311,6 @@ pub fn move_projectiles(
     }
 }
 
-pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) {
-    let title = "Mass Gathering";
-    let id = client.client_id();
-    let nickname = to_nick(id).trim_end().to_string();
-    let title = format!("{title} | nick: \"{nickname}\"");
-    windows.primary_mut().set_title(title);
-}
-
 pub fn handle_projectile_collision(
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,

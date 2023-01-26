@@ -1,7 +1,5 @@
 use bevy::ecs::schedule::ShouldRun;
 pub use bevy::prelude::*;
-pub use bevy_egui::EguiPlugin;
-pub use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use bevy_renet::renet::RenetError;
 pub use std::f32::consts::TAU;
 
@@ -16,14 +14,6 @@ pub mod plugins;
 pub const PROTOCOL_ID: u64 = 35;
 pub const SERVER_IP: &str = "127.0.0.1";
 pub const SERVER_PORT: u16 = 5743;
-
-pub fn set_resolution(mut windows: ResMut<Windows>) {
-    let window = windows.primary_mut();
-    #[cfg(debug_assertions)]
-    window.set_resolution(1280.0 / 2.0, 720.0 / 2.0);
-    #[cfg(not(debug_assertions))]
-    window.set_resolution(1280.0, 720.0);
-}
 
 // NOTE: Density is assumed to be 1.0 everywhere, so mass and volume are used interchangably.
 
@@ -50,27 +40,6 @@ pub fn scale_to_mass(scale: Vec3) -> f32 {
 
 pub fn mass_to_scale(mass: f32) -> Vec3 {
     radius_to_scale(mass_to_radius(mass))
-}
-
-pub fn let_light(mut commands: Commands) {
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 10_000.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(-0.5, -0.3, -1.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
-    commands.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            illuminance: 20_000.0,
-            shadows_enabled: true,
-            ..default()
-        },
-        transform: Transform::from_xyz(1.0, -2.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
-    });
 }
 
 pub fn to_nick(id: u64) -> String {

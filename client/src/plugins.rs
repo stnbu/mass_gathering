@@ -1,4 +1,5 @@
 use crate::*;
+use bevy::input::InputPlugin;
 use clap::Parser;
 
 #[derive(Default)]
@@ -8,7 +9,11 @@ impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(MinimalPlugins);
         app.add_plugin(get_log_plugin("client"));
-        app.insert_resource(ClearColor(Color::BLACK));
+
+        // FIXME: Are these necessary (for "headless client that listens for keyboard input")?
+        app.add_plugin(TransformPlugin::default());
+        app.add_plugin(InputPlugin::default());
+
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_system(control)
@@ -18,11 +23,6 @@ impl Plugin for ClientPlugin {
                 .with_system(handle_projectile_collision)
                 .with_system(rotate_inhabitable_masses),
         );
-        app.add_plugin(EguiPlugin);
-        app.add_startup_system(set_resolution);
-        app.add_startup_system(let_light);
-        app.add_system(bevy::window::close_on_esc);
-        app.add_system(set_window_title);
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_run_criteria(run_if_client_connected)

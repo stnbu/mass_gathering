@@ -55,7 +55,7 @@ pub fn handle_server_events(
                     Ok(mass_id) => {
                         debug!("Client {client_id} assigned mass {mass_id}");
                         if game_config.is_capacity() {
-                            debug!("Game is at capacity, sending configuration to clients");
+                            debug!("Game is at capacity, sending configuration to clients, setting game state to \"Runnning\"");
                             server.broadcast_message(
                                 DefaultChannel::Reliable,
                                 bincode::serialize(&events::ToClient::SetGameConfig(
@@ -70,6 +70,7 @@ pub fn handle_server_events(
                             );
                             let _ = app_state.overwrite_set(state);
                         } else {
+                            debug!("Game not at capacity. [Re]setting game state to \"Waiting\"");
                             let state = resources::GameState::Waiting;
                             server.broadcast_message(
                                 DefaultChannel::Reliable,
@@ -101,6 +102,7 @@ pub fn handle_server_events(
                 events::ToServer::ProjectileFired(projectile_flight) => {
                     let projectile_fired = events::ToClient::ProjectileFired(projectile_flight);
                     let message = bincode::serialize(&projectile_fired).unwrap();
+                    debug!("Projectile fired by {client_id}");
                     server.broadcast_message(DefaultChannel::Reliable, message);
                 }
             }
