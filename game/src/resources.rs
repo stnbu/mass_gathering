@@ -11,7 +11,7 @@ pub enum GameState {
     Stopped, // initial state
 }
 
-pub fn init_masses<'a>(inhabited_mass_id: u64, init_data: InitData, commands: &'a mut Commands) {
+pub fn init_masses(inhabited_mass_id: u64, init_data: InitData, commands: &mut Commands) {
     for (
         &mass_id,
         &MassInitData {
@@ -36,13 +36,20 @@ pub fn init_masses<'a>(inhabited_mass_id: u64, init_data: InitData, commands: &'
             collider: Collider::ball(radius),
             ..Default::default()
         });
-        mass_commands.remove::<RigidBody>();
         mass_commands.insert(components::MassID(mass_id));
-        if mass_id == inhabited_mass_id {
-            mass_commands.insert(components::ClientInhabited);
-        } else if inhabitable {
-            mass_commands.insert(components::Inhabitable);
+        if inhabitable {
+            mass_commands.remove::<RigidBody>();
+            if mass_id == inhabited_mass_id {
+                mass_commands.insert(components::ClientInhabited);
+            } else {
+                mass_commands.insert(components::Inhabitable);
+            }
         }
+        debug!(
+            "Spawned inhabitable={inhabitable} mass {mass_id} at {:?} ({:?})",
+            transform.translation,
+            mass_commands.id()
+        );
     }
 }
 
