@@ -11,19 +11,12 @@ pub enum GameState {
     Stopped, // initial state
 }
 
-pub fn init_masses<'a>(
-    inhabited_mass_id: u64,
-    init_data: InitData,
-    commands: &'a mut Commands,
-    meshes: &'a mut ResMut<Assets<Mesh>>,
-    materials: &'a mut ResMut<Assets<StandardMaterial>>,
-) {
+pub fn init_masses<'a>(inhabited_mass_id: u64, init_data: InitData, commands: &'a mut Commands) {
     for (
         &mass_id,
         &MassInitData {
             inhabitable,
             motion: MassMotion { position, velocity },
-            color,
             mass,
         },
     ) in init_data.masses.iter()
@@ -37,80 +30,18 @@ pub fn init_masses<'a>(
         // NOTE: We use unit radius always. We scale as needed.
         let radius = 1.0;
         let mut mass_commands = commands.spawn(physics::PointMassBundle {
-            pbr: PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius,
-                    ..Default::default()
-                })),
-                material: materials.add(color.into()),
-                transform,
-                ..Default::default()
-            },
+            transform_bundle: TransformBundle::from_transform(transform),
             momentum: components::Momentum { velocity },
+            // collider only has a RADIUS
             collider: Collider::ball(radius),
             ..Default::default()
         });
+        mass_commands.remove::<RigidBody>();
         mass_commands.insert(components::MassID(mass_id));
         if mass_id == inhabited_mass_id {
             mass_commands.insert(components::ClientInhabited);
-            mass_commands.remove::<RigidBody>();
-            mass_commands.with_children(|child| {
-                child.spawn(Camera3dBundle::default());
-                child
-                    .spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.0005,
-                            ..Default::default()
-                        })),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_xyz(0.0, 0.0, -0.2),
-                        visibility: Visibility::INVISIBLE,
-                        ..Default::default()
-                    })
-                    .insert(components::Sights);
-                child
-                    .spawn(PointLightBundle {
-                        transform: Transform::from_xyz(0.0, 0.0, -0.15),
-                        visibility: Visibility::INVISIBLE,
-                        point_light: PointLight {
-                            ..Default::default()
-                        },
-                        ..Default::default()
-                    })
-                    .insert(components::Sights);
-            });
         } else if inhabitable {
-            mass_commands
-                .insert(components::Inhabitable)
-                .with_children(|child| {
-                    // barrel
-                    child.spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Capsule {
-                            radius: 0.05,
-                            depth: 1.0,
-                            ..Default::default()
-                        })),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
-                            .with_translation(Vec3::Z * -1.5),
-                        ..Default::default()
-                    });
-                    // horizontal stabilizer
-                    child.spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_translation(Vec3::Z * 0.5),
-                        ..Default::default()
-                    });
-                    // vertical stabilizer
-                    child.spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
-                            .with_translation(Vec3::Z * 0.5),
-                        ..Default::default()
-                    });
-                });
+            mass_commands.insert(components::Inhabitable);
         }
     }
 }
@@ -140,7 +71,6 @@ pub struct MassMotion {
 pub struct MassInitData {
     pub inhabitable: bool,
     pub motion: MassMotion,
-    pub color: Color,
     pub mass: f32,
 }
 

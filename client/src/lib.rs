@@ -1,7 +1,3 @@
-use bevy_egui::{
-    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
-    EguiContext,
-};
 use bevy_rapier3d::prelude::{Collider, CollisionEvent, QueryFilter, RapierContext};
 use bevy_renet::{
     renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
@@ -12,9 +8,6 @@ use game::*;
 use std::{net::UdpSocket, time::SystemTime};
 
 pub mod plugins;
-
-const FRAME_FILL: Color32 = Color32::TRANSPARENT;
-const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
 
 #[derive(Parser, Resource)]
 pub struct ClientCliArgs {
@@ -40,8 +33,6 @@ pub fn send_messages_to_server(
 /// definitely NOT "process to 'client events'"
 pub fn process_to_client_events(
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     mut game_state: ResMut<State<resources::GameState>>,
     mut to_client_events: EventReader<events::ToClient>,
     client: Res<RenetClient>,
@@ -61,8 +52,6 @@ pub fn process_to_client_events(
                     inhabited_mass_id,
                     game_config.init_data.clone(),
                     &mut commands,
-                    &mut meshes,
-                    &mut materials,
                 );
                 commands.insert_resource(game_config.clone());
             }
@@ -199,39 +188,6 @@ pub fn rotate_inhabitable_masses(
     }
 }
 
-pub fn client_waiting_screen(
-    mut ctx: ResMut<EguiContext>,
-    game_config: Res<resources::GameConfig>,
-) {
-    SidePanel::left("client_waiting_screen")
-        .resizable(false)
-        .min_width(250.0)
-        .frame(Frame {
-            outer_margin: Margin::symmetric(10.0, 20.0),
-            fill: FRAME_FILL,
-            ..Default::default()
-        })
-        .show(ctx.ctx_mut(), |ui| {
-            ui.label(
-                RichText::new("Waiting for more players\n\nConnected:")
-                    .color(TEXT_COLOR)
-                    .font(FontId {
-                        size: 20.0,
-                        family: Monospace,
-                    }),
-            );
-            ui.separator();
-            for (&id, _) in game_config.client_mass_map.iter() {
-                let nick = to_nick(id);
-                let text = format!("{nick}");
-                ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {
-                    size: 16.0,
-                    family: Monospace,
-                }));
-            }
-        });
-}
-
 pub fn handle_projectile_engagement(
     mass_query: Query<
         (&Transform, &components::MassID),
@@ -286,10 +242,6 @@ pub fn handle_projectile_engagement(
                 // `only_dynamic()`, which includes _other_ inhabited masses. Another thing
                 // fixed by a different `QueryFilter` in the above (I think).
             }
-        } else {
-            for mut visibility in sights_query.iter_mut() {
-                visibility.is_visible = false;
-            }
         }
     } else {
     }
@@ -298,61 +250,33 @@ pub fn handle_projectile_engagement(
 pub fn handle_projectile_fired(
     mut to_client_events: EventReader<events::ToClient>,
     mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::ProjectileFired(projectile_flight) = message {
             let radius = 0.5;
             commands
-                .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius,
-                        ..Default::default()
-                    })),
-                    visibility: Visibility::INVISIBLE,
-                    material: materials.add(StandardMaterial {
-                        base_color: Color::RED + Color::WHITE * 0.2,
-                        emissive: Color::rgb_u8(125, 125, 125),
-                        unlit: true,
-                        ..default()
-                    }),
-                    transform: Transform::from_scale(Vec3::ONE * radius),
-                    ..default()
+                .spawn(physics::PointMassBundle {
+                    transform_bundle: TransformBundle::from_transform(Transform::from_scale(
+                        Vec3::ONE * radius,
+                    )),
+                    ..Default::default()
                 })
                 .insert(Collider::default())
-                .insert(*projectile_flight)
-                .with_children(|children| {
-                    children.spawn(PointLightBundle {
-                        point_light: PointLight {
-                            intensity: 100.0,
-                            color: Color::RED,
-                            ..default()
-                        },
-                        ..default()
-                    });
-                });
+                .insert(*projectile_flight);
         }
     }
 }
 
 pub fn move_projectiles(
     mut commands: Commands,
-    mut projectile_query: Query<(
-        Entity,
-        &mut Transform,
-        &mut Visibility,
-        &events::ProjectileFlight,
-    )>,
+    mut projectile_query: Query<(Entity, &mut Transform, &events::ProjectileFlight)>,
     masses_query: Query<(&Transform, &components::MassID), Without<events::ProjectileFlight>>,
 ) {
     let proportion_of = 1.0 / 512.0;
     let portions_per_second = 128.0 * 3.0;
 
-    for (projectile_id, mut projectile_transform, mut projectile_visibility, projectile_flight) in
-        projectile_query.iter_mut()
+    for (projectile_id, mut projectile_transform, projectile_flight) in projectile_query.iter_mut()
     {
-        projectile_visibility.is_visible = true;
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -400,9 +324,6 @@ pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) 
 }
 
 pub fn handle_projectile_collision(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,
     mass_query: Query<(
@@ -420,25 +341,7 @@ pub fn handle_projectile_collision(
                 let projectile_flight = projectile_query.get(*projectile_id).unwrap();
                 let mass_id = if !e0_is_projectile { e0 } else { e1 };
                 if mass_query.contains(*mass_id) {
-                    // we always have unit diameter and _scale_, so a "unit vector" will
-                    // exactly end at the "surface" in the mass's transform.
-                    let local_impact_site = projectile_flight.local_impact_direction;
-                    commands.entity(*mass_id).with_children(|child| {
-                        child
-                            .spawn(PbrBundle {
-                                transform: Transform::from_translation(local_impact_site),
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.5,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::rgb_u8(255, 255, 255).into()),
-                                ..Default::default()
-                            })
-                            .insert(components::Explosion {
-                                timer: Timer::from_seconds(5.0, TimerMode::Once),
-                            });
-                    });
-                    commands.entity(*projectile_id).despawn_recursive();
+                    debug!("Projectile collided: {projectile_flight:?}");
                 }
             }
         }

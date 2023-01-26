@@ -109,7 +109,7 @@ pub fn merge_masses(
 #[derive(Bundle)]
 pub struct PointMassBundle {
     #[bundle]
-    pub pbr: PbrBundle,
+    pub transform_bundle: TransformBundle,
     pub momentum: components::Momentum,
     pub rigid_body: RigidBody,
     pub collider: Collider,
@@ -120,7 +120,7 @@ pub struct PointMassBundle {
 impl Default for PointMassBundle {
     fn default() -> Self {
         Self {
-            pbr: Default::default(),
+            transform_bundle: Default::default(),
             momentum: Default::default(),
             rigid_body: RigidBody::Dynamic,
             collider: Default::default(),

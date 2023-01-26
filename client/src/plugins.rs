@@ -6,7 +6,8 @@ pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
+        app.add_plugins(MinimalPlugins);
+        app.add_plugin(get_log_plugin("client"));
         app.insert_resource(ClearColor(Color::BLACK));
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
@@ -22,9 +23,6 @@ impl Plugin for ClientPlugin {
         app.add_startup_system(let_light);
         app.add_system(bevy::window::close_on_esc);
         app.add_system(set_window_title);
-        app.add_system_set(
-            SystemSet::on_update(resources::GameState::Waiting).with_system(client_waiting_screen),
-        );
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
                 .with_run_criteria(run_if_client_connected)
