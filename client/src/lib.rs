@@ -202,7 +202,6 @@ pub fn handle_projectile_engagement(
     >,
     rapier_context: Res<RapierContext>,
     mut to_server_events: EventWriter<events::ToServer>,
-    mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
 ) {
     if let Ok((client_pov, &components::MassID(from_mass_id))) = inhabited_mass_query.get_single() {
@@ -217,9 +216,6 @@ pub fn handle_projectile_engagement(
         );
         if let Some((mass, distance)) = intersection {
             if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
-                for mut visibility in sights_query.iter_mut() {
-                    visibility.is_visible = true;
-                }
                 if keys.just_pressed(KeyCode::Space) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =
@@ -344,23 +340,6 @@ pub fn handle_projectile_collision(
                     debug!("Projectile collided: {projectile_flight:?}");
                 }
             }
-        }
-    }
-}
-
-pub fn animate_explosions(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut explosions: Query<(Entity, &mut Transform, &mut components::Explosion)>,
-) {
-    for (explosion_id, mut transform, mut explosion) in explosions.iter_mut() {
-        explosion.timer.tick(time.delta());
-        if explosion.timer.finished() {
-            commands.entity(explosion_id).despawn_recursive();
-        } else {
-            let percent = explosion.timer.percent();
-            let scale = 1.0 - percent;
-            transform.scale = scale * Vec3::ONE;
         }
     }
 }
