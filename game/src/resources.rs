@@ -18,6 +18,7 @@ pub fn init_masses(inhabited_mass_id: u64, init_data: InitData, commands: &mut C
             inhabitable,
             motion: MassMotion { position, velocity },
             mass,
+            ..
         },
     ) in init_data.masses.iter()
     {
@@ -78,6 +79,7 @@ pub struct MassMotion {
 pub struct MassInitData {
     pub inhabitable: bool,
     pub motion: MassMotion,
+    pub color: [f32; 4],
     pub mass: f32,
 }
 

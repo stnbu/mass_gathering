@@ -21,6 +21,7 @@ pub fn demo_shooting() -> resources::InitData {
                 inhabitable,
                 motion,
                 mass,
+                ..Default::default()
             },
         );
     }
@@ -34,6 +35,7 @@ pub fn demo_shooting() -> resources::InitData {
                 velocity: Vec3::ZERO,
             },
             mass,
+            ..Default::default()
         },
     );
     init_data
