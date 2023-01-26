@@ -155,7 +155,11 @@ pub fn handle_projectile_engagement(
         );
         if let Some((mass, distance)) = intersection {
             if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
-                // If the "fire" button has been pressed...
+                debug!("Mass {to_mass_id} is now in our sights");
+                // FIXME: If the "fire" button has been pressed...
+                // this whole func may be out of the scope of "simulation".
+                // as its all about turning user input into messages to the
+                // server!
                 if false {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =
