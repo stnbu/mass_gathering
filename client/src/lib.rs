@@ -95,6 +95,10 @@ pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
     .unwrap()
 }
 
+//
+// Below here to go to "simulation.rs"
+//
+
 /// This does not include the client's mass
 pub fn rotate_inhabitable_masses(
     mut to_client_events: EventReader<events::ToClient>,
