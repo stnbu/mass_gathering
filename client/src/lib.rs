@@ -284,6 +284,8 @@ pub fn handle_projectile_collision(
 
 // // // // // // // // // // //
 
+// -- inhabit[ed|able] mass PBR parts ...
+
 /*
     child
         .spawn(PbrBundle {
@@ -310,44 +312,12 @@ pub fn handle_projectile_collision(
 */
 
 /*
-            commands
-                .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.5,
-                        ..Default::default()
-                    })),
-                    visibility: Visibility::INVISIBLE,
-                    material: materials.add(StandardMaterial {
-                        base_color: Color::RED + Color::WHITE * 0.2,
-                        emissive: Color::rgb_u8(125, 125, 125),
-                        unlit: true,
-                        ..default()
-                    }),
-                    transform: Transform::from_scale(Vec3::ONE * 0.5),
-                    ..default()
-                })
-                .insert(Collider::default())
-                .insert(*projectile_flight)
-                .with_children(|children| {
-                    children.spawn(PointLightBundle {
-                        point_light: PointLight {
-                            intensity: 100.0,
-                            color: Color::RED,
-                            ..default()
-                        },
-                        ..default()
-                    });
-                });
-*/
-
-/*
         PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
                 radius,
                 ..Default::default()
             })),
             material: materials.add(color.into()),
-            transform,
             ..Default::default()
         }
 */
@@ -383,7 +353,42 @@ pub fn handle_projectile_collision(
     });
 */
 
+// -- other ...
+
 /*
+// // PROJECTILE // //
+            commands
+                .spawn(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.5,
+                        ..Default::default()
+                    })),
+                    visibility: Visibility::INVISIBLE,
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::RED + Color::WHITE * 0.2,
+                        emissive: Color::rgb_u8(125, 125, 125),
+                        unlit: true,
+                        ..default()
+                    }),
+                    transform: Transform::from_scale(Vec3::ONE * 0.5),
+                    ..default()
+                })
+                .insert(Collider::default())
+                .insert(*projectile_flight)
+                .with_children(|children| {
+                    children.spawn(PointLightBundle {
+                        point_light: PointLight {
+                            intensity: 100.0,
+                            color: Color::RED,
+                            ..default()
+                        },
+                        ..default()
+                    });
+                });
+*/
+
+/*
+// // EXPLOSION // //
    child
    .spawn(PbrBundle {
        transform: Transform::from_translation(local_impact_site),
