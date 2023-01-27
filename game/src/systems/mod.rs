@@ -15,17 +15,19 @@ pub fn demo_shooting() -> resources::InitData {
         let motion = resources::MassMotion { position, velocity };
         let inhabitable = false;
         let mass = radius_to_mass(i as f32 / 5.0 + 1.0);
+        let color = [1.0, 0.0, 0.0, 1.0];
         init_data.masses.insert(
             mass_id,
             resources::MassInitData {
                 inhabitable,
                 motion,
                 mass,
-                ..Default::default()
+                color,
             },
         );
     }
     let mass = radius_to_mass(3.0);
+    let color = [1.0, 0.0, 0.0, 1.0];
     init_data.masses.insert(
         id_base + 21,
         resources::MassInitData {
@@ -35,7 +37,7 @@ pub fn demo_shooting() -> resources::InitData {
                 velocity: Vec3::ZERO,
             },
             mass,
-            ..Default::default()
+            color,
         },
     );
     init_data

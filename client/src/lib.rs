@@ -122,6 +122,7 @@ pub fn visualize_masses(
     masses_query: Query<(
         Entity,
         &components::MassID,
+        &Transform,
         Option<&components::Inhabitable>,
         Option<&components::ClientInhabited>,
     )>,
@@ -130,10 +131,11 @@ pub fn visualize_masses(
     // FIXME: [HACK] Relying on `bool` having a default of `false`. The goal being "run once"
     if !*has_run && !masses_query.is_empty() {
         *has_run = true;
+        info!("Running this system just this one time!");
         for (&mass_id, &resources::MassInitData { color, .. }) in
             game_config.init_data.masses.iter()
         {
-            for (entity, &components::MassID(this_mass_id), inhabitable, inhabited) in
+            for (entity, &components::MassID(this_mass_id), &transform, inhabitable, inhabited) in
                 masses_query.iter()
             {
                 let inhabitable = inhabitable.is_some();
@@ -144,19 +146,17 @@ pub fn visualize_masses(
                     warn!("Visualizing {mass_id}");
                     commands
                         .entity(entity)
-                        .insert(VisibilityBundle::default())
-                        // .insert(Visibility::default())
-                        // .insert(ComputedVisibility::INVISIBLE)
+                        .insert(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 1.0,
+                                ..Default::default()
+                            })),
+                            material: materials.add(color.into()),
+                            transform, // FIXME: is wierd?
+                            ..Default::default()
+                        })
                         .with_children(|children| {
                             // mass surface
-                            children.spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 1.0,
-                                    ..Default::default()
-                                })),
-                                material: materials.add(color.into()),
-                                ..Default::default()
-                            });
                             if inhabited {
                                 warn!("Mass {mass_id} is inhabted");
                                 children.spawn(Camera3dBundle::default());

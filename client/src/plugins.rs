@@ -6,6 +6,7 @@ pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(ClearColor(Color::BLACK));
         app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
