@@ -14,3 +14,8 @@ pub struct Inhabitable;
 pub struct Momentum {
     pub velocity: Vec3,
 }
+
+// FIXME: Very client-specific. Relocate? Justification? Paperwork? Bike shaving?
+/// Sights as in "gun sights"
+#[derive(Component)]
+pub struct Sights;

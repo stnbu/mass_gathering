@@ -15,6 +15,12 @@ impl Plugin for ServerPlugin {
         app
             //
             .add_plugins(MinimalPlugins)
+            // FIXME: As per https://github.com/dimforge/bevy_rapier/issues/296
+            // manually adding some stuff. Is there a problem with this? Can/should
+            // I use the `headless` feature of `bevy_rapier`?
+            .add_plugin(AssetPlugin::default())
+            .add_asset::<Mesh>()
+            .add_asset::<Scene>()
             .add_plugin(get_log_plugin("server"))
             .insert_resource(new_renet_server(address))
             .insert_resource(resources::GameConfig {

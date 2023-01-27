@@ -23,12 +23,6 @@ pub struct SimulationPlugin;
 // a bit first, then we'll tackle that whole mess.
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
-        // FIXME: As per https://github.com/dimforge/bevy_rapier/issues/296
-        // manually adding some stuff. Is there a problem with this? Can/should
-        // I use the `bevy_rapier` `headless` feature?
-        app.add_plugin(AssetPlugin::default());
-        app.add_asset::<Mesh>();
-        app.add_asset::<Scene>();
         app.insert_resource(RapierConfiguration {
             gravity: Vec3::ZERO,
             ..Default::default()

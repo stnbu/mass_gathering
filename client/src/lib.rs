@@ -94,6 +94,140 @@ pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
 }
 
 //
+// Below here is PBR/visual stuff that is being [re]introduced
+//
+
+pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) {
+    let title = "Mass Gathering";
+    let id = client.client_id();
+    let nickname = to_nick(id).trim_end().to_string();
+    let title = format!("{title} | nick: \"{nickname}\"");
+    windows.primary_mut().set_title(title);
+}
+
+pub fn set_resolution(mut windows: ResMut<Windows>) {
+    let window = windows.primary_mut();
+    if cfg!(debug_assertions) {
+        window.set_resolution(1280.0 / 2.0, 720.0 / 2.0);
+    } else {
+        window.set_resolution(1280.0, 720.0);
+    }
+}
+
+pub fn visualize_masses(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    game_config: Res<resources::GameConfig>,
+    masses_query: Query<(
+        Entity,
+        &components::MassID,
+        Option<&components::Inhabitable>,
+        Option<&components::ClientInhabited>,
+    )>,
+    mut has_run: Local<bool>,
+) {
+    // FIXME: [HACK] Relying on `bool` having a default of `false`. The goal being "run once"
+    if !*has_run && !masses_query.is_empty() {
+        *has_run = true;
+        for (&mass_id, &resources::MassInitData { color, .. }) in
+            game_config.init_data.masses.iter()
+        {
+            for (entity, &components::MassID(this_mass_id), inhabitable, inhabited) in
+                masses_query.iter()
+            {
+                let inhabitable = inhabitable.is_some();
+                let inhabited = inhabited.is_some();
+                assert!(!(inhabitable && inhabited));
+                let color: Color = color.into();
+                if this_mass_id == mass_id {
+                    warn!("Visualizing {mass_id}");
+                    commands
+                        .entity(entity)
+                        .insert(VisibilityBundle::default())
+                        // .insert(Visibility::default())
+                        // .insert(ComputedVisibility::INVISIBLE)
+                        .with_children(|children| {
+                            // mass surface
+                            children.spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                    radius: 1.0,
+                                    ..Default::default()
+                                })),
+                                material: materials.add(color.into()),
+                                ..Default::default()
+                            });
+                            if inhabited {
+                                warn!("Mass {mass_id} is inhabted");
+                                children.spawn(Camera3dBundle::default());
+                                children
+                                    .spawn(PbrBundle {
+                                        mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                            radius: 0.0005,
+
+                                            ..Default::default()
+                                        })),
+                                        material: materials.add(Color::WHITE.into()),
+                                        transform: Transform::from_xyz(0.0, 0.0, -0.2),
+                                        visibility: Visibility::INVISIBLE,
+                                        ..Default::default()
+                                    })
+                                    .insert(components::Sights);
+                                children
+                                    .spawn(PointLightBundle {
+                                        transform: Transform::from_xyz(0.0, 0.0, -0.15),
+                                        visibility: Visibility::INVISIBLE,
+                                        point_light: PointLight {
+                                            ..Default::default()
+                                        },
+                                        ..Default::default()
+                                    })
+                                    .insert(components::Sights);
+                            }
+                            if inhabitable {
+                                warn!("Mass {mass_id} is inhabtable");
+                                // barrel
+                                children.spawn(PbrBundle {
+                                    mesh: meshes.add(Mesh::from(shape::Capsule {
+                                        radius: 0.05,
+                                        depth: 1.0,
+                                        ..Default::default()
+                                    })),
+                                    material: materials.add(Color::WHITE.into()),
+                                    transform: Transform::from_rotation(Quat::from_rotation_x(
+                                        TAU / 4.0,
+                                    ))
+                                    .with_translation(Vec3::Z * -1.5),
+                                    ..Default::default()
+                                });
+                                // horizontal stabilizer
+                                children.spawn(PbrBundle {
+                                    mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                                    material: materials.add(Color::WHITE.into()),
+                                    transform: Transform::from_translation(Vec3::Z * 0.5),
+                                    ..Default::default()
+                                });
+                                // vertical stabilizer
+                                children.spawn(PbrBundle {
+                                    mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                                    material: materials.add(Color::WHITE.into()),
+                                    transform: Transform::from_rotation(Quat::from_rotation_z(
+                                        TAU / 4.0,
+                                    ))
+                                    .with_translation(Vec3::Z * 0.5),
+                                    ..Default::default()
+                                });
+                            }
+                        });
+                    // We found/are done looking for the mass_id in question.
+                    break;
+                }
+            }
+        }
+    }
+}
+
+//
 // Below here to go to "simulation.rs"
 //
 
@@ -287,7 +421,17 @@ pub fn handle_projectile_collision(
 // -- inhabit[ed|able] mass PBR parts ...
 
 /*
-    child
+    // mass surface
+    children.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Icosphere {
+            radius,
+            ..Default::default()
+        })),
+        material: materials.add(color.into()),
+        ..Default::default()
+    });
+    // sights
+    children
         .spawn(PbrBundle {
             mesh: meshes.add(Mesh::from(shape::Icosphere {
                 radius: 0.0005,
@@ -299,7 +443,8 @@ pub fn handle_projectile_collision(
             ..Default::default()
         })
         .insert(components::Sights);
-    child
+    // sights
+    children
         .spawn(PointLightBundle {
             transform: Transform::from_xyz(0.0, 0.0, -0.15),
             visibility: Visibility::INVISIBLE,
@@ -309,23 +454,8 @@ pub fn handle_projectile_collision(
             ..Default::default()
         })
         .insert(components::Sights);
-*/
-
-/*
-        PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius,
-                ..Default::default()
-            })),
-            material: materials.add(color.into()),
-            ..Default::default()
-        }
-*/
-
-/*
-    // if inhabitable ...
     // barrel
-    child.spawn(PbrBundle {
+    children.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Capsule {
             radius: 0.05,
             depth: 1.0,
@@ -337,14 +467,14 @@ pub fn handle_projectile_collision(
         ..Default::default()
     });
     // horizontal stabilizer
-    child.spawn(PbrBundle {
+    children.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
         material: materials.add(Color::WHITE.into()),
         transform: Transform::from_translation(Vec3::Z * 0.5),
         ..Default::default()
     });
     // vertical stabilizer
-    child.spawn(PbrBundle {
+    children.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
         material: materials.add(Color::WHITE.into()),
         transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
