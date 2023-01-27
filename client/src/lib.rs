@@ -114,6 +114,27 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
     }
 }
 
+pub fn let_light(mut commands: Commands) {
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 10_000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(-0.5, -0.3, -1.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 20_000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(1.0, -2.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
+}
+
 pub fn visualize_masses(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

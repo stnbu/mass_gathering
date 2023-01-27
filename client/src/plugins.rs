@@ -28,6 +28,7 @@ impl Plugin for ClientPlugin {
         app.add_system(bevy::window::close_on_esc);
         app.add_system(set_window_title);
         app.add_startup_system(set_resolution);
+        app.add_startup_system(let_light);
         app.add_plugin(RenetClientPlugin::default());
 
         let args = ClientCliArgs::parse();
