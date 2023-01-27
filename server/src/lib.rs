@@ -109,3 +109,7 @@ pub fn handle_server_events(
         }
     }
 }
+
+pub fn spawn_masses(mut commands: Commands, game_config: Res<resources::GameConfig>) {
+    game_config.init_data.spawn_masses(&mut commands, None);
+}

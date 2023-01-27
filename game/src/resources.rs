@@ -11,49 +11,6 @@ pub enum GameState {
     Stopped, // initial state
 }
 
-pub fn init_masses(inhabited_mass_id: u64, init_data: InitData, commands: &mut Commands) {
-    for (
-        &mass_id,
-        &MassInitData {
-            inhabitable,
-            motion: MassMotion { position, velocity },
-            mass,
-            ..
-        },
-    ) in init_data.masses.iter()
-    {
-        let scale = Vec3::splat(mass_to_radius(mass));
-        let mut transform = Transform::from_translation(position).with_scale(scale);
-        if inhabitable {
-            transform.look_at(Vec3::ZERO, Vec3::Y);
-            transform.scale += Vec3::splat(2.5);
-        }
-        // NOTE: We use unit radius always. We scale as needed.
-        let radius = 1.0;
-        let mut mass_commands = commands.spawn(physics::PointMassBundle {
-            transform_bundle: TransformBundle::from_transform(transform),
-            momentum: components::Momentum { velocity },
-            // collider only has a RADIUS
-            collider: Collider::ball(radius),
-            ..Default::default()
-        });
-        mass_commands.insert(components::MassID(mass_id));
-        if inhabitable {
-            mass_commands.remove::<RigidBody>();
-            if mass_id == inhabited_mass_id {
-                mass_commands.insert(components::ClientInhabited);
-            } else {
-                mass_commands.insert(components::Inhabitable);
-            }
-        }
-        debug!(
-            "Spawned inhabitable={inhabitable} mass {mass_id} at {:?} ({:?})",
-            transform.translation,
-            mass_commands.id()
-        );
-    }
-}
-
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
     pub speed: u32,
@@ -86,6 +43,51 @@ pub struct MassInitData {
 #[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]
 pub struct InitData {
     pub masses: HashMap<u64, MassInitData>,
+}
+
+impl InitData {
+    pub fn spawn_masses(&self, commands: &mut Commands, inhabited_mass_id: Option<u64>) {
+        for (
+            &mass_id,
+            &MassInitData {
+                inhabitable,
+                motion: MassMotion { position, velocity },
+                mass,
+                ..
+            },
+        ) in self.masses.iter()
+        {
+            let scale = Vec3::splat(mass_to_radius(mass));
+            let mut transform = Transform::from_translation(position).with_scale(scale);
+            if inhabitable {
+                transform.look_at(Vec3::ZERO, Vec3::Y);
+                transform.scale += Vec3::splat(2.5);
+            }
+            // NOTE: We use unit radius always and scale as needed.
+            let radius = 1.0;
+            let mut mass_commands = commands.spawn(physics::PointMassBundle {
+                transform_bundle: TransformBundle::from_transform(transform),
+                momentum: components::Momentum { velocity },
+                // collider only has a RADIUS
+                collider: Collider::ball(radius),
+                ..Default::default()
+            });
+            mass_commands.insert(components::MassID(mass_id));
+            if inhabitable {
+                mass_commands.remove::<RigidBody>();
+                if inhabited_mass_id.is_some() && mass_id == inhabited_mass_id.unwrap() {
+                    mass_commands.insert(components::ClientInhabited);
+                } else {
+                    mass_commands.insert(components::Inhabitable);
+                }
+            }
+            debug!(
+                "Spawned inhabitable={inhabitable} mass {mass_id} at {:?} ({:?})",
+                transform.translation,
+                mass_commands.id()
+            );
+        }
+    }
 }
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]

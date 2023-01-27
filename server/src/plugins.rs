@@ -22,6 +22,7 @@ impl Plugin for ServerPlugin {
                 init_data: systems::get_system(&args.system)(),
                 ..Default::default()
             })
+            .add_startup_system(spawn_masses)
             .add_system(panic_on_renet_error)
             .add_system(handle_server_events)
             .add_plugin(RenetServerPlugin::default())

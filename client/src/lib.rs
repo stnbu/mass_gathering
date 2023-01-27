@@ -48,11 +48,9 @@ pub fn process_to_client_events(
             }
             events::ToClient::SetGameConfig(game_config) => {
                 let inhabited_mass_id = *game_config.client_mass_map.get(&my_id).unwrap();
-                resources::init_masses(
-                    inhabited_mass_id,
-                    game_config.init_data.clone(),
-                    &mut commands,
-                );
+                game_config
+                    .init_data
+                    .spawn_masses(&mut commands, Some(inhabited_mass_id));
                 commands.insert_resource(game_config.clone());
             }
             events::ToClient::ProjectileFired(_) => {
