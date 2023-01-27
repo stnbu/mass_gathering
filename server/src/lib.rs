@@ -49,8 +49,8 @@ pub fn handle_server_events(
     mut exit: EventWriter<AppExit>,
 ) {
     for event in server_events.iter() {
-        match event {
-            &ServerEvent::ClientConnected(client_id, _) => {
+        match *event {
+            ServerEvent::ClientConnected(client_id, _) => {
                 match game_config.get_assigned_mass_id(client_id) {
                     Ok(mass_id) => {
                         debug!("Client {client_id} assigned mass {mass_id}");
@@ -81,7 +81,8 @@ pub fn handle_server_events(
                     Err(err) => panic!("{err}"),
                 }
             }
-            &ServerEvent::ClientDisconnected(_) => {
+            ServerEvent::ClientDisconnected(client_id) => {
+                debug!("Client {client_id} has disconnected");
                 exit.send(AppExit);
             }
         }
