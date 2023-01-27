@@ -281,3 +281,120 @@ pub fn handle_projectile_collision(
         }
     }
 }
+
+// // // // // // // // // // //
+
+/*
+    child
+        .spawn(PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                radius: 0.0005,
+                ..Default::default()
+            })),
+            material: materials.add(Color::WHITE.into()),
+            transform: Transform::from_xyz(0.0, 0.0, -0.2),
+            visibility: Visibility::INVISIBLE,
+            ..Default::default()
+        })
+        .insert(components::Sights);
+    child
+        .spawn(PointLightBundle {
+            transform: Transform::from_xyz(0.0, 0.0, -0.15),
+            visibility: Visibility::INVISIBLE,
+            point_light: PointLight {
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(components::Sights);
+*/
+
+/*
+            commands
+                .spawn(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.5,
+                        ..Default::default()
+                    })),
+                    visibility: Visibility::INVISIBLE,
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::RED + Color::WHITE * 0.2,
+                        emissive: Color::rgb_u8(125, 125, 125),
+                        unlit: true,
+                        ..default()
+                    }),
+                    transform: Transform::from_scale(Vec3::ONE * 0.5),
+                    ..default()
+                })
+                .insert(Collider::default())
+                .insert(*projectile_flight)
+                .with_children(|children| {
+                    children.spawn(PointLightBundle {
+                        point_light: PointLight {
+                            intensity: 100.0,
+                            color: Color::RED,
+                            ..default()
+                        },
+                        ..default()
+                    });
+                });
+*/
+
+/*
+        PbrBundle {
+            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                radius,
+                ..Default::default()
+            })),
+            material: materials.add(color.into()),
+            transform,
+            ..Default::default()
+        }
+*/
+
+/*
+    // if inhabitable ...
+    // barrel
+    child.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Capsule {
+            radius: 0.05,
+            depth: 1.0,
+            ..Default::default()
+        })),
+        material: materials.add(Color::WHITE.into()),
+        transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+            .with_translation(Vec3::Z * -1.5),
+        ..Default::default()
+    });
+    // horizontal stabilizer
+    child.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+        material: materials.add(Color::WHITE.into()),
+        transform: Transform::from_translation(Vec3::Z * 0.5),
+        ..Default::default()
+    });
+    // vertical stabilizer
+    child.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+        material: materials.add(Color::WHITE.into()),
+        transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+            .with_translation(Vec3::Z * 0.5),
+        ..Default::default()
+    });
+*/
+
+/*
+   child
+   .spawn(PbrBundle {
+       transform: Transform::from_translation(local_impact_site),
+       mesh: meshes.add(Mesh::from(shape::Icosphere {
+           radius: 0.5,
+           ..Default::default()
+       })),
+       material: materials.add(Color::rgb_u8(255, 255, 255).into()),
+       ..Default::default()
+   })
+   .insert(components::Explosion {
+       timer: Timer::from_seconds(5.0, TimerMode::Once),
+   });
+*/
