@@ -7,6 +7,7 @@ pub mod components;
 pub mod events;
 pub mod physics;
 pub mod resources;
+pub mod simulation;
 pub mod systems;
 
 pub mod plugins;

@@ -10,11 +10,11 @@ impl Plugin for ClientPlugin {
         app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
-                .with_system(handle_projectile_engagement)
-                .with_system(handle_projectile_fired)
-                .with_system(move_projectiles)
-                .with_system(handle_projectile_collision)
-                .with_system(rotate_inhabitable_masses),
+                .with_system(simulation::handle_projectile_engagement)
+                .with_system(simulation::handle_projectile_fired)
+                .with_system(simulation::move_projectiles)
+                .with_system(simulation::handle_projectile_collision)
+                .with_system(simulation::rotate_inhabitable_masses),
         );
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
