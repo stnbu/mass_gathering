@@ -3,6 +3,7 @@ use bevy_renet::{
     run_if_client_connected, RenetClientPlugin,
 };
 use clap::Parser;
+use game::simulation::FromSimulation;
 use game::*;
 use std::{net::UdpSocket, time::SystemTime};
 
@@ -291,5 +292,42 @@ pub fn control(
             let message = events::ToServer::Rotation(transform.rotation);
             to_server_events.send(message);
         }
+    }
+}
+
+pub fn visualize_projectiles(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut projectile_spawned_events: EventReader<FromSimulation>,
+) {
+    for &FromSimulation::ProjectileSpawned(id) in projectile_spawned_events.iter() {
+        commands
+            .entity(id)
+            .insert(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius: 0.5,
+                    ..Default::default()
+                })),
+                visibility: Visibility::INVISIBLE,
+                material: materials.add(StandardMaterial {
+                    base_color: Color::RED + Color::WHITE * 0.2,
+                    emissive: Color::rgb_u8(125, 125, 125),
+                    unlit: true,
+                    ..default()
+                }),
+                transform: Transform::from_scale(Vec3::ONE * 0.5),
+                ..default()
+            })
+            .with_children(|children| {
+                children.spawn(PointLightBundle {
+                    point_light: PointLight {
+                        intensity: 100.0,
+                        color: Color::RED,
+                        ..default()
+                    },
+                    ..default()
+                });
+            });
     }
 }

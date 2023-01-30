@@ -85,14 +85,19 @@ pub fn handle_projectile_engagement(
     }
 }
 
+pub enum FromSimulation {
+    ProjectileSpawned(Entity),
+}
+
 pub fn handle_projectile_fired(
-    mut to_client_events: EventReader<events::ToClient>,
     mut commands: Commands,
+    mut to_client_events: EventReader<events::ToClient>,
+    mut projectile_spawned_events: EventWriter<FromSimulation>,
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::ProjectileFired(projectile_flight) = message {
             let radius = 0.5;
-            commands
+            let id = commands
                 .spawn(physics::PointMassBundle {
                     transform_bundle: TransformBundle::from_transform(Transform::from_scale(
                         Vec3::ONE * radius,
@@ -100,7 +105,9 @@ pub fn handle_projectile_fired(
                     ..Default::default()
                 })
                 .insert(Collider::default())
-                .insert(*projectile_flight);
+                .insert(*projectile_flight)
+                .id();
+            projectile_spawned_events.send(FromSimulation::ProjectileSpawned(id));
         }
     }
 }
