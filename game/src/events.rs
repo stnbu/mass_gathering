@@ -32,3 +32,10 @@ pub struct ProjectileFlight {
     pub to_mass_id: u64,
     pub local_impact_direction: Vec3,
 }
+
+#[derive(Debug, Serialize, Deserialize, Resource, Clone, Copy, Component)]
+pub struct MassTargeting {
+    pub from_mass_id: u64,
+    pub to_mass_id: u64,
+    pub local_impact_direction: Vec3,
+}

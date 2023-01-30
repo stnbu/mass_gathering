@@ -28,65 +28,15 @@ pub fn rotate_inhabitable_masses(
     }
 }
 
-pub fn handle_projectile_engagement(
-    mass_query: Query<
-        (&Transform, &components::MassID),
-        (
-            Without<components::Inhabitable>,
-            Without<components::ClientInhabited>,
-        ),
-    >,
-    inhabited_mass_query: Query<
-        (&Transform, &components::MassID),
-        With<components::ClientInhabited>,
-    >,
-    rapier_context: Res<RapierContext>,
-    mut to_server_events: EventWriter<events::ToServer>,
-) {
-    if inhabited_mass_query.is_empty() {
-        error!("No `ClientInhabited` masses found!");
-    }
-    if let Ok((client_pov, &components::MassID(from_mass_id))) = inhabited_mass_query.get_single() {
-        let ray_origin = client_pov.translation;
-        let ray_direction = -client_pov.local_z();
-        let intersection = rapier_context.cast_ray(
-            ray_origin,
-            ray_direction,
-            150.0,
-            false,
-            QueryFilter::only_dynamic(),
-        );
-        if let Some((mass, distance)) = intersection {
-            if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
-                debug!("Mass {to_mass_id} is now in our sights");
-                // FIXME: If the "fire" button has been pressed...
-                // this whole func may be out of the scope of "simulation".
-                // as its all about turning user input into messages to the
-                // server!
-                if false {
-                    let global_impact_site = ray_origin + (ray_direction * distance);
-                    let local_impact_direction =
-                        (global_impact_site - mass_transform.translation).normalize();
-                    let launch_time = SystemTime::now()
-                        .duration_since(SystemTime::UNIX_EPOCH)
-                        .unwrap()
-                        .as_millis();
-                    to_server_events.send(events::ToServer::ProjectileFired(
-                        events::ProjectileFlight {
-                            launch_time,
-                            from_mass_id,
-                            to_mass_id,
-                            local_impact_direction,
-                        },
-                    ));
-                }
-            }
-        }
-    }
-}
-
 pub enum FromSimulation {
     ProjectileSpawned(Entity),
+    // FIXME: It would be nice to handle all masses like we do projectile:
+    // wrap up in visuals via an event containing the spawed `Entity`.
+    // MassSpawned {
+    //     entity: Entity,
+    //     mass_id: u64,
+    //     inhabited: bool,
+    // },
 }
 
 pub fn handle_projectile_fired(

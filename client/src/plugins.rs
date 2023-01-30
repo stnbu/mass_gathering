@@ -11,7 +11,6 @@ impl Plugin for ClientPlugin {
         app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
-                .with_system(simulation::handle_projectile_engagement)
                 .with_system(simulation::handle_projectile_fired)
                 .with_system(simulation::move_projectiles)
                 .with_system(simulation::handle_projectile_collision)
@@ -21,6 +20,7 @@ impl Plugin for ClientPlugin {
             SystemSet::on_update(resources::GameState::Running)
                 .with_run_criteria(run_if_client_connected)
                 .with_system(control)
+                .with_system(handle_projectile_engagement)
                 .with_system(visualize_projectiles)
                 .with_system(visualize_masses)
                 .with_system(send_messages_to_server)
