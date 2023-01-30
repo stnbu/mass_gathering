@@ -1,5 +1,5 @@
 use crate::*;
-use bevy_rapier3d::prelude::{Collider, CollisionEvent, QueryFilter, RapierContext};
+use bevy_rapier3d::prelude::{Collider, CollisionEvent};
 use std::time::SystemTime;
 
 pub fn rotate_inhabitable_masses(
