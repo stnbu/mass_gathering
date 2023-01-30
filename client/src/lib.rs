@@ -55,7 +55,7 @@ pub fn process_to_client_events(
                 commands.insert_resource(game_config.clone());
             }
             events::ToClient::ProjectileFired(_) => {
-                // not handled here
+                // handled by separate system
             }
         }
     }
@@ -161,7 +161,6 @@ pub fn visualize_masses(
                 assert!(!(inhabitable && inhabited));
                 let color: Color = color.into();
                 if this_mass_id == mass_id {
-                    warn!("Visualizing {mass_id}");
                     commands
                         .entity(entity)
                         .insert(PbrBundle {
@@ -176,7 +175,6 @@ pub fn visualize_masses(
                         .with_children(|children| {
                             // mass surface
                             if inhabited {
-                                warn!("Mass {mass_id} is inhabted");
                                 children.spawn(Camera3dBundle::default());
                                 children
                                     .spawn(PbrBundle {
@@ -203,7 +201,6 @@ pub fn visualize_masses(
                                     .insert(components::Sights);
                             }
                             if inhabitable {
-                                warn!("Mass {mass_id} is inhabtable");
                                 // barrel
                                 children.spawn(PbrBundle {
                                     mesh: meshes.add(Mesh::from(shape::Capsule {
@@ -303,6 +300,8 @@ pub fn visualize_projectiles(
     mut projectile_spawned_events: EventReader<FromSimulation>,
 ) {
     for &FromSimulation::ProjectileSpawned(id) in projectile_spawned_events.iter() {
+        // FIXME: This starts out visible and at the origin, where it appears for one frame!
+        // We need to switch visibility on the first "move projectile".
         commands
             .entity(id)
             .insert(PbrBundle {
@@ -310,7 +309,6 @@ pub fn visualize_projectiles(
                     radius: 0.5,
                     ..Default::default()
                 })),
-                visibility: Visibility::INVISIBLE,
                 material: materials.add(StandardMaterial {
                     base_color: Color::RED + Color::WHITE * 0.2,
                     emissive: Color::rgb_u8(125, 125, 125),
@@ -366,7 +364,6 @@ pub fn handle_projectile_engagement(
         if let Some((mass, distance)) = intersection {
             if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
                 sights_visibility.for_each_mut(|mut visibility| visibility.is_visible = true);
-                debug!("Mass {to_mass_id} is now in our sights");
                 if keys.just_pressed(KeyCode::Space) {
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =

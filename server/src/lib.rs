@@ -103,7 +103,6 @@ pub fn handle_server_events(
                 events::ToServer::ProjectileFired(projectile_flight) => {
                     let projectile_fired = events::ToClient::ProjectileFired(projectile_flight);
                     let message = bincode::serialize(&projectile_fired).unwrap();
-                    debug!("Projectile fired by {client_id}");
                     server.broadcast_message(DefaultChannel::Reliable, message);
                 }
             }
