@@ -80,13 +80,8 @@ pub fn handle_projectile_engagement(
                         },
                     ));
                 }
-            } else {
-                // NOTE: This happens because `QueryFilter` in `rapier_context.cast_ray` is
-                // `only_dynamic()`, which includes _other_ inhabited masses. Another thing
-                // fixed by a different `QueryFilter` in the above (I think).
             }
         }
-    } else {
     }
 }
 
