@@ -30,12 +30,23 @@ impl Plugin for ServerPlugin {
                     .with_system(simulation::handle_projectile_collision)
                     .with_system(simulation::rotate_inhabitable_masses),
             )
-            //
             .add_startup_system(spawn_masses)
             .add_system(panic_on_renet_error)
             .add_system(handle_server_events)
-            .add_plugins(DefaultPlugins.set(get_log_plugin("server")))
-            .add_plugin(RenetServerPlugin::default())
-            .run();
+            .add_plugin(RenetServerPlugin::default());
+        #[cfg(feature = "windows")]
+        {
+            app.add_plugins(DefaultPlugins.set(get_log_plugin("server")));
+        }
+        #[cfg(not(feature = "windows"))]
+        {
+            app.add_plugins(MinimalPlugins);
+            // https://github.com/dimforge/bevy_rapier/issues/296
+            app.add_plugin(AssetPlugin::default());
+            app.add_asset::<Mesh>();
+            app.add_asset::<Scene>();
+            app.add_plugin(get_log_plugin("server"));
+        }
+        app.run();
     }
 }
