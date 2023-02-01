@@ -2234,6 +2234,7 @@ dependencies = [
  "bevy_renet",
  "bincode",
  "clap",
+ "client",
  "game",
  "serde",
 ]
