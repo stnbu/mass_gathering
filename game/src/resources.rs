@@ -45,51 +45,6 @@ pub struct InitData {
     pub masses: HashMap<u64, MassInitData>,
 }
 
-impl InitData {
-    pub fn spawn_masses(&self, commands: &mut Commands, inhabited_mass_id: Option<u64>) {
-        for (
-            &mass_id,
-            &MassInitData {
-                inhabitable,
-                motion: MassMotion { position, velocity },
-                mass,
-                ..
-            },
-        ) in self.masses.iter()
-        {
-            let scale = Vec3::splat(mass_to_radius(mass));
-            let mut transform = Transform::from_translation(position).with_scale(scale);
-            if inhabitable {
-                transform.look_at(Vec3::ZERO, Vec3::Y);
-                transform.scale += Vec3::splat(2.5);
-            }
-            // NOTE: We use unit radius always and scale as needed.
-            let radius = 1.0;
-            let mut mass_commands = commands.spawn(physics::PointMassBundle {
-                transform_bundle: TransformBundle::from_transform(transform),
-                momentum: components::Momentum { velocity },
-                // collider only has a RADIUS
-                collider: Collider::ball(radius),
-                ..Default::default()
-            });
-            mass_commands.insert(components::MassID(mass_id));
-            if inhabitable {
-                mass_commands.remove::<RigidBody>();
-                if inhabited_mass_id.is_some() && mass_id == inhabited_mass_id.unwrap() {
-                    mass_commands.insert(components::ClientInhabited);
-                } else {
-                    mass_commands.insert(components::Inhabitable);
-                }
-            }
-            debug!(
-                "Spawned inhabitable={inhabitable} mass {mass_id} at {:?} ({:?})",
-                transform.translation,
-                mass_commands.id()
-            );
-        }
-    }
-}
-
 #[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]
 pub struct GameConfig {
     pub client_mass_map: HashMap<u64, u64>,
@@ -97,39 +52,54 @@ pub struct GameConfig {
     pub init_data: InitData,
 }
 
+// FIXME: This implimentation is just terrible.
+// And it seems odd that a "config" has a concept of
+// "pop id" and whatnot. Lotta wat.
 impl GameConfig {
-    pub fn is_capacity(&self) -> bool {
-        let assigned_count = self.client_mass_map.len();
-        let inhabitable_count = self
-            .init_data
-            .masses
-            .iter()
-            .filter(|(_, mass)| mass.inhabitable)
-            // FIXME: shouldn't there just be a single method somewhere?
-            .collect::<Vec<_>>()
-            .len();
-        inhabitable_count == assigned_count
-    }
-
-    pub fn get_assigned_mass_id(&mut self, client_id: u64) -> Result<u64, &str> {
-        let inhabited_mass_ids = self
+    pub fn get_unassigned_mass_ids(&self) -> HashSet<u64> {
+        let assigned_mass_ids = self
             .client_mass_map
             .iter()
-            .map(|(_, &mass_id)| mass_id)
+            .map(|(_, v)| *v)
             .collect::<HashSet<u64>>();
-        for (&inhabitable_mass_id, _) in self
+        let inhabitable_mass_ids = self
             .init_data
             .masses
             .iter()
             .filter(|(_, mass)| mass.inhabitable)
-        {
-            if !inhabited_mass_ids.contains(&inhabitable_mass_id) {
-                if let Some(mass_id) = self.client_mass_map.insert(client_id, inhabitable_mass_id) {
-                    panic!("Client {client_id} already assigned {mass_id}")
-                }
-                return Ok(inhabitable_mass_id);
-            }
-        }
-        Err("No free mass IDs")
+            .map(|(n, _)| *n)
+            .collect::<HashSet<u64>>();
+
+        let xx = inhabitable_mass_ids
+            .difference(&assigned_mass_ids)
+            .map(|n| *n)
+            .collect::<HashSet<u64>>();
+        //config: {self:#?}
+        warn!(
+            "
+
+assigned: {assigned_mass_ids:?}
+inhabitable: {inhabitable_mass_ids:?}
+
+inhabitable IDs: {xx:?}
+
+"
+        );
+        xx
+    }
+
+    pub fn is_capacity(&self) -> bool {
+        let is_capacity = self.get_unassigned_mass_ids().is_empty();
+        warn!("is capacity? {is_capacity}");
+        is_capacity
+    }
+
+    pub fn get_free_id(&self) -> Result<u64, &str> {
+        warn!("booo");
+        self.get_unassigned_mass_ids()
+            .iter()
+            .next()
+            .copied()
+            .ok_or("No more free IDs!")
     }
 }

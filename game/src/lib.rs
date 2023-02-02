@@ -60,14 +60,17 @@ pub fn from_nick(nick: &str) -> u64 {
 }
 
 pub fn with_gravity(
-    game_config: Res<resources::GameConfig>,
+    game_config: Option<Res<resources::GameConfig>>,
     game_state: Res<State<resources::GameState>>,
 ) -> ShouldRun {
-    if *game_state.current() == resources::GameState::Running && !game_config.physics_config.zerog {
-        ShouldRun::Yes
-    } else {
-        ShouldRun::No
+    if let Some(game_config) = game_config {
+        if *game_state.current() == resources::GameState::Running
+            && !game_config.physics_config.zerog
+        {
+            return ShouldRun::Yes;
+        }
     }
+    ShouldRun::No
 }
 
 pub fn get_log_plugin(package: &str) -> bevy::log::LogPlugin {

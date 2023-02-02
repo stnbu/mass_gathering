@@ -33,13 +33,11 @@ pub fn send_messages_to_server(
 pub fn handle_set_game_config(
     mut commands: Commands,
     mut to_client_events: EventReader<events::ToClient>,
-    mut to_simulation_events: EventWriter<simulation::ToSimulation>,
 ) {
     for message in to_client_events.iter() {
+        warn!("01");
         if let events::ToClient::SetGameConfig(game_config) = message {
-            to_simulation_events.send(simulation::ToSimulation::InitData(
-                game_config.init_data.clone(),
-            ));
+            warn!("02");
             commands.insert_resource(game_config.clone());
         }
     }
@@ -270,100 +268,104 @@ pub fn visualize_masses(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut from_simulation_events: EventReader<FromSimulation>,
     client: Res<RenetClient>,
-    game_config: Res<resources::GameConfig>,
+    game_config: Option<Res<resources::GameConfig>>,
 ) {
-    for message in from_simulation_events.iter() {
-        if let &FromSimulation::MassSpawned {
-            entity,
-            mass_id,
-            mass_init_data,
-        } = message
-        {
-            let mut transform = Transform::from_translation(mass_init_data.motion.position);
-            if mass_init_data.inhabitable {
-                transform.look_at(Vec3::ZERO, Vec3::Y);
-            }
-            // let transform = {
-            // 	mass_init_data
-            // };
-            let mut mass_commands = commands.entity(entity);
-            // do mass stuff
-            let color: Color = mass_init_data.color.into();
-            mass_commands.insert(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius: 1.0,
+    if let Some(game_config) = game_config {
+        for message in from_simulation_events.iter() {
+            warn!("07");
+            if let &FromSimulation::MassSpawned {
+                entity,
+                mass_id,
+                mass_init_data,
+            } = message
+            {
+                warn!("08");
+                let mut transform = Transform::from_translation(mass_init_data.motion.position);
+                if mass_init_data.inhabitable {
+                    transform.look_at(Vec3::ZERO, Vec3::Y);
+                }
+                // let transform = {
+                // 	mass_init_data
+                // };
+                let mut mass_commands = commands.entity(entity);
+                // do mass stuff
+                let color: Color = mass_init_data.color.into();
+                mass_commands.insert(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 1.0,
+                        ..Default::default()
+                    })),
+                    material: materials.add(color.into()),
+                    transform,
                     ..Default::default()
-                })),
-                material: materials.add(color.into()),
-                transform,
-                ..Default::default()
-            });
+                });
 
-            let inhabited = mass_id
-                == *game_config
-                    .client_mass_map
-                    .get(&client.client_id())
-                    .unwrap();
+                let inhabited = mass_id
+                    == *game_config
+                        .client_mass_map
+                        .get(&client.client_id())
+                        .unwrap();
 
-            let inhabitable = mass_init_data.inhabitable && !inhabited;
+                let inhabitable = mass_init_data.inhabitable && !inhabited;
 
-            mass_commands.with_children(|children| {
-                if inhabited {
-                    children.spawn(Camera3dBundle::default());
-                    children
-                        .spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                radius: 0.0005,
+                mass_commands.with_children(|children| {
+                    if inhabited {
+                        children.spawn(Camera3dBundle::default());
+                        children
+                            .spawn(PbrBundle {
+                                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                    radius: 0.0005,
 
+                                    ..Default::default()
+                                })),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_xyz(0.0, 0.0, -0.2),
+                                visibility: Visibility::INVISIBLE,
+                                ..Default::default()
+                            })
+                            .insert(components::Sights);
+                        children
+                            .spawn(PointLightBundle {
+                                transform: Transform::from_xyz(0.0, 0.0, -0.15),
+                                visibility: Visibility::INVISIBLE,
+                                point_light: PointLight {
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            })
+                            .insert(components::Sights);
+                    }
+                    if inhabitable {
+                        // barrel
+                        children.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Capsule {
+                                radius: 0.05,
+                                depth: 1.0,
                                 ..Default::default()
                             })),
                             material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_xyz(0.0, 0.0, -0.2),
-                            visibility: Visibility::INVISIBLE,
+                            transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+                                .with_translation(Vec3::Z * -1.5),
                             ..Default::default()
-                        })
-                        .insert(components::Sights);
-                    children
-                        .spawn(PointLightBundle {
-                            transform: Transform::from_xyz(0.0, 0.0, -0.15),
-                            visibility: Visibility::INVISIBLE,
-                            point_light: PointLight {
-                                ..Default::default()
-                            },
+                        });
+                        // horizontal stabilizer
+                        children.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_translation(Vec3::Z * 0.5),
                             ..Default::default()
-                        })
-                        .insert(components::Sights);
-                }
-                if inhabitable {
-                    // barrel
-                    children.spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Capsule {
-                            radius: 0.05,
-                            depth: 1.0,
+                        });
+                        // vertical stabilizer
+                        children.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+                                .with_translation(Vec3::Z * 0.5),
                             ..Default::default()
-                        })),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
-                            .with_translation(Vec3::Z * -1.5),
-                        ..Default::default()
-                    });
-                    // horizontal stabilizer
-                    children.spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_translation(Vec3::Z * 0.5),
-                        ..Default::default()
-                    });
-                    // vertical stabilizer
-                    children.spawn(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                        material: materials.add(Color::WHITE.into()),
-                        transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
-                            .with_translation(Vec3::Z * 0.5),
-                        ..Default::default()
-                    });
-                }
-            });
+                        });
+                    }
+                });
+            }
         }
     }
 }

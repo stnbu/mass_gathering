@@ -1,5 +1,6 @@
 use crate::*;
 use bevy_rapier3d::prelude::{Collider, CollisionEvent};
+use bevy_renet::renet::RenetClient;
 use std::time::SystemTime;
 
 pub fn rotate_inhabitable_masses(
@@ -35,27 +36,27 @@ pub enum FromSimulation {
         mass_id: u64,
         mass_init_data: resources::MassInitData,
     },
-    // FIXME: It would be nice to handle all masses like we do projectile:
-    // wrap up in visuals via an event containing the spawed `Entity`.
-    // MassSpawned {
-    //     entity: Entity,
-    //     mass_id: u64,
-    //     inhabited: bool,
-    // },
 }
 
-pub enum ToSimulation {
-    InitData(resources::InitData),
-}
-
-pub fn handle_init_data(
+pub fn handle_game_config_insertion(
     mut commands: Commands,
-    mut to_simulation_events: EventReader<ToSimulation>,
+    game_config: Option<Res<resources::GameConfig>>,
     mut from_simulation_events: EventWriter<FromSimulation>,
+    client: Res<RenetClient>,
 ) {
-    for message in to_simulation_events.iter() {
-        if let ToSimulation::InitData(init_data) = message {
-            for (&mass_id, &mass_init_data) in init_data.masses.iter() {
+    //warn!("03");
+    if let Some(game_config) = game_config {
+        if game_config.is_added() {
+            /*
+            Is it usual/health for one to just let their arms hang when relaxed and upright?
+
+            Or is it "normal" for your arms to be elevated just a bit because of some amount of resting tension in your shoulders?
+            */
+            //warn!("04");
+            warn!("The client received init data: {:?}", game_config.init_data);
+            let inhabited_mass_id = game_config.client_mass_map.get(&client.client_id());
+            for (&mass_id, &mass_init_data) in game_config.init_data.masses.iter() {
+                warn!("05");
                 let mass = mass_init_data.mass;
                 let position = mass_init_data.motion.position;
                 let scale = Vec3::splat(mass_to_radius(mass));
@@ -73,6 +74,13 @@ pub fn handle_init_data(
                     collider: Collider::ball(radius),
                     ..Default::default()
                 });
+                if inhabited_mass_id.is_some() && mass_id == *inhabited_mass_id.unwrap() {
+                    warn!("06");
+                    mass_commands.insert(components::ClientInhabited);
+                } else {
+                    warn!("07");
+                    mass_commands.insert(components::Inhabitable);
+                }
                 mass_commands.insert(components::MassID(mass_id));
                 let entity = mass_commands.id();
                 from_simulation_events.send(FromSimulation::MassSpawned {

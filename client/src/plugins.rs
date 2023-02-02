@@ -8,8 +8,10 @@ impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClearColor(Color::BLACK));
         app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
+        app.add_system(simulation::handle_game_config_insertion);
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
+                .with_system(simulation::handle_game_config_insertion)
                 .with_system(simulation::handle_projectile_fired)
                 .with_system(simulation::move_projectiles)
                 .with_system(simulation::handle_projectile_collision)
