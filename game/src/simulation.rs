@@ -30,6 +30,11 @@ pub fn rotate_inhabitable_masses(
 
 pub enum FromSimulation {
     ProjectileSpawned(Entity),
+    MassSpawned {
+        entity: Entity,
+        mass_id: u64,
+        mass_init_data: resources::MassInitData,
+    },
     // FIXME: It would be nice to handle all masses like we do projectile:
     // wrap up in visuals via an event containing the spawed `Entity`.
     // MassSpawned {
@@ -37,6 +42,47 @@ pub enum FromSimulation {
     //     mass_id: u64,
     //     inhabited: bool,
     // },
+}
+
+pub enum ToSimulation {
+    InitData(resources::InitData),
+}
+
+pub fn handle_init_data(
+    mut commands: Commands,
+    mut to_simulation_events: EventReader<ToSimulation>,
+    mut from_simulation_events: EventWriter<FromSimulation>,
+) {
+    for message in to_simulation_events.iter() {
+        if let ToSimulation::InitData(init_data) = message {
+            for (&mass_id, &mass_init_data) in init_data.masses.iter() {
+                let mass = mass_init_data.mass;
+                let position = mass_init_data.motion.position;
+                let scale = Vec3::splat(mass_to_radius(mass));
+                let mut transform = Transform::from_translation(position).with_scale(scale);
+                if mass_init_data.inhabitable {
+                    transform.look_at(Vec3::ZERO, Vec3::Y);
+                    transform.scale += Vec3::splat(2.5);
+                }
+                let radius = 1.0;
+                let mut mass_commands = commands.spawn(physics::PointMassBundle {
+                    transform_bundle: TransformBundle::from_transform(transform),
+                    momentum: components::Momentum {
+                        velocity: mass_init_data.motion.velocity,
+                    },
+                    collider: Collider::ball(radius),
+                    ..Default::default()
+                });
+                mass_commands.insert(components::MassID(mass_id));
+                let entity = mass_commands.id();
+                from_simulation_events.send(FromSimulation::MassSpawned {
+                    entity,
+                    mass_id,
+                    mass_init_data,
+                });
+            }
+        }
+    }
 }
 
 pub fn handle_projectile_fired(

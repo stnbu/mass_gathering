@@ -27,6 +27,8 @@ impl Plugin for SimulationPlugin {
             gravity: Vec3::ZERO,
             ..Default::default()
         });
+        app.add_event::<simulation::FromSimulation>();
+        app.add_event::<simulation::ToSimulation>();
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
