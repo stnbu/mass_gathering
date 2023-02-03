@@ -1,5 +1,5 @@
 use crate::*;
-use bevy_rapier3d::prelude::{Collider, RigidBody};
+
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::collections::HashSet;
