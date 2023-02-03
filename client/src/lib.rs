@@ -277,13 +277,9 @@ pub fn visualize_masses(
                 mass_init_data,
             } = message
             {
-                let mut transform = Transform::from_translation(mass_init_data.motion.position);
-                if mass_init_data.inhabitable {
-                    transform.look_at(Vec3::ZERO, Vec3::Y);
-                }
                 let mut mass_commands = commands.entity(entity);
                 let color: Color = mass_init_data.color.into();
-                //let transform = masses_query.get(entity).clone();
+                let transform = *masses_query.get(entity).unwrap();
                 mass_commands.insert(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 1.0,
