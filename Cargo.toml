@@ -9,8 +9,11 @@ version = "0.35.1"
 bevy = { version = "0.9.1", default-features = false, features = ["bevy_core_pipeline"] }
 
 [profile.release]
+strip = true
 opt-level = "s"
-lto = "thin"
+lto = "thin" # true?
+#codegen-units = 1
+# "cargo bloat"?
 
 [profile.dev]
 opt-level = 1

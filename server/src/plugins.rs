@@ -28,15 +28,12 @@ impl Plugin for ServerPlugin {
         let speed = args.speed;
 
         let physics_config = resources::PhysicsConfig { speed, zerog };
-        //warn!("physics_config: {physics_config:#?}");
         let init_data = systems::get_system(&args.system)();
-        //warn!("init_data: {init_data:#?}");
         let game_config = resources::GameConfig {
             physics_config,
             init_data,
             ..Default::default()
         };
-        //warn!("game_config: {game_config:#?}");
 
         app
             //

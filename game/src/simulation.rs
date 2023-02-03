@@ -44,7 +44,6 @@ pub fn handle_game_config_insertion(
     mut from_simulation_events: EventWriter<FromSimulation>,
     client: Res<RenetClient>,
 ) {
-    //warn!("03");
     if let Some(game_config) = game_config {
         if game_config.is_added() {
             /*
@@ -52,11 +51,8 @@ pub fn handle_game_config_insertion(
 
             Or is it "normal" for your arms to be elevated just a bit because of some amount of resting tension in your shoulders?
             */
-            //warn!("04");
-            warn!("The client received init data: {:?}", game_config.init_data);
             let inhabited_mass_id = game_config.client_mass_map.get(&client.client_id());
             for (&mass_id, &mass_init_data) in game_config.init_data.masses.iter() {
-                warn!("05");
                 let mass = mass_init_data.mass;
                 let position = mass_init_data.motion.position;
                 let scale = Vec3::splat(mass_to_radius(mass));
@@ -75,10 +71,8 @@ pub fn handle_game_config_insertion(
                     ..Default::default()
                 });
                 if inhabited_mass_id.is_some() && mass_id == *inhabited_mass_id.unwrap() {
-                    warn!("06");
                     mass_commands.insert(components::ClientInhabited);
                 } else {
-                    warn!("07");
                     mass_commands.insert(components::Inhabitable);
                 }
                 mass_commands.insert(components::MassID(mass_id));

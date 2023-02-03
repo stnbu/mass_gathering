@@ -35,9 +35,7 @@ pub fn handle_set_game_config(
     mut to_client_events: EventReader<events::ToClient>,
 ) {
     for message in to_client_events.iter() {
-        warn!("01");
         if let events::ToClient::SetGameConfig(game_config) = message {
-            warn!("02");
             commands.insert_resource(game_config.clone());
         }
     }
@@ -269,27 +267,23 @@ pub fn visualize_masses(
     mut from_simulation_events: EventReader<FromSimulation>,
     client: Res<RenetClient>,
     game_config: Option<Res<resources::GameConfig>>,
+    masses_query: Query<&Transform, With<components::MassID>>,
 ) {
     if let Some(game_config) = game_config {
         for message in from_simulation_events.iter() {
-            warn!("07");
             if let &FromSimulation::MassSpawned {
                 entity,
                 mass_id,
                 mass_init_data,
             } = message
             {
-                warn!("08");
                 let mut transform = Transform::from_translation(mass_init_data.motion.position);
                 if mass_init_data.inhabitable {
                     transform.look_at(Vec3::ZERO, Vec3::Y);
                 }
-                // let transform = {
-                // 	mass_init_data
-                // };
                 let mut mass_commands = commands.entity(entity);
-                // do mass stuff
                 let color: Color = mass_init_data.color.into();
+                //let transform = masses_query.get(entity).clone();
                 mass_commands.insert(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 1.0,

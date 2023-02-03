@@ -55,7 +55,6 @@ pub fn handle_server_events(
                     None => {
                         if game_config.is_capacity() {
                             let game_config_ = game_config.clone();
-                            warn!("sending init data to client: {:?}", game_config_.init_data);
                             server.broadcast_message(
                                 DefaultChannel::Reliable,
                                 bincode::serialize(&events::ToClient::SetGameConfig(game_config_))
@@ -72,7 +71,6 @@ pub fn handle_server_events(
                                 .unwrap(),
                             );
                         } else {
-                            warn!("not capacity");
                             server.broadcast_message(
                                 DefaultChannel::Reliable,
                                 bincode::serialize(&events::ToClient::SetGameState(

@@ -69,33 +69,18 @@ impl GameConfig {
             .filter(|(_, mass)| mass.inhabitable)
             .map(|(n, _)| *n)
             .collect::<HashSet<u64>>();
-
-        let xx = inhabitable_mass_ids
+        inhabitable_mass_ids
             .difference(&assigned_mass_ids)
             .map(|n| *n)
-            .collect::<HashSet<u64>>();
-        //config: {self:#?}
-        warn!(
-            "
-
-assigned: {assigned_mass_ids:?}
-inhabitable: {inhabitable_mass_ids:?}
-
-inhabitable IDs: {xx:?}
-
-"
-        );
-        xx
+            .collect::<HashSet<u64>>()
     }
 
     pub fn is_capacity(&self) -> bool {
         let is_capacity = self.get_unassigned_mass_ids().is_empty();
-        warn!("is capacity? {is_capacity}");
         is_capacity
     }
 
     pub fn get_free_id(&self) -> Result<u64, &str> {
-        warn!("booo");
         self.get_unassigned_mass_ids()
             .iter()
             .next()
