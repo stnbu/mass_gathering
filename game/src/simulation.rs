@@ -46,11 +46,6 @@ pub fn handle_game_config_insertion(
 ) {
     if let Some(game_config) = game_config {
         if game_config.is_added() {
-            /*
-            Is it usual/health for one to just let their arms hang when relaxed and upright?
-
-            Or is it "normal" for your arms to be elevated just a bit because of some amount of resting tension in your shoulders?
-            */
             let inhabited_mass_id = game_config.client_mass_map.get(&client.client_id());
             for (&mass_id, &mass_init_data) in game_config.init_data.masses.iter() {
                 let mass = mass_init_data.mass;
