@@ -3,7 +3,7 @@ members = ["game", "client", "server"]
 resolver="2"
 
 [workspace.package]
-version = "0.35.1"
+version = "0.37.0"
 
 [workspace.dependencies]
 bevy = { version = "0.9.1", default-features = false, features = ["bevy_core_pipeline"] }
