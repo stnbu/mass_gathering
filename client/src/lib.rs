@@ -18,15 +18,15 @@ pub struct ClientCliArgs {
     pub address: String,
 }
 
-pub fn send_messages_to_server(
-    mut to_server_events: EventReader<events::ToServer>,
-    mut client: ResMut<RenetClient>,
+pub fn handle_set_game_state(
+    mut game_state: ResMut<State<resources::GameState>>,
+    mut to_client_events: EventReader<events::ToClient>,
 ) {
-    for message in to_server_events.iter() {
-        client.send_message(
-            DefaultChannel::Reliable,
-            bincode::serialize(message).unwrap(),
-        );
+    for message in to_client_events.iter() {
+        if let events::ToClient::SetGameState(state) = message {
+            debug!("Setting state to {state:?}");
+            let _ = game_state.overwrite_set(*state);
+        }
     }
 }
 
@@ -36,8 +36,21 @@ pub fn handle_set_game_config(
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::SetGameConfig(game_config) = message {
+            debug!("GameConfig received. Inserting as resource: {game_config:#?}");
             commands.insert_resource(game_config.clone());
         }
+    }
+}
+
+pub fn send_messages_to_server(
+    mut to_server_events: EventReader<events::ToServer>,
+    mut client: ResMut<RenetClient>,
+) {
+    for message in to_server_events.iter() {
+        client.send_message(
+            DefaultChannel::Reliable,
+            bincode::serialize(message).unwrap(),
+        );
     }
 }
 
@@ -85,6 +98,7 @@ pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) 
 pub fn set_resolution(mut windows: ResMut<Windows>) {
     let window = windows.primary_mut();
     if cfg!(debug_assertions) {
+        debug!("Debug mode, so making your window smaller");
         window.set_resolution(1280.0 / 2.0, 720.0 / 2.0);
     } else {
         window.set_resolution(1280.0, 720.0);
@@ -92,6 +106,7 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
 }
 
 pub fn let_light(mut commands: Commands) {
+    debug!("Adding some directional lighting (distant suns)");
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 10_000.0,
@@ -170,9 +185,10 @@ pub fn visualize_projectiles(
     mut projectile_spawned_events: EventReader<FromSimulation>,
 ) {
     for message in projectile_spawned_events.iter() {
-        if let &FromSimulation::ProjectileSpawned(id) = message {
+        if let &FromSimulation::ProjectileSpawned(entity) = message {
+            debug!("Making projectile {entity:?} visible");
             commands
-                .entity(id)
+                .entity(entity)
                 .insert(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 0.5,
@@ -218,9 +234,6 @@ pub fn handle_projectile_engagement(
     keys: Res<Input<KeyCode>>,
     mut to_server_events: EventWriter<events::ToServer>,
 ) {
-    if inhabited_mass_query.is_empty() {
-        error!("No `ClientInhabited` masses found!");
-    }
     if let Ok((client_pov, &components::MassID(from_mass_id))) = inhabited_mass_query.get_single() {
         let ray_origin = client_pov.translation;
         let ray_direction = -client_pov.local_z();
@@ -235,6 +248,7 @@ pub fn handle_projectile_engagement(
             if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
                 sights_visibility.for_each_mut(|mut visibility| visibility.is_visible = true);
                 if keys.just_pressed(KeyCode::Space) {
+                    debug!("User has fired projectile at mass {mass:?}");
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =
                         (global_impact_site - mass_transform.translation).normalize();
@@ -255,10 +269,10 @@ pub fn handle_projectile_engagement(
         } else {
             sights_visibility.for_each_mut(|mut visibility| visibility.is_visible = false);
         }
+    } else {
+        warn!("ClientInhabited mass not found (yet?)");
     }
 }
-
-//
 
 pub fn visualize_masses(
     mut commands: Commands,
@@ -267,9 +281,9 @@ pub fn visualize_masses(
     mut from_simulation_events: EventReader<FromSimulation>,
     client: Res<RenetClient>,
     game_config: Option<Res<resources::GameConfig>>,
-    masses_query: Query<&Transform, With<components::MassID>>,
 ) {
     if let Some(game_config) = game_config {
+        let client_id = client.client_id();
         for message in from_simulation_events.iter() {
             if let &FromSimulation::MassSpawned {
                 entity,
@@ -277,9 +291,10 @@ pub fn visualize_masses(
                 mass_init_data,
             } = message
             {
+                debug!("Making mass {mass_id} ({entity:?}) visible");
                 let mut mass_commands = commands.entity(entity);
                 let color: Color = mass_init_data.color.into();
-                let transform = *masses_query.get(entity).unwrap();
+                let transform: Transform = mass_init_data.into();
                 mass_commands.insert(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: 1.0,
@@ -290,16 +305,18 @@ pub fn visualize_masses(
                     ..Default::default()
                 });
 
-                let inhabited = mass_id
-                    == *game_config
-                        .client_mass_map
-                        .get(&client.client_id())
-                        .unwrap();
+                if !mass_init_data.inhabitable {
+                    debug!("Mass {mass_id} is uninhabitable");
+                }
+
+                let inhabited = mass_id == *game_config.client_mass_map.get(&client_id).unwrap();
 
                 let inhabitable = mass_init_data.inhabitable && !inhabited;
 
                 mass_commands.with_children(|children| {
                     if inhabited {
+                        let nickname = to_nick(client_id).trim_end().to_string();
+                        debug!("Mass {mass_id} is inhabited by us, {nickname}");
                         children.spawn(Camera3dBundle::default());
                         children
                             .spawn(PbrBundle {
@@ -326,6 +343,7 @@ pub fn visualize_masses(
                             .insert(components::Sights);
                     }
                     if inhabitable {
+                        debug!("Mass {mass_id} is inhabitable");
                         // barrel
                         children.spawn(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Capsule {

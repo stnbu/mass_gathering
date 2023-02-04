@@ -88,3 +88,15 @@ pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
         panic!("Renet error: {e:?}");
     }
 }
+
+pub fn game_has_started(
+    game_config: Option<Res<resources::GameConfig>>,
+    game_state: Res<State<resources::GameState>>,
+) -> ShouldRun {
+    if game_config.is_some() {
+        if *game_state.current() == resources::GameState::Running {
+            return ShouldRun::Yes;
+        }
+    }
+    ShouldRun::No
+}

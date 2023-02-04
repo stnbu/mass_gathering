@@ -1,5 +1,5 @@
 use crate::*;
-use bevy_rapier3d::prelude::{Collider, CollisionEvent};
+use bevy_rapier3d::prelude::{Collider, CollisionEvent, RigidBody};
 use bevy_renet::renet::RenetClient;
 use std::time::SystemTime;
 
@@ -46,17 +46,12 @@ pub fn handle_game_config_insertion(
 ) {
     if let Some(game_config) = game_config {
         if game_config.is_added() {
+            debug!("GameConfig resource is_added");
             let inhabited_mass_id = game_config.client_mass_map.get(&client.client_id());
             for (&mass_id, &mass_init_data) in game_config.init_data.masses.iter() {
-                let mass = mass_init_data.mass;
-                let position = mass_init_data.motion.position;
-                let scale = Vec3::splat(mass_to_radius(mass));
-                let mut transform = Transform::from_translation(position).with_scale(scale);
-                if mass_init_data.inhabitable {
-                    transform.look_at(Vec3::ZERO, Vec3::Y);
-                    transform.scale += Vec3::splat(2.5);
-                }
+                let transform: Transform = mass_init_data.into();
                 let radius = 1.0;
+                debug!("Spawining PointMassBundle for mass {mass_id}");
                 let mut mass_commands = commands.spawn(physics::PointMassBundle {
                     transform_bundle: TransformBundle::from_transform(transform),
                     momentum: components::Momentum {
@@ -65,10 +60,17 @@ pub fn handle_game_config_insertion(
                     collider: Collider::ball(radius),
                     ..Default::default()
                 });
-                if inhabited_mass_id.is_some() && mass_id == *inhabited_mass_id.unwrap() {
-                    mass_commands.insert(components::ClientInhabited);
+                if mass_init_data.inhabitable {
+                    if inhabited_mass_id.is_some() && mass_id == *inhabited_mass_id.unwrap() {
+                        debug!("Mass {mass_id} is inhabted by us");
+                        mass_commands.insert(components::ClientInhabited);
+                        mass_commands.remove::<RigidBody>();
+                    } else {
+                        debug!("Mass {mass_id} is inhabtable");
+                        mass_commands.insert(components::Inhabitable);
+                    }
                 } else {
-                    mass_commands.insert(components::Inhabitable);
+                    debug!("Mass {mass_id} is uninhabtable");
                 }
                 mass_commands.insert(components::MassID(mass_id));
                 let entity = mass_commands.id();
@@ -90,13 +92,11 @@ pub fn handle_projectile_fired(
     for message in to_client_events.iter() {
         if let events::ToClient::ProjectileFired(projectile_flight) = message {
             let radius = 0.5;
+            debug!("Spawning TransformBundle for ProjectileFired event");
             let id = commands
-                .spawn(physics::PointMassBundle {
-                    transform_bundle: TransformBundle::from_transform(Transform::from_scale(
-                        Vec3::ONE * radius,
-                    )),
-                    ..Default::default()
-                })
+                .spawn(TransformBundle::from_transform(Transform::from_scale(
+                    Vec3::ONE * radius,
+                )))
                 .insert(Collider::default())
                 .insert(*projectile_flight)
                 .id();

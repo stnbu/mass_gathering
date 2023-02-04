@@ -9,26 +9,28 @@ impl Plugin for ClientPlugin {
         app.insert_resource(ClearColor(Color::BLACK));
         app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
         app.add_system(simulation::handle_game_config_insertion);
+        app.add_system(handle_set_game_state);
+        app.add_system(handle_set_game_config);
+        //
+        app.add_system(visualize_masses);
+        app.add_system(send_messages_to_server);
+        app.add_system(receive_messages_from_server);
+        app.add_system(panic_on_renet_error);
+        //
         app.add_system_set(
-            SystemSet::on_update(resources::GameState::Running)
-                .with_system(simulation::handle_game_config_insertion)
+            SystemSet::new()
+                .with_run_criteria(game_has_started)
+                //
                 .with_system(simulation::handle_projectile_fired)
                 .with_system(simulation::move_projectiles)
                 .with_system(simulation::handle_projectile_collision)
-                .with_system(simulation::rotate_inhabitable_masses),
-        );
-        app.add_system_set(
-            SystemSet::on_update(resources::GameState::Running)
-                .with_run_criteria(run_if_client_connected)
-                .with_system(handle_set_game_config)
+                .with_system(simulation::rotate_inhabitable_masses)
+                //
                 .with_system(control)
                 .with_system(handle_projectile_engagement)
-                .with_system(visualize_projectiles)
-                .with_system(visualize_masses)
-                .with_system(send_messages_to_server)
-                .with_system(receive_messages_from_server)
-                .with_system(panic_on_renet_error),
+                .with_system(visualize_projectiles),
         );
+
         app.add_system(bevy::window::close_on_esc);
         app.add_system(set_window_title);
         app.add_startup_system(set_resolution);

@@ -40,6 +40,19 @@ pub struct MassInitData {
     pub mass: f32,
 }
 
+impl From<MassInitData> for Transform {
+    fn from(mass_init_data: MassInitData) -> Transform {
+        let position = mass_init_data.motion.position;
+        let scale = mass_to_scale(mass_init_data.mass);
+        let mut transform = Transform::from_translation(position).with_scale(scale);
+        if mass_init_data.inhabitable {
+            transform.look_at(Vec3::ZERO, Vec3::Y);
+            transform.scale += Vec3::splat(2.5);
+        }
+        transform
+    }
+}
+
 #[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]
 pub struct InitData {
     pub masses: HashMap<u64, MassInitData>,

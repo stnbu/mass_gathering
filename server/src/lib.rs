@@ -51,48 +51,55 @@ pub fn handle_server_events(
     for event in server_events.iter() {
         match *event {
             ServerEvent::ClientConnected(client_id, _) => match game_config.get_free_id() {
-                Ok(mass_id) => match game_config.client_mass_map.insert(client_id, mass_id) {
-                    None => {
-                        if game_config.is_capacity() {
-                            let game_config_ = game_config.clone();
-                            server.broadcast_message(
-                                DefaultChannel::Reliable,
-                                bincode::serialize(&events::ToClient::SetGameConfig(game_config_))
+                Ok(mass_id) => {
+                    debug!("Connection from client {client_id} assigning mass {mass_id}");
+                    match game_config.client_mass_map.insert(client_id, mass_id) {
+                        None => {
+                            if game_config.is_capacity() {
+                                debug!("Game is now at capacity. Set state Running");
+                                server.broadcast_message(
+                                    DefaultChannel::Reliable,
+                                    bincode::serialize(&events::ToClient::SetGameConfig(
+                                        game_config.clone(),
+                                    ))
                                     .unwrap(),
-                            );
-                            app_state
-                                .overwrite_set(resources::GameState::Running)
-                                .unwrap();
-                            server.broadcast_message(
-                                DefaultChannel::Reliable,
-                                bincode::serialize(&events::ToClient::SetGameState(
-                                    resources::GameState::Running,
-                                ))
-                                .unwrap(),
-                            );
-                        } else {
-                            server.broadcast_message(
-                                DefaultChannel::Reliable,
-                                bincode::serialize(&events::ToClient::SetGameState(
-                                    resources::GameState::Waiting,
-                                ))
-                                .unwrap(),
-                            );
-                            app_state
-                                .overwrite_set(resources::GameState::Waiting)
-                                .unwrap();
+                                );
+                                app_state
+                                    .overwrite_set(resources::GameState::Running)
+                                    .unwrap();
+                                server.broadcast_message(
+                                    DefaultChannel::Reliable,
+                                    bincode::serialize(&events::ToClient::SetGameState(
+                                        resources::GameState::Running,
+                                    ))
+                                    .unwrap(),
+                                );
+                            } else {
+                                debug!("Game is not at capacity. Set state Waiting");
+                                server.broadcast_message(
+                                    DefaultChannel::Reliable,
+                                    bincode::serialize(&events::ToClient::SetGameState(
+                                        resources::GameState::Waiting,
+                                    ))
+                                    .unwrap(),
+                                );
+                                app_state
+                                    .overwrite_set(resources::GameState::Waiting)
+                                    .unwrap();
+                            }
+                        }
+                        Some(id) => {
+                            error!("Client already assigigned mass {id}");
                         }
                     }
-                    Some(id) => {
-                        error!("Client already assigigned mass {id}");
-                    }
-                },
+                    //
+                }
                 Err(err) => {
                     error!("While getting free mass id: {err}");
                 }
             },
             ServerEvent::ClientDisconnected(client_id) => {
-                debug!("Client {client_id} has disconnected");
+                warn!("Client {client_id} has disconnected");
                 exit.send(AppExit);
             }
         }
@@ -113,6 +120,7 @@ pub fn handle_server_events(
                 events::ToServer::ProjectileFired(projectile_flight) => {
                     let projectile_fired = events::ToClient::ProjectileFired(projectile_flight);
                     let message = bincode::serialize(&projectile_fired).unwrap();
+                    debug!("Broadcasting projectile flight");
                     server.broadcast_message(DefaultChannel::Reliable, message);
                 }
             }
