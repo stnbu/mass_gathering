@@ -6,34 +6,35 @@ pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
         app.insert_resource(ClearColor(Color::BLACK));
+        app.add_plugins(DefaultPlugins.set(get_log_plugin("client")));
+        app.add_system(simulation::handle_game_config_insertion);
+        app.add_system(handle_set_game_state);
+        app.add_system(handle_set_game_config);
+        //
+        app.add_system(visualize_masses);
+        app.add_system(send_messages_to_server);
+        app.add_system(receive_messages_from_server);
+        app.add_system(panic_on_renet_error);
+        //
         app.add_system_set(
-            SystemSet::on_update(resources::GameState::Running)
+            SystemSet::new()
+                .with_run_criteria(game_has_started)
+                //
+                .with_system(simulation::handle_projectile_fired)
+                .with_system(simulation::move_projectiles)
+                .with_system(simulation::handle_projectile_collision)
+                .with_system(simulation::rotate_inhabitable_masses)
+                //
                 .with_system(control)
                 .with_system(handle_projectile_engagement)
-                .with_system(handle_projectile_fired)
-                .with_system(move_projectiles)
-                .with_system(handle_projectile_collision)
-                .with_system(rotate_inhabitable_masses),
+                .with_system(visualize_projectiles),
         );
-        app.add_plugin(EguiPlugin);
-        app.add_startup_system(set_resolution);
-        app.add_startup_system(let_light);
+
         app.add_system(bevy::window::close_on_esc);
         app.add_system(set_window_title);
-        app.add_system_set(
-            SystemSet::on_update(resources::GameState::Waiting).with_system(client_waiting_screen),
-        );
-        app.add_system_set(
-            SystemSet::on_update(resources::GameState::Running)
-                .with_run_criteria(run_if_client_connected)
-                .with_system(send_messages_to_server)
-                .with_system(process_to_client_events)
-                .with_system(receive_messages_from_server)
-                .with_system(animate_explosions)
-                .with_system(panic_on_renet_error),
-        );
+        app.add_startup_system(set_resolution);
+        app.add_startup_system(let_light);
         app.add_plugin(RenetClientPlugin::default());
 
         let args = ClientCliArgs::parse();

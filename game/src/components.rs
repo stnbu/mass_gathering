@@ -10,16 +10,12 @@ pub struct ClientInhabited;
 #[derive(Component)]
 pub struct Inhabitable;
 
-/// Sights as in "gun sights"
-#[derive(Component)]
-pub struct Sights;
-
 #[derive(Component, Debug, Default)]
 pub struct Momentum {
     pub velocity: Vec3,
 }
 
+// FIXME: Very client-specific. Relocate? Justification? Paperwork? Bike shaving?
+/// Sights as in "gun sights"
 #[derive(Component)]
-pub struct Explosion {
-    pub timer: Timer,
-}
+pub struct Sights;

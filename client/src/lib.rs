@@ -1,20 +1,14 @@
-use bevy_egui::{
-    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
-    EguiContext,
-};
-use bevy_rapier3d::prelude::{Collider, CollisionEvent, QueryFilter, RapierContext};
+use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use bevy_renet::{
     renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
     run_if_client_connected, RenetClientPlugin,
 };
 use clap::Parser;
+use game::simulation::FromSimulation;
 use game::*;
 use std::{net::UdpSocket, time::SystemTime};
 
 pub mod plugins;
-
-const FRAME_FILL: Color32 = Color32::TRANSPARENT;
-const TEXT_COLOR: Color32 = Color32::from_rgba_premultiplied(0, 255, 0, 100);
 
 #[derive(Parser, Resource)]
 pub struct ClientCliArgs {
@@ -22,6 +16,30 @@ pub struct ClientCliArgs {
     pub nickname: String,
     #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
     pub address: String,
+}
+
+pub fn handle_set_game_state(
+    mut game_state: ResMut<State<resources::GameState>>,
+    mut to_client_events: EventReader<events::ToClient>,
+) {
+    for message in to_client_events.iter() {
+        if let events::ToClient::SetGameState(state) = message {
+            debug!("Setting state to {state:?}");
+            let _ = game_state.overwrite_set(*state);
+        }
+    }
+}
+
+pub fn handle_set_game_config(
+    mut commands: Commands,
+    mut to_client_events: EventReader<events::ToClient>,
+) {
+    for message in to_client_events.iter() {
+        if let events::ToClient::SetGameConfig(game_config) = message {
+            debug!("GameConfig received. Inserting as resource: {game_config:#?}");
+            commands.insert_resource(game_config.clone());
+        }
+    }
 }
 
 pub fn send_messages_to_server(
@@ -33,43 +51,6 @@ pub fn send_messages_to_server(
             DefaultChannel::Reliable,
             bincode::serialize(message).unwrap(),
         );
-    }
-}
-
-/// That is, "process 'to-client' events"
-/// definitely NOT "process to 'client events'"
-pub fn process_to_client_events(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut game_state: ResMut<State<resources::GameState>>,
-    mut to_client_events: EventReader<events::ToClient>,
-    client: Res<RenetClient>,
-) {
-    let my_id = client.client_id();
-    for message in to_client_events.iter() {
-        match message {
-            events::ToClient::SetGameState(new_game_state) => {
-                let _ = game_state.overwrite_set(*new_game_state);
-            }
-            events::ToClient::InhabitantRotation { .. } => {
-                // handled by separate system
-            }
-            events::ToClient::SetGameConfig(game_config) => {
-                let inhabited_mass_id = *game_config.client_mass_map.get(&my_id).unwrap();
-                resources::init_masses(
-                    inhabited_mass_id,
-                    game_config.init_data.clone(),
-                    &mut commands,
-                    &mut meshes,
-                    &mut materials,
-                );
-                commands.insert_resource(game_config.clone());
-            }
-            events::ToClient::ProjectileFired(_) => {
-                // not handled here
-            }
-        }
     }
 }
 
@@ -106,6 +87,46 @@ pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
     .unwrap()
 }
 
+pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) {
+    let title = "Mass Gathering";
+    let id = client.client_id();
+    let nickname = to_nick(id).trim_end().to_string();
+    let title = format!("{title} | nick: \"{nickname}\"");
+    windows.primary_mut().set_title(title);
+}
+
+pub fn set_resolution(mut windows: ResMut<Windows>) {
+    let window = windows.primary_mut();
+    if cfg!(debug_assertions) {
+        debug!("Debug mode, so making your window smaller");
+        window.set_resolution(1280.0 / 2.0, 720.0 / 2.0);
+    } else {
+        window.set_resolution(1280.0, 720.0);
+    }
+}
+
+pub fn let_light(mut commands: Commands) {
+    debug!("Adding some directional lighting (distant suns)");
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 10_000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(-0.5, -0.3, -1.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            illuminance: 20_000.0,
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform::from_xyz(1.0, -2.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
+        ..default()
+    });
+}
+
 pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
@@ -114,41 +135,33 @@ pub fn control(
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
-
-    // rotation about local axes
     let mut rotation = Vec3::ZERO;
-
-    // FIXME: What's the general way of handling this?
-    // How to generally get "with modifiers"?
-    if !keys.pressed(KeyCode::RShift) {
-        for key in keys.get_pressed() {
-            match key {
-                // pitch
-                KeyCode::W => {
-                    rotation.x += nudge;
-                }
-                KeyCode::S => {
-                    rotation.x -= nudge;
-                }
-                // yaw
-                KeyCode::A => {
-                    rotation.y += nudge;
-                }
-                KeyCode::D => {
-                    rotation.y -= nudge;
-                }
-                // roll
-                KeyCode::Z => {
-                    rotation.z -= nudge;
-                }
-                KeyCode::X => {
-                    rotation.z += nudge;
-                }
-                _ => (),
+    for key in keys.get_pressed() {
+        match key {
+            // pitch
+            KeyCode::W => {
+                rotation.x += nudge;
             }
+            KeyCode::S => {
+                rotation.x -= nudge;
+            }
+            // yaw
+            KeyCode::A => {
+                rotation.y += nudge;
+            }
+            KeyCode::D => {
+                rotation.y -= nudge;
+            }
+            // roll
+            KeyCode::Z => {
+                rotation.z -= nudge;
+            }
+            KeyCode::X => {
+                rotation.z += nudge;
+            }
+            _ => (),
         }
     }
-
     if rotation.length() > 0.0000001 {
         if let Ok(mut transform) = inhabitant_query.get_single_mut() {
             let frame_time = time.delta_seconds() * 60.0;
@@ -161,75 +174,47 @@ pub fn control(
             transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
             let message = events::ToServer::Rotation(transform.rotation);
             to_server_events.send(message);
-        } else {
         }
     }
 }
 
-/// This does not include the client's mass
-pub fn rotate_inhabitable_masses(
-    mut to_client_events: EventReader<events::ToClient>,
-    mut inhabitable_masses: Query<
-        (&mut Transform, &components::MassID),
-        With<components::Inhabitable>,
-    >,
-    game_config: Res<resources::GameConfig>,
+pub fn visualize_projectiles(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut projectile_spawned_events: EventReader<FromSimulation>,
 ) {
-    for message in to_client_events.iter() {
-        if let events::ToClient::InhabitantRotation {
-            client_id,
-            rotation,
-        } = message
-        {
-            let inhabited_mass_id = *game_config.client_mass_map.get(client_id).unwrap();
-            for (mut mass_transform, &components::MassID(mass_id)) in inhabitable_masses.iter_mut()
-            {
-                // The choices seem to be
-                //   1. Loop through masses and look for a match, like we do here.
-                //   2. Maintain a mass_id <-> mass_entity mapping.
-                // The latter was tried (see history), but the complexity cost doesn't
-                // seem to be worth the "performance gain" (of which there may be little.)
-                // It might be worth swapping the loops (iter masses then messages.)
-                if inhabited_mass_id == mass_id {
-                    mass_transform.rotation = *rotation;
-                    break;
-                }
-            }
-        }
-    }
-}
-
-pub fn client_waiting_screen(
-    mut ctx: ResMut<EguiContext>,
-    game_config: Res<resources::GameConfig>,
-) {
-    SidePanel::left("client_waiting_screen")
-        .resizable(false)
-        .min_width(250.0)
-        .frame(Frame {
-            outer_margin: Margin::symmetric(10.0, 20.0),
-            fill: FRAME_FILL,
-            ..Default::default()
-        })
-        .show(ctx.ctx_mut(), |ui| {
-            ui.label(
-                RichText::new("Waiting for more players\n\nConnected:")
-                    .color(TEXT_COLOR)
-                    .font(FontId {
-                        size: 20.0,
-                        family: Monospace,
+    for message in projectile_spawned_events.iter() {
+        if let &FromSimulation::ProjectileSpawned(entity) = message {
+            debug!("Making projectile {entity:?} visible");
+            commands
+                .entity(entity)
+                .insert(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: 0.5,
+                        ..Default::default()
+                    })),
+                    material: materials.add(StandardMaterial {
+                        base_color: Color::RED + Color::WHITE * 0.2,
+                        emissive: Color::rgb_u8(125, 125, 125),
+                        unlit: true,
+                        ..default()
                     }),
-            );
-            ui.separator();
-            for (&id, _) in game_config.client_mass_map.iter() {
-                let nick = to_nick(id);
-                let text = format!("{nick}");
-                ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {
-                    size: 16.0,
-                    family: Monospace,
-                }));
-            }
-        });
+                    transform: Transform::from_scale(Vec3::ONE * 0.5),
+                    ..default()
+                })
+                .with_children(|children| {
+                    children.spawn(PointLightBundle {
+                        point_light: PointLight {
+                            intensity: 100.0,
+                            color: Color::RED,
+                            ..default()
+                        },
+                        ..default()
+                    });
+                });
+        }
+    }
 }
 
 pub fn handle_projectile_engagement(
@@ -240,14 +225,14 @@ pub fn handle_projectile_engagement(
             Without<components::ClientInhabited>,
         ),
     >,
+    mut sights_visibility: Query<&mut Visibility, With<components::Sights>>,
     inhabited_mass_query: Query<
         (&Transform, &components::MassID),
         With<components::ClientInhabited>,
     >,
     rapier_context: Res<RapierContext>,
-    mut to_server_events: EventWriter<events::ToServer>,
-    mut sights_query: Query<&mut Visibility, With<components::Sights>>,
     keys: Res<Input<KeyCode>>,
+    mut to_server_events: EventWriter<events::ToServer>,
 ) {
     if let Ok((client_pov, &components::MassID(from_mass_id))) = inhabited_mass_query.get_single() {
         let ray_origin = client_pov.translation;
@@ -261,10 +246,9 @@ pub fn handle_projectile_engagement(
         );
         if let Some((mass, distance)) = intersection {
             if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
-                for mut visibility in sights_query.iter_mut() {
-                    visibility.is_visible = true;
-                }
+                sights_visibility.for_each_mut(|mut visibility| visibility.is_visible = true);
                 if keys.just_pressed(KeyCode::Space) {
+                    debug!("User has fired projectile at mass {mass:?}");
                     let global_impact_site = ray_origin + (ray_direction * distance);
                     let local_impact_direction =
                         (global_impact_site - mass_transform.translation).normalize();
@@ -281,183 +265,115 @@ pub fn handle_projectile_engagement(
                         },
                     ));
                 }
-            } else {
-                // NOTE: This happens because `QueryFilter` in `rapier_context.cast_ray` is
-                // `only_dynamic()`, which includes _other_ inhabited masses. Another thing
-                // fixed by a different `QueryFilter` in the above (I think).
             }
         } else {
-            for mut visibility in sights_query.iter_mut() {
-                visibility.is_visible = false;
-            }
+            sights_visibility.for_each_mut(|mut visibility| visibility.is_visible = false);
         }
     } else {
+        warn!("ClientInhabited mass not found (yet?)");
     }
 }
 
-pub fn handle_projectile_fired(
-    mut to_client_events: EventReader<events::ToClient>,
+pub fn visualize_masses(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    mut from_simulation_events: EventReader<FromSimulation>,
+    client: Res<RenetClient>,
+    game_config: Option<Res<resources::GameConfig>>,
 ) {
-    for message in to_client_events.iter() {
-        if let events::ToClient::ProjectileFired(projectile_flight) = message {
-            let radius = 0.5;
-            commands
-                .spawn(PbrBundle {
+    if let Some(game_config) = game_config {
+        let client_id = client.client_id();
+        for message in from_simulation_events.iter() {
+            if let &FromSimulation::MassSpawned {
+                entity,
+                mass_id,
+                mass_init_data,
+            } = message
+            {
+                debug!("Making mass {mass_id} ({entity:?}) visible");
+                let mut mass_commands = commands.entity(entity);
+                let color: Color = mass_init_data.color.into();
+                let transform: Transform = mass_init_data.into();
+                mass_commands.insert(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius,
+                        radius: 1.0,
                         ..Default::default()
                     })),
-                    visibility: Visibility::INVISIBLE,
-                    material: materials.add(StandardMaterial {
-                        base_color: Color::RED + Color::WHITE * 0.2,
-                        emissive: Color::rgb_u8(125, 125, 125),
-                        unlit: true,
-                        ..default()
-                    }),
-                    transform: Transform::from_scale(Vec3::ONE * radius),
-                    ..default()
-                })
-                .insert(Collider::default())
-                .insert(*projectile_flight)
-                .with_children(|children| {
-                    children.spawn(PointLightBundle {
-                        point_light: PointLight {
-                            intensity: 100.0,
-                            color: Color::RED,
-                            ..default()
-                        },
-                        ..default()
-                    });
+                    material: materials.add(color.into()),
+                    transform,
+                    ..Default::default()
                 });
-        }
-    }
-}
 
-pub fn move_projectiles(
-    mut commands: Commands,
-    mut projectile_query: Query<(
-        Entity,
-        &mut Transform,
-        &mut Visibility,
-        &events::ProjectileFlight,
-    )>,
-    masses_query: Query<(&Transform, &components::MassID), Without<events::ProjectileFlight>>,
-) {
-    let proportion_of = 1.0 / 512.0;
-    let portions_per_second = 128.0 * 3.0;
+                if !mass_init_data.inhabitable {
+                    debug!("Mass {mass_id} is uninhabitable");
+                }
 
-    for (projectile_id, mut projectile_transform, mut projectile_visibility, projectile_flight) in
-        projectile_query.iter_mut()
-    {
-        projectile_visibility.is_visible = true;
-        let now = SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap()
-            .as_millis();
-        let seconds_elapsed = (now - projectile_flight.launch_time) as f32 / 1_000.0;
-        // FIXME: This could be collapsed into something sexier, `for_each().fold()...`
-        // Something like that.
-        let mut from_transform = None;
-        let mut to_transform = None;
-        for (transform, &components::MassID(mass_id)) in masses_query.iter() {
-            if projectile_flight.from_mass_id == mass_id {
-                from_transform = Some(transform);
-            }
-            if projectile_flight.to_mass_id == mass_id {
-                to_transform = Some(transform);
-            }
-        }
-        if from_transform.is_none() {
-            panic!("The transform FROM which projectile {projectile_id:?} originated (an inhabited mass) has disappeared!");
-        }
-        if to_transform.is_none() {
-            // FIXME: When a minor mass gets merged into a major, what should happen to in-flight projectiles
-            // that were targeting that mass? What if the major mass is an inhabited mass??
-            commands.entity(projectile_id).despawn_recursive();
-            continue;
-        }
-        let from_transform = from_transform.unwrap();
-        let to_transform = to_transform.unwrap();
+                let inhabited = mass_id == *game_config.client_mass_map.get(&client_id).unwrap();
 
-        // The impact site/taget is the _surface of_ the mass
-        let impact_site = to_transform.translation
-            + projectile_flight.local_impact_direction * scale_to_radius(to_transform.scale);
-        let flight_vector = impact_site - from_transform.translation;
-        let flight_progress = flight_vector * proportion_of * portions_per_second * seconds_elapsed;
-        projectile_transform.translation = from_transform.translation + flight_progress;
-    }
-}
+                let inhabitable = mass_init_data.inhabitable && !inhabited;
 
-pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) {
-    let title = "Mass Gathering";
-    let id = client.client_id();
-    let nickname = to_nick(id).trim_end().to_string();
-    let title = format!("{title} | nick: \"{nickname}\"");
-    windows.primary_mut().set_title(title);
-}
-
-pub fn handle_projectile_collision(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut collision_events: EventReader<CollisionEvent>,
-    projectile_query: Query<&events::ProjectileFlight>,
-    mass_query: Query<(
-        With<components::MassID>,
-        Without<components::ClientInhabited>,
-        Without<components::Inhabitable>,
-    )>,
-) {
-    for collision_event in collision_events.iter() {
-        if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            let e0_is_projectile = projectile_query.contains(*e0);
-            let e1_is_projectile = projectile_query.contains(*e1);
-            if e0_is_projectile ^ e1_is_projectile {
-                let projectile_id = if e0_is_projectile { e0 } else { e1 };
-                let projectile_flight = projectile_query.get(*projectile_id).unwrap();
-                let mass_id = if !e0_is_projectile { e0 } else { e1 };
-                if mass_query.contains(*mass_id) {
-                    // we always have unit diameter and _scale_, so a "unit vector" will
-                    // exactly end at the "surface" in the mass's transform.
-                    let local_impact_site = projectile_flight.local_impact_direction;
-                    commands.entity(*mass_id).with_children(|child| {
-                        child
+                mass_commands.with_children(|children| {
+                    if inhabited {
+                        let nickname = to_nick(client_id).trim_end().to_string();
+                        debug!("Mass {mass_id} is inhabited by us, {nickname}");
+                        children.spawn(Camera3dBundle::default());
+                        children
                             .spawn(PbrBundle {
-                                transform: Transform::from_translation(local_impact_site),
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.5,
+                                    radius: 0.0005,
+
                                     ..Default::default()
                                 })),
-                                material: materials.add(Color::rgb_u8(255, 255, 255).into()),
+                                material: materials.add(Color::WHITE.into()),
+                                transform: Transform::from_xyz(0.0, 0.0, -0.2),
+                                visibility: Visibility::INVISIBLE,
                                 ..Default::default()
                             })
-                            .insert(components::Explosion {
-                                timer: Timer::from_seconds(5.0, TimerMode::Once),
-                            });
-                    });
-                    commands.entity(*projectile_id).despawn_recursive();
-                }
+                            .insert(components::Sights);
+                        children
+                            .spawn(PointLightBundle {
+                                transform: Transform::from_xyz(0.0, 0.0, -0.15),
+                                visibility: Visibility::INVISIBLE,
+                                point_light: PointLight {
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            })
+                            .insert(components::Sights);
+                    }
+                    if inhabitable {
+                        debug!("Mass {mass_id} is inhabitable");
+                        // barrel
+                        children.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Capsule {
+                                radius: 0.05,
+                                depth: 1.0,
+                                ..Default::default()
+                            })),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+                                .with_translation(Vec3::Z * -1.5),
+                            ..Default::default()
+                        });
+                        // horizontal stabilizer
+                        children.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_translation(Vec3::Z * 0.5),
+                            ..Default::default()
+                        });
+                        // vertical stabilizer
+                        children.spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                            material: materials.add(Color::WHITE.into()),
+                            transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+                                .with_translation(Vec3::Z * 0.5),
+                            ..Default::default()
+                        });
+                    }
+                });
             }
-        }
-    }
-}
-
-pub fn animate_explosions(
-    mut commands: Commands,
-    time: Res<Time>,
-    mut explosions: Query<(Entity, &mut Transform, &mut components::Explosion)>,
-) {
-    for (explosion_id, mut transform, mut explosion) in explosions.iter_mut() {
-        explosion.timer.tick(time.delta());
-        if explosion.timer.finished() {
-            commands.entity(explosion_id).despawn_recursive();
-        } else {
-            let percent = explosion.timer.percent();
-            let scale = 1.0 - percent;
-            transform.scale = scale * Vec3::ONE;
         }
     }
 }

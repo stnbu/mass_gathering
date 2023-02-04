@@ -1,4 +1,5 @@
 use crate::*;
+use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 
 #[derive(Default)]
 pub struct CorePlugin;
@@ -10,7 +11,7 @@ impl Plugin for CorePlugin {
         app.add_state(resources::GameState::Stopped);
         app.add_event::<physics::MassCollisionEvent>();
         app.add_event::<physics::DespawnMassEvent>();
-        app.init_resource::<resources::GameConfig>();
+        //app.init_resource::<resources::GameConfig>();
     }
 }
 
@@ -26,6 +27,7 @@ impl Plugin for SimulationPlugin {
             gravity: Vec3::ZERO,
             ..Default::default()
         });
+        app.add_event::<simulation::FromSimulation>();
         app.add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
         app.add_system_set(
             SystemSet::on_update(resources::GameState::Running)
