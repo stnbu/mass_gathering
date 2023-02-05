@@ -64,9 +64,11 @@ pub fn handle_server_events(
                                     ))
                                     .unwrap(),
                                 );
-                                app_state
-                                    .overwrite_set(resources::GameState::Running)
-                                    .unwrap();
+                                if let Err(err) =
+                                    app_state.overwrite_set(resources::GameState::Running)
+                                {
+                                    panic!("When setting state to Running: {err:?}");
+                                }
                                 server.broadcast_message(
                                     DefaultChannel::Reliable,
                                     bincode::serialize(&events::ToClient::SetGameState(
@@ -83,9 +85,7 @@ pub fn handle_server_events(
                                     ))
                                     .unwrap(),
                                 );
-                                app_state
-                                    .overwrite_set(resources::GameState::Waiting)
-                                    .unwrap();
+                                let _ = app_state.overwrite_set(resources::GameState::Waiting);
                             }
                         }
                         Some(id) => {
