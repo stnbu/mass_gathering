@@ -1,7 +1,6 @@
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use bevy_renet::{
-    renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
-    run_if_client_connected, RenetClientPlugin,
+    renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig}, RenetClientPlugin,
 };
 use clap::Parser;
 use game::simulation::FromSimulation;

@@ -1,5 +1,37 @@
 use crate::*;
 
+pub fn demo_2m2i() -> resources::InitData {
+    let mut init_data = resources::InitData::default();
+    let position = Vec3::X * 10.0;
+    let velocity = Vec3::Y * 0.035;
+    let mass = radius_to_mass(1.0);
+    init_data.masses.insert(
+        0,
+        resources::MassInitData {
+            inhabitable: true,
+            motion: resources::MassMotion {
+                position: position * 1.0,
+                velocity: velocity * -1.0,
+            },
+            color: [1.0, 0.0, 0.0, 1.0],
+            mass,
+        },
+    );
+    init_data.masses.insert(
+        1,
+        resources::MassInitData {
+            inhabitable: true,
+            motion: resources::MassMotion {
+                position: position * -1.0,
+                velocity: velocity * 1.0,
+            },
+            color: [0.0, 0.0, 1.0, 1.0],
+            mass,
+        },
+    );
+    init_data
+}
+
 pub fn demo_shooting() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let id_base = 0;
@@ -45,6 +77,7 @@ pub fn demo_shooting() -> resources::InitData {
 
 pub fn get_system(name: &str) -> impl (Fn() -> resources::InitData) {
     match name {
+        "demo_2m2i" => demo_2m2i,
         "demo_shooting" => demo_shooting,
         _ => panic!("No such system: {name}"),
     }
