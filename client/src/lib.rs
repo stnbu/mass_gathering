@@ -1,6 +1,7 @@
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use bevy_renet::{
-    renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig}, RenetClientPlugin,
+    renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
+    RenetClientPlugin,
 };
 use clap::Parser;
 use game::simulation::FromSimulation;
@@ -110,19 +111,19 @@ pub fn let_light(mut commands: Commands) {
         directional_light: DirectionalLight {
             illuminance: 10_000.0,
             shadows_enabled: true,
-            ..default()
+            ..Default::default()
         },
         transform: Transform::from_xyz(-0.5, -0.3, -1.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
+        ..Default::default()
     });
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 20_000.0,
             shadows_enabled: true,
-            ..default()
+            ..Default::default()
         },
         transform: Transform::from_xyz(1.0, -2.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
+        ..Default::default()
     });
 }
 
@@ -197,19 +198,19 @@ pub fn visualize_projectiles(
                         base_color: Color::RED + Color::WHITE * 0.2,
                         emissive: Color::rgb_u8(125, 125, 125),
                         unlit: true,
-                        ..default()
+                        ..Default::default()
                     }),
                     transform: Transform::from_scale(Vec3::ONE * 0.5),
-                    ..default()
+                    ..Default::default()
                 })
                 .with_children(|children| {
                     children.spawn(PointLightBundle {
                         point_light: PointLight {
                             intensity: 100.0,
                             color: Color::RED,
-                            ..default()
+                            ..Default::default()
                         },
-                        ..default()
+                        ..Default::default()
                     });
                 });
         }
