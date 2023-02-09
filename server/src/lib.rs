@@ -92,7 +92,6 @@ pub fn handle_server_events(
                             error!("Client already assigigned mass {id}");
                         }
                     }
-                    //
                 }
                 Err(err) => {
                     error!("While getting free mass id: {err}");
