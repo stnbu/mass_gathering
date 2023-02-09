@@ -228,7 +228,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2037,
                 resources::MassInitData {
-                    inhabitable: false,
+                    inhabitable: true,
                     motion: resources::MassMotion {
                         position: Vec3::new(1e-6, 70.0, 1e-6),
                         velocity: Vec3::new(1e-6, 1e-6, 1e-6),
@@ -276,7 +276,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2038,
                 resources::MassInitData {
-                    inhabitable: false,
+                    inhabitable: true,
                     motion: resources::MassMotion {
                         position: Vec3::new(1e-6, 1e-6, 70.0),
                         velocity: Vec3::new(1e-6, 1e-6, 1e-6),
