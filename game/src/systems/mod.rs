@@ -1,8 +1,3 @@
-fn gah() {
-    let mut x = 123u32;
-    x = -1;
-}
-
 use crate::*;
 use std::collections::HashMap;
 
