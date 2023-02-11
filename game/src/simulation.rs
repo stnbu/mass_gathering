@@ -209,21 +209,24 @@ impl FurthestTwo {
             reference,
         }
     }
-    fn update(&mut self, position: Vec3) {
-        if let Some(challenger) = self.points.0 {
-            if (self.reference - position).length() > challenger.length() {
-                self.points.1 = Some(challenger);
-                self.points.0 = Some(position);
-            } else {
-                if let Some(challenger) = self.points.1 {
-                    if (self.reference - position).length() > challenger.length() {
-                        self.points.1 = Some(position);
+    fn update(&mut self, positions: &[Vec3]) -> &mut Self {
+        for &position in positions.iter() {
+            if let Some(challenger) = self.points.0 {
+                if (self.reference - position).length() > challenger.length() {
+                    self.points.1 = Some(challenger);
+                    self.points.0 = Some(position);
+                } else {
+                    if let Some(challenger) = self.points.1 {
+                        if (self.reference - position).length() > challenger.length() {
+                            self.points.1 = Some(position);
+                        }
                     }
                 }
+            } else {
+                self.points.0 = Some(position);
             }
-        } else {
-            self.points.0 = Some(position);
         }
+        self
     }
     fn get_farthest_triplet_normal(&self) -> Option<Vec3> {
         if let Some(p0) = self.points.0 {
@@ -235,12 +238,12 @@ impl FurthestTwo {
     }
 }
 
-fn get_normal_to_widest_plane(centroid: Vec3, mut positions: Vec<Vec3>) {
-    let mut furthest_two = FurthestTwo::from(centroid);
-    positions.iter().for_each(|&p| furthest_two.update(p));
-    let norm = furthest_two.get_farthest_triplet_normal();
-    println!("norm: {norm:?}");
-}
+// fn get_normal_to_widest_plane(centroid: Vec3, mut positions: Vec<Vec3>) {
+//     let mut furthest_two = FurthestTwo::from(centroid);
+//     positions.iter().for_each(|&p| furthest_two.update(p));
+//     let norm = furthest_two.get_farthest_triplet_normal();
+//     println!("norm: {norm:?}");
+// }
 
 #[cfg(test)]
 mod tests {
@@ -248,6 +251,11 @@ mod tests {
 
     #[test]
     fn test_bob() {
-        get_normal_to_widest_plane(Vec3::ZERO, vec![Vec3::X, Vec3::Y]);
+        let mut furthest_two = FurthestTwo::from(Vec3::ZERO);
+        let furthest_two = furthest_two.update(&[Vec3::X, Vec3::Y]);
+        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
+        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
+        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
+        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
     }
 }
