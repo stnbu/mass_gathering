@@ -177,3 +177,77 @@ pub fn handle_projectile_collision(
         }
     }
 }
+
+fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
+    let total_mass = masses
+        .iter()
+        .fold(0.0, |accumulator, mass| accumulator + mass.0);
+    let x_centroid = masses
+        .iter()
+        .fold(0.0, |accumulator, mass| accumulator + mass.1.x * mass.0)
+        / total_mass;
+    let y_centroid = masses
+        .iter()
+        .fold(0.0, |accumulator, mass| accumulator + mass.1.y * mass.0)
+        / total_mass;
+    let z_centroid = masses
+        .iter()
+        .fold(0.0, |accumulator, mass| accumulator + mass.1.z * mass.0)
+        / total_mass;
+    Vec3::new(x_centroid, y_centroid, z_centroid)
+}
+
+struct FurthestTwo {
+    points: (Option<Vec3>, Option<Vec3>),
+    reference: Vec3,
+}
+
+impl FurthestTwo {
+    fn from(reference: Vec3) -> Self {
+        FurthestTwo {
+            points: (None, None),
+            reference,
+        }
+    }
+    fn update(&mut self, position: Vec3) {
+        if let Some(challenger) = self.points.0 {
+            if (self.reference - position).length() > challenger.length() {
+                self.points.1 = Some(challenger);
+                self.points.0 = Some(position);
+            } else {
+                if let Some(challenger) = self.points.1 {
+                    if (self.reference - position).length() > challenger.length() {
+                        self.points.1 = Some(position);
+                    }
+                }
+            }
+        } else {
+            self.points.0 = Some(position);
+        }
+    }
+    fn get_farthest_triplet_normal(&self) -> Option<Vec3> {
+        if let Some(p0) = self.points.0 {
+            if let Some(p1) = self.points.1 {
+                return Some((p0 - self.reference).cross(p1 - self.reference));
+            }
+        }
+        None
+    }
+}
+
+fn get_normal_to_widest_plane(centroid: Vec3, mut positions: Vec<Vec3>) {
+    let mut furthest_two = FurthestTwo::from(centroid);
+    positions.iter().for_each(|&p| furthest_two.update(p));
+    let norm = furthest_two.get_farthest_triplet_normal();
+    println!("norm: {norm:?}");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_bob() {
+        get_normal_to_widest_plane(Vec3::ZERO, vec![Vec3::X, Vec3::Y]);
+    }
+}
