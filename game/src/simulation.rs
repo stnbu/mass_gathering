@@ -197,6 +197,7 @@ fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
     Vec3::new(x_centroid, y_centroid, z_centroid)
 }
 
+#[derive(Debug)]
 struct FurthestTwo {
     points: (Option<Vec3>, Option<Vec3>),
     reference: Vec3,
@@ -212,12 +213,12 @@ impl FurthestTwo {
     fn update(&mut self, positions: &[Vec3]) -> &mut Self {
         for &position in positions.iter() {
             if let Some(challenger) = self.points.0 {
-                if (self.reference - position).length() > challenger.length() {
+                if (self.reference - position).length() >= challenger.length() {
                     self.points.1 = Some(challenger);
                     self.points.0 = Some(position);
                 } else {
                     if let Some(challenger) = self.points.1 {
-                        if (self.reference - position).length() > challenger.length() {
+                        if (self.reference - position).length() >= challenger.length() {
                             self.points.1 = Some(position);
                         }
                     }
@@ -253,9 +254,7 @@ mod tests {
     fn test_bob() {
         let mut furthest_two = FurthestTwo::from(Vec3::ZERO);
         let furthest_two = furthest_two.update(&[Vec3::X, Vec3::Y]);
-        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
-        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
-        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
+        eprintln!("far2: {:?}", furthest_two);
         eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
     }
 }
