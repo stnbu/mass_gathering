@@ -182,6 +182,12 @@ fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
     let total_mass = masses
         .iter()
         .fold(0.0, |accumulator, mass| accumulator + mass.0);
+
+    // let centroid = masses
+    //     .iter()
+    //     .fold(Vec3::ZERO, |accumulator, mass| accumulator + mass.1 * mass.0)
+    //     / total_mass;
+
     let x_centroid = masses
         .iter()
         .fold(0.0, |accumulator, mass| accumulator + mass.1.x * mass.0)
@@ -210,6 +216,9 @@ impl FurthestTwo {
             reference,
         }
     }
+
+    // FIXME: Not quite right. `>=` doesn't cover discontinuities like origin vs -1 vs +1
+    // and more.
     fn update(&mut self, positions: &[Vec3]) -> &mut Self {
         for &position in positions.iter() {
             if let Some(challenger) = self.points.0 {
@@ -229,6 +238,7 @@ impl FurthestTwo {
         }
         self
     }
+
     fn get_farthest_triplet_normal(&self) -> Option<Vec3> {
         if let Some(p0) = self.points.0 {
             if let Some(p1) = self.points.1 {
@@ -238,13 +248,6 @@ impl FurthestTwo {
         None
     }
 }
-
-// fn get_normal_to_widest_plane(centroid: Vec3, mut positions: Vec<Vec3>) {
-//     let mut furthest_two = FurthestTwo::from(centroid);
-//     positions.iter().for_each(|&p| furthest_two.update(p));
-//     let norm = furthest_two.get_farthest_triplet_normal();
-//     println!("norm: {norm:?}");
-// }
 
 #[cfg(test)]
 mod tests {
