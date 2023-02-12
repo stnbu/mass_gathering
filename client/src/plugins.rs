@@ -17,6 +17,9 @@ impl Plugin for ClientPlugin {
         app.add_system(receive_messages_from_server);
         app.add_system(panic_on_renet_error);
         //
+        app.add_system(choose_camera);
+        app.add_system(position_objective_camera);
+        //
         app.add_system_set(
             SystemSet::new()
                 .with_run_criteria(game_has_started)

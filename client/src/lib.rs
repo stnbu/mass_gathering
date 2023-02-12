@@ -63,6 +63,58 @@ pub fn receive_messages_from_server(
     }
 }
 
+pub fn position_objective_camera(
+    masses: Query<&Transform, With<components::MassID>>,
+    mut objective_camera: Query<
+        (&mut Transform, &Camera),
+        (With<ObjectiveCamera>, Without<components::MassID>),
+    >,
+) {
+    if let Ok((mut transform, camera)) = objective_camera.get_single_mut() {
+        if camera.is_active {
+            let centroid = simulation::get_centroid(
+                masses
+                    .iter()
+                    .map(|t| (scale_to_mass(t.scale), t.translation))
+                    .collect::<Vec<_>>(),
+            );
+            let positions = masses.iter().map(|t| t.translation).collect::<Vec<_>>();
+            let mut furthest_two = simulation::FurthestTwo::from(centroid);
+            let furthest_two = furthest_two.update(&positions);
+            let camera_translation = centroid
+                + furthest_two
+                    .get_farthest_triplet_normal()
+                    .unwrap()
+                    .normalize()
+                    * (furthest_two.points.0.unwrap() - centroid).length();
+            let camera_transform =
+                Transform::from_translation(camera_translation).looking_at(centroid, Vec3::Y);
+            *transform = camera_transform;
+        }
+    }
+}
+
+pub fn choose_camera(
+    mut objective_camera: Query<&mut Camera, (With<ObjectiveCamera>, Without<ClientCamera>)>,
+    mut client_camera: Query<&mut Camera, (With<ClientCamera>, Without<ObjectiveCamera>)>,
+    keys: Res<Input<KeyCode>>,
+) {
+    if let (Ok(mut objective_camera), Ok(mut client_camera)) = (
+        objective_camera.get_single_mut(),
+        client_camera.get_single_mut(),
+    ) {
+        assert!(
+            objective_camera.is_active ^ client_camera.is_active,
+            "Expected exactly one camera to be active!"
+        );
+        if keys.just_released(KeyCode::O) {
+            debug!("Swapping client/objective cameras");
+            objective_camera.is_active = !objective_camera.is_active;
+            client_camera.is_active = !client_camera.is_active;
+        }
+    }
+}
+
 pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
@@ -288,11 +340,11 @@ pub fn handle_projectile_engagement(
 }
 
 #[derive(Component)]
-struct ClientCamera;
+pub struct ClientCamera;
 const CLIENT_CAMERA_PRIORITY: isize = 0;
 
 #[derive(Component)]
-struct ObjectiveCamera;
+pub struct ObjectiveCamera;
 const OBJECTIVE_CAMERA_PRIORITY: isize = 1;
 
 pub fn visualize_masses(
