@@ -65,11 +65,27 @@ pub fn receive_messages_from_server(
 
 use bevy::prelude::{TextBundle, TextStyle};
 
+#[derive(Component)]
+pub struct InfoText;
+
 pub fn spawn_info_text(mut commands: Commands) {
-    commands.spawn(TextBundle::from_section(
-        "hello\nbevy!",
-        TextStyle::default(),
-    ));
+    commands
+        .spawn(TextBundle::from_section(
+            "hello\nbevy!",
+            TextStyle::default(),
+        ))
+        .insert(InfoText);
+}
+
+pub fn toggle_info_text(
+    mut info_text_query: Query<&mut Visibility, With<InfoText>>,
+    keys: Res<Input<KeyCode>>,
+) {
+    if keys.just_released(KeyCode::I) {
+        for mut visibility in info_text_query.iter_mut() {
+            visibility.is_visible = !visibility.is_visible;
+        }
+    }
 }
 
 pub fn position_objective_camera(
