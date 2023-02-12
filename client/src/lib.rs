@@ -105,6 +105,19 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
     }
 }
 
+pub fn spawn_objective_camera(mut commands: Commands) {
+    commands
+        .spawn(Camera3dBundle {
+            camera: Camera {
+                priority: OBJECTIVE_CAMERA_PRIORITY,
+                is_active: false,
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(ObjectiveCamera);
+}
+
 pub fn let_light(mut commands: Commands) {
     debug!("Adding some directional lighting (distant suns)");
     commands.spawn(DirectionalLightBundle {
@@ -274,6 +287,14 @@ pub fn handle_projectile_engagement(
     }
 }
 
+#[derive(Component)]
+struct ClientCamera;
+const CLIENT_CAMERA_PRIORITY: isize = 0;
+
+#[derive(Component)]
+struct ObjectiveCamera;
+const OBJECTIVE_CAMERA_PRIORITY: isize = 1;
+
 pub fn visualize_masses(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -317,7 +338,17 @@ pub fn visualize_masses(
                     if inhabited {
                         let nickname = to_nick(client_id).trim_end().to_string();
                         debug!("Mass {mass_id} is inhabited by us, {nickname}");
-                        children.spawn(Camera3dBundle::default());
+                        children
+                            .spawn(Camera3dBundle {
+                                camera: Camera {
+                                    priority: CLIENT_CAMERA_PRIORITY,
+                                    //is_active: false,
+                                    is_active: true,
+                                    ..Default::default()
+                                },
+                                ..Default::default()
+                            })
+                            .insert(ClientCamera);
                         children
                             .spawn(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
