@@ -63,6 +63,15 @@ pub fn receive_messages_from_server(
     }
 }
 
+use bevy::prelude::{TextBundle, TextStyle};
+
+pub fn spawn_info_text(mut commands: Commands) {
+    commands.spawn(TextBundle::from_section(
+        "hello\nbevy!",
+        TextStyle::default(),
+    ));
+}
+
 pub fn position_objective_camera(
     masses: Query<&Transform, With<components::MassID>>,
     mut objective_camera: Query<
