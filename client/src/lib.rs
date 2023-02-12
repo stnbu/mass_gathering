@@ -86,7 +86,8 @@ pub fn position_objective_camera(
                     .get_farthest_triplet_normal()
                     .unwrap()
                     .normalize()
-                    * (furthest_two.points.0.unwrap() - centroid).length();
+                    * (furthest_two.points.0.unwrap() - centroid).length()
+                    * 2.0;
             let camera_transform =
                 Transform::from_translation(camera_translation).looking_at(centroid, Vec3::Y);
             *transform = camera_transform;
