@@ -68,11 +68,15 @@ use bevy::prelude::{TextBundle, TextStyle};
 #[derive(Component)]
 pub struct InfoText;
 
-pub fn spawn_info_text(mut commands: Commands) {
+pub fn spawn_info_text(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands
         .spawn(TextBundle::from_section(
-            "hello\nbevy!",
-            TextStyle::default(),
+            "hello\nbevy!\nhello\nbevy!\nhello\nbevy!\nhello\nbevy!\n",
+            TextStyle {
+                font: asset_server.load("fonts/FiraSans-Bold.ttf"),
+                font_size: 100.0,
+                color: Color::WHITE,
+            },
         ))
         .insert(InfoText);
 }
@@ -82,6 +86,7 @@ pub fn toggle_info_text(
     keys: Res<Input<KeyCode>>,
 ) {
     if keys.just_released(KeyCode::I) {
+        debug!("Toggling info text visibility");
         for mut visibility in info_text_query.iter_mut() {
             visibility.is_visible = !visibility.is_visible;
         }

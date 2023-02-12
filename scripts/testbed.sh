@@ -12,7 +12,7 @@ LOG_DIR="/tmp/logs/$(date +%s)"
 mkdir -p "$LOG_DIR"
 
 LOG_FILENAME="build.out"
-cargo build -p '*' $CARGO_ARGS 2>&1 | tee "$LOG_DIR"/"$LOG_FILENAME"  &
+cargo build -p '*' $CARGO_ARGS --lib --bins 2>&1 | tee "$LOG_DIR"/"$LOG_FILENAME"  &
 
 for nick in $NICKNAMES ; do
     LOG_FILENAME="client-${nick}.out"
