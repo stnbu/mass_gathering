@@ -1087,7 +1087,7 @@ dependencies = [
 
 [[package]]
 name = "client"
-version = "0.37.0"
+version = "0.38.0"
 dependencies = [
  "bevy",
  "bevy_rapier3d",
@@ -1638,7 +1638,7 @@ dependencies = [
 
 [[package]]
 name = "game"
-version = "0.37.0"
+version = "0.38.0"
 dependencies = [
  "bevy",
  "bevy_rapier3d",
@@ -3084,7 +3084,7 @@ dependencies = [
 
 [[package]]
 name = "server"
-version = "0.37.0"
+version = "0.38.0"
 dependencies = [
  "bevy",
  "bevy_renet",
