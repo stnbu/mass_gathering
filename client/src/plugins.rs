@@ -18,8 +18,6 @@ impl Plugin for ClientPlugin {
         app.add_system(panic_on_renet_error);
         //
         app.add_system(choose_camera);
-        app.add_system(toggle_info_text);
-        app.add_startup_system(spawn_info_text);
         app.add_system(position_objective_camera);
         //
         app.add_system_set(
