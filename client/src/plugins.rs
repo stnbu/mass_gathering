@@ -1,4 +1,5 @@
 use crate::*;
+use bevy_egui::EguiPlugin;
 use clap::Parser;
 
 #[derive(Default)]
@@ -17,7 +18,12 @@ impl Plugin for ClientPlugin {
         app.add_system(receive_messages_from_server);
         app.add_system(panic_on_renet_error);
         //
-        app.add_system(choose_camera);
+
+        app.add_plugin(EguiPlugin);
+        app.insert_resource(UiState::default());
+        app.add_system(info_text);
+        app.add_system(set_active_camera);
+        app.add_system(set_ui_state);
         app.add_system(position_objective_camera);
         //
         app.add_system_set(

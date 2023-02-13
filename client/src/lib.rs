@@ -62,39 +62,97 @@ pub fn receive_messages_from_server(
         to_client_events.send(bincode::deserialize(&message).unwrap());
     }
 }
-
 // pub fn client_waiting_screen(
 //     mut ctx: ResMut<EguiContext>,
 //     game_config: Res<resources::GameConfig>,
 // ) {
-//     SidePanel::left("client_waiting_screen")
-//         .resizable(false)
-//         .min_width(250.0)
-//         .frame(Frame {
-//             outer_margin: Margin::symmetric(10.0, 20.0),
-//             fill: FRAME_FILL,
-//             ..Default::default()
-//         })
-//         .show(ctx.ctx_mut(), |ui| {
-//             ui.label(
-//                 RichText::new("Waiting for more players\n\nConnected:")
-//                     .color(TEXT_COLOR)
-//                     .font(FontId {
-//                         size: 20.0,
-//                         family: Monospace,
-//                     }),
-//             );
-//             ui.separator();
-//             for (&id, _) in game_config.client_mass_map.iter() {
-//                 let nick = to_nick(id);
-//                 let text = format!("{nick}");
-//                 ui.label(RichText::new(text).color(TEXT_COLOR).font(FontId {
-//                     size: 16.0,
-//                     family: Monospace,
-//                 }));
-//             }
-//         });
 // }
+
+use bevy_egui::{
+    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
+    EguiContext,
+};
+
+pub fn info_text(
+    mut ctx: ResMut<EguiContext>,
+    ui_state: Res<UiState>,
+    game_config: Option<Res<resources::GameConfig>>,
+    objective_camera: Query<&Camera, With<ObjectiveCamera>>,
+    client: Res<RenetClient>,
+) {
+    if !ui_state.show_info {
+        return;
+    }
+    let my_id = client.client_id();
+    if let Some(ref game_config) = game_config {
+        for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
+            let color = game_config.init_data.masses.get(&mass_id).unwrap().color;
+            let nickname = to_nick(client_id).trim_end().to_owned();
+            let prefix = if client_id == my_id { "*" } else { " " };
+            let line = format!("{prefix}{nickname} ({color:?})");
+            let line = line.to_owned();
+            debug!("{line}");
+        }
+        let line = format!(
+            "camera: {}",
+            if objective_camera.get_single().unwrap().is_active {
+                "objective"
+            } else {
+                "client"
+            },
+        );
+        debug!("{line}");
+    }
+    debug!("");
+    //
+    let text_color = Color32::from_rgba_premultiplied(0, 255, 0, 100);
+    SidePanel::left("info")
+        .resizable(false)
+        .min_width(250.0)
+        .frame(Frame {
+            outer_margin: Margin::symmetric(10.0, 20.0),
+            fill: Color32::TRANSPARENT,
+            ..Default::default()
+        })
+        .show(ctx.ctx_mut(), |ui| {
+            ui.label(
+                RichText::new("Waiting for more players\n\nConnected:")
+                    .color(text_color)
+                    .font(FontId {
+                        size: 20.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.separator();
+            for &nick in &[" bob", "*jim", " bil"] {
+                ui.label(RichText::new(nick).color(text_color).font(FontId {
+                    size: 16.0,
+                    family: Monospace,
+                }));
+            }
+        });
+}
+
+#[derive(Resource, Debug)]
+pub enum ActiveCamera {
+    Client,
+    Objective,
+}
+
+#[derive(Resource, Debug)]
+pub struct UiState {
+    pub camera: ActiveCamera,
+    pub show_info: bool,
+}
+
+impl Default for UiState {
+    fn default() -> Self {
+        Self {
+            camera: ActiveCamera::Client,
+            show_info: true,
+        }
+    }
+}
 
 pub fn position_objective_camera(
     masses: Query<&Transform, With<components::MassID>>,
@@ -128,11 +186,26 @@ pub fn position_objective_camera(
     }
 }
 
-pub fn choose_camera(
+pub fn set_ui_state(mut ui_state: ResMut<UiState>, keys: Res<Input<KeyCode>>) {
+    if keys.just_released(KeyCode::O) {
+        ui_state.camera = match ui_state.camera {
+            ActiveCamera::Objective => ActiveCamera::Client,
+            ActiveCamera::Client => ActiveCamera::Objective,
+        };
+    }
+    if keys.just_released(KeyCode::I) {
+        ui_state.show_info = !ui_state.show_info;
+    }
+}
+
+pub fn set_active_camera(
+    ui_state: Res<UiState>,
     mut objective_camera: Query<&mut Camera, (With<ObjectiveCamera>, Without<ClientCamera>)>,
     mut client_camera: Query<&mut Camera, (With<ClientCamera>, Without<ObjectiveCamera>)>,
-    keys: Res<Input<KeyCode>>,
 ) {
+    if !ui_state.is_changed() && !ui_state.is_added() {
+        return;
+    }
     if let (Ok(mut objective_camera), Ok(mut client_camera)) = (
         objective_camera.get_single_mut(),
         client_camera.get_single_mut(),
@@ -141,10 +214,15 @@ pub fn choose_camera(
             objective_camera.is_active ^ client_camera.is_active,
             "Expected exactly one camera to be active!"
         );
-        if keys.just_released(KeyCode::O) {
-            debug!("Swapping client/objective cameras");
-            objective_camera.is_active = !objective_camera.is_active;
-            client_camera.is_active = !client_camera.is_active;
+        match ui_state.camera {
+            ActiveCamera::Client => {
+                objective_camera.is_active = false;
+                client_camera.is_active = true;
+            }
+            ActiveCamera::Objective => {
+                objective_camera.is_active = true;
+                client_camera.is_active = false;
+            }
         }
     }
 }
