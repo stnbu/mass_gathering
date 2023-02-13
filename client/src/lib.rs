@@ -114,15 +114,14 @@ pub fn info_text(
             if let Some(game_config) = game_config {
                 for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
                     let color = game_config.init_data.masses.get(&mass_id).unwrap().color;
-                    //panic!("gaarg: {color:?}");
                     let [r, g, b, a] = color;
-                    let color = Color32::from_rgba_unmultiplied(
+                    // FIXME: these all wind up being white!
+                    let color = Color32::from_rgba_premultiplied(
                         (r * 255.0) as u8,
                         (g * 255.0) as u8,
                         (b * 255.0) as u8,
                         (a * 255.0) as u8,
                     );
-                    //panic!("c: {color:?}");
                     let nickname = to_nick(client_id).trim_end().to_owned();
                     let prefix = if client_id == my_id { "* " } else { "  " };
                     let line = format!("{prefix}{nickname}");
@@ -510,7 +509,6 @@ pub fn visualize_masses(
 
                 mass_commands.with_children(|children| {
                     if inhabited {
-                        let nickname = to_nick(client_id).trim_end().to_string();
                         children
                             .spawn(Camera3dBundle {
                                 camera: Camera {
