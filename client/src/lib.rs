@@ -84,26 +84,6 @@ pub fn info_text(
         return;
     }
     let my_id = client.client_id();
-    if let Some(ref game_config) = game_config {
-        for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
-            let color = game_config.init_data.masses.get(&mass_id).unwrap().color;
-            let nickname = to_nick(client_id).trim_end().to_owned();
-            let prefix = if client_id == my_id { "*" } else { " " };
-            let line = format!("{prefix}{nickname} ({color:?})");
-            let line = line.to_owned();
-            debug!("{line}");
-        }
-        let line = format!(
-            "camera: {}",
-            if objective_camera.get_single().unwrap().is_active {
-                "objective"
-            } else {
-                "client"
-            },
-        );
-        debug!("{line}");
-    }
-    debug!("");
     //
     let text_color = Color32::from_rgba_premultiplied(0, 255, 0, 100);
     SidePanel::left("info")
@@ -116,7 +96,15 @@ pub fn info_text(
         })
         .show(ctx.ctx_mut(), |ui| {
             ui.label(
-                RichText::new("Waiting for more players\n\nConnected:")
+                RichText::new("`i` key toggles this [i]nfo menu")
+                    .color(text_color)
+                    .font(FontId {
+                        size: 20.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.label(
+                RichText::new("`o` key swaps [o]bjective and client cameras")
                     .color(text_color)
                     .font(FontId {
                         size: 20.0,
@@ -124,8 +112,33 @@ pub fn info_text(
                     }),
             );
             ui.separator();
-            for &nick in &[" bob", "*jim", " bil"] {
-                ui.label(RichText::new(nick).color(text_color).font(FontId {
+            if let Some(ref game_config) = game_config {
+                for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
+                    let [r, g, b, a] = game_config.init_data.masses.get(&mass_id).unwrap().color;
+                    let color = Color32::from_rgba_unmultiplied(
+                        (r * 255.0) as u8,
+                        (g * 255.0) as u8,
+                        (b * 255.0) as u8,
+                        (a * 255.0) as u8,
+                    );
+                    let nickname = to_nick(client_id).trim_end().to_owned();
+                    let prefix = if client_id == my_id { "*" } else { " " };
+                    let line = format!("{prefix}{nickname}");
+                    let line = line.to_owned();
+                    ui.label(RichText::new(line).color(color).font(FontId {
+                        size: 16.0,
+                        family: Monospace,
+                    }));
+                }
+                let line = format!(
+                    "camera: {}",
+                    if objective_camera.get_single().unwrap().is_active {
+                        "objective"
+                    } else {
+                        "client"
+                    },
+                );
+                ui.label(RichText::new(line).color(text_color).font(FontId {
                     size: 16.0,
                     family: Monospace,
                 }));
