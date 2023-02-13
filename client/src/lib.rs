@@ -112,17 +112,25 @@ pub fn info_text(
                     }),
             );
             ui.separator();
-            if let Some(ref game_config) = game_config {
-                for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
-                    let [r, g, b, a] = game_config.init_data.masses.get(&mass_id).unwrap().color;
+            if let Some(game_config) = game_config {
+                for (&client_id, &mass_id) in game_config
+                    .client_mass_map
+                    .iter()
+                    .collect::<Vec<_>>()
+                    .sort_by(|(&a, _), (&b, _)| to_nick(a).cmp(&to_nick(b)))
+                {
+                    let color = game_config.init_data.masses.get(&mass_id).unwrap().color;
+                    //panic!("gaarg: {color:?}");
+                    let [r, g, b, a] = color;
                     let color = Color32::from_rgba_unmultiplied(
                         (r * 255.0) as u8,
                         (g * 255.0) as u8,
                         (b * 255.0) as u8,
                         (a * 255.0) as u8,
                     );
+                    //panic!("c: {color:?}");
                     let nickname = to_nick(client_id).trim_end().to_owned();
-                    let prefix = if client_id == my_id { "*" } else { " " };
+                    let prefix = if client_id == my_id { "* " } else { "  " };
                     let line = format!("{prefix}{nickname}");
                     let line = line.to_owned();
                     ui.label(RichText::new(line).color(color).font(FontId {
@@ -489,7 +497,6 @@ pub fn visualize_masses(
                 mass_init_data,
             } = message
             {
-                debug!("Making mass {mass_id} ({entity:?}) visible");
                 let mut mass_commands = commands.entity(entity);
                 let color: Color = mass_init_data.color.into();
                 let transform: Transform = mass_init_data.into();
@@ -503,10 +510,6 @@ pub fn visualize_masses(
                     ..Default::default()
                 });
 
-                if !mass_init_data.inhabitable {
-                    debug!("Mass {mass_id} is uninhabitable");
-                }
-
                 let inhabited = mass_id == *game_config.client_mass_map.get(&client_id).unwrap();
 
                 let inhabitable = mass_init_data.inhabitable && !inhabited;
@@ -514,7 +517,6 @@ pub fn visualize_masses(
                 mass_commands.with_children(|children| {
                     if inhabited {
                         let nickname = to_nick(client_id).trim_end().to_string();
-                        debug!("Mass {mass_id} is inhabited by us, {nickname}");
                         children
                             .spawn(Camera3dBundle {
                                 camera: Camera {
@@ -551,7 +553,6 @@ pub fn visualize_masses(
                             .insert(components::Sights);
                     }
                     if inhabitable {
-                        debug!("Mass {mass_id} is inhabitable");
                         // barrel
                         children.spawn(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Capsule {
