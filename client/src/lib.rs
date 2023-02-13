@@ -36,7 +36,6 @@ pub fn handle_set_game_config(
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::SetGameConfig(game_config) = message {
-            debug!("GameConfig received. Inserting as resource: {game_config:#?}");
             commands.insert_resource(game_config.clone());
         }
     }
@@ -113,12 +112,7 @@ pub fn info_text(
             );
             ui.separator();
             if let Some(game_config) = game_config {
-                for (&client_id, &mass_id) in game_config
-                    .client_mass_map
-                    .iter()
-                    .collect::<Vec<_>>()
-                    .sort_by(|(&a, _), (&b, _)| to_nick(a).cmp(&to_nick(b)))
-                {
+                for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
                     let color = game_config.init_data.masses.get(&mass_id).unwrap().color;
                     //panic!("gaarg: {color:?}");
                     let [r, g, b, a] = color;
