@@ -69,18 +69,19 @@ use bevy::prelude::{TextBundle, TextStyle};
 pub struct InfoText;
 
 pub fn spawn_info_text(mut commands: Commands, asset_server: Res<AssetServer>) {
+    let lines = &["line one", "line two"];
     commands
         .spawn(
-            TextBundle::from_section(
-                "hello\nbevy!\nhello\nbevy!\nhello\nbevy!\nhello\nbevy!\n",
-                TextStyle {
+            TextBundle::from_sections(lines.iter().map(|line| {
+                let value = line.to_string();
+                let style = TextStyle {
                     font: asset_server.load("fonts/FiraSans-Bold.ttf"),
                     font_size: 30.0,
                     color: Color::WHITE,
-                },
-            ) // Set the alignment of the Text
+                };
+                TextSection { value, style }
+            }))
             .with_text_alignment(TextAlignment::TOP_CENTER)
-            // Set the style of the TextBundle itself.
             .with_style(Style {
                 position_type: PositionType::Absolute,
                 position: UiRect {
