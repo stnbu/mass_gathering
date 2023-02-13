@@ -99,7 +99,7 @@ pub fn info_text(
                 RichText::new("`i` key toggles this [i]nfo menu")
                     .color(text_color)
                     .font(FontId {
-                        size: 20.0,
+                        size: 10.0,
                         family: Monospace,
                     }),
             );
@@ -107,7 +107,7 @@ pub fn info_text(
                 RichText::new("`o` key swaps [o]bjective and client cameras")
                     .color(text_color)
                     .font(FontId {
-                        size: 20.0,
+                        size: 10.0,
                         family: Monospace,
                     }),
             );
@@ -126,7 +126,7 @@ pub fn info_text(
                     let line = format!("{prefix}{nickname}");
                     let line = line.to_owned();
                     ui.label(RichText::new(line).color(color).font(FontId {
-                        size: 16.0,
+                        size: 8.0,
                         family: Monospace,
                     }));
                 }
@@ -139,7 +139,7 @@ pub fn info_text(
                     },
                 );
                 ui.label(RichText::new(line).color(text_color).font(FontId {
-                    size: 16.0,
+                    size: 8.0,
                     family: Monospace,
                 }));
             }
