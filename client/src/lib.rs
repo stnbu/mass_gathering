@@ -72,7 +72,7 @@ pub fn info_text(
     ui_state: Res<resources::UiState>,
     game_state: Res<State<resources::GameState>>,
     game_config: Option<Res<resources::GameConfig>>,
-    cameras: Query<(&Camera, &resources::Cameras)>,
+    cameras: Query<(&Camera, &resources::CameraTag)>,
     client: Res<RenetClient>,
 ) {
     if !ui_state.show_info {
@@ -144,10 +144,10 @@ pub fn info_text(
 
 pub fn position_objective_camera(
     masses: Query<&Transform, With<components::MassID>>,
-    mut cameras: Query<(&mut Transform, &Camera, &resources::Cameras), Without<components::MassID>>,
+    mut cameras: Query<(&mut Transform, &Camera, &resources::CameraTag), Without<components::MassID>>,
 ) {
     if let Ok((mut transform, camera, tag)) = cameras.get_single_mut() {
-        if *tag == resources::Cameras::Objective && camera.is_active {
+        if *tag == resources::CameraTag::Objective && camera.is_active {
             let centroid = simulation::get_centroid(
                 masses
                     .iter()
@@ -174,8 +174,8 @@ pub fn position_objective_camera(
 pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<KeyCode>>) {
     if keys.just_released(KeyCode::O) {
         ui_state.camera = match ui_state.camera {
-            resources::Cameras::Objective => resources::Cameras::Client,
-            resources::Cameras::Client => resources::Cameras::Objective,
+            resources::CameraTag::Objective => resources::CameraTag::Client,
+            resources::CameraTag::Client => resources::CameraTag::Objective,
         };
     }
     if keys.just_released(KeyCode::I) {
@@ -185,7 +185,7 @@ pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<Ke
 
 pub fn set_active_camera(
     ui_state: Res<resources::UiState>,
-    mut cameras: Query<(&mut Camera, &resources::Cameras)>,
+    mut cameras: Query<(&mut Camera, &resources::CameraTag)>,
 ) {
     // TODO: Who, where, how to assert that we have only one active camera yadda yadda?
     if ui_state.is_changed() || ui_state.is_added() {
@@ -242,8 +242,8 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
 }
 
 pub fn spawn_cameras(mut commands: Commands) {
-    for tag in &[resources::Cameras::Client, resources::Cameras::Objective] {
-        let is_active = *tag == resources::Cameras::Client;
+    for tag in &[resources::CameraTag::Client, resources::CameraTag::Objective] {
+        let is_active = *tag == resources::CameraTag::Client;
         let priority = tag.into();
         commands
             .spawn(Camera3dBundle {
@@ -434,7 +434,7 @@ pub fn visualize_masses(
     mut from_simulation_events: EventReader<FromSimulation>,
     client: Res<RenetClient>,
     game_config: Option<Res<resources::GameConfig>>,
-    cameras: Query<(Entity, &resources::Cameras)>,
+    cameras: Query<(Entity, &resources::CameraTag)>,
 ) {
     if let Some(game_config) = game_config {
         let client_id = client.client_id();
@@ -466,7 +466,7 @@ pub fn visualize_masses(
                     // rustgods, what's the smart version of:
                     let mut client_camera = None;
                     for (camera, tag) in cameras.iter() {
-                        if *tag == resources::Cameras::Client {
+                        if *tag == resources::CameraTag::Client {
                             client_camera = Some(camera);
                         }
                     }

@@ -105,22 +105,22 @@ impl GameConfig {
 // Both a `Resource`, because it is used in `UiState`, and also
 // a `Component` because it is used to mark camera entities.
 #[derive(Resource, Debug, Component, PartialEq, Clone)]
-pub enum Cameras {
+pub enum CameraTag {
     Client,
     Objective,
 }
 
 // Converting to an `isize` let's us re-use the component as `Camera::priority`
-impl From<&Cameras> for isize {
-    fn from(active_camera: &Cameras) -> Self {
+impl From<&CameraTag> for isize {
+    fn from(active_camera: &CameraTag) -> Self {
         match active_camera {
-            Cameras::Client => 0,
-            Cameras::Objective => 1,
+            CameraTag::Client => 0,
+            CameraTag::Objective => 1,
         }
     }
 }
 
-impl std::fmt::Display for Cameras {
+impl std::fmt::Display for CameraTag {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         let display = match self {
             Self::Client => "client",
@@ -132,14 +132,14 @@ impl std::fmt::Display for Cameras {
 
 #[derive(Resource, Debug)]
 pub struct UiState {
-    pub camera: Cameras,
+    pub camera: CameraTag,
     pub show_info: bool,
 }
 
 impl Default for UiState {
     fn default() -> Self {
         Self {
-            camera: Cameras::Client,
+            camera: CameraTag::Client,
             show_info: true,
         }
     }
