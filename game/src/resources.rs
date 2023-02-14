@@ -11,6 +11,17 @@ pub enum GameState {
     Stopped, // initial state
 }
 
+impl std::fmt::Display for GameState {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let display = match self {
+            Self::Running => "running",
+            Self::Waiting => "waiting",
+            Self::Stopped => "stopped",
+        };
+        write!(f, "{}", display)
+    }
+}
+
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
     pub speed: u32,
@@ -99,5 +110,48 @@ impl GameConfig {
             .next()
             .copied()
             .ok_or("No more free IDs!")
+    }
+}
+
+// Both a `Resource`, because it is used in `UiState`, and also
+// a `Component` because it is used to mark camera entities.
+#[derive(Resource, Debug, Component, PartialEq, Clone)]
+pub enum CameraTag {
+    Client,
+    Objective,
+}
+
+// Converting to an `isize` let's us re-use the component as `Camera::priority`
+impl From<&CameraTag> for isize {
+    fn from(active_camera: &CameraTag) -> Self {
+        match active_camera {
+            CameraTag::Client => 0,
+            CameraTag::Objective => 1,
+        }
+    }
+}
+
+impl std::fmt::Display for CameraTag {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let display = match self {
+            Self::Client => "client",
+            Self::Objective => "objective",
+        };
+        write!(f, "{}", display)
+    }
+}
+
+#[derive(Resource, Debug)]
+pub struct UiState {
+    pub camera: CameraTag,
+    pub show_info: bool,
+}
+
+impl Default for UiState {
+    fn default() -> Self {
+        Self {
+            camera: CameraTag::Client,
+            show_info: true,
+        }
     }
 }

@@ -177,3 +177,58 @@ pub fn handle_projectile_collision(
         }
     }
 }
+
+pub fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
+    let total_mass = masses
+        .iter()
+        .fold(0.0, |accumulator, mass| accumulator + mass.0);
+    masses.iter().fold(Vec3::ZERO, |accumulator, mass| {
+        accumulator + mass.1 * mass.0
+    }) / total_mass
+}
+
+#[derive(Debug)]
+pub struct FurthestTwo {
+    pub points: (Option<Vec3>, Option<Vec3>),
+    pub reference: Vec3,
+}
+
+impl FurthestTwo {
+    pub fn from(reference: Vec3) -> Self {
+        FurthestTwo {
+            points: (None, None),
+            reference,
+        }
+    }
+
+    // FIXME: Not quite right. `>=` doesn't cover discontinuities like origin vs -1 vs +1
+    // and more.
+    pub fn update(&mut self, positions: &[Vec3]) -> &mut Self {
+        for &position in positions.iter() {
+            if let Some(challenger) = self.points.0 {
+                if (self.reference - position).length() >= challenger.length() {
+                    self.points.1 = Some(challenger);
+                    self.points.0 = Some(position);
+                } else {
+                    if let Some(challenger) = self.points.1 {
+                        if (self.reference - position).length() >= challenger.length() {
+                            self.points.1 = Some(position);
+                        }
+                    }
+                }
+            } else {
+                self.points.0 = Some(position);
+            }
+        }
+        self
+    }
+
+    pub fn get_farthest_triplet_normal(&self) -> Option<Vec3> {
+        if let Some(p0) = self.points.0 {
+            if let Some(p1) = self.points.1 {
+                return Some((p0 - self.reference).cross(p1 - self.reference));
+            }
+        }
+        None
+    }
+}

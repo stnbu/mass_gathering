@@ -1,6 +1,7 @@
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use bevy_renet::{
-    renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig}, RenetClientPlugin,
+    renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
+    RenetClientPlugin,
 };
 use clap::Parser;
 use game::simulation::FromSimulation;
@@ -35,7 +36,6 @@ pub fn handle_set_game_config(
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::SetGameConfig(game_config) = message {
-            debug!("GameConfig received. Inserting as resource: {game_config:#?}");
             commands.insert_resource(game_config.clone());
         }
     }
@@ -59,6 +59,165 @@ pub fn receive_messages_from_server(
 ) {
     while let Some(message) = client.receive_message(DefaultChannel::Reliable) {
         to_client_events.send(bincode::deserialize(&message).unwrap());
+    }
+}
+
+use bevy_egui::{
+    egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
+    EguiContext,
+};
+
+pub fn info_text(
+    mut ctx: ResMut<EguiContext>,
+    ui_state: Res<resources::UiState>,
+    game_state: Res<State<resources::GameState>>,
+    game_config: Option<Res<resources::GameConfig>>,
+    cameras: Query<(&Camera, &resources::CameraTag)>,
+    client: Res<RenetClient>,
+) {
+    if !ui_state.show_info {
+        return;
+    }
+    let my_id = client.client_id();
+    let text_color = Color32::from_rgba_premultiplied(0, 255, 0, 100);
+    SidePanel::left("info")
+        .resizable(false)
+        .min_width(250.0)
+        .frame(Frame {
+            outer_margin: Margin::symmetric(10.0, 20.0),
+            fill: Color32::TRANSPARENT,
+            ..Default::default()
+        })
+        .show(ctx.ctx_mut(), |ui| {
+            ui.label(
+                RichText::new("`i` key toggles this [i]nfo menu")
+                    .color(text_color)
+                    .font(FontId {
+                        size: 10.0,
+                        family: Monospace,
+                    }),
+            );
+            ui.label(
+                RichText::new("`o` key swaps [o]bjective and client cameras")
+                    .color(text_color)
+                    .font(FontId {
+                        size: 10.0,
+                        family: Monospace,
+                    }),
+            );
+            for (camera, tag) in cameras.iter() {
+                if *tag == ui_state.camera {
+                    if !camera.is_active {
+                        warn!("Selected camera {} is not active!", ui_state.camera);
+                    }
+                    let line = format!("camera: {tag}");
+                    ui.label(RichText::new(line).color(text_color).font(FontId {
+                        size: 8.0,
+                        family: Monospace,
+                    }));
+                }
+            }
+            let connected = if client.is_connected() { "yes" } else { "no" };
+            let line = format!("connected: {connected}");
+            ui.label(RichText::new(line).color(text_color).font(FontId {
+                size: 8.0,
+                family: Monospace,
+            }));
+            let game_state = game_state.current();
+            let line = format!("game state: {game_state}");
+            ui.label(RichText::new(line).color(text_color).font(FontId {
+                size: 8.0,
+                family: Monospace,
+            }));
+            ui.separator();
+            if let Some(game_config) = game_config {
+                for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
+                    let color = game_config.init_data.masses.get(&mass_id).unwrap().color;
+                    let [r, g, b, a] = color;
+                    // FIXME: Because "color" in `InitData` is not done right!
+                    // `r,g,b` un-normalized, and yet `a=1.0` ...!
+                    let [r, g, b] = Vec3::new(r, g, b).normalize().to_array();
+                    let color = Color32::from_rgba_premultiplied(
+                        (r * 255.0) as u8,
+                        (g * 255.0) as u8,
+                        (b * 255.0) as u8,
+                        (a * 255.0) as u8,
+                    );
+                    let nickname = to_nick(client_id).trim_end().to_owned();
+                    let prefix = if client_id == my_id { "* " } else { "  " };
+                    let line = format!("{prefix}{nickname}");
+                    let line = line.to_owned();
+                    ui.label(RichText::new(line).color(color).font(FontId {
+                        size: 8.0,
+                        family: Monospace,
+                    }));
+                }
+            }
+        });
+}
+
+pub fn position_objective_camera(
+    masses: Query<&Transform, With<components::MassID>>,
+    mut cameras: Query<
+        (&mut Transform, &Camera, &resources::CameraTag),
+        Without<components::MassID>,
+    >,
+) {
+    for (mut transform, _, tag) in cameras.iter_mut() {
+        if *tag == resources::CameraTag::Objective {
+            // FIXME: what if not is_active?
+            let centroid = simulation::get_centroid(
+                masses
+                    .iter()
+                    .map(|t| (scale_to_mass(t.scale), t.translation))
+                    .collect::<Vec<_>>(),
+            );
+            let positions = masses.iter().map(|t| t.translation).collect::<Vec<_>>();
+            let mut furthest_two = simulation::FurthestTwo::from(centroid);
+            let furthest_two = furthest_two.update(&positions);
+            if let Some(triplet_cross) = furthest_two.get_farthest_triplet_normal() {
+                let camera_translation_direction = triplet_cross.normalize();
+                // FIXME: points.0 is `Some` becaues `get_farthest_triplet_normal()` is `Some`.
+                // A better way forward: Make a type that represents all the masses at a frozen
+                // point in time `(mass, location)` and provide methods like `get_centroid()`
+                // on downward. We needen't leave people wondering, "What is 'triplet_cross'?"
+                let max_centroid_distance = (furthest_two.points.0.unwrap() - centroid).length();
+                let camera_translation = camera_translation_direction * max_centroid_distance * 2.0;
+                *transform =
+                    Transform::from_translation(camera_translation).looking_at(centroid, Vec3::Y);
+            } else {
+                // FIXME: (yes, please, fix me.) ... this is not working, we'll just put a pin in it!!
+                trace!("no triplet!");
+            }
+        }
+    }
+}
+
+pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<KeyCode>>) {
+    if keys.just_released(KeyCode::O) {
+        ui_state.camera = match ui_state.camera {
+            resources::CameraTag::Objective => resources::CameraTag::Client,
+            resources::CameraTag::Client => resources::CameraTag::Objective,
+        };
+    }
+    if keys.just_released(KeyCode::I) {
+        ui_state.show_info = !ui_state.show_info;
+    }
+}
+
+pub fn set_active_camera(
+    ui_state: Res<resources::UiState>,
+    mut cameras: Query<(&mut Camera, &resources::CameraTag)>,
+) {
+    // TODO: Who, where, how to assert that we have only one active camera yadda yadda?
+    if ui_state.is_changed() || ui_state.is_added() {
+        for (mut camera, tag) in cameras.iter_mut() {
+            if ui_state.camera == *tag {
+                camera.is_active = true;
+            } else {
+                camera.is_active = false;
+            }
+        }
     }
 }
 
@@ -104,25 +263,45 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
     }
 }
 
+pub fn spawn_cameras(mut commands: Commands) {
+    for tag in &[
+        resources::CameraTag::Client,
+        resources::CameraTag::Objective,
+    ] {
+        let is_active = *tag == resources::CameraTag::Client;
+        let priority = tag.into();
+        commands
+            .spawn(Camera3dBundle {
+                camera: Camera {
+                    priority,
+                    is_active,
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .insert(tag.clone());
+    }
+}
+
 pub fn let_light(mut commands: Commands) {
     debug!("Adding some directional lighting (distant suns)");
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 10_000.0,
             shadows_enabled: true,
-            ..default()
+            ..Default::default()
         },
         transform: Transform::from_xyz(-0.5, -0.3, -1.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
+        ..Default::default()
     });
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 20_000.0,
             shadows_enabled: true,
-            ..default()
+            ..Default::default()
         },
         transform: Transform::from_xyz(1.0, -2.0, 3.0).looking_at(Vec3::ZERO, Vec3::Y),
-        ..default()
+        ..Default::default()
     });
 }
 
@@ -197,19 +376,19 @@ pub fn visualize_projectiles(
                         base_color: Color::RED + Color::WHITE * 0.2,
                         emissive: Color::rgb_u8(125, 125, 125),
                         unlit: true,
-                        ..default()
+                        ..Default::default()
                     }),
                     transform: Transform::from_scale(Vec3::ONE * 0.5),
-                    ..default()
+                    ..Default::default()
                 })
                 .with_children(|children| {
                     children.spawn(PointLightBundle {
                         point_light: PointLight {
                             intensity: 100.0,
                             color: Color::RED,
-                            ..default()
+                            ..Default::default()
                         },
-                        ..default()
+                        ..Default::default()
                     });
                 });
         }
@@ -280,6 +459,7 @@ pub fn visualize_masses(
     mut from_simulation_events: EventReader<FromSimulation>,
     client: Res<RenetClient>,
     game_config: Option<Res<resources::GameConfig>>,
+    cameras: Query<(Entity, &resources::CameraTag)>,
 ) {
     if let Some(game_config) = game_config {
         let client_id = client.client_id();
@@ -290,7 +470,6 @@ pub fn visualize_masses(
                 mass_init_data,
             } = message
             {
-                debug!("Making mass {mass_id} ({entity:?}) visible");
                 let mut mass_commands = commands.entity(entity);
                 let color: Color = mass_init_data.color.into();
                 let transform: Transform = mass_init_data.into();
@@ -304,19 +483,28 @@ pub fn visualize_masses(
                     ..Default::default()
                 });
 
-                if !mass_init_data.inhabitable {
-                    debug!("Mass {mass_id} is uninhabitable");
-                }
-
                 let inhabited = mass_id == *game_config.client_mass_map.get(&client_id).unwrap();
 
                 let inhabitable = mass_init_data.inhabitable && !inhabited;
 
+                if inhabited {
+                    // rustgods, what's the smart version of:
+                    let mut client_camera = None;
+                    for (camera, tag) in cameras.iter() {
+                        if *tag == resources::CameraTag::Client {
+                            client_camera = Some(camera);
+                        }
+                    }
+                    let client_camera = if let Some(c) = client_camera {
+                        c
+                    } else {
+                        panic!("No client camera. Cannot proceed!");
+                    };
+                    mass_commands.add_child(client_camera);
+                }
+
                 mass_commands.with_children(|children| {
                     if inhabited {
-                        let nickname = to_nick(client_id).trim_end().to_string();
-                        debug!("Mass {mass_id} is inhabited by us, {nickname}");
-                        children.spawn(Camera3dBundle::default());
                         children
                             .spawn(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -342,7 +530,6 @@ pub fn visualize_masses(
                             .insert(components::Sights);
                     }
                     if inhabitable {
-                        debug!("Mass {mass_id} is inhabitable");
                         // barrel
                         children.spawn(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Capsule {

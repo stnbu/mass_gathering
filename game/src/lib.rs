@@ -12,7 +12,7 @@ pub mod systems;
 
 pub mod plugins;
 
-pub const PROTOCOL_ID: u64 = 37;
+pub const PROTOCOL_ID: u64 = 38;
 pub const SERVER_IP: &str = "127.0.0.1";
 pub const SERVER_PORT: u16 = 5743;
 
