@@ -17,7 +17,7 @@ impl Plugin for ClientPlugin {
         app.add_system(receive_messages_from_server);
         app.add_system(panic_on_renet_error);
         app.add_plugin(EguiPlugin);
-        app.insert_resource(UiState::default());
+        app.insert_resource(resources::UiState::default());
         app.add_system(info_text);
         app.add_system(set_active_camera);
         app.add_system(set_ui_state);

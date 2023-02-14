@@ -69,9 +69,9 @@ use bevy_egui::{
 
 pub fn info_text(
     mut ctx: ResMut<EguiContext>,
-    ui_state: Res<UiState>,
+    ui_state: Res<resources::UiState>,
     game_config: Option<Res<resources::GameConfig>>,
-    objective_camera: Query<&Camera, With<ObjectiveCamera>>,
+    objective_camera: Query<&Camera, With<components::ObjectiveCamera>>,
     client: Res<RenetClient>,
 ) {
     if !ui_state.show_info {
@@ -141,32 +141,14 @@ pub fn info_text(
         });
 }
 
-#[derive(Resource, Debug)]
-pub enum ActiveCamera {
-    Client,
-    Objective,
-}
-
-#[derive(Resource, Debug)]
-pub struct UiState {
-    pub camera: ActiveCamera,
-    pub show_info: bool,
-}
-
-impl Default for UiState {
-    fn default() -> Self {
-        Self {
-            camera: ActiveCamera::Client,
-            show_info: true,
-        }
-    }
-}
-
 pub fn position_objective_camera(
     masses: Query<&Transform, With<components::MassID>>,
     mut objective_camera: Query<
         (&mut Transform, &Camera),
-        (With<ObjectiveCamera>, Without<components::MassID>),
+        (
+            With<components::ObjectiveCamera>,
+            Without<components::MassID>,
+        ),
     >,
 ) {
     if let Ok((mut transform, camera)) = objective_camera.get_single_mut() {
@@ -194,11 +176,11 @@ pub fn position_objective_camera(
     }
 }
 
-pub fn set_ui_state(mut ui_state: ResMut<UiState>, keys: Res<Input<KeyCode>>) {
+pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<KeyCode>>) {
     if keys.just_released(KeyCode::O) {
         ui_state.camera = match ui_state.camera {
-            ActiveCamera::Objective => ActiveCamera::Client,
-            ActiveCamera::Client => ActiveCamera::Objective,
+            resources::ActiveCamera::Objective => resources::ActiveCamera::Client,
+            resources::ActiveCamera::Client => resources::ActiveCamera::Objective,
         };
     }
     if keys.just_released(KeyCode::I) {
@@ -207,9 +189,21 @@ pub fn set_ui_state(mut ui_state: ResMut<UiState>, keys: Res<Input<KeyCode>>) {
 }
 
 pub fn set_active_camera(
-    ui_state: Res<UiState>,
-    mut objective_camera: Query<&mut Camera, (With<ObjectiveCamera>, Without<ClientCamera>)>,
-    mut client_camera: Query<&mut Camera, (With<ClientCamera>, Without<ObjectiveCamera>)>,
+    ui_state: Res<resources::UiState>,
+    mut objective_camera: Query<
+        &mut Camera,
+        (
+            With<components::ObjectiveCamera>,
+            Without<components::ClientCamera>,
+        ),
+    >,
+    mut client_camera: Query<
+        &mut Camera,
+        (
+            With<components::ClientCamera>,
+            Without<components::ObjectiveCamera>,
+        ),
+    >,
 ) {
     if !ui_state.is_changed() && !ui_state.is_added() {
         return;
@@ -223,11 +217,11 @@ pub fn set_active_camera(
             "Expected exactly one camera to be active!"
         );
         match ui_state.camera {
-            ActiveCamera::Client => {
+            resources::ActiveCamera::Client => {
                 objective_camera.is_active = false;
                 client_camera.is_active = true;
             }
-            ActiveCamera::Objective => {
+            resources::ActiveCamera::Objective => {
                 objective_camera.is_active = true;
                 client_camera.is_active = false;
             }
@@ -281,13 +275,13 @@ pub fn spawn_objective_camera(mut commands: Commands) {
     commands
         .spawn(Camera3dBundle {
             camera: Camera {
-                priority: OBJECTIVE_CAMERA_PRIORITY,
+                priority: components::OBJECTIVE_CAMERA_PRIORITY,
                 is_active: false,
                 ..Default::default()
             },
             ..Default::default()
         })
-        .insert(ObjectiveCamera);
+        .insert(components::ObjectiveCamera);
 }
 
 pub fn let_light(mut commands: Commands) {
@@ -459,14 +453,6 @@ pub fn handle_projectile_engagement(
     }
 }
 
-#[derive(Component)]
-pub struct ClientCamera;
-const CLIENT_CAMERA_PRIORITY: isize = 0;
-
-#[derive(Component)]
-pub struct ObjectiveCamera;
-const OBJECTIVE_CAMERA_PRIORITY: isize = 1;
-
 pub fn visualize_masses(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -506,14 +492,14 @@ pub fn visualize_masses(
                         children
                             .spawn(Camera3dBundle {
                                 camera: Camera {
-                                    priority: CLIENT_CAMERA_PRIORITY,
+                                    priority: components::CLIENT_CAMERA_PRIORITY,
                                     //is_active: false,
                                     is_active: true,
                                     ..Default::default()
                                 },
                                 ..Default::default()
                             })
-                            .insert(ClientCamera);
+                            .insert(components::ClientCamera);
                         children
                             .spawn(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {

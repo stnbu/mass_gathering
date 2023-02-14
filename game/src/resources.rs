@@ -101,3 +101,24 @@ impl GameConfig {
             .ok_or("No more free IDs!")
     }
 }
+
+#[derive(Resource, Debug)]
+pub enum ActiveCamera {
+    Client,
+    Objective,
+}
+
+#[derive(Resource, Debug)]
+pub struct UiState {
+    pub camera: ActiveCamera,
+    pub show_info: bool,
+}
+
+impl Default for UiState {
+    fn default() -> Self {
+        Self {
+            camera: ActiveCamera::Client,
+            show_info: true,
+        }
+    }
+}
