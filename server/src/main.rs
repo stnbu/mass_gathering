@@ -1,3 +1,4 @@
+/// The server binary (executable)
 use bevy::prelude::App;
 
 fn main() {

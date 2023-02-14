@@ -1,3 +1,4 @@
+/// Components common to all packages (sort of)
 use crate::*;
 use bevy::prelude::Component;
 

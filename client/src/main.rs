@@ -1,3 +1,4 @@
+/// The executable client binary
 use bevy::prelude::App;
 
 fn main() {

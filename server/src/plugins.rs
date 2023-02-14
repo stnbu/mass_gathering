@@ -1,3 +1,4 @@
+/// Plugin(s) required for server binary (executable)
 use crate::*;
 use bevy_renet::RenetServerPlugin;
 use clap::Parser;

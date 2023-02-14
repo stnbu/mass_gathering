@@ -1,3 +1,6 @@
+/// Resources regardless of package (sort of).
+/// Things that are both `Component` and `Resource` also
+/// go here (I think).
 use crate::*;
 
 use serde::{Deserialize, Serialize};

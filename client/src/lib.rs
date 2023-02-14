@@ -1,3 +1,8 @@
+/// The client module
+///
+/// "Client" is currently defined as: the networking, gui (windows), and simulation parts put together to play the game, on a network.
+/// Contrast "server", is a networking server, which requires a full simulation, and also can _optionally_ do the graphical stuff or
+/// be headless.
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use bevy_renet::{
     renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},

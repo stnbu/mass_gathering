@@ -1,3 +1,8 @@
+/// Physics!!
+///
+/// Oribity stuff and mass-mass collision stuff (the latter disabled for now).
+///
+/// Maybe this goes in "simulation"?
 use crate::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 

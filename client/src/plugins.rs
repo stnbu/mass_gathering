@@ -1,3 +1,4 @@
+/// Plugin(s) required to implement a server binary (executable).
 use crate::*;
 use bevy_egui::EguiPlugin;
 use clap::Parser;

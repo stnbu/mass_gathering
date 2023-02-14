@@ -1,3 +1,4 @@
+/// Plugins common to all packages
 use crate::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 

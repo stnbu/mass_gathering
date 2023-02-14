@@ -1,3 +1,4 @@
+/// Functionality common to all packages
 use bevy::ecs::schedule::ShouldRun;
 pub use bevy::prelude::*;
 use bevy_renet::renet::RenetError;

@@ -1,3 +1,6 @@
+/// Server stuff. Will/may include both "simulation" and "visual" stuff (for debugging).
+///
+/// But in this case there will be exactly zero instead of exactly one inhabited mass, should be optionally headless, and "reads its own output", i.e. anything that gets sent to clients also gets sent to this server's internal simulation (rotation does not matter). And it should be `x,y,z,v,m` exactly the same as the clients, or close enough.
 use bevy::app::AppExit;
 use bevy_renet::renet::ServerEvent;
 use bevy_renet::renet::{

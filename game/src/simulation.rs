@@ -1,3 +1,4 @@
+/// Everything minus the visuals. Move stuff, spawn stuff, but nothing that's not headless.
 use crate::*;
 use bevy_rapier3d::prelude::{Collider, CollisionEvent, RigidBody};
 use bevy_renet::renet::RenetClient;

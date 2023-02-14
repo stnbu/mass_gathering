@@ -1,10 +1,4 @@
-// FIXME:
-//
-// Maybe make better use of channel characteristics?
-//
-//  - Rotate -> Unreliable
-//  - InitData -> Chunk
-
+/// All events used by the game, independant of package (sort of)
 use crate::*;
 use bevy::prelude::Component;
 use serde::{Deserialize, Serialize};

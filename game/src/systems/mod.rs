@@ -1,3 +1,9 @@
+/// Code for generating the various hand-built systems.
+///
+/// NOTE: I don't like "system" but here I mean roughly "solar system" not "bevy system", please post your ideas to my coordinates.
+///
+/// The way I think this should work: A separate package (?) provides tools to build serialized "systems" which you may write to disk if you like.
+/// The game can just somehow consume the serialized version, unpack, and proceed as before.
 use crate::*;
 use std::collections::HashMap;
 
