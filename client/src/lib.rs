@@ -93,7 +93,7 @@ pub fn info_text(
                 RichText::new("`i` key toggles this [i]nfo menu")
                     .color(text_color)
                     .font(FontId {
-                        size: 10.0,
+                        size: 8.0,
                         family: Monospace,
                     }),
             );
@@ -101,14 +101,15 @@ pub fn info_text(
                 RichText::new("`o` key swaps [o]bjective and client cameras")
                     .color(text_color)
                     .font(FontId {
-                        size: 10.0,
+                        size: 8.0,
                         family: Monospace,
                     }),
             );
+            ui.separator();
             for (camera, tag) in cameras.iter() {
                 if *tag == ui_state.camera {
                     if !camera.is_active {
-                        warn!("Selected camera {} is not active!", ui_state.camera);
+                        warn!("Selected camera \"{}\" is not active!", ui_state.camera);
                     }
                     let line = format!("camera: {tag}");
                     ui.label(RichText::new(line).color(text_color).font(FontId {
