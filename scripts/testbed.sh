@@ -23,6 +23,3 @@ LOG_FILENAME="server.out"
 ./target/debug/server $SERVER_ARGS --system $SYSTEM_NAME 2>&1 | tee "$LOG_DIR"/"$LOG_FILENAME"
 
 echo "Log dir: ${LOG_DIR}"
-
-# echo ">>> HERE COME INTERESTING LOG MESSAGES..."
-# grep -rvE 'DEBUG|Blocking waiting for file lock on package cache|Radeon|Blocking waiting for file lock on build directory|  Finished dev \[| Running `' $LOG_DIR
