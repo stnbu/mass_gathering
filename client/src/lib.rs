@@ -134,7 +134,9 @@ pub fn info_text(
                 for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
                     let color = game_config.init_data.masses.get(&mass_id).unwrap().color;
                     let [r, g, b, a] = color;
-                    // FIXME: these all wind up being white!
+                    // FIXME: Because "color" in `InitData` is not done right!
+                    // `r,g,b` un-normalized, and yet `a=1.0` ...!
+                    let [r, g, b] = Vec3::new(r, g, b).normalize().to_array();
                     let color = Color32::from_rgba_premultiplied(
                         (r * 255.0) as u8,
                         (g * 255.0) as u8,
