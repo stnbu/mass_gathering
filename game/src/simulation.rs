@@ -38,6 +38,17 @@ pub enum FromSimulation {
     },
 }
 
+/// React to the insertion of the GameConfig resource.
+///   * Iterate through the masses and spawn `TransformBundle`s that are
+///   the basis of the simulation. These are "invisible" such that we can
+///   skip all GUI stuff and use this in a "headless" sense.
+///   * Conditionally handle "inhabited" and complicated stuff.
+///   * Emit an event for each new entity. Other systems can respond by.
+///   Upgrading them to "visible" so they can be rendered and displayed.
+///   * We do not care about seeing them but we do care how "big" they are
+///   because we insert a `Collider`.
+///
+/// refactor_tags: simulation, running, eventwriter, client
 pub fn handle_game_config_insertion(
     mut commands: Commands,
     game_config: Option<Res<resources::GameConfig>>,
