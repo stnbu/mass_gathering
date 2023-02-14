@@ -493,7 +493,6 @@ pub fn visualize_masses(
                             .spawn(Camera3dBundle {
                                 camera: Camera {
                                     priority: components::CLIENT_CAMERA_PRIORITY,
-                                    //is_active: false,
                                     is_active: true,
                                     ..Default::default()
                                 },
