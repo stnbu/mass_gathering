@@ -144,10 +144,14 @@ pub fn info_text(
 
 pub fn position_objective_camera(
     masses: Query<&Transform, With<components::MassID>>,
-    mut cameras: Query<(&mut Transform, &Camera, &resources::CameraTag), Without<components::MassID>>,
+    mut cameras: Query<
+        (&mut Transform, &Camera, &resources::CameraTag),
+        Without<components::MassID>,
+    >,
 ) {
-    if let Ok((mut transform, camera, tag)) = cameras.get_single_mut() {
-        if *tag == resources::CameraTag::Objective && camera.is_active {
+    for (mut transform, _, tag) in cameras.iter_mut() {
+        if *tag == resources::CameraTag::Objective {
+            // FIXME: what if not is_active?
             let centroid = simulation::get_centroid(
                 masses
                     .iter()
@@ -157,16 +161,19 @@ pub fn position_objective_camera(
             let positions = masses.iter().map(|t| t.translation).collect::<Vec<_>>();
             let mut furthest_two = simulation::FurthestTwo::from(centroid);
             let furthest_two = furthest_two.update(&positions);
-            let camera_translation = centroid
-                + furthest_two
-                    .get_farthest_triplet_normal()
-                    .unwrap()
-                    .normalize()
-                    * (furthest_two.points.0.unwrap() - centroid).length()
-                    * 2.0;
-            let camera_transform =
-                Transform::from_translation(camera_translation).looking_at(centroid, Vec3::Y);
-            *transform = camera_transform;
+            if let Some(triplet_cross) = furthest_two.get_farthest_triplet_normal() {
+                let camera_translation_direction = triplet_cross.normalize();
+                // FIXME: points.0 is `Some` becaues `get_farthest_triplet_normal()` is `Some`.
+                // A better way forward: Make a type that represents all the masses at a frozen
+                // point in time `(mass, location)` and provide methods like `get_centroid()`
+                // on downward. We needen't leave people wondering, "What is 'triplet_cross'?"
+                let max_centroid_distance = (furthest_two.points.0.unwrap() - centroid).length();
+                let camera_translation = camera_translation_direction * max_centroid_distance * 2.0;
+                *transform =
+                    Transform::from_translation(camera_translation).looking_at(centroid, Vec3::Y);
+            } else {
+                warn!("no triplet!");
+            }
         }
     }
 }
@@ -242,7 +249,10 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
 }
 
 pub fn spawn_cameras(mut commands: Commands) {
-    for tag in &[resources::CameraTag::Client, resources::CameraTag::Objective] {
+    for tag in &[
+        resources::CameraTag::Client,
+        resources::CameraTag::Objective,
+    ] {
         let is_active = *tag == resources::CameraTag::Client;
         let priority = tag.into();
         commands
