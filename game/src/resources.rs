@@ -11,6 +11,17 @@ pub enum GameState {
     Stopped, // initial state
 }
 
+impl std::fmt::Display for GameState {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let display = match self {
+            Self::Running => "running",
+            Self::Waiting => "waiting",
+            Self::Stopped => "stopped",
+        };
+        write!(f, "{}", display)
+    }
+}
+
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 pub struct PhysicsConfig {
     pub speed: u32,

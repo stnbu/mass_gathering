@@ -105,6 +105,30 @@ pub fn info_text(
                         family: Monospace,
                     }),
             );
+            for (camera, tag) in cameras.iter() {
+                if *tag == ui_state.camera {
+                    if !camera.is_active {
+                        warn!("Selected camera {} is not active!", ui_state.camera);
+                    }
+                    let line = format!("camera: {tag}");
+                    ui.label(RichText::new(line).color(text_color).font(FontId {
+                        size: 8.0,
+                        family: Monospace,
+                    }));
+                }
+            }
+            let connected = if client.is_connected() { "yes" } else { "no" };
+            let line = format!("connected: {connected}");
+            ui.label(RichText::new(line).color(text_color).font(FontId {
+                size: 8.0,
+                family: Monospace,
+            }));
+            let game_state = game_state.current();
+            let line = format!("game state: {game_state}");
+            ui.label(RichText::new(line).color(text_color).font(FontId {
+                size: 8.0,
+                family: Monospace,
+            }));
             ui.separator();
             if let Some(game_config) = game_config {
                 for (&client_id, &mass_id) in game_config.client_mass_map.iter() {
@@ -125,18 +149,6 @@ pub fn info_text(
                         size: 8.0,
                         family: Monospace,
                     }));
-                }
-                for (camera, tag) in cameras.iter() {
-                    if *tag == ui_state.camera {
-                        if !camera.is_active {
-                            warn!("Selected camera {} is not active!", ui_state.camera);
-                        }
-                        let line = format!("camera: {tag}");
-                        ui.label(RichText::new(line).color(text_color).font(FontId {
-                            size: 8.0,
-                            family: Monospace,
-                        }));
-                    }
                 }
             }
         });
@@ -172,7 +184,8 @@ pub fn position_objective_camera(
                 *transform =
                     Transform::from_translation(camera_translation).looking_at(centroid, Vec3::Y);
             } else {
-                warn!("no triplet!");
+                // FIXME: (yes, please, fix me.) ... this is not working, we'll just put a pin in it!!
+                trace!("no triplet!");
             }
         }
     }
