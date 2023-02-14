@@ -182,25 +182,9 @@ pub fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
     let total_mass = masses
         .iter()
         .fold(0.0, |accumulator, mass| accumulator + mass.0);
-
-    // FIXME: Maybe this?
-    // let centroid = masses
-    //     .iter()
-    //     .fold(Vec3::ZERO, |accumulator, mass| accumulator + mass.1 * mass.0)
-    //     / total_mass;
-    let x_centroid = masses
-        .iter()
-        .fold(0.0, |accumulator, mass| accumulator + mass.1.x * mass.0)
-        / total_mass;
-    let y_centroid = masses
-        .iter()
-        .fold(0.0, |accumulator, mass| accumulator + mass.1.y * mass.0)
-        / total_mass;
-    let z_centroid = masses
-        .iter()
-        .fold(0.0, |accumulator, mass| accumulator + mass.1.z * mass.0)
-        / total_mass;
-    Vec3::new(x_centroid, y_centroid, z_centroid)
+    masses.iter().fold(Vec3::ZERO, |accumulator, mass| {
+        accumulator + mass.1 * mass.0
+    }) / total_mass
 }
 
 #[derive(Debug)]
