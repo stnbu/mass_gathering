@@ -37,7 +37,7 @@ impl Plugin for ClientPlugin {
 
         app.add_system(bevy::window::close_on_esc);
         app.add_system(set_window_title);
-        app.add_startup_system(spawn_objective_camera);
+        app.add_startup_system(spawn_cameras);
         app.add_startup_system(set_resolution);
         app.add_startup_system(let_light);
         app.add_plugin(RenetClientPlugin::default());

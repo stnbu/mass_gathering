@@ -70,8 +70,9 @@ use bevy_egui::{
 pub fn info_text(
     mut ctx: ResMut<EguiContext>,
     ui_state: Res<resources::UiState>,
+    game_state: Res<State<resources::GameState>>,
     game_config: Option<Res<resources::GameConfig>>,
-    objective_camera: Query<&Camera, With<components::ObjectiveCamera>>,
+    cameras: Query<(&Camera, &resources::Cameras)>,
     client: Res<RenetClient>,
 ) {
     if !ui_state.show_info {
@@ -125,34 +126,28 @@ pub fn info_text(
                         family: Monospace,
                     }));
                 }
-                let line = format!(
-                    "camera: {}",
-                    if objective_camera.get_single().unwrap().is_active {
-                        "objective"
-                    } else {
-                        "client"
-                    },
-                );
-                ui.label(RichText::new(line).color(text_color).font(FontId {
-                    size: 8.0,
-                    family: Monospace,
-                }));
+                for (camera, tag) in cameras.iter() {
+                    if *tag == ui_state.camera {
+                        if !camera.is_active {
+                            warn!("Selected camera {} is not active!", ui_state.camera);
+                        }
+                        let line = format!("camera: {tag}");
+                        ui.label(RichText::new(line).color(text_color).font(FontId {
+                            size: 8.0,
+                            family: Monospace,
+                        }));
+                    }
+                }
             }
         });
 }
 
 pub fn position_objective_camera(
     masses: Query<&Transform, With<components::MassID>>,
-    mut objective_camera: Query<
-        (&mut Transform, &Camera),
-        (
-            With<components::ObjectiveCamera>,
-            Without<components::MassID>,
-        ),
-    >,
+    mut cameras: Query<(&mut Transform, &Camera, &resources::Cameras), Without<components::MassID>>,
 ) {
-    if let Ok((mut transform, camera)) = objective_camera.get_single_mut() {
-        if camera.is_active {
+    if let Ok((mut transform, camera, tag)) = cameras.get_single_mut() {
+        if *tag == resources::Cameras::Objective && camera.is_active {
             let centroid = simulation::get_centroid(
                 masses
                     .iter()
@@ -179,8 +174,8 @@ pub fn position_objective_camera(
 pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<KeyCode>>) {
     if keys.just_released(KeyCode::O) {
         ui_state.camera = match ui_state.camera {
-            resources::ActiveCamera::Objective => resources::ActiveCamera::Client,
-            resources::ActiveCamera::Client => resources::ActiveCamera::Objective,
+            resources::Cameras::Objective => resources::Cameras::Client,
+            resources::Cameras::Client => resources::Cameras::Objective,
         };
     }
     if keys.just_released(KeyCode::I) {
@@ -190,40 +185,15 @@ pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<Ke
 
 pub fn set_active_camera(
     ui_state: Res<resources::UiState>,
-    mut objective_camera: Query<
-        &mut Camera,
-        (
-            With<components::ObjectiveCamera>,
-            Without<components::ClientCamera>,
-        ),
-    >,
-    mut client_camera: Query<
-        &mut Camera,
-        (
-            With<components::ClientCamera>,
-            Without<components::ObjectiveCamera>,
-        ),
-    >,
+    mut cameras: Query<(&mut Camera, &resources::Cameras)>,
 ) {
-    if !ui_state.is_changed() && !ui_state.is_added() {
-        return;
-    }
-    if let (Ok(mut objective_camera), Ok(mut client_camera)) = (
-        objective_camera.get_single_mut(),
-        client_camera.get_single_mut(),
-    ) {
-        assert!(
-            objective_camera.is_active ^ client_camera.is_active,
-            "Expected exactly one camera to be active!"
-        );
-        match ui_state.camera {
-            resources::ActiveCamera::Client => {
-                objective_camera.is_active = false;
-                client_camera.is_active = true;
-            }
-            resources::ActiveCamera::Objective => {
-                objective_camera.is_active = true;
-                client_camera.is_active = false;
+    // TODO: Who, where, how to assert that we have only one active camera yadda yadda?
+    if ui_state.is_changed() || ui_state.is_added() {
+        for (mut camera, tag) in cameras.iter_mut() {
+            if ui_state.camera == *tag {
+                camera.is_active = true;
+            } else {
+                camera.is_active = false;
             }
         }
     }
@@ -271,17 +241,21 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
     }
 }
 
-pub fn spawn_objective_camera(mut commands: Commands) {
-    commands
-        .spawn(Camera3dBundle {
-            camera: Camera {
-                priority: components::OBJECTIVE_CAMERA_PRIORITY,
-                is_active: false,
+pub fn spawn_cameras(mut commands: Commands) {
+    for tag in &[resources::Cameras::Client, resources::Cameras::Objective] {
+        let is_active = *tag == resources::Cameras::Client;
+        let priority = tag.into();
+        commands
+            .spawn(Camera3dBundle {
+                camera: Camera {
+                    priority,
+                    is_active,
+                    ..Default::default()
+                },
                 ..Default::default()
-            },
-            ..Default::default()
-        })
-        .insert(components::ObjectiveCamera);
+            })
+            .insert(tag.clone());
+    }
 }
 
 pub fn let_light(mut commands: Commands) {
@@ -460,6 +434,7 @@ pub fn visualize_masses(
     mut from_simulation_events: EventReader<FromSimulation>,
     client: Res<RenetClient>,
     game_config: Option<Res<resources::GameConfig>>,
+    cameras: Query<(Entity, &resources::Cameras)>,
 ) {
     if let Some(game_config) = game_config {
         let client_id = client.client_id();
@@ -487,18 +462,24 @@ pub fn visualize_masses(
 
                 let inhabitable = mass_init_data.inhabitable && !inhabited;
 
+                if inhabited {
+                    // rustgods, what's the smart version of:
+                    let mut client_camera = None;
+                    for (camera, tag) in cameras.iter() {
+                        if *tag == resources::Cameras::Client {
+                            client_camera = Some(camera);
+                        }
+                    }
+                    let client_camera = if let Some(c) = client_camera {
+                        c
+                    } else {
+                        panic!("No client camera. Cannot proceed!");
+                    };
+                    mass_commands.add_child(client_camera);
+                }
+
                 mass_commands.with_children(|children| {
                     if inhabited {
-                        children
-                            .spawn(Camera3dBundle {
-                                camera: Camera {
-                                    priority: components::CLIENT_CAMERA_PRIORITY,
-                                    is_active: true,
-                                    ..Default::default()
-                                },
-                                ..Default::default()
-                            })
-                            .insert(components::ClientCamera);
                         children
                             .spawn(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
