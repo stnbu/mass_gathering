@@ -61,11 +61,6 @@ pub fn receive_messages_from_server(
         to_client_events.send(bincode::deserialize(&message).unwrap());
     }
 }
-// pub fn client_waiting_screen(
-//     mut ctx: ResMut<EguiContext>,
-//     game_config: Res<resources::GameConfig>,
-// ) {
-// }
 
 use bevy_egui::{
     egui::{style::Margin, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel},
@@ -83,7 +78,6 @@ pub fn info_text(
         return;
     }
     let my_id = client.client_id();
-    //
     let text_color = Color32::from_rgba_premultiplied(0, 255, 0, 100);
     SidePanel::left("info")
         .resizable(false)

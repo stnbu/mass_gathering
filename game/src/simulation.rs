@@ -183,11 +183,11 @@ pub fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
         .iter()
         .fold(0.0, |accumulator, mass| accumulator + mass.0);
 
+    // FIXME: Maybe this?
     // let centroid = masses
     //     .iter()
     //     .fold(Vec3::ZERO, |accumulator, mass| accumulator + mass.1 * mass.0)
     //     / total_mass;
-
     let x_centroid = masses
         .iter()
         .fold(0.0, |accumulator, mass| accumulator + mass.1.x * mass.0)
@@ -246,18 +246,5 @@ impl FurthestTwo {
             }
         }
         None
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_bob() {
-        let mut furthest_two = FurthestTwo::from(Vec3::ZERO);
-        let furthest_two = furthest_two.update(&[Vec3::X, Vec3::Y]);
-        eprintln!("far2: {:?}", furthest_two);
-        eprintln!("norm: {:?}", furthest_two.get_farthest_triplet_normal());
     }
 }
