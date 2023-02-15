@@ -4,6 +4,7 @@ use bevy_egui::EguiPlugin;
 use clap::Parser;
 
 #[derive(Default)]
+/// refactor_tags: UNSET
 pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {

@@ -19,36 +19,44 @@ pub const SERVER_PORT: u16 = 5743;
 
 // NOTE: Density is assumed to be 1.0 everywhere, so mass and volume are used interchangably.
 
+/// refactor_tags: UNSET
 pub fn radius_to_mass(radius: f32) -> f32 {
     (3.0 / 4.0) * TAU * radius.powf(3.0)
 }
 
+/// refactor_tags: UNSET
 pub fn mass_to_radius(mass: f32) -> f32 {
     ((mass * (4.0 / 3.0)) / TAU).powf(1.0 / 3.0)
 }
 
+/// refactor_tags: UNSET
 pub fn scale_to_radius(scale: Vec3) -> f32 {
     // TODO: Should assert that it's a uniform scale.
     scale.x // arbitrary axis
 }
 
+/// refactor_tags: UNSET
 pub fn radius_to_scale(radius: f32) -> Vec3 {
     Vec3::splat(radius)
 }
 
+/// refactor_tags: UNSET
 pub fn scale_to_mass(scale: Vec3) -> f32 {
     radius_to_mass(scale_to_radius(scale))
 }
 
+/// refactor_tags: UNSET
 pub fn mass_to_scale(mass: f32) -> Vec3 {
     radius_to_scale(mass_to_radius(mass))
 }
 
+/// refactor_tags: UNSET
 pub fn to_nick(id: u64) -> String {
     let nic_vec: Vec<u8> = id.to_ne_bytes().to_vec();
     String::from_utf8(nic_vec).unwrap() // NOTE includes trailing spaces
 }
 
+/// refactor_tags: UNSET
 pub fn from_nick(nick: &str) -> u64 {
     let mut nick_vec = [b' '; 8];
     if nick.len() > 8 {
@@ -60,6 +68,7 @@ pub fn from_nick(nick: &str) -> u64 {
     u64::from_ne_bytes(nick_vec)
 }
 
+/// refactor_tags: UNSET
 pub fn with_gravity(
     game_config: Option<Res<resources::GameConfig>>,
     game_state: Res<State<resources::GameState>>,
@@ -74,6 +83,7 @@ pub fn with_gravity(
     ShouldRun::No
 }
 
+/// refactor_tags: UNSET
 pub fn get_log_plugin(package: &str) -> bevy::log::LogPlugin {
     if cfg!(debug_assertions) {
         let filter = format!("info,wgpu_core=warn,wgpu_hal=off,{package}=debug");
@@ -84,12 +94,14 @@ pub fn get_log_plugin(package: &str) -> bevy::log::LogPlugin {
     }
 }
 
+/// refactor_tags: UNSET
 pub fn panic_on_renet_error(mut renet_error: EventReader<RenetError>) {
     for e in renet_error.iter() {
         panic!("Renet error: {e:?}");
     }
 }
 
+/// refactor_tags: UNSET
 pub fn game_has_started(
     game_config: Option<Res<resources::GameConfig>>,
     game_state: Res<State<resources::GameState>>,

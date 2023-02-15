@@ -4,6 +4,7 @@ use bevy_renet::RenetServerPlugin;
 use clap::Parser;
 
 #[derive(Default)]
+/// refactor_tags: UNSET
 pub struct ServerPlugin;
 
 impl Plugin for ServerPlugin {

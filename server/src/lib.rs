@@ -14,6 +14,7 @@ use std::{net::UdpSocket, time::SystemTime};
 pub mod plugins;
 
 #[derive(Parser, Resource)]
+/// refactor_tags: UNSET
 pub struct ServerCliArgs {
     #[arg(long, default_value_t = 1)]
     pub speed: u32,
@@ -25,6 +26,7 @@ pub struct ServerCliArgs {
     pub zerog: bool,
 }
 
+/// refactor_tags: UNSET
 pub fn new_renet_server(address: String) -> RenetServer {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
@@ -44,6 +46,7 @@ pub fn new_renet_server(address: String) -> RenetServer {
     .unwrap()
 }
 
+/// refactor_tags: UNSET
 pub fn handle_server_events(
     mut server_events: EventReader<ServerEvent>,
     mut server: ResMut<RenetServer>,

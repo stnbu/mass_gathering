@@ -96,6 +96,7 @@ pub fn handle_game_config_insertion(
     }
 }
 
+/// refactor_tags: UNSET
 pub fn handle_projectile_fired(
     mut commands: Commands,
     mut to_client_events: EventReader<events::ToClient>,
@@ -117,6 +118,7 @@ pub fn handle_projectile_fired(
     }
 }
 
+/// refactor_tags: UNSET
 pub fn move_projectiles(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &mut Transform, &events::ProjectileFlight)>,
@@ -165,6 +167,7 @@ pub fn move_projectiles(
     }
 }
 
+/// refactor_tags: UNSET
 pub fn handle_projectile_collision(
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,
@@ -190,6 +193,7 @@ pub fn handle_projectile_collision(
     }
 }
 
+/// refactor_tags: UNSET
 pub fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
     let total_mass = masses
         .iter()
@@ -200,6 +204,7 @@ pub fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
 }
 
 #[derive(Debug)]
+/// refactor_tags: UNSET
 pub struct FurthestTwo {
     pub points: (Option<Vec3>, Option<Vec3>),
     pub reference: Vec3,
