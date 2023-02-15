@@ -1,9 +1,15 @@
+/// Physics!!
+///
+/// Oribity stuff and mass-mass collision stuff (the latter disabled for now).
+///
+/// Maybe this goes in "simulation"?
 use crate::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
 #[derive(Debug)]
 pub struct MassCollisionEvent(pub Entity, pub Entity);
 
+/// refactor_tags: UNSET
 pub fn handle_mass_collisions(
     mut collision_events: EventReader<CollisionEvent>,
     mut mass_collision_events: EventWriter<MassCollisionEvent>,
@@ -21,6 +27,7 @@ pub fn handle_mass_collisions(
 
 pub struct DespawnMassEvent(pub Entity);
 
+/// refactor_tags: UNSET
 pub fn handle_despawn_mass(
     mut commands: Commands,
     mut despawn_mass_events: EventReader<DespawnMassEvent>,
@@ -38,6 +45,7 @@ pub fn handle_despawn_mass(
 // * Define and implement an "extension type" so you can `set_mass()` and
 //   `get_mass` on type `Transform` (using `scale`).
 
+/// refactor_tags: UNSET
 pub fn merge_masses(
     mut mass_query: Query<(&mut Transform, &mut components::Momentum, Entity)>,
     inhabitant_query: Query<
@@ -130,6 +138,7 @@ impl Default for PointMassBundle {
     }
 }
 
+/// refactor_tags: UNSET
 pub fn freefall(
     mut masses_query: Query<(Entity, &mut Transform, &mut components::Momentum)>,
     game_config: Res<resources::GameConfig>,

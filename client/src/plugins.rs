@@ -1,8 +1,10 @@
+/// Plugin(s) required to implement a server binary (executable).
 use crate::*;
 use bevy_egui::EguiPlugin;
 use clap::Parser;
 
 #[derive(Default)]
+/// refactor_tags: UNSET
 pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {

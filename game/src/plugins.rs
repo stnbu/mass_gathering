@@ -1,7 +1,9 @@
+/// Plugins common to all packages
 use crate::*;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 
 #[derive(Default)]
+/// refactor_tags: UNSET
 pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
@@ -16,6 +18,7 @@ impl Plugin for CorePlugin {
 }
 
 #[derive(Default)]
+/// refactor_tags: UNSET
 pub struct SimulationPlugin;
 
 // FIXME: The mass-mass collision and merging code has been disabled. This

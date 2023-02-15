@@ -1,3 +1,8 @@
+/// The client module
+///
+/// "Client" is currently defined as: the networking, gui (windows), and simulation parts put together to play the game, on a network.
+/// Contrast "server", is a networking server, which requires a full simulation, and also can _optionally_ do the graphical stuff or
+/// be headless.
 use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
 use bevy_renet::{
     renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
@@ -18,6 +23,13 @@ pub struct ClientCliArgs {
     pub address: String,
 }
 
+/// Unconditionally set `GameState` for each `SetGameState` event read
+///
+/// NOTE: This could be done on the server as well and we could forget
+/// about the server writing its own state separately. In that case, is
+/// ToClient a reasonable name for the event? (probably still yes)
+///
+/// refactor_tags: to_client_read, game_state_write
 pub fn handle_set_game_state(
     mut game_state: ResMut<State<resources::GameState>>,
     mut to_client_events: EventReader<events::ToClient>,
@@ -30,6 +42,11 @@ pub fn handle_set_game_state(
     }
 }
 
+/// Insert `GameConfig` for each `SetGameConfig` event read
+///
+/// NOTE: Could we insert this on the server too a la `GameState`??
+///
+/// refactor_tags: to_client_read, commands, game_config_insert
 pub fn handle_set_game_config(
     mut commands: Commands,
     mut to_client_events: EventReader<events::ToClient>,
@@ -41,6 +58,11 @@ pub fn handle_set_game_config(
     }
 }
 
+/// Send every `ToServer` event read, over the network to the server
+///
+/// NOTE: Definitely only on "client"
+///
+/// refactor_tags: to_server_read, network_client_write
 pub fn send_messages_to_server(
     mut to_server_events: EventReader<events::ToServer>,
     mut client: ResMut<RenetClient>,
@@ -53,6 +75,11 @@ pub fn send_messages_to_server(
     }
 }
 
+/// For every `ToClient` received over the network from the server, send it as an event
+///
+/// NOTE: Only "client" but, the server lacks this analog for its client-on-server.
+///
+/// refactor_tags: network_client_write, to_client_write
 pub fn receive_messages_from_server(
     mut client: ResMut<RenetClient>,
     mut to_client_events: EventWriter<events::ToClient>,
@@ -67,6 +94,11 @@ use bevy_egui::{
     EguiContext,
 };
 
+/// Read various resources and display a toggleable info screen
+///
+/// NOTE: This system can tolerate absence of `GameConfig`, since this is available before its insertion.
+///
+/// refactor_tags: ui_state_read, game_state_read, game_config_read, cameras_read, network_client_read, egui, gui
 pub fn info_text(
     mut ctx: ResMut<EguiContext>,
     ui_state: Res<resources::UiState>,
@@ -157,6 +189,9 @@ pub fn info_text(
         });
 }
 
+/// Cleverly position the "objective" camera to get a good view of the masses, using only the masses as input.
+///
+/// refactor_tags: cameras_write, mass_id_read, gui
 pub fn position_objective_camera(
     masses: Query<&Transform, With<components::MassID>>,
     mut cameras: Query<
@@ -178,7 +213,7 @@ pub fn position_objective_camera(
             let furthest_two = furthest_two.update(&positions);
             if let Some(triplet_cross) = furthest_two.get_farthest_triplet_normal() {
                 let camera_translation_direction = triplet_cross.normalize();
-                // FIXME: points.0 is `Some` becaues `get_farthest_triplet_normal()` is `Some`.
+                // FIXME: points.0 is `Some` because `get_farthest_triplet_normal()` is `Some`.
                 // A better way forward: Make a type that represents all the masses at a frozen
                 // point in time `(mass, location)` and provide methods like `get_centroid()`
                 // on downward. We needen't leave people wondering, "What is 'triplet_cross'?"
@@ -194,6 +229,9 @@ pub fn position_objective_camera(
     }
 }
 
+/// Set the `UiState` resource based upon user input
+///
+/// refactor_tags: ui_state_write, user_input
 pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<KeyCode>>) {
     if keys.just_released(KeyCode::O) {
         ui_state.camera = match ui_state.camera {
@@ -206,6 +244,13 @@ pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<Ke
     }
 }
 
+/// Set the active camera based upon `UiState`
+///
+/// NOTE: Some kind of "assurance" that we have exactly one camera for each
+/// of the `CameraTag` values, that only one is active at any time and that
+/// the current active camera matches `UiState`.
+///
+/// refactor_tags: ui_state_read, camera_write, testing
 pub fn set_active_camera(
     ui_state: Res<resources::UiState>,
     mut cameras: Query<(&mut Camera, &resources::CameraTag)>,
@@ -222,6 +267,11 @@ pub fn set_active_camera(
     }
 }
 
+/// For `client_id`, and `address` supplied by caller, create and return `RenetClient`.
+///
+/// NOTE: Insertion of the `RenetClient` resource triggers the connection process.
+///
+/// refactor_tags: network_client_insert
 pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
@@ -246,6 +296,9 @@ pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
     .unwrap()
 }
 
+/// Set a helpful window title
+///
+/// refactor_tags: gui, windows_write, network_client_read
 pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) {
     let title = "Mass Gathering";
     let id = client.client_id();
@@ -254,6 +307,9 @@ pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) 
     windows.primary_mut().set_title(title);
 }
 
+/// Set window resolution
+///
+/// refactor_tags: gui, windows_write, startup_system
 pub fn set_resolution(mut windows: ResMut<Windows>) {
     let window = windows.primary_mut();
     if cfg!(debug_assertions) {
@@ -264,6 +320,10 @@ pub fn set_resolution(mut windows: ResMut<Windows>) {
     }
 }
 
+/// Spawn one camera for each possible `CameraTag` value, ensure only one is active.
+/// Insert the corresponding `CameraTag` marker component into each newly-spawned camera.
+///
+/// refactor_tags: gui, commands, startup_system, testing
 pub fn spawn_cameras(mut commands: Commands) {
     for tag in &[
         resources::CameraTag::Client,
@@ -284,6 +344,9 @@ pub fn spawn_cameras(mut commands: Commands) {
     }
 }
 
+/// Spawn some reasonable directional lights to light masses.
+///
+/// refactor_tags: gui, commands, startup_system
 pub fn let_light(mut commands: Commands) {
     debug!("Adding some directional lighting (distant suns)");
     commands.spawn(DirectionalLightBundle {
@@ -306,6 +369,11 @@ pub fn let_light(mut commands: Commands) {
     });
 }
 
+/// Rotate inhabited mass based upon user input, write `ToServer::Rotation` with the _net_ rotation.
+///
+/// NOTE: The server broadcasts the current rotation to all _other_ clients, which they use to update their simulation.
+///
+/// refactor_tags: gui, user_input, to_server_write, inhabited_mass_write, time,
 pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
@@ -357,6 +425,9 @@ pub fn control(
     }
 }
 
+/// For every `ProjectileSpawned` received from the simulation, insert a `PbrBundle` to make it visible.
+///
+/// refactor_tags: gui, commands, meshes, materials, from_simulation_read
 pub fn visualize_projectiles(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -396,6 +467,9 @@ pub fn visualize_projectiles(
     }
 }
 
+/// Show sights for uninhabited mass, send `ToServer::ProjectileFired` when user fires.
+///
+/// refactor_tags: gui, uninhabited_mass_read, sights_write, inhabited_mass_read, rapier_context_read, user_input, to_server_write
 pub fn handle_projectile_engagement(
     mass_query: Query<
         (&Transform, &components::MassID),
@@ -453,6 +527,7 @@ pub fn handle_projectile_engagement(
     }
 }
 
+/// refactor_tags: UNSET
 pub fn visualize_masses(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,

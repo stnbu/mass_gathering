@@ -1,3 +1,6 @@
+/// Resources regardless of package (sort of).
+/// Things that are both `Component` and `Resource` also
+/// go here (I think).
 use crate::*;
 
 use serde::{Deserialize, Serialize};
@@ -5,6 +8,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 #[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Serialize, Deserialize)]
+/// refactor_tags: UNSET
 pub enum GameState {
     Running, // full networked game play
     Waiting, // waiting for clients
@@ -23,6 +27,7 @@ impl std::fmt::Display for GameState {
 }
 
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+/// refactor_tags: UNSET
 pub struct PhysicsConfig {
     pub speed: u32,
     pub zerog: bool,
@@ -38,12 +43,14 @@ impl Default for PhysicsConfig {
 }
 
 #[derive(Default, Serialize, Deserialize, Clone, Copy, Debug)]
+/// refactor_tags: UNSET
 pub struct MassMotion {
     pub position: Vec3,
     pub velocity: Vec3,
 }
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug, Copy, Clone)]
+/// refactor_tags: UNSET
 pub struct MassInitData {
     pub inhabitable: bool,
     pub motion: MassMotion,
@@ -65,11 +72,13 @@ impl From<MassInitData> for Transform {
 }
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]
+/// refactor_tags: UNSET
 pub struct InitData {
     pub masses: HashMap<u64, MassInitData>,
 }
 
 #[derive(Default, Serialize, Deserialize, Resource, Debug, Clone)]
+/// refactor_tags: UNSET
 pub struct GameConfig {
     pub client_mass_map: HashMap<u64, u64>,
     pub physics_config: PhysicsConfig,
@@ -116,6 +125,7 @@ impl GameConfig {
 // Both a `Resource`, because it is used in `UiState`, and also
 // a `Component` because it is used to mark camera entities.
 #[derive(Resource, Debug, Component, PartialEq, Clone)]
+/// refactor_tags: UNSET
 pub enum CameraTag {
     Client,
     Objective,
@@ -142,6 +152,7 @@ impl std::fmt::Display for CameraTag {
 }
 
 #[derive(Resource, Debug)]
+/// refactor_tags: UNSET
 pub struct UiState {
     pub camera: CameraTag,
     pub show_info: bool,

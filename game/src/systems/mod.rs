@@ -1,6 +1,13 @@
+/// Code for generating the various hand-built systems.
+///
+/// NOTE: I don't like "system" but here I mean roughly "solar system" not "bevy system", please post your ideas to my coordinates.
+///
+/// The way I think this should work: A separate package (?) provides tools to build serialized "systems" which you may write to disk if you like.
+/// The game can just somehow consume the serialized version, unpack, and proceed as before.
 use crate::*;
 use std::collections::HashMap;
 
+/// refactor_tags: UNSET
 pub fn demo_2m2i() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let position = Vec3::X * 10.0;
@@ -33,6 +40,7 @@ pub fn demo_2m2i() -> resources::InitData {
     init_data
 }
 
+/// refactor_tags: UNSET
 pub fn demo_shooting() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let id_base = 0;
@@ -76,6 +84,7 @@ pub fn demo_shooting() -> resources::InitData {
     init_data
 }
 
+/// refactor_tags: UNSET
 pub fn rando_calrissian() -> resources::InitData {
     resources::InitData {
         masses: HashMap::from([
@@ -553,6 +562,7 @@ pub fn rando_calrissian() -> resources::InitData {
     }
 }
 
+/// refactor_tags: UNSET
 pub fn cubic() -> resources::InitData {
     let mut init_data = resources::InitData::default();
 
@@ -631,6 +641,7 @@ pub fn cubic() -> resources::InitData {
     init_data
 }
 
+/// refactor_tags: UNSET
 pub fn get_system(name: &str) -> impl (Fn() -> resources::InitData) {
     match name {
         "cubic" => cubic,

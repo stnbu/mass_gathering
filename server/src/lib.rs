@@ -1,3 +1,6 @@
+/// Server stuff. Will/may include both "simulation" and "visual" stuff (for debugging).
+///
+/// But in this case there will be exactly zero instead of exactly one inhabited mass, should be optionally headless, and "reads its own output", i.e. anything that gets sent to clients also gets sent to this server's internal simulation (rotation does not matter). And it should be `x,y,z,v,m` exactly the same as the clients, or close enough.
 use bevy::app::AppExit;
 use bevy_renet::renet::ServerEvent;
 use bevy_renet::renet::{
@@ -11,6 +14,7 @@ use std::{net::UdpSocket, time::SystemTime};
 pub mod plugins;
 
 #[derive(Parser, Resource)]
+/// refactor_tags: UNSET
 pub struct ServerCliArgs {
     #[arg(long, default_value_t = 1)]
     pub speed: u32,
@@ -22,6 +26,7 @@ pub struct ServerCliArgs {
     pub zerog: bool,
 }
 
+/// refactor_tags: UNSET
 pub fn new_renet_server(address: String) -> RenetServer {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
@@ -41,6 +46,7 @@ pub fn new_renet_server(address: String) -> RenetServer {
     .unwrap()
 }
 
+/// refactor_tags: UNSET
 pub fn handle_server_events(
     mut server_events: EventReader<ServerEvent>,
     mut server: ResMut<RenetServer>,
