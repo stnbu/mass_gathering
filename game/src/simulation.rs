@@ -4,6 +4,7 @@ use bevy_rapier3d::prelude::{Collider, CollisionEvent, RigidBody};
 use bevy_renet::renet::RenetClient;
 use std::time::SystemTime;
 
+/// refactor_tags: simulation, collision_event_read, projectile_read, masses_read, disabled
 pub fn rotate_inhabitable_masses(
     mut to_client_events: EventReader<events::ToClient>,
     mut inhabitable_masses: Query<
@@ -30,6 +31,7 @@ pub fn rotate_inhabitable_masses(
     }
 }
 
+/// refactor_tags: simulation, from_simulation, user_input
 pub enum FromSimulation {
     ProjectileSpawned(Entity),
     MassSpawned {
@@ -96,7 +98,7 @@ pub fn handle_game_config_insertion(
     }
 }
 
-/// refactor_tags: UNSET
+/// refactor_tags: simulation, commands, to_client_read, from_simulation_write
 pub fn handle_projectile_fired(
     mut commands: Commands,
     mut to_client_events: EventReader<events::ToClient>,
@@ -118,10 +120,13 @@ pub fn handle_projectile_fired(
     }
 }
 
-/// refactor_tags: UNSET
+/// NOTE: Need to give some thought to the use of system time vs bevy's ideas about time. _think about time_
+///
+/// refactor_tags: simulation, commands, to_client_read, from_simulation_write, projectiles_write, system_time
 pub fn move_projectiles(
     mut commands: Commands,
     mut projectile_query: Query<(Entity, &mut Transform, &events::ProjectileFlight)>,
+    // this could/should exclude inhabit[ed|able]
     masses_query: Query<(&Transform, &components::MassID), Without<events::ProjectileFlight>>,
 ) {
     let proportion_of = 1.0 / 512.0;
@@ -167,7 +172,7 @@ pub fn move_projectiles(
     }
 }
 
-/// refactor_tags: UNSET
+/// refactor_tags: simulation, collision_event_read, projectile_read, masses_read, disabled
 pub fn handle_projectile_collision(
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,
@@ -193,7 +198,7 @@ pub fn handle_projectile_collision(
     }
 }
 
-/// refactor_tags: UNSET
+/// refactor_tags: refactor, simulation, cameras
 pub fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
     let total_mass = masses
         .iter()
@@ -204,7 +209,7 @@ pub fn get_centroid(masses: Vec<(f32, Vec3)>) -> Vec3 {
 }
 
 #[derive(Debug)]
-/// refactor_tags: UNSET
+/// refactor_tags: refactor, simulation, cameras
 pub struct FurthestTwo {
     pub points: (Option<Vec3>, Option<Vec3>),
     pub reference: Vec3,

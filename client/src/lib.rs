@@ -250,7 +250,7 @@ pub fn set_ui_state(mut ui_state: ResMut<resources::UiState>, keys: Res<Input<Ke
 /// of the `CameraTag` values, that only one is active at any time and that
 /// the current active camera matches `UiState`.
 ///
-/// refactor_tags: ui_state_read, camera_write, testing
+/// refactor_tags: ui_state_read, cameras_write, testing
 pub fn set_active_camera(
     ui_state: Res<resources::UiState>,
     mut cameras: Query<(&mut Camera, &resources::CameraTag)>,

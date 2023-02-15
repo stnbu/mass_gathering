@@ -7,7 +7,7 @@
 use crate::*;
 use std::collections::HashMap;
 
-/// refactor_tags: UNSET
+/// refactor_tags: system, to_client_read, to_client_write, simulation, refactor
 pub fn demo_2m2i() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let position = Vec3::X * 10.0;
@@ -40,7 +40,7 @@ pub fn demo_2m2i() -> resources::InitData {
     init_data
 }
 
-/// refactor_tags: UNSET
+/// refactor_tags: system, to_client_read, to_client_write, simulation, refactor
 pub fn demo_shooting() -> resources::InitData {
     let mut init_data = resources::InitData::default();
     let id_base = 0;
@@ -84,7 +84,7 @@ pub fn demo_shooting() -> resources::InitData {
     init_data
 }
 
-/// refactor_tags: UNSET
+/// refactor_tags: system, to_client_read, to_client_write, simulation, refactor
 pub fn rando_calrissian() -> resources::InitData {
     resources::InitData {
         masses: HashMap::from([
@@ -562,7 +562,7 @@ pub fn rando_calrissian() -> resources::InitData {
     }
 }
 
-/// refactor_tags: UNSET
+/// refactor_tags: system, to_client_read, to_client_write, simulation, refactor
 pub fn cubic() -> resources::InitData {
     let mut init_data = resources::InitData::default();
 
@@ -641,7 +641,7 @@ pub fn cubic() -> resources::InitData {
     init_data
 }
 
-/// refactor_tags: UNSET
+/// refactor_tags: system, to_client_read, to_client_write, simulation, refactor
 pub fn get_system(name: &str) -> impl (Fn() -> resources::InitData) {
     match name {
         "cubic" => cubic,
