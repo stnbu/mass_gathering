@@ -3,7 +3,7 @@
 /// "Client" is currently defined as: the networking, gui (windows), and simulation parts put together to play the game, on a network.
 /// Contrast "server", is a networking server, which requires a full simulation, and also can _optionally_ do the graphical stuff or
 /// be headless.
-use bevy_rapier3d::prelude::{QueryFilter, RapierContext};
+use bevy_rapier3d::prelude::{QueryFilter, RapierContext, RigidBody};
 use bevy_renet::{
     renet::{ClientAuthentication, DefaultChannel, RenetClient, RenetConnectionConfig},
     RenetClientPlugin,
@@ -551,8 +551,15 @@ pub fn visualize_masses(
                 transform,
                 ..Default::default()
             });
-
             if mass_init_data.inhabitation.by(*player) {
+                // RigidBody interferes with the "ray" that we
+                // use to detect masses in our sights. Since
+                // that is strictly a "gui" thing we remove it
+                // when we are making our inhabited mass "visual".
+                // It's a "gui" thing because if we cannot _see_
+                // a mass, we cannot know if it's in our sights.
+                // FIXME: There's probably a better fix.
+                mass_commands.remove::<RigidBody>();
                 // rustgods, what's the smart version of:
                 let mut client_camera = None;
                 for (camera, tag) in cameras.iter() {
