@@ -59,7 +59,7 @@ pub fn merge_masses(
 ) {
     for MassCollisionEvent(e0, e1) in mass_events.iter() {
         if let Ok([p0, p1]) = masses_query.get_many_mut([*e0, *e1]) {
-            let (mut major, mut minor) = if p0.3.inhabitable() && p1.3.inhabitable() {
+            let (mut major, minor) = if p0.3.inhabitable() && p1.3.inhabitable() {
                 continue;
             } else if p0.3.inhabitable() {
                 (p0, p1)
@@ -96,6 +96,19 @@ pub fn merge_masses(
             major.0.scale = mass_to_scale(combined_mass);
             major.0.translation += delta_p;
             major.0.scale *= delta_s;
+
+            // FIXME:
+            //   1) This should only happen on the server as it is the dictator of merge events.
+            //   2) Here we could increment the score off player corresponding to major if applicable.
+            let thats_me = if major.3.by(*player) {
+                ""
+            } else {
+                " (that's me!)"
+            };
+            // FIXME: `Player` implements `Display`. `Res<Player>` does not...here at least.
+            // err: `bevy::prelude::Res<'_, Player>` cannot be formatted with the default formatter
+            let player = player.get_name();
+            debug!("Player {player} merged with {combined_mass}{thats_me}");
 
             despawn_mass_events.send(DespawnMassEvent(minor.2));
         }

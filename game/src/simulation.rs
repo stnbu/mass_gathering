@@ -8,21 +8,15 @@ use std::time::SystemTime;
 pub fn rotate_inhabitable_masses(
     player: Res<components::Player>,
     mut to_client_events: EventReader<events::ToClient>,
-    mut masses_query: Query<(
-        &mut Transform,
-        &components::MassID,
-        &components::Inhabitation,
-    )>,
+    mut masses_query: Query<(&mut Transform, &components::Inhabitation)>,
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::InhabitantRotation { rotation, .. } = message {
             // for ... masses inhabited by other players
-            for (mut mass_transform, &components::MassID(mass_id), inhabitation) in
-                masses_query.iter_mut().filter(|(.., inhabitation)| {
-                    inhabitation.inhabitable() && !inhabitation.by(*player)
-                })
-            {
-                mass_transform.rotation = *rotation;
+            for (mut mass_transform, inhabitation) in masses_query.iter_mut() {
+                if inhabitation.inhabitable() && !inhabitation.by(*player) {
+                    mass_transform.rotation = *rotation;
+                }
             }
         }
     }
@@ -53,7 +47,6 @@ pub fn handle_game_config_insertion(
     mut commands: Commands,
     game_config: Option<Res<resources::GameConfig>>,
     mut from_simulation_events: EventWriter<FromSimulation>,
-    client: Res<RenetClient>,
 ) {
     if let Some(game_config) = game_config {
         if game_config.is_added() {
@@ -63,6 +56,10 @@ pub fn handle_game_config_insertion(
                 let radius = 1.0;
                 let inhabitation = mass_init_data.inhabitation;
                 debug!("Spawining PointMassBundle for mass {mass_id}");
+                // FIXME: If we could de/serialize "all the parts of the game", we could:
+                //   1) Just send that instead of "GameConfig" and all that.
+                //   2) We could serialize the whole "PointMassBundle" below and send that
+                //      in a message "EntitySpawned" (or something) for handling visuals.
                 let entity = commands
                     .spawn(physics::PointMassBundle {
                         transform_bundle: TransformBundle::from_transform(transform),

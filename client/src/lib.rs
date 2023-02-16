@@ -530,102 +530,99 @@ pub fn visualize_masses(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut from_simulation_events: EventReader<FromSimulation>,
     player: Res<components::Player>,
-    game_config: Option<Res<resources::GameConfig>>,
     cameras: Query<(Entity, &resources::CameraTag)>,
 ) {
-    if let Some(game_config) = game_config {
-        for message in from_simulation_events.iter() {
-            if let &FromSimulation::MassSpawned {
-                entity,
-                mass_id,
-                mass_init_data,
-            } = message
-            {
-                let mut mass_commands = commands.entity(entity);
-                let color: Color = mass_init_data.color.into();
-                let transform: Transform = mass_init_data.into();
-                mass_commands.insert(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 1.0,
-                        ..Default::default()
-                    })),
-                    material: materials.add(color.into()),
-                    transform,
+    for message in from_simulation_events.iter() {
+        if let &FromSimulation::MassSpawned {
+            entity,
+            mass_init_data,
+            ..
+        } = message
+        {
+            let mut mass_commands = commands.entity(entity);
+            let color: Color = mass_init_data.color.into();
+            let transform: Transform = mass_init_data.into();
+            mass_commands.insert(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Icosphere {
+                    radius: 1.0,
                     ..Default::default()
-                });
+                })),
+                material: materials.add(color.into()),
+                transform,
+                ..Default::default()
+            });
 
-                if mass_init_data.inhabitation.by(*player) {
-                    // rustgods, what's the smart version of:
-                    let mut client_camera = None;
-                    for (camera, tag) in cameras.iter() {
-                        if *tag == resources::CameraTag::Client {
-                            client_camera = Some(camera);
-                        }
+            if mass_init_data.inhabitation.by(*player) {
+                // rustgods, what's the smart version of:
+                let mut client_camera = None;
+                for (camera, tag) in cameras.iter() {
+                    if *tag == resources::CameraTag::Client {
+                        client_camera = Some(camera);
                     }
-                    let client_camera = if let Some(c) = client_camera {
-                        c
-                    } else {
-                        panic!("No client camera. Cannot proceed!");
-                    };
-                    mass_commands.add_child(client_camera);
                 }
+                let client_camera = if let Some(c) = client_camera {
+                    c
+                } else {
+                    panic!("No client camera. Cannot proceed!");
+                };
+                mass_commands.add_child(client_camera);
+            }
 
-                mass_commands.with_children(|children| {
-                    if mass_init_data.inhabitation.by(*player) {
-                        children
-                            .spawn(PbrBundle {
-                                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                                    radius: 0.0005,
+            mass_commands.with_children(|children| {
+                if mass_init_data.inhabitation.by(*player) {
+                    children
+                        .spawn(PbrBundle {
+                            mesh: meshes.add(Mesh::from(shape::Icosphere {
+                                radius: 0.0005,
 
-                                    ..Default::default()
-                                })),
-                                material: materials.add(Color::WHITE.into()),
-                                transform: Transform::from_xyz(0.0, 0.0, -0.2),
-                                visibility: Visibility::INVISIBLE,
-                                ..Default::default()
-                            })
-                            .insert(components::Sights);
-                        children
-                            .spawn(PointLightBundle {
-                                transform: Transform::from_xyz(0.0, 0.0, -0.15),
-                                visibility: Visibility::INVISIBLE,
-                                point_light: PointLight {
-                                    ..Default::default()
-                                },
-                                ..Default::default()
-                            })
-                            .insert(components::Sights);
-                    } else if mass_init_data.inhabitation.inhabitable() {
-                        // barrel
-                        children.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Capsule {
-                                radius: 0.05,
-                                depth: 1.0,
                                 ..Default::default()
                             })),
                             material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
-                                .with_translation(Vec3::Z * -1.5),
+                            transform: Transform::from_xyz(0.0, 0.0, -0.2),
+                            visibility: Visibility::INVISIBLE,
                             ..Default::default()
-                        });
-                        // horizontal stabilizer
-                        children.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_translation(Vec3::Z * 0.5),
+                        })
+                        .insert(components::Sights);
+                    children
+                        .spawn(PointLightBundle {
+                            transform: Transform::from_xyz(0.0, 0.0, -0.15),
+                            visibility: Visibility::INVISIBLE,
+                            point_light: PointLight {
+                                ..Default::default()
+                            },
                             ..Default::default()
-                        });
-                        // vertical stabilizer
-                        children.spawn(PbrBundle {
-                            mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
-                            material: materials.add(Color::WHITE.into()),
-                            transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
-                                .with_translation(Vec3::Z * 0.5),
+                        })
+                        .insert(components::Sights);
+                } else if mass_init_data.inhabitation.inhabitable() {
+                    // barrel
+                    children.spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Capsule {
+                            radius: 0.05,
+                            depth: 1.0,
                             ..Default::default()
-                        });
-                    }
-                });
-            }
+                        })),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_rotation(Quat::from_rotation_x(TAU / 4.0))
+                            .with_translation(Vec3::Z * -1.5),
+                        ..Default::default()
+                    });
+                    // horizontal stabilizer
+                    children.spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_translation(Vec3::Z * 0.5),
+                        ..Default::default()
+                    });
+                    // vertical stabilizer
+                    children.spawn(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Box::new(2.0, 0.075, 1.0))),
+                        material: materials.add(Color::WHITE.into()),
+                        transform: Transform::from_rotation(Quat::from_rotation_z(TAU / 4.0))
+                            .with_translation(Vec3::Z * 0.5),
+                        ..Default::default()
+                    });
+                }
+            });
         }
     }
 }
