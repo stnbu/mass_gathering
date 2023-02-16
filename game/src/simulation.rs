@@ -6,26 +6,23 @@ use std::time::SystemTime;
 
 /// refactor_tags: simulation, collision_event_read, projectile_read, masses_read, disabled
 pub fn rotate_inhabitable_masses(
+    player: Res<components::Player>,
     mut to_client_events: EventReader<events::ToClient>,
-    mut inhabitable_masses: Query<
-        (&mut Transform, &components::MassID),
-        With<components::Inhabitable>,
-    >,
-    game_config: Res<resources::GameConfig>,
+    mut masses_query: Query<(
+        &mut Transform,
+        &components::MassID,
+        &components::Inhabitation,
+    )>,
 ) {
     for message in to_client_events.iter() {
-        if let events::ToClient::InhabitantRotation {
-            client_id,
-            rotation,
-        } = message
-        {
-            let inhabited_mass_id = *game_config.client_mass_map.get(client_id).unwrap();
-            for (mut mass_transform, &components::MassID(mass_id)) in inhabitable_masses.iter_mut()
+        if let events::ToClient::InhabitantRotation { rotation, .. } = message {
+            // for ... masses inhabited by other players
+            for (mut mass_transform, &components::MassID(mass_id), inhabitation) in
+                masses_query.iter_mut().filter(|(.., inhabitation)| {
+                    inhabitation.inhabitable() && !inhabitation.by(*player)
+                })
             {
-                if inhabited_mass_id == mass_id {
-                    mass_transform.rotation = *rotation;
-                    break;
-                }
+                mass_transform.rotation = *rotation;
             }
         }
     }
@@ -61,33 +58,23 @@ pub fn handle_game_config_insertion(
     if let Some(game_config) = game_config {
         if game_config.is_added() {
             debug!("GameConfig resource is_added");
-            let inhabited_mass_id = game_config.client_mass_map.get(&client.client_id());
             for (&mass_id, &mass_init_data) in game_config.init_data.masses.iter() {
                 let transform: Transform = mass_init_data.into();
                 let radius = 1.0;
+                let inhabitation = mass_init_data.inhabitation;
                 debug!("Spawining PointMassBundle for mass {mass_id}");
-                let mut mass_commands = commands.spawn(physics::PointMassBundle {
-                    transform_bundle: TransformBundle::from_transform(transform),
-                    momentum: components::Momentum {
-                        velocity: mass_init_data.motion.velocity,
-                    },
-                    collider: Collider::ball(radius),
-                    ..Default::default()
-                });
-                if mass_init_data.inhabitable {
-                    if inhabited_mass_id.is_some() && mass_id == *inhabited_mass_id.unwrap() {
-                        debug!("Mass {mass_id} is inhabted by us");
-                        mass_commands.insert(components::ClientInhabited);
-                        mass_commands.remove::<RigidBody>();
-                    } else {
-                        debug!("Mass {mass_id} is inhabtable");
-                        mass_commands.insert(components::Inhabitable);
-                    }
-                } else {
-                    debug!("Mass {mass_id} is uninhabtable");
-                }
-                mass_commands.insert(components::MassID(mass_id));
-                let entity = mass_commands.id();
+                let entity = commands
+                    .spawn(physics::PointMassBundle {
+                        transform_bundle: TransformBundle::from_transform(transform),
+                        momentum: components::Momentum {
+                            velocity: mass_init_data.motion.velocity,
+                        },
+                        collider: Collider::ball(radius),
+                        ..Default::default()
+                    })
+                    .insert(inhabitation)
+                    .insert(components::MassID(mass_id))
+                    .id();
                 from_simulation_events.send(FromSimulation::MassSpawned {
                     entity,
                     mass_id,
@@ -176,10 +163,10 @@ pub fn move_projectiles(
 pub fn handle_projectile_collision(
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,
-    mass_query: Query<(
+    masses_query: Query<(
         With<components::MassID>,
-        Without<components::ClientInhabited>,
-        Without<components::Inhabitable>,
+        Without<components::Inhabitation>,
+        Without<components::Inhabitation>,
     )>,
 ) {
     for collision_event in collision_events.iter() {
@@ -190,7 +177,7 @@ pub fn handle_projectile_collision(
                 let projectile_id = if e0_is_projectile { e0 } else { e1 };
                 let projectile_flight = projectile_query.get(*projectile_id).unwrap();
                 let mass_id = if !e0_is_projectile { e0 } else { e1 };
-                if mass_query.contains(*mass_id) {
+                if masses_query.contains(*mass_id) {
                     debug!("Projectile collided: {projectile_flight:?}");
                 }
             }

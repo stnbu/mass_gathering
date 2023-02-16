@@ -377,8 +377,9 @@ pub fn let_light(mut commands: Commands) {
 pub fn control(
     keys: Res<Input<KeyCode>>,
     time: Res<Time>,
+    player: Res<components::Player>,
     mut to_server_events: EventWriter<events::ToServer>,
-    mut inhabitant_query: Query<&mut Transform, With<components::ClientInhabited>>,
+    mut inhabitant_query: Query<(&mut Transform, &components::Inhabitation)>,
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -410,17 +411,19 @@ pub fn control(
         }
     }
     if rotation.length() > 0.0000001 {
-        if let Ok(mut transform) = inhabitant_query.get_single_mut() {
-            let frame_time = time.delta_seconds() * 60.0;
-            rotation *= keys_scaling * frame_time;
-            let local_x = transform.local_x();
-            let local_y = transform.local_y();
-            let local_z = transform.local_z();
-            transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
-            transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
-            transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
-            let message = events::ToServer::Rotation(transform.rotation);
-            to_server_events.send(message);
+        for (mut transform, inhabitation) in inhabitant_query.iter_mut() {
+            if inhabitation.by(*player) {
+                let frame_time = time.delta_seconds() * 60.0;
+                rotation *= keys_scaling * frame_time;
+                let local_x = transform.local_x();
+                let local_y = transform.local_y();
+                let local_z = transform.local_z();
+                transform.rotate(Quat::from_axis_angle(local_x, rotation.x));
+                transform.rotate(Quat::from_axis_angle(local_z, rotation.z));
+                transform.rotate(Quat::from_axis_angle(local_y, rotation.y));
+                let message = events::ToServer::Rotation(transform.rotation);
+                to_server_events.send(message);
+            }
         }
     }
 }
@@ -471,25 +474,19 @@ pub fn visualize_projectiles(
 ///
 /// refactor_tags: gui, uninhabited_mass_read, sights_write, inhabited_mass_read, rapier_context_read, user_input, to_server_write
 pub fn handle_projectile_engagement(
-    mass_query: Query<
-        (&Transform, &components::MassID),
-        (
-            Without<components::Inhabitable>,
-            Without<components::ClientInhabited>,
-        ),
-    >,
+    masses_query: Query<(&Transform, &components::MassID, &components::Inhabitation)>,
     mut sights_visibility: Query<&mut Visibility, With<components::Sights>>,
-    inhabited_mass_query: Query<
-        (&Transform, &components::MassID),
-        With<components::ClientInhabited>,
-    >,
+    player: Res<components::Player>,
     rapier_context: Res<RapierContext>,
     keys: Res<Input<KeyCode>>,
     mut to_server_events: EventWriter<events::ToServer>,
 ) {
-    if let Ok((client_pov, &components::MassID(from_mass_id))) = inhabited_mass_query.get_single() {
-        let ray_origin = client_pov.translation;
-        let ray_direction = -client_pov.local_z();
+    for (player_transform, &components::MassID(from_mass_id), _) in masses_query
+        .iter()
+        .filter(|(_, _, inhabitation)| inhabitation.by(*player))
+    {
+        let ray_origin = player_transform.translation;
+        let ray_direction = -player_transform.local_z();
         let intersection = rapier_context.cast_ray(
             ray_origin,
             ray_direction,
@@ -498,7 +495,8 @@ pub fn handle_projectile_engagement(
             QueryFilter::only_dynamic(),
         );
         if let Some((mass, distance)) = intersection {
-            if let Ok((mass_transform, &components::MassID(to_mass_id))) = mass_query.get(mass) {
+            if let Ok((mass_transform, &components::MassID(to_mass_id), _)) = masses_query.get(mass)
+            {
                 sights_visibility.for_each_mut(|mut visibility| visibility.is_visible = true);
                 if keys.just_pressed(KeyCode::Space) {
                     debug!("User has fired projectile at mass {mass:?}");
@@ -522,8 +520,6 @@ pub fn handle_projectile_engagement(
         } else {
             sights_visibility.for_each_mut(|mut visibility| visibility.is_visible = false);
         }
-    } else {
-        warn!("ClientInhabited mass not found (yet?)");
     }
 }
 
@@ -533,12 +529,11 @@ pub fn visualize_masses(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut from_simulation_events: EventReader<FromSimulation>,
-    client: Res<RenetClient>,
+    player: Res<components::Player>,
     game_config: Option<Res<resources::GameConfig>>,
     cameras: Query<(Entity, &resources::CameraTag)>,
 ) {
     if let Some(game_config) = game_config {
-        let client_id = client.client_id();
         for message in from_simulation_events.iter() {
             if let &FromSimulation::MassSpawned {
                 entity,
@@ -559,11 +554,7 @@ pub fn visualize_masses(
                     ..Default::default()
                 });
 
-                let inhabited = mass_id == *game_config.client_mass_map.get(&client_id).unwrap();
-
-                let inhabitable = mass_init_data.inhabitable && !inhabited;
-
-                if inhabited {
+                if mass_init_data.inhabitation.by(*player) {
                     // rustgods, what's the smart version of:
                     let mut client_camera = None;
                     for (camera, tag) in cameras.iter() {
@@ -580,7 +571,7 @@ pub fn visualize_masses(
                 }
 
                 mass_commands.with_children(|children| {
-                    if inhabited {
+                    if mass_init_data.inhabitation.by(*player) {
                         children
                             .spawn(PbrBundle {
                                 mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -604,8 +595,7 @@ pub fn visualize_masses(
                                 ..Default::default()
                             })
                             .insert(components::Sights);
-                    }
-                    if inhabitable {
+                    } else if mass_init_data.inhabitation.inhabitable() {
                         // barrel
                         children.spawn(PbrBundle {
                             mesh: meshes.add(Mesh::from(shape::Capsule {

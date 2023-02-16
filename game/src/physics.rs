@@ -13,11 +13,11 @@ pub struct MassCollisionEvent(pub Entity, pub Entity);
 pub fn handle_mass_collisions(
     mut collision_events: EventReader<CollisionEvent>,
     mut mass_collision_events: EventWriter<MassCollisionEvent>,
-    mass_query: Query<With<components::MassID>>,
+    masses_query: Query<With<components::MassID>>,
 ) {
     for collision_event in collision_events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
-            if mass_query.get_many([*e0, *e1]).is_ok() {
+            if masses_query.get_many([*e0, *e1]).is_ok() {
                 let event = MassCollisionEvent(*e0, *e1);
                 mass_collision_events.send(event);
             }
@@ -47,43 +47,31 @@ pub fn handle_despawn_mass(
 
 /// refactor_tags: UNSET
 pub fn merge_masses(
-    mut mass_query: Query<(&mut Transform, &mut components::Momentum, Entity)>,
-    inhabitant_query: Query<
+    player: Res<components::Player>,
+    mut masses_query: Query<(
+        &mut Transform,
+        &mut components::Momentum,
         Entity,
-        Or<(
-            With<components::Inhabitable>,
-            With<components::ClientInhabited>,
-        )>,
-    >,
+        &components::Inhabitation,
+    )>,
     mut mass_events: EventReader<MassCollisionEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
     for MassCollisionEvent(e0, e1) in mass_events.iter() {
-        let involved_inhabitant = inhabitant_query.iter_many([*e0, *e1]).collect::<Vec<_>>();
-        if involved_inhabitant.len() == 2 {
-            continue;
-        }
-        let inhabitant = if involved_inhabitant.len() == 1 {
-            let id = involved_inhabitant[0];
-            Some(id)
-        } else {
-            None
-        };
-
-        if let Ok([p0, p1]) = mass_query.get_many_mut([*e0, *e1]) {
-            // scale_to_mass(.0.scale)
-            let (mut major, mut minor) = if scale_to_mass(p0.0.scale) > scale_to_mass(p1.0.scale) {
+        if let Ok([p0, p1]) = masses_query.get_many_mut([*e0, *e1]) {
+            let (mut major, mut minor) = if p0.3.inhabitable() && p1.3.inhabitable() {
+                continue;
+            } else if p0.3.inhabitable() {
                 (p0, p1)
-            // FIXME: tie-breaker!
-            } else {
+            } else if p1.3.inhabitable() {
                 (p1, p0)
-            };
-
-            if let Some(c) = inhabitant {
-                if c == minor.2 {
-                    (major, minor) = (minor, major);
+            } else {
+                if scale_to_mass(p0.0.scale) > scale_to_mass(p1.0.scale) {
+                    (p0, p1)
+                } else {
+                    (p1, p0)
                 }
-            }
+            };
 
             let combined_momentum = (major.1.velocity * scale_to_mass(major.0.scale))
                 + (minor.1.velocity * scale_to_mass(minor.0.scale));
@@ -99,7 +87,7 @@ pub fn merge_masses(
             // How much to scale in the linear (multiply major original
             // radius by this much to achieve a proportionate mass (i.e. volume) increase.
             // We do _not_ scale inhabited masses (they just get denser nom nom.)
-            let delta_s = if inhabitant.is_some() {
+            let delta_s = if major.3.inhabitable() {
                 1.0
             } else {
                 major_factor.powf(-1.0 / 3.0)
