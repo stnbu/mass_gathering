@@ -272,7 +272,7 @@ pub fn set_active_camera(
 /// NOTE: Insertion of the `RenetClient` resource triggers the connection process.
 ///
 /// refactor_tags: network_client_insert
-pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
+pub fn new_renet_client(client_id: u64, address: String) -> (RenetClient, components::Player) {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
     } else {
@@ -285,15 +285,19 @@ pub fn new_renet_client(client_id: u64, address: String) -> RenetClient {
         server_addr: address,
         user_data: None,
     };
-    RenetClient::new(
-        SystemTime::now()
-            .duration_since(SystemTime::UNIX_EPOCH)
-            .unwrap(),
-        socket,
-        RenetConnectionConfig::default(),
-        authentication,
+    let name = &to_nick(client_id);
+    (
+        RenetClient::new(
+            SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .unwrap(),
+            socket,
+            RenetConnectionConfig::default(),
+            authentication,
+        )
+        .unwrap(),
+        components::Player::new(name),
     )
-    .unwrap()
 }
 
 /// Set a helpful window title

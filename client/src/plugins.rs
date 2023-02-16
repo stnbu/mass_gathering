@@ -45,7 +45,8 @@ impl Plugin for ClientPlugin {
         app.add_plugin(RenetClientPlugin::default());
         let args = ClientCliArgs::parse();
         let address = args.address.clone();
-        let renet_client = new_renet_client(from_nick(&args.nickname), address);
+        let (renet_client, player) = new_renet_client(from_nick(&args.nickname), address);
         app.insert_resource(renet_client);
+        app.insert_resource(player);
     }
 }
