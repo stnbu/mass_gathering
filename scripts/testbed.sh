@@ -22,6 +22,8 @@ fi
 LOG_FILENAME="build.out"
 cargo build -p '*' $CARGO_ARGS $RELEASE_FLAG --lib --bins 2>&1 | tee "$LOG_DIR"/"$LOG_FILENAME"
 
+#cargo doc --open --workspace --no-deps --document-private-items --lib --bins --all-features
+
 for nick in $NICKNAMES ; do
     LOG_FILENAME="client-${nick}.out"
     ./target/"$PROFILE"/client --nickname "$nick" 2>&1 | tee "$LOG_DIR"/"$LOG_FILENAME"  &
