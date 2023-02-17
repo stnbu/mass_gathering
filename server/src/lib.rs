@@ -59,6 +59,15 @@ pub fn handle_server_events(
             ServerEvent::ClientConnected(client_id, _) => match game_config.get_free_id() {
                 Ok(mass_id) => {
                     debug!("Connection from client {client_id} assigning mass {mass_id}");
+                    // FIXME: Now we are keeping client_id->mass_id mapping in two places.
+                    // Several kinds of yuck.
+                    let player = components::Player::new(&to_nick(client_id));
+                    game_config
+                        .init_data
+                        .masses
+                        .get_mut(&mass_id)
+                        .unwrap()
+                        .inhabitation = components::Inhabitation::Inhabitable(Some(player));
                     match game_config.client_mass_map.insert(client_id, mass_id) {
                         None => {
                             if game_config.is_capacity() {

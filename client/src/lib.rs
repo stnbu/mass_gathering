@@ -564,19 +564,12 @@ pub fn visualize_masses(
                 // a mass, we cannot know if it's in our sights.
                 // FIXME: There's probably a better fix.
                 mass_commands.remove::<RigidBody>();
-                // rustgods, what's the smart version of:
-                let mut client_camera = None;
+
                 for (camera, tag) in cameras.iter() {
                     if *tag == resources::CameraTag::Client {
-                        client_camera = Some(camera);
+                        mass_commands.add_child(camera);
                     }
                 }
-                let client_camera = if let Some(c) = client_camera {
-                    c
-                } else {
-                    panic!("No client camera. Cannot proceed!");
-                };
-                mass_commands.add_child(client_camera);
             }
 
             mass_commands.with_children(|children| {
