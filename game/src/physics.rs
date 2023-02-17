@@ -38,36 +38,30 @@ pub fn handle_despawn_mass(
     }
 }
 
-// FIXME:
-// * Imlement type that can replace the `(Transform, Momentum)` below, so we
-//   don't use stupid names like `p0`.
-// * It should be possible to compare them `T1 > T2` (compare mass and obey
-//   rules about inhabited masses.)
-// * Define and implement an "extension type" so you can `set_mass()` and
-//   `get_mass` on type `Transform` (using `scale`).
-
+/// FIXME: F
+/// FIXME: i
+/// FIXME: x me! None of this WorldQuery/MergableMass code is tested!
+///  At all! The merge code is disabled at the plugin level (missing),
+/// and I'm choosing to check in this code that compiles but is
+///    UNTESTED
+/// as a convenience. Good luck, Future Homer! Angry? Just look at the
+/// parent commit. FYI, the below `...Item` stuff is part of WQ macro.
 #[derive(WorldQuery)]
 #[world_query(mutable)]
-struct MergableMass {
-    entity: Entity,
-    transform: &'static mut Transform,
-    momentum: &'static mut components::Momentum,
-    inhabitation: &'static components::Inhabitation,
+pub struct MergableMass {
+    pub entity: Entity,
+    pub transform: &'static mut Transform,
+    pub momentum: &'static mut components::Momentum,
+    pub inhabitation: &'static components::Inhabitation,
 }
 
-struct MergeResult {
-    major: MergableMass,
-    minor: MergableMass,
+struct MergeResult<'w> {
+    major: MergableMassItem<'w>,
+    minor: MergableMassItem<'w>,
 }
 
-struct MergeDelta {
-    velocity: Vec3,
-    scale: f32,
-    translation: Vec3,
-}
-
-impl MergeResult {
-    fn from(pair: [MergableMass; 2]) -> Result<Self, &'static str> {
+impl<'w> MergeResult<'w> {
+    fn from(pair: [MergableMassItem<'w>; 2]) -> Result<Self, &'static str> {
         let [p0, p1] = pair;
         let (major, minor) = if p0.inhabitation.inhabitable() && p1.inhabitation.inhabitable() {
             return Err("Inhabitable pair collision");
@@ -117,14 +111,13 @@ impl MergeResult {
 
 /// refactor_tags: UNSET
 pub fn merge_masses(
-    player: Res<components::Player>,
     mut mergable_masses_query: Query<MergableMass>,
     mut mass_events: EventReader<MassCollisionEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
     for MassCollisionEvent(e0, e1) in mass_events.iter() {
         if let Ok(pair) = mergable_masses_query.get_many_mut([*e0, *e1]) {
-            if let Ok(merge_result) = MergeResult::from(pair) {
+            if let Ok(mut merge_result) = MergeResult::from(pair) {
                 merge_result.apply_major_delta();
                 despawn_mass_events.send(DespawnMassEvent(merge_result.minor_entity()));
             }
