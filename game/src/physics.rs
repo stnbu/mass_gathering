@@ -4,6 +4,7 @@
 ///
 /// Maybe this goes in "simulation"?
 use crate::*;
+use bevy::ecs::query::WorldQuery;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
 #[derive(Debug)]
@@ -45,72 +46,88 @@ pub fn handle_despawn_mass(
 // * Define and implement an "extension type" so you can `set_mass()` and
 //   `get_mass` on type `Transform` (using `scale`).
 
+#[derive(WorldQuery)]
+#[world_query(mutable)]
+struct MergableMass {
+    entity: Entity,
+    transform: &'static mut Transform,
+    momentum: &'static mut components::Momentum,
+    inhabitation: &'static components::Inhabitation,
+}
+
+struct MergeResult {
+    major: MergableMass,
+    minor: MergableMass,
+}
+
+struct MergeDelta {
+    velocity: Vec3,
+    scale: f32,
+    translation: Vec3,
+}
+
+impl MergeResult {
+    fn from(pair: [MergableMass; 2]) -> Result<Self, &'static str> {
+        let [p0, p1] = pair;
+        let (major, minor) = if p0.inhabitation.inhabitable() && p1.inhabitation.inhabitable() {
+            return Err("Inhabitable pair collision");
+        } else if p0.inhabitation.inhabitable() {
+            (p0, p1)
+        } else if p1.inhabitation.inhabitable() {
+            (p1, p0)
+        } else {
+            if scale_to_mass(p0.transform.scale) > scale_to_mass(p1.transform.scale) {
+                (p0, p1)
+            } else {
+                (p1, p0)
+            }
+        };
+        Ok(MergeResult { major, minor })
+    }
+
+    fn apply_major_delta(&mut self) {
+        let combined_momentum = (self.major.momentum.velocity
+            * scale_to_mass(self.major.transform.scale))
+            + (self.minor.momentum.velocity * scale_to_mass(self.minor.transform.scale));
+        let combined_mass =
+            scale_to_mass(self.major.transform.scale) + scale_to_mass(self.minor.transform.scale);
+        let delta_v = (combined_momentum / combined_mass) - self.major.momentum.velocity;
+        let major_factor = scale_to_mass(self.major.transform.scale) / combined_mass;
+        let minor_factor = scale_to_mass(self.minor.transform.scale) / combined_mass;
+        let weighted_midpoint = ((major_factor * self.major.transform.translation)
+            + (minor_factor * self.minor.transform.translation))
+            / 2.0;
+        let delta_t = weighted_midpoint - self.major.transform.translation;
+
+        let delta_s = if self.major.inhabitation.inhabitable() {
+            1.0
+        } else {
+            major_factor.powf(-1.0 / 3.0)
+        };
+        self.major.momentum.velocity += delta_v;
+        self.major.transform.scale = mass_to_scale(combined_mass);
+        self.major.transform.translation += delta_t;
+        self.major.transform.scale *= delta_s;
+    }
+
+    fn minor_entity(&self) -> Entity {
+        self.minor.entity
+    }
+}
+
 /// refactor_tags: UNSET
 pub fn merge_masses(
     player: Res<components::Player>,
-    mut masses_query: Query<(
-        &mut Transform,
-        &mut components::Momentum,
-        Entity,
-        &components::Inhabitation,
-    )>,
+    mut mergable_masses_query: Query<MergableMass>,
     mut mass_events: EventReader<MassCollisionEvent>,
     mut despawn_mass_events: EventWriter<DespawnMassEvent>,
 ) {
     for MassCollisionEvent(e0, e1) in mass_events.iter() {
-        if let Ok([p0, p1]) = masses_query.get_many_mut([*e0, *e1]) {
-            let (mut major, minor) = if p0.3.inhabitable() && p1.3.inhabitable() {
-                continue;
-            } else if p0.3.inhabitable() {
-                (p0, p1)
-            } else if p1.3.inhabitable() {
-                (p1, p0)
-            } else {
-                if scale_to_mass(p0.0.scale) > scale_to_mass(p1.0.scale) {
-                    (p0, p1)
-                } else {
-                    (p1, p0)
-                }
-            };
-
-            let combined_momentum = (major.1.velocity * scale_to_mass(major.0.scale))
-                + (minor.1.velocity * scale_to_mass(minor.0.scale));
-            let combined_mass = scale_to_mass(major.0.scale) + scale_to_mass(minor.0.scale);
-            let delta_v = (combined_momentum / combined_mass) - major.1.velocity;
-            // Convince yourself that the sum of these must equal 1.0;
-            let major_factor = scale_to_mass(major.0.scale) / combined_mass;
-            let minor_factor = scale_to_mass(minor.0.scale) / combined_mass;
-
-            let weighted_midpoint =
-                ((major_factor * major.0.translation) + (minor_factor * minor.0.translation)) / 2.0;
-            let delta_p = weighted_midpoint - major.0.translation;
-            // How much to scale in the linear (multiply major original
-            // radius by this much to achieve a proportionate mass (i.e. volume) increase.
-            // We do _not_ scale inhabited masses (they just get denser nom nom.)
-            let delta_s = if major.3.inhabitable() {
-                1.0
-            } else {
-                major_factor.powf(-1.0 / 3.0)
-            };
-            major.1.velocity += delta_v;
-            major.0.scale = mass_to_scale(combined_mass);
-            major.0.translation += delta_p;
-            major.0.scale *= delta_s;
-
-            // FIXME:
-            //   1) This should only happen on the server as it is the dictator of merge events.
-            //   2) Here we could increment the score off player corresponding to major if applicable.
-            let thats_me = if major.3.by(*player) {
-                ""
-            } else {
-                " (that's me!)"
-            };
-            // FIXME: `Player` implements `Display`. `Res<Player>` does not...here at least.
-            // err: `bevy::prelude::Res<'_, Player>` cannot be formatted with the default formatter
-            let player = player.get_name();
-            debug!("Player {player} merged with {combined_mass}{thats_me}");
-
-            despawn_mass_events.send(DespawnMassEvent(minor.2));
+        if let Ok(pair) = mergable_masses_query.get_many_mut([*e0, *e1]) {
+            if let Ok(merge_result) = MergeResult::from(pair) {
+                merge_result.apply_major_delta();
+                despawn_mass_events.send(DespawnMassEvent(merge_result.minor_entity()));
+            }
         }
     }
 }
