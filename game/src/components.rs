@@ -19,7 +19,7 @@ pub struct Player {
 }
 
 impl Player {
-    pub fn new(name: &str) -> Self {
+    pub fn from(name: &str) -> Self {
         let id = from_nick(name);
         Self { id }
     }

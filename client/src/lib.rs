@@ -272,12 +272,13 @@ pub fn set_active_camera(
 /// NOTE: Insertion of the `RenetClient` resource triggers the connection process.
 ///
 /// refactor_tags: network_client_insert
-pub fn new_renet_client(client_id: u64, address: String) -> (RenetClient, components::Player) {
+pub fn new_renet_client(player: components::Player, address: String) -> RenetClient {
     let address = if let Ok(address) = format!("{address}").parse() {
         address
     } else {
         panic!("Cannot parse address `{address}`");
     };
+    let client_id = player.into();
     let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
     let authentication = ClientAuthentication::Unsecure {
         client_id,
