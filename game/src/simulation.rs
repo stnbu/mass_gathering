@@ -160,11 +160,7 @@ pub fn move_projectiles(
 pub fn handle_projectile_collision(
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,
-    masses_query: Query<(
-        With<components::MassID>,
-        Without<components::Inhabitation>,
-        Without<components::Inhabitation>,
-    )>,
+    masses_query: Query<(With<components::MassID>, Without<components::Inhabitation>)>,
 ) {
     for collision_event in collision_events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
