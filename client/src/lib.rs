@@ -286,19 +286,15 @@ pub fn new_renet_client(player: components::Player, address: String) -> RenetCli
         server_addr: address,
         user_data: None,
     };
-    let name = &to_nick(client_id);
-    (
-        RenetClient::new(
-            SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .unwrap(),
-            socket,
-            RenetConnectionConfig::default(),
-            authentication,
-        )
-        .unwrap(),
-        components::Player::new(name),
+    RenetClient::new(
+        SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap(),
+        socket,
+        RenetConnectionConfig::default(),
+        authentication,
     )
+    .unwrap()
 }
 
 /// Set a helpful window title

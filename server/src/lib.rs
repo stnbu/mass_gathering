@@ -61,7 +61,8 @@ pub fn handle_server_events(
                     debug!("Connection from client {client_id} assigning mass {mass_id}");
                     // FIXME: Now we are keeping client_id->mass_id mapping in two places.
                     // Several kinds of yuck.
-                    let player = components::Player::new(&to_nick(client_id));
+                    // FIXME: Also the client does this same thing on the other end, directly from CLI args. Do we "ship" this also?
+                    let player = components::Player::from(&to_nick(client_id));
                     game_config
                         .init_data
                         .masses
