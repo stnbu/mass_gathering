@@ -106,11 +106,11 @@ pub fn info_text(
     game_config: Option<Res<resources::GameConfig>>,
     cameras: Query<(&Camera, &resources::CameraTag)>,
     client: Res<RenetClient>,
+    player: Res<components::Player>,
 ) {
     if !ui_state.show_info {
         return;
     }
-    let my_id = client.client_id();
     let text_color = Color32::from_rgba_premultiplied(0, 255, 0, 100);
     SidePanel::left("info")
         .resizable(false)
@@ -176,9 +176,13 @@ pub fn info_text(
                         (b * 255.0) as u8,
                         (a * 255.0) as u8,
                     );
-                    let nickname = to_nick(client_id).trim_end().to_owned();
-                    let prefix = if client_id == my_id { "* " } else { "  " };
-                    let line = format!("{prefix}{nickname}");
+                    let prefix = if client_id == player.get_id() {
+                        "* "
+                    } else {
+                        "  "
+                    };
+                    let player_name = player.get_name(); // FIXME: Display
+                    let line = format!("{prefix}{player_name}");
                     let line = line.to_owned();
                     ui.label(RichText::new(line).color(color).font(FontId {
                         size: 8.0,
@@ -300,11 +304,11 @@ pub fn new_renet_client(player: components::Player, address: String) -> RenetCli
 /// Set a helpful window title
 ///
 /// refactor_tags: gui, windows_write, network_client_read
-pub fn set_window_title(mut windows: ResMut<Windows>, client: Res<RenetClient>) {
-    let title = "Mass Gathering";
-    let id = client.client_id();
-    let nickname = to_nick(id).trim_end().to_string();
-    let title = format!("{title} | nick: \"{nickname}\"");
+pub fn set_window_title(mut windows: ResMut<Windows>, player: Res<components::Player>) {
+    // FIXME: Why/how does `Res<Player>` not implement `Display`.
+    // `Player` does!
+    let player = player.get_name();
+    let title = format!("Mass Gathering | player: \"{player:?}\"");
     windows.primary_mut().set_title(title);
 }
 
