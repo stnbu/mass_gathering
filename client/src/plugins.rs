@@ -44,7 +44,7 @@ impl Plugin for ClientPlugin {
         app.add_startup_system(let_light);
         app.add_plugin(RenetClientPlugin::default());
         let args = ClientCliArgs::parse();
-        let player = components::Player::from_name(&args.nickname);
+        let player = components::Player::from_name(&args.player_name);
         app.insert_resource(player);
         let address = args.address;
         let renet_client = new_renet_client(player, address);

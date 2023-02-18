@@ -3,7 +3,7 @@
 # RUSTFLAGS=-Zmacro-backtrace
 # RUST_BACKTRACE=full
 
-NICKNAMES="${NICKNAMES:=bob jim tim}"
+PLAYER_NAMES="${PLAYER_NAMES:=bob jim tim}"
 SERVER_ARGS="${SERVER_ARGS:=}"
 SYSTEM_NAME="${SYSTEM_NAME:=rando_calrissian}"
 CARGO_ARGS="${CARGO_ARGS:=--color always}"
@@ -24,9 +24,9 @@ cargo build -p '*' $CARGO_ARGS $RELEASE_FLAG --lib --bins 2>&1 | tee "$LOG_DIR"/
 
 #cargo doc --open --workspace --no-deps --document-private-items --lib --bins --all-features
 
-for nick in $NICKNAMES ; do
-    LOG_FILENAME="client-${nick}.out"
-    ./target/"$PROFILE"/client --nickname "$nick" 2>&1 | tee "$LOG_DIR"/"$LOG_FILENAME"  &
+for name in $PLAYER_NAMES ; do
+    LOG_FILENAME="client-${name}.out"
+    ./target/"$PROFILE"/client --player-name "$name" 2>&1 | tee "$LOG_DIR"/"$LOG_FILENAME"  &
 done
 
 LOG_FILENAME="server.out"

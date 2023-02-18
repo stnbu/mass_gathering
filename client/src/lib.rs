@@ -18,7 +18,7 @@ pub mod plugins;
 #[derive(Parser, Resource)]
 pub struct ClientCliArgs {
     #[arg(long)]
-    pub nickname: String,
+    pub player_name: String,
     #[arg(long, default_value_t = format!("{SERVER_IP}:{SERVER_PORT}"))]
     pub address: String,
 }

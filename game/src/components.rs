@@ -3,14 +3,6 @@ use crate::*;
 use bevy::prelude::Component;
 use serde::{Deserialize, Serialize};
 
-// FIXME: Should there be a "Nickname" type? I think there probably should.
-// Do that and also stop using `String` directly.
-// NOTE: Such a type could be isomorphic to "client ID".
-
-// FIXME: HEY HEY. Let's call it "player". Uses of "user" will be replaced by "player".
-// Some uses of "nickname" can be replaced by "player". Interesting generative content
-// could be accessible by index: `get_colors()` etc.
-
 #[derive(
     Default, Serialize, Deserialize, Resource, Debug, Copy, Clone, Component, Eq, PartialEq,
 )]
