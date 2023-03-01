@@ -68,7 +68,7 @@ pub fn handle_server_events(
                         .masses
                         .get_mut(&mass_id)
                         .unwrap()
-                        .inhabitation = components::Inhabitation::Inhabitable(Some(player));
+                        .inhabitation = components::Inhabitable(Some(player));
                     match game_config.client_mass_map.insert(client_id, mass_id) {
                         None => {
                             if game_config.is_capacity() {

@@ -53,36 +53,28 @@ impl From<Player> for u64 {
 #[derive(Component)]
 pub struct MassID(pub u64);
 
-#[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone, Component)]
-pub enum Inhabitation {
-    Uninhabitable,
-    Inhabitable(Option<Player>),
-}
+// #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone, Component)]
+// pub enum Inhabitation {
+//     Uninhabitable,
+//     Inhabitable(Option<Player>),
+// }
 
-impl Inhabitation {
+#[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone, Component)]
+pub struct Inhabitable(pub Option<Player>);
+
+impl Inhabitable {
     pub fn by(&self, player: Player) -> bool {
-        match self {
-            &Self::Inhabitable(Some(value)) if value == player => true,
+        match self.0 {
+            Some(value) if value == player => true,
             _ => false,
         }
     }
 
     pub fn vacant(&self) -> bool {
-        match self {
-            Self::Inhabitable(None) => true,
+        match self.0 {
+            None => true,
             _ => false,
         }
-    }
-
-    pub fn uninhabitable(&self) -> bool {
-        match self {
-            Self::Uninhabitable => true,
-            _ => false,
-        }
-    }
-
-    pub fn inhabitable(&self) -> bool {
-        !self.uninhabitable()
     }
 }
 

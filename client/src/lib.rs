@@ -384,7 +384,7 @@ pub fn control(
     time: Res<Time>,
     player: Res<components::Player>,
     mut to_server_events: EventWriter<events::ToServer>,
-    mut inhabitant_query: Query<(&mut Transform, &components::Inhabitation)>,
+    mut inhabitant_query: Query<(&mut Transform, &components::Inhabitable)>,
 ) {
     let nudge = TAU / 10000.0;
     let keys_scaling = 10.0;
@@ -479,7 +479,7 @@ pub fn visualize_projectiles(
 ///
 /// refactor_tags: gui, uninhabited_mass_read, sights_write, inhabited_mass_read, rapier_context_read, user_input, to_server_write
 pub fn handle_projectile_engagement(
-    masses_query: Query<(&Transform, &components::MassID, &components::Inhabitation)>,
+    masses_query: Query<(&Transform, &components::MassID, &components::Inhabitable)>,
     mut sights_visibility: Query<&mut Visibility, With<components::Sights>>,
     player: Res<components::Player>,
     rapier_context: Res<RapierContext>,

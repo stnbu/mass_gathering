@@ -8,13 +8,13 @@ use std::time::SystemTime;
 pub fn rotate_inhabitable_masses(
     player: Res<components::Player>,
     mut to_client_events: EventReader<events::ToClient>,
-    mut masses_query: Query<(&mut Transform, &components::Inhabitation)>,
+    mut masses_query: Query<(&mut Transform, &components::Inhabitable)>,
 ) {
     for message in to_client_events.iter() {
         if let events::ToClient::InhabitantRotation { rotation, .. } = message {
             // for ... masses inhabited by other players
             for (mut mass_transform, inhabitation) in masses_query.iter_mut() {
-                if inhabitation.inhabitable() && !inhabitation.by(*player) {
+                if !inhabitation.by(*player) {
                     mass_transform.rotation = *rotation;
                 }
             }
@@ -160,7 +160,7 @@ pub fn move_projectiles(
 pub fn handle_projectile_collision(
     mut collision_events: EventReader<CollisionEvent>,
     projectile_query: Query<&events::ProjectileFlight>,
-    masses_query: Query<(With<components::MassID>, Without<components::Inhabitation>)>,
+    masses_query: Query<(With<components::MassID>, Without<components::Inhabitable>)>,
 ) {
     for collision_event in collision_events.iter() {
         if let CollisionEvent::Started(e0, e1, _) = collision_event {

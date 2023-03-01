@@ -57,7 +57,7 @@ pub struct MassMotion {
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 /// refactor_tags: simulation
 pub struct MassInitData {
-    pub inhabitation: components::Inhabitation,
+    pub inhabitable: bool,
     pub motion: MassMotion,
     pub color: [f32; 4],
     pub mass: f32,
@@ -68,7 +68,7 @@ impl From<MassInitData> for Transform {
         let position = mass_init_data.motion.position;
         let scale = mass_to_scale(mass_init_data.mass);
         let mut transform = Transform::from_translation(position).with_scale(scale);
-        if mass_init_data.inhabitation.inhabitable() {
+        if mass_init_data.inhabitable {
             transform.look_at(Vec3::ZERO, Vec3::Y);
             transform.scale += Vec3::splat(2.5);
         }

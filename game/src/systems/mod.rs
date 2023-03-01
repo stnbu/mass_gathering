@@ -16,7 +16,7 @@ pub fn demo_2m2i() -> resources::InitData {
     init_data.masses.insert(
         0,
         resources::MassInitData {
-            inhabitation: components::Inhabitation::Inhabitable(None),
+            inhabitable: true,
             motion: resources::MassMotion {
                 position: position * 1.0,
                 velocity: velocity * -1.0,
@@ -28,7 +28,7 @@ pub fn demo_2m2i() -> resources::InitData {
     init_data.masses.insert(
         1,
         resources::MassInitData {
-            inhabitation: components::Inhabitation::Inhabitable(None),
+            inhabitable: true,
             motion: resources::MassMotion {
                 position: position * -1.0,
                 velocity: velocity * 1.0,
@@ -54,13 +54,13 @@ pub fn demo_shooting() -> resources::InitData {
         let z = (i as f32 - 10.0) * 2.5;
         let position = Vec3::new(x, y, z);
         let motion = resources::MassMotion { position, velocity };
-        let inhabitation = components::Inhabitation::Uninhabitable;
+        let inhabitable = false;
         let mass = radius_to_mass(i as f32 / 5.0 + 1.0);
         let color = [1.0, 0.0, 0.0, 1.0];
         init_data.masses.insert(
             mass_id,
             resources::MassInitData {
-                inhabitation,
+                inhabitable,
                 motion,
                 mass,
                 color,
@@ -72,7 +72,7 @@ pub fn demo_shooting() -> resources::InitData {
     init_data.masses.insert(
         id_base + 21,
         resources::MassInitData {
-            inhabitation: components::Inhabitation::Inhabitable(None),
+            inhabitable: true,
             motion: resources::MassMotion {
                 position: Vec3::new(-10.0, 0.0, 0.0),
                 velocity: Vec3::ZERO,
@@ -92,7 +92,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2033,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-38.18563, -16.365957, -14.895282),
                         velocity: Vec3::new(-0.97545135, -0.00109941, -0.12273329),
@@ -104,7 +104,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2008,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-21.527424, -5.7028694, 40.36987),
                         velocity: Vec3::new(-0.58495325, -0.003760232, 0.10443846),
@@ -116,7 +116,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2034,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-18.37727, -4.3796225, -46.20309),
                         velocity: Vec3::new(-0.027242454, -0.007021472, -0.6918575),
@@ -128,7 +128,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2022,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(19.650904, -13.976096, -10.24036),
                         velocity: Vec3::new(-0.5919171, 0.0034584964, -0.26293072),
@@ -140,7 +140,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2000,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(9.161188, -7.2353406, 1.0305831),
                         velocity: Vec3::new(0.8030496, -0.0044738017, -0.3907408),
@@ -152,7 +152,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2018,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-10.727993, 46.651474, 13.530999),
                         velocity: Vec3::new(-0.124982454, -0.008768366, -0.10915459),
@@ -164,7 +164,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2019,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(10.727995, -46.651474, -13.530997),
                         velocity: Vec3::new(0.12498445, 0.008770366, 0.109156586),
@@ -176,7 +176,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2017,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(5.091732, 23.021427, -4.2325954),
                         velocity: Vec3::new(0.40976635, -0.0018757978, 0.19066471),
@@ -188,7 +188,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2015,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(5.190026, 0.27572125, 13.757441),
                         velocity: Vec3::new(-0.5740422, -0.0054757698, 0.5183668),
@@ -200,7 +200,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2025,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(11.205822, 15.86477, 0.62063706),
                         velocity: Vec3::new(-0.6755305, 0.0011191271, 0.7205383),
@@ -212,7 +212,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2031,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(16.953125, 21.460934, 0.22213744),
                         velocity: Vec3::new(-0.7418253, 0.0022850453, 0.6028883),
@@ -224,7 +224,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2005,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-14.441915, -0.65056473, 2.897615),
                         velocity: Vec3::new(0.6227617, 0.0007707861, -0.7314223),
@@ -237,7 +237,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2037,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Inhabitable(None),
+                    inhabitable: true,
                     motion: resources::MassMotion {
                         position: Vec3::new(1e-6, 70.0, 1e-6),
                         velocity: Vec3::new(1e-6, 1e-6, 1e-6),
@@ -249,7 +249,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2001,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-9.161186, 7.2353425, -1.0305812),
                         velocity: Vec3::new(-0.8030476, 0.0044758013, 0.39074284),
@@ -261,7 +261,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2024,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-11.20582, -15.864768, -0.62063503),
                         velocity: Vec3::new(0.6755325, -0.0011171271, -0.7205363),
@@ -273,7 +273,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2006,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(22.042305, -30.1111, 17.284887),
                         velocity: Vec3::new(0.90640867, 0.0037647518, -0.06767071),
@@ -285,7 +285,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2038,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Inhabitable(None),
+                    inhabitable: true,
                     motion: resources::MassMotion {
                         position: Vec3::new(1e-6, 1e-6, 70.0),
                         velocity: Vec3::new(1e-6, 1e-6, 1e-6),
@@ -297,7 +297,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2016,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-5.09173, -23.021423, 4.2325974),
                         velocity: Vec3::new(-0.40976432, 0.0018777978, -0.19066271),
@@ -309,7 +309,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2003,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-16.988888, 10.84331, 44.61658),
                         velocity: Vec3::new(0.44792792, -0.0051308344, -0.5568966),
@@ -321,7 +321,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2020,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(47.31852, 13.543327, -0.72530705),
                         velocity: Vec3::new(0.7601094, -0.0016827884, -0.57057023),
@@ -333,7 +333,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2009,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(21.527428, 5.7028713, -40.36987),
                         velocity: Vec3::new(0.5849553, 0.003762232, -0.104436465),
@@ -345,7 +345,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2013,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-2.2454338, -13.705887, -21.335745),
                         velocity: Vec3::new(-0.5670095, 0.0007114005, 0.81629264),
@@ -357,7 +357,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2002,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(16.988892, -10.843308, -44.61658),
                         velocity: Vec3::new(-0.4479259, 0.005132834, 0.55689865),
@@ -369,7 +369,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2026,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-12.535445, -1.6048312, -1.9671205),
                         velocity: Vec3::new(-0.8018609, 0.00037506176, 0.58809537),
@@ -381,7 +381,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2027,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(12.535447, 1.6048331, 1.9671224),
                         velocity: Vec3::new(0.80186296, -0.00037306175, -0.58809334),
@@ -393,7 +393,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2028,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(25.86586, -27.072681, 28.040224),
                         velocity: Vec3::new(-0.61429983, 0.0031392337, -0.06214477),
@@ -405,7 +405,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2035,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(18.377274, 4.3796244, 46.20309),
                         velocity: Vec3::new(0.027244454, 0.0070234714, 0.69185954),
@@ -417,7 +417,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2012,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(2.2454357, 13.705889, 21.335749),
                         velocity: Vec3::new(0.56701154, -0.0007094005, -0.8162906),
@@ -429,7 +429,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2036,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Inhabitable(None),
+                    inhabitable: true,
                     motion: resources::MassMotion {
                         position: Vec3::new(70.0, 1e-6, 1e-6),
                         velocity: Vec3::new(1e-6, 1e-6, 1e-6),
@@ -441,7 +441,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2014,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-5.190024, -0.27571923, -13.757439),
                         velocity: Vec3::new(0.5740442, 0.0054777693, -0.5183648),
@@ -453,7 +453,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2030,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-16.953121, -21.46093, -0.22213544),
                         velocity: Vec3::new(0.7418273, -0.0022830453, -0.60288626),
@@ -465,7 +465,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2010,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(16.930954, 29.013283, 15.770469),
                         velocity: Vec3::new(0.720379, 0.00070454687, 0.4428605),
@@ -477,7 +477,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2007,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-22.042301, 30.111103, -17.284883),
                         velocity: Vec3::new(-0.90640664, -0.0037627518, 0.06767271),
@@ -489,7 +489,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2029,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-25.865856, 27.072685, -28.04022),
                         velocity: Vec3::new(0.61430186, -0.0031372337, 0.062146768),
@@ -501,7 +501,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2004,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(14.441916, 0.65056676, -2.897613),
                         velocity: Vec3::new(-0.6227597, -0.00076878606, 0.73142433),
@@ -513,7 +513,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2032,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(38.18563, 16.365961, 14.895284),
                         velocity: Vec3::new(0.9754534, 0.00110141, 0.122735284),
@@ -525,7 +525,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2023,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-19.6509, 13.976098, 10.240362),
                         velocity: Vec3::new(0.5919191, -0.0034564964, 0.26293275),
@@ -537,7 +537,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2011,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-16.93095, -29.013279, -15.770467),
                         velocity: Vec3::new(-0.72037697, -0.00070254685, -0.4428585),
@@ -549,7 +549,7 @@ pub fn rando_calrissian() -> resources::InitData {
             (
                 2021,
                 resources::MassInitData {
-                    inhabitation: components::Inhabitation::Uninhabitable,
+                    inhabitable: false,
                     motion: resources::MassMotion {
                         position: Vec3::new(-47.31852, -13.543325, 0.7253091),
                         velocity: Vec3::new(-0.7601074, 0.0016847884, 0.57057226),
@@ -606,7 +606,7 @@ pub fn cubic() -> resources::InitData {
             };
 
             let mass_init_data = resources::MassInitData {
-                inhabitation: components::Inhabitation::Uninhabitable,
+                inhabitable: false,
                 motion: resources::MassMotion { position, velocity },
                 color,
                 mass,
@@ -628,13 +628,9 @@ pub fn cubic() -> resources::InitData {
         let position = Vec3::new(x as f32, y as f32, z as f32) * inhabitable_distance;
         let color = [17.0, 19.0 / color_tweak, 23.0 * color_tweak, 1.0];
         let mass = radius_to_mass(1.0);
-        let inhabitation = if z == 1 {
-            components::Inhabitation::Inhabitable(None)
-        } else {
-            components::Inhabitation::Uninhabitable
-        };
+        let inhabitable = z == 1;
         let mass_init_data = resources::MassInitData {
-            inhabitation,
+            inhabitable,
             motion: resources::MassMotion { position, velocity },
             color,
             mass,

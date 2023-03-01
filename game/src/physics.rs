@@ -52,7 +52,7 @@ pub struct MergableMass {
     pub entity: Entity,
     pub transform: &'static mut Transform,
     pub momentum: &'static mut components::Momentum,
-    pub inhabitation: &'static components::Inhabitation,
+    pub inhabitable: Option<&'static components::Inhabitable>,
 }
 
 struct MergeResult<'w> {
@@ -63,11 +63,13 @@ struct MergeResult<'w> {
 impl<'w> MergeResult<'w> {
     fn from(pair: [MergableMassItem<'w>; 2]) -> Result<Self, &'static str> {
         let [p0, p1] = pair;
-        let (major, minor) = if p0.inhabitation.inhabitable() && p1.inhabitation.inhabitable() {
+        let p0_inhabitable = !p0.inhabitable.is_none();
+        let p1_inhabitable = !p1.inhabitable.is_none();
+        let (major, minor) = if p0_inhabitable && p1_inhabitable {
             return Err("Inhabitable pair collision");
-        } else if p0.inhabitation.inhabitable() {
+        } else if p0_inhabitable {
             (p0, p1)
-        } else if p1.inhabitation.inhabitable() {
+        } else if p1_inhabitable {
             (p1, p0)
         } else {
             if scale_to_mass(p0.transform.scale) > scale_to_mass(p1.transform.scale) {
@@ -93,7 +95,7 @@ impl<'w> MergeResult<'w> {
             / 2.0;
         let delta_t = weighted_midpoint - self.major.transform.translation;
 
-        let delta_s = if self.major.inhabitation.inhabitable() {
+        let delta_s = if !self.major.inhabitable.is_none() {
             1.0
         } else {
             major_factor.powf(-1.0 / 3.0)
