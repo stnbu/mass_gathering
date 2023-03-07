@@ -53,12 +53,6 @@ impl From<Player> for u64 {
 #[derive(Component)]
 pub struct MassID(pub u64);
 
-// #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone, Component)]
-// pub enum Inhabitation {
-//     Uninhabitable,
-//     Inhabitable(Option<Player>),
-// }
-
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone, Component)]
 pub struct Inhabitable(pub Option<Player>);
 
