@@ -57,7 +57,7 @@ pub struct MassMotion {
 #[derive(Serialize, Deserialize, Resource, Debug, Copy, Clone)]
 /// refactor_tags: simulation
 pub struct MassInitData {
-    pub inhabitable: bool,
+    pub inhabitation: Option<components::Inhabitable>,
     pub motion: MassMotion,
     pub color: [f32; 4],
     pub mass: f32,
@@ -68,7 +68,7 @@ impl From<MassInitData> for Transform {
         let position = mass_init_data.motion.position;
         let scale = mass_to_scale(mass_init_data.mass);
         let mut transform = Transform::from_translation(position).with_scale(scale);
-        if mass_init_data.inhabitable {
+        if mass_init_data.inhabitation.is_some() {
             transform.look_at(Vec3::ZERO, Vec3::Y);
             transform.scale += Vec3::splat(2.5);
         }
@@ -106,7 +106,7 @@ impl GameConfig {
             .init_data
             .masses
             .iter()
-            .filter(|(_, mass)| mass.inhabitation.vacant())
+            .filter(|(_, mass)| mass.inhabitation.is_some() && mass.inhabitation.unwrap().vacant())
             .map(|(n, _)| *n)
             .collect::<HashSet<u64>>();
         inhabitable_mass_ids

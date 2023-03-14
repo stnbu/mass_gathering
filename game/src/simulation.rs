@@ -60,18 +60,20 @@ pub fn handle_game_config_insertion(
                 //   1) Just send that instead of "GameConfig" and all that.
                 //   2) We could serialize the whole "PointMassBundle" below and send that
                 //      in a message "EntitySpawned" (or something) for handling visuals.
-                let entity = commands
-                    .spawn(physics::PointMassBundle {
-                        transform_bundle: TransformBundle::from_transform(transform),
-                        momentum: components::Momentum {
-                            velocity: mass_init_data.motion.velocity,
-                        },
-                        collider: Collider::ball(radius),
-                        ..Default::default()
-                    })
-                    .insert(inhabitation)
-                    .insert(components::MassID(mass_id))
-                    .id();
+                let mut mass_commands = commands.spawn(physics::PointMassBundle {
+                    transform_bundle: TransformBundle::from_transform(transform),
+                    momentum: components::Momentum {
+                        velocity: mass_init_data.motion.velocity,
+                    },
+                    collider: Collider::ball(radius),
+                    ..Default::default()
+                });
+                if let Some(i) = mass_init_data.inhabitation {
+                    mass_commands.insert(i);
+                }
+                //}
+                mass_commands.insert(components::MassID(mass_id));
+                let entity = mass_commands.id();
                 from_simulation_events.send(FromSimulation::MassSpawned {
                     entity,
                     mass_id,
