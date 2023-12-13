@@ -1,9 +1,7 @@
 use bevy::transform::TransformBundle;
 use bevy::{
-    core_pipeline::clear_color::ClearColorConfig,
-    prelude::*,
-    render::camera::Viewport,
-    window::{WindowId, WindowResized},
+    core_pipeline::clear_color::ClearColorConfig, prelude::*, render::camera::Viewport,
+    window::WindowResized,
 };
 
 use bevy_rapier3d::prelude::{
@@ -38,6 +36,7 @@ pub struct LeftCamera;
 #[derive(Component)]
 pub struct RightCamera;
 
+#[derive(Resource)]
 pub struct SpacecraftConfig {
     pub show_debug_markers: bool,
     pub show_impact_explosions: bool,
@@ -115,8 +114,8 @@ pub fn spacecraft_setup(
     config: Res<SpacecraftConfig>,
 ) {
     let spacecraft = commands
-        .spawn_bundle(TransformBundle::from_transform(config.start_transform))
-        .insert_bundle(VisibilityBundle::default())
+        .spawn(TransformBundle::from_transform(config.start_transform))
+        .insert(VisibilityBundle::default())
         .insert(Spacecraft {
             speed: config.start_speed,
         })
@@ -124,18 +123,15 @@ pub fn spacecraft_setup(
             if config.stereo_enabled {
                 let offset = config.stereo_iod / 2.0;
                 child
-                    .spawn_bundle(Camera3dBundle {
+                    .spawn(Camera3dBundle {
                         transform: Transform::from_xyz(offset, 0.0, 0.0),
                         ..default()
                     })
                     .insert(LeftCamera);
                 child
-                    .spawn_bundle(Camera3dBundle {
+                    .spawn(Camera3dBundle {
                         transform: Transform::from_xyz(-offset, 0.0, 0.0),
-                        camera: Camera {
-                            priority: 1,
-                            ..default()
-                        },
+                        camera: Camera::default(),
                         camera_3d: Camera3d {
                             clear_color: ClearColorConfig::None,
                             ..default()
@@ -144,45 +140,48 @@ pub fn spacecraft_setup(
                     })
                     .insert(RightCamera);
             } else {
-                child.spawn_bundle(Camera3dBundle {
+                child.spawn(Camera3dBundle {
                     transform: Transform::from_xyz(0.0, 0.0, 0.0).looking_at(-Vec3::Z, Vec3::Y),
                     ..default()
                 });
             }
             // Possibly the worst way to implement "crosshairs" evar.
             child
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: 0.01,
-                        ..Default::default()
-                    })),
+                .spawn(PbrBundle {
+                    mesh: meshes.add(
+                        Mesh::try_from(shape::Icosphere {
+                            radius: 0.01,
+                            ..Default::default()
+                        })
+                        .unwrap(),
+                    ),
                     material: materials.add(Color::LIME_GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -7.0),
-                    visibility: Visibility { is_visible: false },
+                    visibility: Visibility::Hidden,
                     ..Default::default()
                 })
                 .insert(SpacecraftAR::CrosshairsCold);
             child
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.08))),
                     material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -7.0),
-                    visibility: Visibility { is_visible: false },
+                    visibility: Visibility::Hidden,
                     ..Default::default()
                 })
                 .insert(SpacecraftAR::CrosshairsHot);
             child
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.08))),
                     material: materials.add(Color::GREEN.into()),
                     transform: Transform::from_xyz(0.0, 0.0, -6.0),
-                    visibility: Visibility { is_visible: false },
+                    visibility: Visibility::Hidden,
                     ..Default::default()
                 })
                 .insert(SpacecraftAR::CrosshairsHot);
 
             // Various lights for seeing
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.7,
@@ -191,7 +190,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(-10.0, 5.0, -35.0),
                 point_light: PointLight {
                     intensity: 5000.0 * 1.5,
@@ -200,7 +199,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(30.0, -20.0, 80.0),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.7,
@@ -209,7 +208,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child.spawn_bundle(PointLightBundle {
+            child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(-30.0, 10.0, 100.0),
                 point_light: PointLight {
                     intensity: 1000000.0 * 0.8,
@@ -218,7 +217,7 @@ pub fn spacecraft_setup(
                 },
                 ..Default::default()
             });
-            child.spawn_bundle(TransformBundle::from_transform(Transform::from_xyz(
+            child.spawn(TransformBundle::from_transform(Transform::from_xyz(
                 -0.12, -0.06, -0.25,
             )));
         })
@@ -229,8 +228,8 @@ pub fn spacecraft_setup(
 pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &SpacecraftAR)>) {
     for (mut visibility, mode) in ar_query.iter_mut() {
         match mode {
-            SpacecraftAR::CrosshairsCold => visibility.is_visible = true,
-            SpacecraftAR::CrosshairsHot => visibility.is_visible = false,
+            SpacecraftAR::CrosshairsCold => *visibility = Visibility::Visible,
+            SpacecraftAR::CrosshairsHot => *visibility = Visibility::Hidden,
         }
     }
 }
@@ -247,10 +246,10 @@ pub fn handle_hot_planet(
                 if let Ok((mut visibility, ar_element)) = ar_query.get_mut(*child_id) {
                     match *ar_element {
                         SpacecraftAR::CrosshairsHot => {
-                            visibility.is_visible = true;
+                            *visibility = Visibility::Visible;
                         }
                         SpacecraftAR::CrosshairsCold => {
-                            visibility.is_visible = false;
+                            *visibility = Visibility::Hidden;
                         }
                     }
                 }
@@ -259,6 +258,7 @@ pub fn handle_hot_planet(
     }
 }
 
+#[derive(Event)]
 pub struct FireProjectileEvent;
 
 pub fn fire_on_hot_planet(
@@ -279,11 +279,14 @@ pub fn fire_on_hot_planet(
             let mut spacecraft_transform = spacecraft_query.get_single_mut().unwrap();
             debug!("Firing at planet {planet:?}, planet-local direction to target: {local_direction:?}");
             commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: config.projectile_radius,
-                        ..Default::default()
-                    })),
+                .spawn(PbrBundle {
+                    mesh: meshes.add(
+                        Mesh::try_from(shape::Icosphere {
+                            radius: config.projectile_radius,
+                            ..Default::default()
+                        })
+                        .unwrap(),
+                    ),
                     material: materials.add(Color::WHITE.into()),
                     transform: Transform::from_translation(spacecraft_transform.translation),
                     ..Default::default()
@@ -314,7 +317,7 @@ pub fn fire_on_hot_planet(
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Event)]
 pub struct ProjectileCollisionEvent {
     pub planet: Entity,
     pub projectile: Entity,
@@ -346,11 +349,14 @@ pub fn spawn_projectile_explosion_animation(
                 let local_impact_site =
                     event.local_impact_site / (planet_transform.scale.length() / SQRT_3);
                 let explosion = commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: 0.2,
-                            ..Default::default()
-                        })),
+                    .spawn(PbrBundle {
+                        mesh: meshes.add(
+                            Mesh::try_from(shape::Icosphere {
+                                radius: 0.2,
+                                ..Default::default()
+                            })
+                            .unwrap(),
+                        ),
                         material: materials.add(StandardMaterial {
                             base_color: Color::YELLOW,
                             perceptual_roughness: 0.99,
@@ -467,39 +473,7 @@ pub fn animate_projectile_explosion(
     }
 }
 
-pub fn set_camera_viewports(
-    windows: Res<Windows>,
-    mut resize_events: EventReader<WindowResized>,
-    mut left_camera: Query<&mut Camera, (With<LeftCamera>, Without<RightCamera>)>,
-    mut right_camera: Query<&mut Camera, (With<RightCamera>, Without<LeftCamera>)>,
-    config: Res<SpacecraftConfig>,
-) {
-    // FIXME vvv
-    if !config.stereo_enabled {
-        return;
-    }
-    for resize_event in resize_events.iter() {
-        if resize_event.id == WindowId::primary() {
-            let window = windows.primary();
-
-            let mut left_viewport = left_camera.single_mut();
-            let mut right_viewport = right_camera.single_mut();
-
-            left_viewport.viewport = Some(Viewport {
-                physical_position: UVec2::new(0, 0),
-                physical_size: UVec2::new(window.physical_width() / 2, window.physical_height()),
-                ..default()
-            });
-
-            right_viewport.viewport = Some(Viewport {
-                physical_position: UVec2::new(window.physical_width() / 2, 0),
-                physical_size: UVec2::new(window.physical_width() / 2, window.physical_height()),
-                ..default()
-            });
-        }
-    }
-}
-
+#[derive(Event)]
 pub struct HotPlanetEvent {
     pub planet: Entity,
     // This is: the direction to the impact site relative to the planet's transform

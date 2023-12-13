@@ -4,11 +4,11 @@ use bevy_egui::{
         CentralPanel, Color32, FontFamily::Monospace, FontId, Frame, RichText, SidePanel,
         TopBottomPanel,
     },
-    EguiContext,
+    EguiContexts,
 };
-use egui_extras::{Size, TableBuilder};
+use egui_extras::{Column, Size, TableBuilder};
 
-pub fn helpscreen(mut ctx: ResMut<EguiContext>) {
+pub fn helpscreen(mut ctx: EguiContexts) {
     let fill_color = Color32::from_rgba_premultiplied(0, 0, 0, 240);
     TopBottomPanel::top("top_panel")
         .resizable(false)
@@ -82,9 +82,9 @@ fn build_table(ui: &mut egui::Ui) {
     TableBuilder::new(ui)
         .striped(false)
         .cell_layout(egui::Layout::left_to_right(egui::Align::Center))
-        .column(Size::initial(120.0))
-        .column(Size::initial(270.0))
-        .column(Size::remainder())
+        .column(Column::initial(120.0))
+        .column(Column::initial(270.0))
+        .column(Column::remainder())
         .resizable(false)
         .header(50.0, |mut header| {
             header.col(|ui| {

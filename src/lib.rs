@@ -1,6 +1,5 @@
 use bevy::app::PluginGroupBuilder;
 use bevy::input::mouse::MouseButtonInput;
-use bevy::log::LogSettings;
 use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
@@ -19,12 +18,31 @@ use prelude::*;
 pub struct FullGame;
 
 impl PluginGroup for FullGame {
+    fn build(self) -> PluginGroupBuilder {
+        PluginGroupBuilder::start::<Self>()
+            .add(Core)
+            .add(SpacecraftPlugin)
+            .add(Spacetime)
+    }
+}
+
+/*
+impl PluginGroup for FullGame {
     fn build(&mut self, group: &mut PluginGroupBuilder) {
         group.add(Core).add(SpacecraftPlugin).add(Spacetime);
     }
 }
+*/
 
 pub struct SpacecraftPlugin;
+
+/*
+        .add_systems(
+            Update,
+            (movement, change_color).run_if(in_state(AppState::InGame)),
+        )
+
+*/
 
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
@@ -32,27 +50,25 @@ impl Plugin for SpacecraftPlugin {
             .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
             .add_event::<FireProjectileEvent>()
-            .add_system_set(
-                SystemSet::on_update(AppState::Playing)
-                    .with_system(move_forward)
-                    .with_system(control)
-                    .with_system(stars)
-                    .with_system(signal_hot_planet)
-                    .with_system(fire_on_hot_planet)
-                    .with_system(animate_projectile_explosion)
-                    .with_system(handle_hot_planet)
-                    .with_system(set_ar_default_visibility.before(handle_hot_planet))
-                    .with_system(move_projectiles.before(handle_despawn_planet))
-                    .with_system(transfer_projectile_momentum)
-                    // FIXME: even though `handle_despawn_planet` added by another plugin?
-                    .with_system(spawn_projectile_explosion_animation.after(handle_despawn_planet))
-                    .with_system(
-                        handle_projectile_despawn.after(spawn_projectile_explosion_animation),
-                    ),
+            .add_systems(
+                OnEnter(AppState::Playing),
+                (
+                    move_forward,
+                    control,
+                    stars,
+                    signal_hot_planet,
+                    fire_on_hot_planet,
+                    animate_projectile_explosion,
+                    handle_hot_planet,
+                    set_ar_default_visibility.before(handle_hot_planet),
+                    move_projectiles.before(handle_despawn_planet),
+                    transfer_projectile_momentum,
+                    spawn_projectile_explosion_animation.after(handle_despawn_planet),
+                    handle_projectile_despawn.after(spawn_projectile_explosion_animation),
+                ),
             )
-            .add_startup_system(spacecraft_setup)
-            .add_system(set_camera_viewports)
-            .add_system_set(SystemSet::on_update(AppState::Help).with_system(helpscreen));
+            .add_systems(Startup, spacecraft_setup)
+            .add_systems(OnEnter(AppState::Help), helpscreen);
     }
 }
 
@@ -64,13 +80,15 @@ impl Plugin for Spacetime {
             .add_event::<DeltaEvent>()
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnPlanetEvent>()
-            .add_system_set(
-                SystemSet::on_update(AppState::Playing)
-                    .with_system(handle_despawn_planet)
-                    .with_system(signal_freefall_delta.before(handle_despawn_planet))
-                    .with_system(handle_freefall.before(handle_despawn_planet))
-                    .with_system(handle_planet_collisions.before(handle_despawn_planet))
-                    .with_system(transfer_planet_momentum.before(handle_despawn_planet)),
+            .add_systems(
+                OnEnter(AppState::Playing),
+                (
+                    handle_despawn_planet,
+                    signal_freefall_delta.before(handle_despawn_planet),
+                    handle_freefall.before(handle_despawn_planet),
+                    handle_planet_collisions.before(handle_despawn_planet),
+                    transfer_planet_momentum.before(handle_despawn_planet),
+                ),
             );
     }
 }
@@ -79,54 +97,30 @@ pub struct Core;
 
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
-        app.add_plugins(MinimalPlugins);
-
-        #[cfg(debug_assertions)]
-        app.insert_resource(LogSettings {
-            filter: "warn,mass_gathering=debug".into(),
-            level: bevy::log::Level::DEBUG,
-        })
-        .add_plugin(bevy::log::LogPlugin);
-        debug!("DEBUG LEVEL LOGGING ! !");
-
-        // An attempt at minimizing DefaultPlugins for our purposes
-        app.add_plugin(bevy::transform::TransformPlugin)
-            .add_plugin(bevy::input::InputPlugin)
-            .add_plugin(bevy::window::WindowPlugin)
-            .add_plugin(bevy::asset::AssetPlugin)
-            .add_plugin(bevy::scene::ScenePlugin)
-            .add_plugin(bevy::winit::WinitPlugin)
-            .add_plugin(bevy::render::RenderPlugin)
-            .add_plugin(bevy::core_pipeline::CorePipelinePlugin)
-            .add_plugin(bevy::pbr::PbrPlugin)
-	    // ...
-	    ;
-
-        #[cfg(not(debug_assertions))]
-        {
-            error!("We have no logging, and yet you SEE this message...?");
-            // FIXME: num-triangles on a mesh is a different thing
-            app.insert_resource(Msaa { samples: 4 });
-        }
+        app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
+                      filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
+                            level: bevy::log::Level::DEBUG,
+                       }));
 
         #[cfg(target_arch = "wasm32")]
         app.add_system(handle_browser_resize);
 
         #[cfg(not(target_arch = "wasm32"))]
-        app.add_system(bevy::window::close_on_esc);
+        app.add_systems(Update, bevy::window::close_on_esc);
 
-        app.add_plugin(EguiPlugin)
-            .add_state(AppState::Help)
-            .add_startup_system(disable_rapier_gravity)
-            .add_system(handle_game_state)
-            .add_system(timer_despawn)
-            .add_plugin(RapierPhysicsPlugin::<NoUserData>::default());
+        app.add_plugins(EguiPlugin)
+            .add_state::<AppState>()
+            .add_systems(Startup, disable_rapier_gravity)
+            //.add_systems(Update, handle_game_state)
+            .add_systems(Update, timer_despawn)
+            .add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy)]
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Default, States)]
 enum AppState {
     Playing,
+    #[default]
     Help,
 }
 
@@ -134,35 +128,22 @@ fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
     rapier_config.gravity = Vec3::ZERO;
 }
 
-fn handle_game_state(
-    mut app_state: ResMut<State<AppState>>,
-    keys: Res<Input<KeyCode>>,
-    mouse_button_input_events: EventReader<MouseButtonInput>,
-    mut windows: ResMut<Windows>,
-) {
-    use AppState::*;
-    use KeyCode::*;
-    let next_state = if *app_state.current() == Help && !mouse_button_input_events.is_empty() {
-        let window = windows.get_primary_mut().unwrap();
-        window.set_cursor_visibility(false);
-        window.set_cursor_lock_mode(true);
-        Some(Playing)
-    } else {
-        keys.get_just_pressed()
-            .fold(None, |_state, key| match (*app_state.current(), *key) {
-                (Playing, P | H | M) => {
-                    let window = windows.get_primary_mut().unwrap();
-                    window.set_cursor_visibility(true);
-                    window.set_cursor_lock_mode(false);
-                    Some(Help)
-                }
-                (_, _) => Some(Playing),
-            })
-    };
-    if let Some(state) = next_state {
-        let _ = app_state.overwrite_set(state);
+/*
+fn toggle_cursor(mut windows: Query<&mut Window>, input: Res<ButtonInput<KeyCode>>) {
+    if input.just_pressed(KeyCode::Space) {
+        let mut window = windows.single_mut();
+
+        window.cursor.visible = !window.cursor.visible;
+        window.cursor.grab_mode = match window.cursor.grab_mode {
+            CursorGrabMode::None => CursorGrabMode::Locked,
+            CursorGrabMode::Locked | CursorGrabMode::Confined => CursorGrabMode::None,
+        };
     }
 }
+*/
+
+// snip
+//fn handle_game_state(...
 
 // Take the latitude (poles are [1,-1]) and the longitude (portion around, starting at (0,0,1))
 // and return the x, y, z on the unit sphere.
@@ -239,11 +220,14 @@ pub fn my_planets(
         let (r, w, y) = (rf() * 40.0, rf() * 400.0, rf() * 20.0);
         let star_colored = (Color::RED * r + Color::WHITE * w + Color::YELLOW * y) * 1000.0;
         commands
-            .spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Icosphere {
-                    radius,
-                    ..default()
-                })),
+            .spawn(PbrBundle {
+                mesh: meshes.add(
+                    Mesh::try_from(shape::Icosphere {
+                        radius,
+                        ..default()
+                    })
+                    .unwrap(),
+                ),
                 material: materials.add(star_colored.into()),
                 transform: Transform::from_translation(position),
                 ..default()

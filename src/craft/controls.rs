@@ -78,8 +78,8 @@ pub fn control(
         rotation.x -= event.delta.y * mouse_scaling;
         rotation.y -= event.delta.x * mouse_scaling;
     }
-    for MouseButtonInput { button, state } in mouse_button_input_events.iter() {
-        if *button == MouseButton::Left && *state == ButtonState::Pressed {
+    for MouseButtonInput { button, state, .. } in mouse_button_input_events.iter() {
+        if button == &MouseButton::Left && state == &ButtonState::Pressed {
             fire_projectile_events.send(FireProjectileEvent);
         }
     }

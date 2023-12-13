@@ -1,4 +1,4 @@
-use bevy::prelude::{App, ClearColor, Color, Transform, Vec3};
+use bevy::prelude::{App, ClearColor, Color, Startup, Transform, Vec3};
 use mass_gathering::prelude::{my_planets, PhysicsConfig, SpacecraftConfig};
 use mass_gathering::FullGame;
 
@@ -18,6 +18,6 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(FullGame)
-        .add_startup_system(my_planets)
+        .add_systems(Startup, my_planets)
         .run();
 }

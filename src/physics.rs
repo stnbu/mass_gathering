@@ -3,6 +3,7 @@ use crate::{mass_to_radius, radius_to_mass};
 use bevy::prelude::*;
 use bevy_rapier3d::prelude::{ActiveEvents, Collider, CollisionEvent, RigidBody, Sensor};
 
+#[derive(Resource)]
 pub struct PhysicsConfig {
     pub trails: bool,
     pub sims_per_frame: u8,
@@ -19,7 +20,7 @@ impl Default for PhysicsConfig {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Event)]
 pub struct PlanetCollisionEvent(pub Entity, pub Entity);
 
 pub fn handle_planet_collisions(
@@ -61,6 +62,7 @@ pub fn handle_planet_collisions(
     }
 }
 
+#[derive(Event)]
 pub struct DespawnPlanetEvent(pub Entity);
 
 pub fn handle_despawn_planet(
@@ -151,7 +153,6 @@ pub fn transfer_planet_momentum(
 
 #[derive(Bundle)]
 pub struct PlanetBundle {
-    #[bundle]
     pbr: PbrBundle,
     momentum: Momentum,
     rigid_body: RigidBody,
@@ -183,12 +184,24 @@ pub fn spawn_planet<'a>(
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) {
     let mass = radius_to_mass(radius);
-    let planet_bundle = PlanetBundle {
+    /*
+
+    meshes.add(
+            Mesh::try_from(shape::Icosphere {
+                radius: 0.9,
+                subdivisions: 7,
+            })
+
+         */
+    let planet = PlanetBundle {
         pbr: PbrBundle {
-            mesh: meshes.add(Mesh::from(shape::Icosphere {
-                radius,
-                ..default()
-            })),
+            mesh: meshes.add(
+                Mesh::try_from(shape::Icosphere {
+                    radius,
+                    ..default()
+                })
+                .unwrap(),
+            ),
             material: materials.add(color.into()),
             transform: Transform::from_translation(position),
             ..default()
@@ -201,7 +214,7 @@ pub fn spawn_planet<'a>(
         collider: Collider::ball(radius),
         ..Default::default()
     };
-    let planet_id = commands.spawn_bundle(planet_bundle).id();
+    let planet_id = commands.spawn(planet).id();
     debug!("Spawned planet={planet_id:?}");
 }
 
@@ -212,7 +225,7 @@ pub struct Momentum {
     pub force_ro: Vec3,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Event)]
 pub struct DeltaEvent {
     pub entity: Entity,
     pub delta_p: Vec3,
