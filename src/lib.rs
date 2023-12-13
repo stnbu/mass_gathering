@@ -29,8 +29,6 @@ pub struct SpacecraftPlugin;
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SpacecraftConfig>()
-            .init_resource::<VectorBallData>()
-            .add_startup_system(create_vector_ball)
             .add_event::<ProjectileCollisionEvent>()
             .add_event::<HotPlanetEvent>()
             .add_event::<FireProjectileEvent>()
@@ -40,8 +38,6 @@ impl Plugin for SpacecraftPlugin {
                     .with_system(control)
                     .with_system(stars)
                     .with_system(signal_hot_planet)
-                    .with_system(relay_vector_ball_updates.after(signal_hot_planet))
-                    .with_system(update_vector_ball.after(relay_vector_ball_updates))
                     .with_system(fire_on_hot_planet)
                     .with_system(animate_projectile_explosion)
                     .with_system(handle_hot_planet)
@@ -68,7 +64,6 @@ impl Plugin for Spacetime {
             .add_event::<DeltaEvent>()
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnPlanetEvent>()
-            .add_event::<VectorBallUpdate>()
             .add_system_set(
                 SystemSet::on_update(AppState::Playing)
                     .with_system(handle_despawn_planet)
