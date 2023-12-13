@@ -1,2 +1,6 @@
 /target
 /pkg
+*~
+\#*\#
+.\#*
+.DS_Store
