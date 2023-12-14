@@ -30,7 +30,7 @@ pub fn handle_planet_collisions(
     planet_query: Query<(&Transform, &Momentum)>,
     projectile_query: Query<&Transform, With<ProjectileTarget>>,
 ) {
-    for collision_event in events.iter() {
+    for collision_event in events.read() {
         // FIXME: Filter events (for "Sensor")
         if let CollisionEvent::Started(e0, e1, _) = collision_event {
             if planet_query.get_many([*e0, *e1]).is_ok() {
@@ -70,7 +70,7 @@ pub fn handle_despawn_planet(
     mut despawn_planet_events: EventReader<DespawnPlanetEvent>,
     projectile_query: Query<(Entity, &ProjectileTarget)>,
 ) {
-    for &DespawnPlanetEvent(entity) in despawn_planet_events.iter() {
+    for &DespawnPlanetEvent(entity) in despawn_planet_events.read() {
         debug!("RECURSIVELY despawning planet {entity:?} and all of its in-flight projectiles");
         for (projectile, &ProjectileTarget { planet, .. }) in projectile_query.iter() {
             if entity == planet {
@@ -89,7 +89,7 @@ pub fn transfer_planet_momentum(
     mut delta_events: EventWriter<DeltaEvent>,
     mut despawn_planet_events: EventWriter<DespawnPlanetEvent>,
 ) {
-    for PlanetCollisionEvent(e0, e1) in planet_events.iter() {
+    for PlanetCollisionEvent(e0, e1) in planet_events.read() {
         // FIXME: We have write access to `Momentum` and yet we update
         // `delta_v` via an event. Just update it here? Should `DeltaEvent`
         // even have a `delta_v` field?
@@ -285,7 +285,7 @@ pub fn handle_freefall(
     mut planet_query: Query<(&mut Transform, &mut Momentum)>,
     mut delta_events: EventReader<DeltaEvent>,
 ) {
-    for event in delta_events.iter() {
+    for event in delta_events.read() {
         if let Ok((mut transform, mut momentum)) = planet_query.get_mut(event.entity) {
             transform.translation += event.delta_p;
             momentum.velocity += event.delta_v;

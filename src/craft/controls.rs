@@ -74,16 +74,16 @@ pub fn control(
         }
     }
 
-    for event in mouse_motion_events.iter() {
+    for event in mouse_motion_events.read() {
         rotation.x -= event.delta.y * mouse_scaling;
         rotation.y -= event.delta.x * mouse_scaling;
     }
-    for MouseButtonInput { button, state, .. } in mouse_button_input_events.iter() {
+    for MouseButtonInput { button, state, .. } in mouse_button_input_events.read() {
         if button == &MouseButton::Left && state == &ButtonState::Pressed {
             fire_projectile_events.send(FireProjectileEvent);
         }
     }
-    for event in mouse_wheel_events.iter() {
+    for event in mouse_wheel_events.read() {
         spacecraft.speed = event.y;
     }
 

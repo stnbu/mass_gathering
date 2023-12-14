@@ -1,7 +1,6 @@
 use bevy::transform::TransformBundle;
 use bevy::{
-    core_pipeline::clear_color::ClearColorConfig, prelude::*, render::camera::Viewport,
-    window::WindowResized,
+    core_pipeline::clear_color::ClearColorConfig, prelude::*,
 };
 
 use bevy_rapier3d::prelude::{
@@ -273,9 +272,9 @@ pub fn fire_on_hot_planet(
     for &HotPlanetEvent {
         planet,
         local_direction,
-    } in hot_planet_events.iter()
+    } in hot_planet_events.read()
     {
-        for _ in fire_projectile_events.iter() {
+        for _ in fire_projectile_events.read() {
             let mut spacecraft_transform = spacecraft_query.get_single_mut().unwrap();
             debug!("Firing at planet {planet:?}, planet-local direction to target: {local_direction:?}");
             commands
@@ -329,7 +328,7 @@ pub fn handle_projectile_despawn(
     mut commands: Commands,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
-    for projectile_collision in projectile_events.iter() {
+    for projectile_collision in projectile_events.read() {
         commands.entity(projectile_collision.projectile).despawn();
     }
 }
@@ -342,7 +341,7 @@ pub fn spawn_projectile_explosion_animation(
     planet_query: Query<&Transform, With<Momentum>>,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
 ) {
-    for event in projectile_events.iter() {
+    for event in projectile_events.read() {
         if let Ok(projectile_target) = projectile_query.get(event.projectile) {
             if let Ok(planet_transform) = planet_query.get(event.planet) {
                 // FIXME: WHY does local_impact_site need any scaling??
@@ -394,7 +393,7 @@ pub fn transfer_projectile_momentum(
     mut delta_events: EventWriter<DeltaEvent>,
     config: Res<SpacecraftConfig>,
 ) {
-    for event in projectile_events.iter() {
+    for event in projectile_events.read() {
         if let Ok(planet_momentum) = planet_query.get(event.planet) {
             let delta_v = -event.local_impact_site.normalize() * config.impact_magnitude
                 / planet_momentum.mass;
