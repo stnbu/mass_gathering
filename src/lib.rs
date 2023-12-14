@@ -33,7 +33,7 @@ impl Plugin for SpacecraftPlugin {
             .add_event::<HotPlanetEvent>()
             .add_event::<FireProjectileEvent>()
             .add_systems(
-                OnEnter(AppState::Playing),
+                Update,
                 (
                     move_forward,
                     control,
@@ -47,10 +47,11 @@ impl Plugin for SpacecraftPlugin {
                     transfer_projectile_momentum,
                     spawn_projectile_explosion_animation.after(handle_despawn_planet),
                     handle_projectile_despawn.after(spawn_projectile_explosion_animation),
-                ),
+                )
+                    .run_if(in_state(AppState::Playing)),
             )
             .add_systems(Startup, spacecraft_setup)
-            .add_systems(OnEnter(AppState::Help), helpscreen);
+            .add_systems(Update, helpscreen.run_if(in_state(AppState::Help)));
     }
 }
 
@@ -63,14 +64,15 @@ impl Plugin for Spacetime {
             .add_event::<PlanetCollisionEvent>()
             .add_event::<DespawnPlanetEvent>()
             .add_systems(
-                OnEnter(AppState::Playing),
+                Update,
                 (
                     handle_despawn_planet,
                     signal_freefall_delta.before(handle_despawn_planet),
                     handle_freefall.before(handle_despawn_planet),
                     handle_planet_collisions.before(handle_despawn_planet),
                     transfer_planet_momentum.before(handle_despawn_planet),
-                ),
+                )
+                    .run_if(in_state(AppState::Playing)),
             );
     }
 }
@@ -92,7 +94,7 @@ impl Plugin for Core {
                        }));
 
         #[cfg(target_arch = "wasm32")]
-        app.add_system(handle_browser_resize);
+        app.add_systems(Update, handle_browser_resize);
 
         #[cfg(not(target_arch = "wasm32"))]
         app.add_systems(Update, bevy::window::close_on_esc);
