@@ -10,7 +10,6 @@ use physics::*;
 
 mod craft;
 mod helpscreen;
-mod mg_shapes;
 pub mod prelude;
 
 use prelude::*;
@@ -26,23 +25,7 @@ impl PluginGroup for FullGame {
     }
 }
 
-/*
-impl PluginGroup for FullGame {
-    fn build(&mut self, group: &mut PluginGroupBuilder) {
-        group.add(Core).add(SpacecraftPlugin).add(Spacetime);
-    }
-}
-*/
-
 pub struct SpacecraftPlugin;
-
-/*
-        .add_systems(
-            Update,
-            (movement, change_color).run_if(in_state(AppState::InGame)),
-        )
-
-*/
 
 impl Plugin for SpacecraftPlugin {
     fn build(&self, app: &mut App) {
@@ -93,6 +76,13 @@ impl Plugin for Spacetime {
     }
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Default, States)]
+enum AppState {
+    #[default]
+    Playing,
+    Help,
+}
+
 pub struct Core;
 
 impl Plugin for Core {
@@ -111,39 +101,14 @@ impl Plugin for Core {
         app.add_plugins(EguiPlugin)
             .add_state::<AppState>()
             .add_systems(Startup, disable_rapier_gravity)
-            //.add_systems(Update, handle_game_state)
             .add_systems(Update, timer_despawn)
             .add_plugins(RapierPhysicsPlugin::<NoUserData>::default());
     }
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash, Copy, Default, States)]
-enum AppState {
-    Playing,
-    #[default]
-    Help,
-}
-
 fn disable_rapier_gravity(mut rapier_config: ResMut<RapierConfiguration>) {
     rapier_config.gravity = Vec3::ZERO;
 }
-
-/*
-fn toggle_cursor(mut windows: Query<&mut Window>, input: Res<ButtonInput<KeyCode>>) {
-    if input.just_pressed(KeyCode::Space) {
-        let mut window = windows.single_mut();
-
-        window.cursor.visible = !window.cursor.visible;
-        window.cursor.grab_mode = match window.cursor.grab_mode {
-            CursorGrabMode::None => CursorGrabMode::Locked,
-            CursorGrabMode::Locked | CursorGrabMode::Confined => CursorGrabMode::None,
-        };
-    }
-}
-*/
-
-// snip
-//fn handle_game_state(...
 
 // Take the latitude (poles are [1,-1]) and the longitude (portion around, starting at (0,0,1))
 // and return the x, y, z on the unit sphere.

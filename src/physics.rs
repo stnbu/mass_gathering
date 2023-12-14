@@ -184,15 +184,6 @@ pub fn spawn_planet<'a>(
     materials: &'a mut ResMut<Assets<StandardMaterial>>,
 ) {
     let mass = radius_to_mass(radius);
-    /*
-
-    meshes.add(
-            Mesh::try_from(shape::Icosphere {
-                radius: 0.9,
-                subdivisions: 7,
-            })
-
-         */
     let planet = PlanetBundle {
         pbr: PbrBundle {
             mesh: meshes.add(
