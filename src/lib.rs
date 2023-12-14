@@ -5,11 +5,10 @@ use bevy_egui::EguiPlugin;
 use bevy_rapier3d::prelude::{NoUserData, RapierConfiguration, RapierPhysicsPlugin};
 use rand::Rng;
 use std::f32::consts::{PI, TAU};
-mod physics;
-use physics::*;
 
 mod craft;
 mod helpscreen;
+mod physics;
 pub mod prelude;
 
 use prelude::*;
