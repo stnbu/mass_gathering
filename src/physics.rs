@@ -236,7 +236,7 @@ pub fn signal_freefall_delta(
         .iter()
         .map(|t| (t.0, t.1.translation, t.2.mass, t.2.velocity))
         .collect::<Vec<_>>();
-    for _ in (0..physics_config.sims_per_frame).rev() {
+    for _ in 0..physics_config.sims_per_frame {
         let accelerations = masses.iter().map(|particle1| {
             masses.iter().fold(Vec3::ZERO, |acceleration, particle2| {
                 let dir = particle2.1 - particle1.1;
