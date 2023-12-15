@@ -92,13 +92,7 @@ impl Plugin for Core {
                       filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
                             level: bevy::log::Level::DEBUG,
                        }));
-
-        #[cfg(target_arch = "wasm32")]
-        app.add_systems(Update, handle_browser_resize);
-
-        #[cfg(not(target_arch = "wasm32"))]
         app.add_systems(Update, bevy::window::close_on_esc);
-
         app.add_plugins(EguiPlugin)
             .add_state::<AppState>()
             .add_systems(Startup, disable_rapier_gravity)
@@ -216,17 +210,4 @@ fn stars(
         star.translation += spacecraft.translation - previous.0;
     }
     previous.0 = spacecraft.translation;
-}
-
-#[cfg(target_arch = "wasm32")]
-fn handle_browser_resize(mut windows: ResMut<Windows>) {
-    let window = windows.get_primary_mut().unwrap();
-    let wasm_window = web_sys::window().unwrap();
-    let (target_width, target_height) = (
-        wasm_window.inner_width().unwrap().as_f64().unwrap() as f32,
-        wasm_window.inner_height().unwrap().as_f64().unwrap() as f32,
-    );
-    if window.width() != target_width || window.height() != target_height {
-        window.set_resolution(target_width, target_height);
-    }
 }

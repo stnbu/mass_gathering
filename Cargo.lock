@@ -2499,7 +2499,6 @@ dependencies = [
  "egui_extras",
  "rand",
  "rapier3d",
- "web-sys",
 ]
 
 [[package]]
