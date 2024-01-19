@@ -4,7 +4,7 @@
 
 Mass Gathering is built in Rust using the Bevy game framework.
 
-Here's a short video clip of four clients playing over the network, along with copious debug output...
+Here's a short video clip of three clients playing over the network, along with copious debug output.
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/f4SgXuvTqWI/0.jpg)](https://www.youtube.com/watch?v=f4SgXuvTqWI)
 
