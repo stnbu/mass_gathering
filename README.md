@@ -12,6 +12,8 @@ Here's a short video clip of three clients playing over the network, along with 
 
 ### Inputs
 
+#### Keyboard
+
 `WASD`
 : Pitch and Yaw
 
@@ -21,7 +23,9 @@ Here's a short video clip of three clients playing over the network, along with 
 `Space`
 : Fire!
 
-Networking and WASM builds are under development, support for which appear in non-default branches.
+#### Mouse
+
+Mouse movement for pitch and yaw. Use your keyboard (ZX keys) for roll. Click (or space) to fire.
 
 ### Running Locally
 
@@ -31,7 +35,7 @@ No special toolchain or manual setup is required. Just...
 1. Clone this repository somewhere locally.
 1. `cd` to the root directory of the repository and execute `cargo run`
 
-### WASM
+### WASM Builds
 
 A WASM build playable in your browser is available [here](https://unintuitive.org/mass_gathering).
 
