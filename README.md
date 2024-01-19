@@ -1,6 +1,8 @@
 # Mass Gathering
 
-...is 3D gravity-based game where you (a planet) try to bring about collisions with other planets with momentum-altering missiles.
+...is 3D gravity-based game where you, a mass in free-fall, influence the momentum of planets with the goal of causing them to collide. Collisions between two planets will cause them to merge.
+
+Mass Gathering is built in Rust using the Bevy game framework.
 
 Here's a short video clip of four clients playing over the network, along with copious debug output...
 
