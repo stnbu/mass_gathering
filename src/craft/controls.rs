@@ -26,7 +26,9 @@ pub fn control(
     // rotation about local axes
     let mut rotation = Vec3::ZERO;
 
-    let (mut transform, mut spacecraft) = spacecraft_query.get_single_mut().unwrap();
+    let (mut transform, mut spacecraft) = spacecraft_query
+        .get_single_mut()
+        .expect("Spacecraft query failed");
 
     // `just_presssed` ignores keys held down.
     for key in keys.get_just_pressed() {
@@ -89,7 +91,7 @@ pub fn control(
 
     let frame_time = time.delta_seconds() * 60.0;
     rotation *= keys_scaling * frame_time;
-    // help. there _is_ a more succinct way to say...
+
     let local_x = transform.local_x();
     let local_y = transform.local_y();
     let local_z = transform.local_z();

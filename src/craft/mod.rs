@@ -1,7 +1,5 @@
 use bevy::transform::TransformBundle;
-use bevy::{
-    core_pipeline::clear_color::ClearColorConfig, prelude::*,
-};
+use bevy::{core_pipeline::clear_color::ClearColorConfig, prelude::*};
 
 use bevy_rapier3d::prelude::{
     ActiveEvents, Collider, QueryFilter, RapierContext, RigidBody, Sensor,
@@ -13,8 +11,7 @@ use std::collections::HashSet;
 mod controls;
 pub use controls::*;
 
-use crate::mass_to_radius;
-use crate::physics::Momentum;
+use crate::{mass_to_radius, physics::Momentum, DeltaEvent};
 
 pub const SQRT_3: f32 = 1.7320508_f32;
 
@@ -144,8 +141,8 @@ pub fn spacecraft_setup(
                     ..default()
                 });
             }
-            // Possibly the worst way to implement "crosshairs" evar.
             child
+                // Crosshairs "bead"
                 .spawn(PbrBundle {
                     mesh: meshes.add(
                         Mesh::try_from(shape::Icosphere {
@@ -161,6 +158,7 @@ pub fn spacecraft_setup(
                 })
                 .insert(SpacecraftAR::CrosshairsCold);
             child
+                // horizontal hair
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(0.005, 5.0, 0.08))),
                     material: materials.add(Color::GREEN.into()),
@@ -170,6 +168,7 @@ pub fn spacecraft_setup(
                 })
                 .insert(SpacecraftAR::CrosshairsHot);
             child
+                // vertical hair
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::new(5.0, 0.005, 0.08))),
                     material: materials.add(Color::GREEN.into()),
@@ -179,7 +178,7 @@ pub fn spacecraft_setup(
                 })
                 .insert(SpacecraftAR::CrosshairsHot);
 
-            // Various lights for seeing
+            // Various lights
             child.spawn(PointLightBundle {
                 transform: Transform::from_xyz(10.0, -10.0, -25.0),
                 point_light: PointLight {
@@ -233,7 +232,7 @@ pub fn set_ar_default_visibility(mut ar_query: Query<(&mut Visibility, &Spacecra
     }
 }
 
-use crate::prelude::DeltaEvent;
+// "Hot" means the crosshairs fall on a planet. They are hidden when not on a planet.
 pub fn handle_hot_planet(
     spacecraft_query: Query<&Children, With<Spacecraft>>,
     mut ar_query: Query<(&mut Visibility, &SpacecraftAR), Without<Spacecraft>>,
@@ -275,9 +274,12 @@ pub fn fire_on_hot_planet(
     } in hot_planet_events.read()
     {
         for _ in fire_projectile_events.read() {
-            let mut spacecraft_transform = spacecraft_query.get_single_mut().unwrap();
+            let mut spacecraft_transform = spacecraft_query
+                .get_single_mut()
+                .expect("Did not find spacecraft transform");
             debug!("Firing at planet {planet:?}, planet-local direction to target: {local_direction:?}");
             commands
+                // Spawn projectile
                 .spawn(PbrBundle {
                     mesh: meshes.add(
                         Mesh::try_from(shape::Icosphere {
@@ -290,16 +292,17 @@ pub fn fire_on_hot_planet(
                     transform: Transform::from_translation(spacecraft_transform.translation),
                     ..Default::default()
                 })
+                // The projectile carries its "target" as a component.
                 .insert(ProjectileTarget {
                     planet,
                     local_direction,
                 })
                 .insert(RigidBody::Dynamic)
-                .insert(Collider::ball(0.001)) // FIXME: does size matter?
+                .insert(Collider::ball(0.001))
                 .insert(ActiveEvents::COLLISION_EVENTS)
                 .insert(Sensor);
 
-            // Add some recoil excitement
+            // Your spacecraft recoils (jiggles randomly) when you fire.
             if config.recoil != 0.0 {
                 let mut rng = rand::thread_rng();
                 let bump_x = (rng.gen::<f32>() - 0.5) * config.recoil;
@@ -347,6 +350,7 @@ pub fn spawn_projectile_explosion_animation(
                 // FIXME: WHY does local_impact_site need any scaling??
                 let local_impact_site =
                     event.local_impact_site / (planet_transform.scale.length() / SQRT_3);
+                // An explosion is a sphere centered on the planet surface at the impact site that grows and then shrinks to simulate a "fireball".
                 let explosion = commands
                     .spawn(PbrBundle {
                         mesh: meshes.add(
@@ -387,6 +391,7 @@ pub fn spawn_projectile_explosion_animation(
     }
 }
 
+/// When a projectile collides with a planet, the planet's momentum is affected.
 pub fn transfer_projectile_momentum(
     planet_query: Query<&Momentum, Without<ProjectileTarget>>,
     mut projectile_events: EventReader<ProjectileCollisionEvent>,
@@ -412,6 +417,7 @@ pub fn transfer_projectile_momentum(
     }
 }
 
+/// Projectiles are moved toward their target planet by a constant velocity.
 pub fn move_projectiles(
     mut projectile_query: Query<(Entity, &mut Transform, &ProjectileTarget)>,
     planet_query: Query<(&Transform, &mut Momentum, Entity), Without<ProjectileTarget>>,
@@ -425,17 +431,15 @@ pub fn move_projectiles(
             let translation_to_target = target_coordinates - projectile_transform.translation;
             let distance = translation_to_target.length();
             let direction = translation_to_target.normalize();
-
+            // Hardcoding the speed of a projectile.
             let speed_coefficient = 120.0;
-            // FIXME: Tweak, experiment with inverse distance acceleration.
             let absolute_velocity =
                 direction * speed_coefficient * ((distance + 30.0) / (distance + 1.0));
             // constant velocity relative planet
             let velocity = absolute_velocity + planet_momentum.velocity;
             let mut translation = velocity * time.delta_seconds();
+            // FIXME: If the distance to the target is less than the distance the projectile will travel, then instead just travel a bit more than that distance to ensure collision. The planet's radius should be part of this calculation.
             if translation.length() > distance {
-                // FIXME: this "works" but it needs invesgation. Do we need it?
-                // shouldn't it be a function of radius?
                 translation = translation_to_target * 1.1;
             }
             trace!(" Projectile {projectile:?} traveling toward target on planet {:?} by delta_p={translation:?}", target.planet);
@@ -449,6 +453,7 @@ pub fn move_projectiles(
     }
 }
 
+/// Animate the "explosion" of the collision.
 pub fn animate_projectile_explosion(
     mut commands: Commands,
     mut explosion_query: Query<(Entity, &mut Transform, &mut ProjectileExplosion)>,
@@ -462,6 +467,7 @@ pub fn animate_projectile_explosion(
         }
         let mut coords = [0.0; 3];
         transform.scale.write_to_slice(&mut coords);
+        // A decaying explosion is scaled down in each frame. When any of the coordinates become negative (scaled downward past zero), then the explosion entity is despawned.
         for d in coords {
             if d < 0.0 {
                 debug!("despawning explosion entity {:?}", entity);
@@ -491,7 +497,7 @@ pub fn signal_hot_planet(
         let intersection = rapier_context.cast_ray(
             ray_origin,
             ray_direction,
-            150.0, // what's reasonable here...?
+            150.0, // Beyond this distance, the crosshairs are inactive.
             true,
             QueryFilter::only_dynamic(),
         );
