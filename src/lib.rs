@@ -18,7 +18,7 @@ pub const SERVER_IP: &str = "127.0.0.1";
 pub const SERVER_PORT: u16 = 5743; // FIXME NOTE -- don't change this anymore
 pub const CHANNEL_RELIABLE: u8 = 0;
 pub const SQRT_3: f32 = 1.7320508;
-
+use bevy::window::WindowMode;
 pub struct Core;
 impl Plugin for Core {
     fn build(&self, app: &mut App) {
@@ -28,6 +28,12 @@ impl Plugin for Core {
             app.add_plugins(DefaultPlugins.set(bevy::log::LogPlugin {
                 filter: "info,wgpu_core=warn,wgpu_hal=off,mass_gathering=debug,mass_gathering::networking=debug".into(),
                 level: bevy::log::Level::DEBUG,
+            }).set(WindowPlugin {
+                window: WindowDescriptor {
+                    mode: WindowMode::BorderlessFullscreen,
+                    ..default()
+                },
+                ..default()
             }));
         }
         #[cfg(not(debug_assertions))]
